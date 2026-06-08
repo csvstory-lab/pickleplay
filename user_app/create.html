@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VDZBSH2YBT');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>P!CKLE - 불판 생성 (법적 경고 추가)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+        --alert-red: #ff3333;
+    }
+
+    body {
+        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
+        -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+    }
+
+    /* === 상단 헤더 === */
+    header {
+        position: sticky; top: 0; width: 100%;
+        background-color: rgba(9, 9, 11, 0.9); backdrop-filter: blur(10px);
+        z-index: 900; padding: 15px 0; border-bottom: 1px solid var(--border-color);
+        transition: top 0.3s ease-in-out;
+    }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+    .logo {
+        font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer;
+    }
+    .header-actions { display: flex; align-items: center; gap: 15px; }
+    .btn-category { background-color: rgba(39, 39, 42, 0.8); color: #fff; border: 1px solid #3f3f46; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; }
+    .noti-bell::after { content: 'N'; position: absolute; top: -5px; right: -5px; background-color: var(--neon-pink); color: white; font-size: 0.6rem; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-color); }
+
+    /* === 본문 (불판 생성 폼) === */
+    main { padding: 20px 20px 120px 20px; }
+    
+    .page-title { font-weight: 800; font-size: 1.5rem; margin: 0 0 20px 0; color: #fff; letter-spacing: -0.5px; }
+    
+    .form-group { margin-bottom: 25px; }
+    .form-label { font-size: 0.9rem; font-weight: 800; margin-bottom: 10px; display: block; color: #d4d4d8; }
+    .form-hint { font-size: 0.75rem; color: var(--neon-pink); font-weight: 600; margin-left: 5px; }
+    
+    .chip-scroll { 
+        display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; 
+        cursor: grab; 
+    }
+    .chip-scroll:active { cursor: grabbing; } 
+    .chip-scroll::-webkit-scrollbar { display: none; }
+    .cat-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; user-select: none;}
+    .cat-chip.selected { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
+
+    /* 공통 입력 박스 */
+    .input-box {
+        width: 100%; box-sizing: border-box; background-color: var(--card-bg); border: 1px solid var(--border-color);
+        color: #fff; padding: 15px; border-radius: 20px; font-size: 1rem; font-family: 'Pretendard', sans-serif;
+        transition: all 0.2s; margin-bottom: 10px; color-scheme: dark; accent-color: var(--neon-green);
+    }
+    .input-box:focus { outline: none; border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+    .input-box::placeholder { color: #52525b; }
+    textarea.input-box { resize: none; line-height: 1.4; padding: 15px; border-radius: 16px; }
+
+    /* 단추 버튼 (미디어 형태) */
+    .toggle-wrapper { display: flex; background: rgba(39, 39, 42, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 10px; }
+    .toggle-btn { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; border: none; background: transparent; transition: all 0.2s; }
+    .toggle-btn.active { background: #3f3f46; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .toggle-btn.active.highlight { background: var(--neon-green); color: #000; }
+
+    .sub-toggle-wrapper { display: none; background: transparent; gap: 10px; padding: 0; margin-bottom: 15px; }
+    .sub-toggle-wrapper.show { display: flex; }
+    .sub-toggle-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-sub); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+    .sub-toggle-btn.active { border-color: var(--neon-blue); color: var(--neon-blue); background: rgba(0, 240, 255, 0.1); }
+
+    /* 불판 진행 기간 버튼 UI */
+    .duration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 5px; }
+    .duration-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 12px 0; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif; }
+    .duration-btn.active { background: rgba(57, 255, 20, 0.1); border-color: var(--neon-green); color: var(--neon-green); }
+
+    #customDateWrap { background: rgba(39, 39, 42, 0.4); padding: 20px; border-radius: 24px; margin-top: 10px; border: 1px dashed #52525b; }
+    .date-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 800; margin-bottom: 8px; display: block; margin-left: 5px; }
+    .date-input-row { display: flex; flex-direction: column; gap: 15px; }
+
+    /* 동적 업로드 영역 */
+    #uploadContainer { transition: all 0.3s ease; }
+    .media-input-wrap { display: flex; flex-direction: column; gap: 8px; width: 100%; position: relative; }
+    .upload-box {
+        width: 100%; border: 2px dashed #52525b; border-radius: 16px;
+        background-color: rgba(39, 39, 42, 0.3); display: flex; justify-content: center; align-items: center;
+        flex-direction: column; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+        color: var(--text-sub); box-sizing: border-box;
+    }
+    .upload-box:active { transform: scale(0.98); }
+    .upload-box.uploaded { border-color: var(--neon-green); color: var(--neon-green); background-color: rgba(57, 255, 20, 0.1); border-style: solid; }
+
+    .url-input { 
+        width: 100%; background-color: rgba(39, 39, 42, 0.5); border: 1px solid #52525b; 
+        color: #fff; padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; 
+        box-sizing: border-box; outline: none; transition: 0.2s; font-family: 'Pretendard', sans-serif;
+    }
+    .url-input:focus { border-color: var(--neon-green); background-color: #18181b; }
+    .url-input::placeholder { color: #71717a; }
+
+    .upload-box.ratio-16-9 { aspect-ratio: 16 / 9; }
+    .upload-box.ratio-9-16 { aspect-ratio: 9 / 16; width: 60%; margin: 0 auto; }
+    
+    .vs-upload-group { display: flex; flex-direction: column; gap: 20px; position: relative; }
+    .upload-box.ratio-vs { aspect-ratio: 16 / 9; height: auto; }
+    
+    .vs-upload-group.row-layout { flex-direction: row; gap: 15px; justify-content: space-between; align-items: flex-start; }
+    .vs-upload-group.row-layout .media-input-wrap { flex: 1; }
+    .vs-upload-group.row-layout .upload-box.ratio-vs-vert { aspect-ratio: 9 / 16; width: 100%; height: auto; margin: 0; border-radius: 16px; }
+
+    .vs-badge-upload {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background-color: var(--bg-color); color: #fff; font-family: 'Black Han Sans', sans-serif;
+        width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;
+        border-radius: 50%; border: 2px solid #52525b; z-index: 10;
+    }
+
+    .icon-plus { font-size: 2rem; margin-bottom: 5px; }
+    .upload-txt { font-size: 0.9rem; font-weight: 700; text-align: center; line-height: 1.4; }
+
+    /* A/B 입력 필드 */
+    .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
+    .ab-input-wrapper { position: relative; }
+    .ab-badge { position: absolute; top: 50%; left: 15px; transform: translateY(-50%); font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; }
+    .ab-badge.a { color: var(--neon-blue); }
+    .ab-badge.b { color: var(--neon-pink); }
+    .ab-input { padding-left: 45px; }
+    .ab-input-wrapper.a .input-box:focus { border-color: var(--neon-blue); }
+    .ab-input-wrapper.b .input-box:focus { border-color: var(--neon-pink); }
+
+    /* 🚨 법적 책임 경고 영역 (새로 추가) */
+    .legal-warning-box {
+        background: rgba(255, 51, 51, 0.05);
+        border: 1px solid rgba(255, 51, 51, 0.3);
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 25px;
+        margin-bottom: 10px;
+    }
+    .legal-warning-title {
+        font-size: 0.85rem;
+        font-weight: 900;
+        color: var(--alert-red);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .legal-warning-text {
+        font-size: 0.75rem;
+        color: #a1a1aa;
+        line-height: 1.5;
+        word-break: keep-all;
+    }
+    .legal-warning-text strong {
+        color: #d4d4d8;
+    }
+
+    /* 등록 버튼 */
+    .btn-submit {
+        width: 100%; padding: 18px; border-radius: 20px; border: none;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000;
+        font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; letter-spacing: 1px;
+        cursor: pointer; box-shadow: 0 5px 20px rgba(57, 255, 20, 0.3); transition: transform 0.2s;
+        margin-top: 15px;
+    }
+    .btn-submit:active { transform: scale(0.95); }
+
+    /* === 하단 네비게이션 === */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0; border-top: 1px solid var(--border-color); z-index: 900; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .nav-icon { font-size: 1.4rem; }
+    .nav-btn.fire-btn .nav-icon { background-color: var(--neon-green); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: #000; font-size: 1.6rem; transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3); }
+
+    /* 바텀 시트 */
+    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: #121214; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px 20px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+    .bottom-sheet.open { transform: translateY(0); }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .sheet-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: var(--neon-green); }
+    .btn-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding-bottom: 20px; }
+    .grid-item { background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
+    .grid-item:active { background-color: var(--neon-green); color: #000; transform: scale(0.95); }
+    .grid-item.highlight { border: 1px solid var(--neon-pink); color: var(--neon-pink); }
+</style>
+</head>
+<body>
+
+<header id="mainHeader">
+    <div class="top-row">
+        <h1 class="logo" onclick="location.href='index.html'">P!CKLE</h1>
+        <div class="header-actions">
+            <button class="btn-category" onclick="toggleCategorySheet()"><span>≡</span> 전체 불판</button>
+            <div class="noti-bell" onclick="alert('알림함으로 이동합니다!')">🔔</div>
+        </div>
+    </div>
+</header>
+
+<div class="overlay" id="categoryOverlay" onclick="toggleCategorySheet()"></div>
+<div class="bottom-sheet" id="categorySheet">
+    <div class="sheet-header">
+        <div class="sheet-title">모든 불판 탐험 🚀</div>
+        <button class="btn-close" onclick="toggleCategorySheet()">✕</button>
+    </div>
+    <div class="category-grid">
+        <div class="grid-item highlight">🔥 HOT 랭킹</div>
+        <div class="grid-item highlight">🎁 꿀템 드랍</div>
+        <div class="grid-item">💖 연애/과몰입</div>
+        <div class="grid-item">⚖️ 뇌정지 밸런스</div>
+        <div class="grid-item">🤬 빌런/썰</div>
+        <div class="grid-item">🍕 먹잘알/푸파</div>
+        <div class="grid-item">👗 OOTD/스타일</div>
+        <div class="grid-item">🍿 덕질/서브컬처</div>
+        <div class="grid-item">🎮 겜심/이스포츠</div>
+        <div class="grid-item">🐾 힐링/동물</div>
+        <div class="grid-item">🏟️ 스포츠/매치업</div>
+        <div class="grid-item">💸 텅장/소비</div>
+        <div class="grid-item">🚗 블박/과실</div>
+        <div class="grid-item">🧠 MBTI/심리</div>
+        <div class="grid-item">🎤 돌판/K-POP</div>
+        <div class="grid-item">👻 미스터리</div>
+    </div>
+</div>
+
+<main>
+    <h1 class="page-title">🔥 새로운 불판 지피기</h1>
+
+    <div class="form-group">
+        <label class="form-label">어떤 전장으로 갈까요?</label>
+        <div class="chip-scroll" id="chipSlider">
+            <div class="cat-chip" onclick="selectChip(this)">🚗 블박/과실</div>
+            <div class="cat-chip" onclick="selectChip(this)">🍕 먹잘알/푸파</div>
+            <div class="cat-chip" onclick="selectChip(this)">💖 연애/과몰입</div>
+            <div class="cat-chip" onclick="selectChip(this)">⚖️ 뇌정지 밸런스</div>
+            <div class="cat-chip" onclick="selectChip(this)">👗 OOTD/스타일</div>
+            <div class="cat-chip" onclick="selectChip(this)">🤬 빌런/썰</div>
+            <div class="cat-chip" onclick="selectChip(this)">🍿 덕질/서브컬처</div>
+            <div class="cat-chip" onclick="selectChip(this)">🎮 겜심/이스포츠</div>
+            <div class="cat-chip" onclick="selectChip(this)">🐾 힐링/동물</div>
+            <div class="cat-chip" onclick="selectChip(this)">🏟️ 스포츠/매치업</div>
+            <div class="cat-chip" onclick="selectChip(this)">💸 텅장/소비</div>
+            <div class="cat-chip" onclick="selectChip(this)">🧠 MBTI/심리</div>
+            <div class="cat-chip" onclick="selectChip(this)">🎤 돌판/K-POP</div>
+            <div class="cat-chip" onclick="selectChip(this)">👻 미스터리</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">불판 제목</label>
+        <input type="text" id="inputTitle" class="input-box" placeholder="유저들의 도파민을 자극할 제목을 적어주세요!">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">상세 설명 <span class="form-hint">(선택사항)</span></label>
+        <textarea id="inputDesc" class="input-box" rows="2" maxlength="60" placeholder="제목에 다 담지 못한 디테일한 상황이나 룰을 60자 이내로 적어주세요."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">불판 진행 기간</label>
+        <div class="duration-grid">
+            <button class="duration-btn active" onclick="setDuration(this, '24h')">24시간</button>
+            <button class="duration-btn" onclick="setDuration(this, '3')">3일</button>
+            <button class="duration-btn" onclick="setDuration(this, '7')">7일</button>
+            <button class="duration-btn" onclick="setDuration(this, 'custom')">직접 선택</button>
+        </div>
+        
+        <div id="customDateWrap" style="display: none;">
+            <div class="date-input-row">
+                <div>
+                    <label class="date-label">🟢 오픈(시작) 일시</label>
+                    <input type="datetime-local" id="inputStartDate" class="input-box" style="margin: 0; padding: 12px;">
+                </div>
+                <div>
+                    <label class="date-label">🔴 종료(마감) 일시</label>
+                    <input type="datetime-local" id="inputEndDate" class="input-box" style="margin: 0; padding: 12px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">불판에 올릴 미디어 형태</label>
+        
+        <div class="toggle-wrapper">
+            <button class="toggle-btn active highlight" id="btnSingle" onclick="setMainMode('single')">미디어 1개</button>
+            <button class="toggle-btn" id="btnVs" onclick="setMainMode('vs')">미디어 2개 (VS)</button>
+            <button class="toggle-btn" id="btnText" onclick="setMainMode('text')">영상/이미지 없음</button>
+        </div>
+
+        <div class="sub-toggle-wrapper show" id="orientationToggle">
+            <button class="sub-toggle-btn active" id="btnHori" onclick="setOrientation('horizontal')">가로형 (16:9)</button>
+            <button class="sub-toggle-btn" id="btnVerti" onclick="setOrientation('vertical')">세로형 (9:16)</button>
+        </div>
+        
+        <div id="uploadContainer"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">A/B 선택지</label>
+        <div class="ab-input-group">
+            <div class="ab-input-wrapper a">
+                <span class="ab-badge a">A</span>
+                <input type="text" id="inputA" class="input-box ab-input" placeholder="A 선택지 내용을 적어주세요">
+            </div>
+            <div class="ab-input-wrapper b">
+                <span class="ab-badge b">B</span>
+                <input type="text" id="inputB" class="input-box ab-input" placeholder="B 선택지 내용을 적어주세요">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">해시태그 <span class="form-hint">(선택사항, 최대 3개)</span></label>
+        <input type="text" id="inputHashtag" class="input-box" placeholder="#블박 #과실비율 (띄어쓰기로 구분, 최대 3개 입력)">
+    </div>
+
+    <!-- 💡 법적 책임 경고 영역 추가 -->
+    <div class="legal-warning-box">
+        <div class="legal-warning-title">🚨 불판 등록 전 확인해주세요!</div>
+        <div class="legal-warning-text">
+            음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
+        </div>
+    </div>
+
+    <button class="btn-submit" onclick="validateAndSubmit()">🚀 불판 지피기 (등록)</button>
+
+</main>
+
+<nav class="bottom-nav">
+    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    <div class="nav-btn fire-btn" onclick="location.href='index.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
+</nav>
+
+<script>
+    // 마우스 드래그 스크롤
+    const slider = document.getElementById('chipSlider');
+    let isDown = false; let startX; let scrollLeft; let isDragged = false;
+    slider.addEventListener('mousedown', (e) => { isDown = true; isDragged = false; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
+    slider.addEventListener('mouseleave', () => { isDown = false; });
+    slider.addEventListener('mouseup', () => { isDown = false; });
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault(); isDragged = true;
+        const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk;
+    });
+
+    function selectChip(element) {
+        if (isDragged) return;
+        document.querySelectorAll('.cat-chip').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop && scrollTop > 60) document.getElementById('mainHeader').style.top = '-80px'; 
+        else document.getElementById('mainHeader').style.top = '0';
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+
+    function toggleCategorySheet() {
+        const overlay = document.getElementById('categoryOverlay');
+        const sheet = document.getElementById('categorySheet');
+        sheet.classList.toggle('open'); overlay.classList.toggle('open');
+        document.body.style.overflow = sheet.classList.contains('open') ? 'hidden' : '';
+    }
+
+    let selectedDuration = '24h';
+    function setDuration(btn, val) {
+        document.querySelectorAll('.duration-btn').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active'); selectedDuration = val;
+        const customWrap = document.getElementById('customDateWrap');
+        customWrap.style.display = (val === 'custom') ? 'block' : 'none';
+    }
+
+    // 💡 미디어 업로드 관리 변수
+    let currentMode = 'single';
+    let currentOri = 'horizontal';
+    let uploadStatus = { single: false, vsA: false, vsB: false };
+
+    function setMainMode(mode) {
+        currentMode = mode;
+        uploadStatus = { single: false, vsA: false, vsB: false }; 
+        document.getElementById('btnSingle').classList.remove('active', 'highlight');
+        document.getElementById('btnVs').classList.remove('active', 'highlight');
+        document.getElementById('btnText').classList.remove('active', 'highlight');
+        if(mode === 'single') document.getElementById('btnSingle').classList.add('active', 'highlight');
+        if(mode === 'vs') document.getElementById('btnVs').classList.add('active', 'highlight');
+        if(mode === 'text') document.getElementById('btnText').classList.add('active', 'highlight');
+
+        const oriToggle = document.getElementById('orientationToggle');
+        if (mode === 'single' || mode === 'vs') oriToggle.classList.add('show');
+        else oriToggle.classList.remove('show');
+        renderUploadArea();
+    }
+
+    function setOrientation(ori) {
+        currentOri = ori;
+        uploadStatus = { single: false, vsA: false, vsB: false }; 
+        document.getElementById('btnHori').classList.remove('active');
+        document.getElementById('btnVerti').classList.remove('active');
+        if(ori === 'horizontal') document.getElementById('btnHori').classList.add('active');
+        if(ori === 'vertical') document.getElementById('btnVerti').classList.add('active');
+        renderUploadArea();
+    }
+
+    // 💡 동적 UI 생성 (사진 업로드 상자 + 영상 URL 입력창 결합)
+    function renderUploadArea() {
+        const container = document.getElementById('uploadContainer');
+        container.innerHTML = ''; 
+        if (currentMode === 'text') return; 
+
+        // 슬롯 생성 함수
+        const makeSlot = (id, label, ratioClass, iconColor) => `
+            <div class="media-input-wrap">
+                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}', this)">
+                    <div class="icon-plus" style="color:${iconColor || 'var(--text-sub)'};">➕</div>
+                    <div class="upload-txt">${label} 사진 첨부</div>
+                </div>
+                <input type="url" class="url-input" id="url_${id}" placeholder="🔗 또는 영상 URL 입력 (유튜브 등)" oninput="checkUrlInput('${id}')">
+            </div>
+        `;
+
+        if (currentMode === 'single') {
+            const ratioClass = currentOri === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
+            container.innerHTML = makeSlot('single', '가로/세로', ratioClass);
+        }
+
+        if (currentMode === 'vs') {
+            if (currentOri === 'horizontal') {
+                container.innerHTML = `
+                    <div class="vs-upload-group">
+                        ${makeSlot('vsA', 'A', 'ratio-vs', 'var(--neon-blue)')}
+                        <div class="vs-badge-upload">VS</div>
+                        ${makeSlot('vsB', 'B', 'ratio-vs', 'var(--neon-pink)')}
+                    </div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="vs-upload-group row-layout">
+                        ${makeSlot('vsA', 'A', 'ratio-vs-vert', 'var(--neon-blue)')}
+                        <div class="vs-badge-upload">VS</div>
+                        ${makeSlot('vsB', 'B', 'ratio-vs-vert', 'var(--neon-pink)')}
+                    </div>`;
+            }
+        }
+    }
+    renderUploadArea();
+
+    // 💡 사진 업로드 클릭 시 로직 (URL이 있으면 차단)
+    function mockUpload(type, element) {
+        const urlInput = document.getElementById('url_' + type);
+        if(urlInput && urlInput.value.trim() !== '') {
+            alert('이미 영상 URL이 입력되어 있습니다.\\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.');
+            return;
+        }
+        uploadStatus[type] = true;
+        element.classList.add('uploaded');
+        element.innerHTML = `<div class="icon-plus">✅</div><div class="upload-txt">사진 첨부 완료!</div>`;
+    }
+
+    // 💡 영상 URL 입력 시 로직 (사진 업로드 상자 비활성화 디자인)
+    function checkUrlInput(type) {
+        const urlInput = document.getElementById('url_' + type);
+        const box = document.getElementById('box_' + type);
+        
+        if(urlInput.value.trim() !== '') {
+            uploadStatus[type] = false; // 사진 업로드 무효화
+            box.classList.remove('uploaded');
+            box.style.border = '2px dashed #3f3f46';
+            box.style.opacity = '0.4';
+            box.innerHTML = '<div class="icon-plus">🔗</div><div class="upload-txt">영상 링크 적용됨</div>';
+        } else {
+            box.style.opacity = '1';
+            box.style.border = '2px dashed #52525b';
+            let iconColor = type === 'vsA' ? 'var(--neon-blue)' : (type === 'vsB' ? 'var(--neon-pink)' : 'var(--text-sub)');
+            let label = type === 'vsA' ? 'A' : (type === 'vsB' ? 'B' : '가로/세로');
+            box.innerHTML = `<div class="icon-plus" style="color:${iconColor};">➕</div><div class="upload-txt">${label} 사진 첨부</div>`;
+        }
+    }
+
+    // 💡 등록 전 밸리데이션
+    function validateAndSubmit() {
+        const selectedCategory = document.querySelector('.cat-chip.selected');
+        if (!selectedCategory) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
+
+        const titleVal = document.getElementById('inputTitle').value.trim();
+        if (titleVal === '') { alert('불판 제목을 입력해주세요!'); return; }
+
+        if (currentMode === 'single') {
+            const urlVal = document.getElementById('url_single') ? document.getElementById('url_single').value.trim() : '';
+            if (!uploadStatus.single && urlVal === '') { alert('사진을 첨부하거나 영상 URL을 입력해주세요!'); return; }
+        } else if (currentMode === 'vs') {
+            const urlA = document.getElementById('url_vsA') ? document.getElementById('url_vsA').value.trim() : '';
+            const urlB = document.getElementById('url_vsB') ? document.getElementById('url_vsB').value.trim() : '';
+            
+            const hasA = uploadStatus.vsA || urlA !== '';
+            const hasB = uploadStatus.vsB || urlB !== '';
+            
+            if (!hasA || !hasB) { alert('A와 B 각각 사진을 첨부하거나 영상 URL을 입력해주세요!'); return; }
+        }
+
+        const aVal = document.getElementById('inputA').value.trim();
+        const bVal = document.getElementById('inputB').value.trim();
+        if (aVal === '' || bVal === '') { alert('A/B 선택지 내용을 완성해주세요!'); return; }
+
+        alert('🔥 완벽합니다! 불판이 예약/등록 되었습니다.');
+        location.href = 'detail.html';
+    }
+</script>
+
+</body>
+</html>

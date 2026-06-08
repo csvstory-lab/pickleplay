@@ -1,0 +1,6 @@
+# Supabase 키 (로컬만 보관)
+js/supabase-config.js
+admin_web/js/firebase-config.js
+pass_supabase.txt
+.env
+.env.local

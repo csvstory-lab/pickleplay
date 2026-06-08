@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin: 일반 불판 관리 (리스트)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --sidebar-bg: #121214;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+    /* === 💡 완벽 복원된 사이드바 === */
+    .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
+
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    .nav-item.active { background-color: rgba(57, 255, 20, 0.05); color: var(--neon-green); border-left-color: var(--neon-green); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #d4d4d8; }
+    .nav-sub-item.active { color: #fff; font-weight: 700; }
+    .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+
+    /* === 메인 컨텐츠 === */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: var(--bg-color); }
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 5; }
+    .page-title { font-size: 1.4rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .admin-profile { display: flex; align-items: center; gap: 15px; }
+    .admin-avatar { width: 36px; height: 36px; background-color: var(--neon-green); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-weight: 900; }
+
+    .content-container { padding: 30px 40px; }
+
+    /* 미니 KPI */
+    .mini-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .mini-kpi-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .mini-kpi-info { display: flex; flex-direction: column; gap: 5px; }
+    .mini-kpi-title { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); }
+    .mini-kpi-val { font-size: 1.4rem; font-weight: 900; font-family: 'Black Han Sans', sans-serif; color: #fff; }
+    .mini-kpi-icon { font-size: 1.8rem; opacity: 0.8; }
+
+    /* 검색 및 필터 바 */
+    .filter-bar { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); }
+    
+    .admin-input, .admin-select { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.9rem; padding: 10px 15px; border-radius: 8px; outline: none; transition: 0.2s; }
+    .admin-input:focus, .admin-select:focus { border-color: var(--neon-green); }
+    .admin-input { width: 240px; }
+    .admin-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px; }
+    .admin-select.cat-filter { width: 200px; }
+
+    .btn-search { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 0.9rem; padding: 11px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .btn-search:active { transform: scale(0.95); }
+    .btn-reset { background-color: transparent; color: var(--text-sub); border: 1px solid #3f3f46; font-family: 'Pretendard', sans-serif; font-weight: 700; font-size: 0.9rem; padding: 11px 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .btn-reset:hover { border-color: #fff; color: #fff; }
+
+    /* 불판 데이터 테이블 */
+    .table-container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+    
+    /* 💡 테이블 헤더 컨트롤 영역 (10/50/100개 보기 추가) */
+    .table-control { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: #121214; }
+    .table-total { font-size: 0.85rem; font-weight: 800; color: var(--text-sub); }
+    
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #121214; padding: 15px; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+    td { padding: 15px; border-bottom: 1px solid #222; font-size: 0.9rem; font-weight: 600; color: #e4e4e7; vertical-align: middle; }
+    tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+    
+    .post-id { font-family: monospace; color: var(--text-sub); font-size: 0.8rem; }
+    .cat-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
+    
+    .post-title-cell { max-width: 250px; }
+    .post-title { font-weight: 800; color: #fff; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .post-author { font-size: 0.75rem; color: var(--text-sub); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .meta-stat { color: var(--theme-gold); font-weight: 800; }
+    .meta-share { color: var(--neon-blue); font-weight: 800; }
+
+    /* A/B 투표율 미니 바 */
+    .vote-summary { width: 160px; }
+    .vote-count { font-size: 0.75rem; color: var(--theme-gold); font-weight: 800; margin-bottom: 4px; display: block; text-align: right; }
+    .mini-bar-wrapper { width: 100%; height: 8px; background-color: #27272a; border-radius: 4px; overflow: hidden; display: flex; }
+    .mini-bar-a { height: 100%; background-color: var(--neon-blue); }
+    .mini-bar-b { height: 100%; background-color: var(--neon-pink); }
+    .vote-pct { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; margin-top: 3px; }
+    .pct-a { color: var(--neon-blue); }
+    .pct-b { color: var(--neon-pink); }
+
+    /* 상태 뱃지 */
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
+    .status-active { background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
+    .status-ended { background-color: rgba(161, 161, 170, 0.15); color: var(--text-sub); border: 1px solid rgba(161, 161, 170, 0.3); }
+    .status-blinded { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); }
+
+    /* 액션 버튼 */
+    .action-btns { display: flex; gap: 8px; }
+    .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-sm:active { transform: scale(0.95); }
+    .btn-detail { background-color: #3f3f46; color: #fff; }
+    .btn-detail:hover { background-color: #52525b; }
+    .btn-blind { background-color: transparent; border: 1px solid var(--neon-pink); color: var(--neon-pink); }
+    .btn-blind:hover { background-color: rgba(255, 0, 127, 0.1); }
+    .btn-unblind { background-color: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); }
+
+    /* 페이지네이션 */
+    .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 25px; padding-bottom: 40px; }
+    .page-btn { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 6px; background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .page-btn:hover { background-color: #27272a; color: #fff; }
+    .page-btn.active { background-color: var(--neon-green); border-color: var(--neon-green); color: #000; }
+
+</style>
+<!-- Firebase (App + Analytics + Firestore) -->
+<script type="module" src="js/firebase-init.js"></script>
+</head>
+<body>
+
+<!-- 💡 사이드바 완벽 복원 -->
+<aside class="sidebar">
+    <div class="logo-area"><h1 class="logo">P!CKLE</h1><div class="logo-sub">ADMINISTRATOR 2.6</div></div>
+    <ul class="nav-menu">
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
+        <li class="nav-item active"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item active">· 일반 불판 관리</li>
+        <li class="nav-sub-item">· 스폰(최애) 불판 설정</li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item">· 광고주 및 정산 관리</li>
+        <li class="nav-sub-item">· 파트너(대행사) 관리</li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div></li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <h2 class="page-title"><span style="font-size:1.5rem;">🔥</span> 일반 불판 관리</h2>
+        <div class="admin-profile">
+            <span style="font-size:0.9rem; font-weight:700;">최고관리자 님</span>
+            <div class="admin-avatar">A</div>
+        </div>
+    </header>
+
+    <div class="content-container">
+        
+        <div class="mini-kpi-row">
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">누적 생성된 불판</span><span class="mini-kpi-val">58,241</span></div>
+                <div class="mini-kpi-icon">📚</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">진행 중 (Active)</span><span class="mini-kpi-val" style="color: var(--neon-blue);">1,245</span></div>
+                <div class="mini-kpi-icon">🔥</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">블라인드 조치</span><span class="mini-kpi-val" style="color: var(--neon-pink);">342</span></div>
+                <div class="mini-kpi-icon">👁️</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">오늘 올라온 참견(댓글)</span><span class="mini-kpi-val" style="color: var(--neon-green);">14,890</span></div>
+                <div class="mini-kpi-icon">💬</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="input-group">
+                <span class="input-label">검색어</span>
+                <input type="text" class="admin-input" placeholder="불판 제목 또는 작성자(닉네임)">
+            </div>
+            <div class="input-group">
+                <span class="input-label">카테고리 연동 필터</span>
+                <select class="admin-select cat-filter">
+                    <option value="all" style="font-weight:bold;">전체 카테고리 보기</option>
+                    <optgroup label="[메인 도파민 카테고리]">
+                        <option value="c_love">💔 연애 / 썸 / 이별</option>
+                        <option value="c_brain">🤯 뇌정지 밸런스</option>
+                        <option value="c_food">🍕 먹잘알 / 푸파</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-label">진행 상태</span>
+                <select class="admin-select" style="width: 120px;">
+                    <option value="all">전체</option><option value="active">진행 중</option><option value="ended">마감됨</option><option value="blinded">블라인드</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-label">정렬 기준</span>
+                <select class="admin-select" style="width: 140px;">
+                    <option value="newest">최신 등록순</option>
+                    <option value="votes">투표 많은순</option>
+                    <option value="comments">댓글 많은순</option>
+                    <option value="reports">신고 누적순</option>
+                </select>
+            </div>
+            <button class="btn-search">조회</button>
+            <button class="btn-reset">초기화</button>
+        </div>
+
+        <div class="table-container">
+            <!-- 💡 노출 개수 셀렉트박스 추가 -->
+            <div class="table-control">
+                <span class="table-total">전체 <b>58,241</b>건 검색됨</span>
+                <select class="admin-select" style="width:130px; padding:6px 12px; font-size:0.8rem; background:transparent;">
+                    <option value="10">10개씩 보기</option>
+                    <option value="50" selected>50개씩 보기</option>
+                    <option value="100">100개씩 보기</option>
+                </select>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>카테고리</th>
+                        <th>불판 주제 (제목)</th>
+                        <th>투표 결과 현황 (A vs B)</th>
+                        <th>마감 일시</th>
+                        <th>상태</th>
+                        <th>관리자 액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="post-id">#10425</td>
+                        <td><span class="cat-badge">💔 연애/썸</span></td>
+                        <td class="post-title-cell">
+                            <span class="post-title">10년지기 이성친구와 단둘이 1박 2일 여행가기 허용?</span>
+                            <!-- 💡 공유수(Share) 지표 추가 -->
+                            <span class="post-author">작성자: 프로불편러 <span style="margin:0 5px;">|</span> <span class="meta-stat">💬 참견 1,024</span> <span style="margin:0 5px;">|</span> <span class="meta-share">🔗 공유 156</span></span>
+                        </td>
+                        <td>
+                            <div class="vote-summary">
+                                <span class="vote-count">총 15,240명 투표</span>
+                                <div class="mini-bar-wrapper">
+                                    <div class="mini-bar-a" style="width: 15%;"></div>
+                                    <div class="mini-bar-b" style="width: 85%;"></div>
+                                </div>
+                                <div class="vote-pct">
+                                    <span class="pct-a">허용 (15%)</span><span class="pct-b">절대 불가 (85%)</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>26.05.30 18:00</td>
+                        <td><span class="status-badge status-active">진행 중</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">상세/댓글</button>
+                                <button class="btn-sm btn-blind" onclick="blindPost(this, '#10425')">블라인드</button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="post-id">#10382</td>
+                        <td><span class="cat-badge">🍕 먹잘알</span></td>
+                        <td class="post-title-cell">
+                            <span class="post-title">평생 라면 한 종류만 먹어야 한다면?</span>
+                            <span class="post-author">작성자: 쩝쩝박사 <span style="margin:0 5px;">|</span> <span class="meta-stat">💬 참견 842</span> <span style="margin:0 5px;">|</span> <span class="meta-share">🔗 공유 32</span></span>
+                        </td>
+                        <td>
+                            <div class="vote-summary">
+                                <span class="vote-count" style="color:var(--text-sub);">총 8,451명 투표</span>
+                                <div class="mini-bar-wrapper" style="opacity:0.6;">
+                                    <div class="mini-bar-a" style="width: 62%;"></div>
+                                    <div class="mini-bar-b" style="width: 38%;"></div>
+                                </div>
+                                <div class="vote-pct" style="opacity:0.6;">
+                                    <span class="pct-a">신라면 (62%)</span><span class="pct-b">진라면 (38%)</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color:var(--text-sub);">26.05.19 12:00</td>
+                        <td><span class="status-badge status-ended">마감됨</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">상세/댓글</button>
+                                <button class="btn-sm btn-blind" onclick="blindPost(this, '#10382')">블라인드</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button class="page-btn">←</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">→</button>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    async function blindPost(btn, postId) {
+        if(!confirm(`해당 불판(${postId})을 강제 숨김 처리하시겠습니까?\n시스템 규정에 따라 작성자에게 제재가 가해질 수 있습니다.`)) return;
+        const FB = window.PickleAdminFirebase;
+        const saved = await FB.persist('posts', String(postId), { status: 'blinded', action: 'blind' }, {
+            page: 'admin_board_list',
+            action: 'blind',
+            successMessage: '블라인드 처리가 Firebase에 저장되었습니다.',
+        });
+        if (!saved.ok) return;
+        {
+            const row = btn.closest('tr');
+            const statusCell = row.cells[5];
+            const actionCell = row.cells[6];
+            
+            row.style.opacity = '0.6';
+            row.style.backgroundColor = 'rgba(255,0,127,0.02)';
+            row.querySelector('.post-title').style.textDecoration = 'line-through';
+            
+            statusCell.innerHTML = '<span class="status-badge status-blinded">블라인드됨</span>';
+            actionCell.innerHTML = `
+                <div class="action-btns">
+                    <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">사유 확인</button>
+                    <button class="btn-sm btn-unblind" onclick="unblindPost(this, '${postId}')">숨김 해제</button>
+                </div>
+            `;
+        }
+    }
+
+    async function unblindPost(btn, postId) {
+        if(!confirm(`해당 불판(${postId})의 블라인드 조치를 해제하시겠습니까?`)) return;
+        const FB = window.PickleAdminFirebase;
+        const saved = await FB.persist('posts', String(postId), { status: 'active', action: 'unblind' }, {
+            page: 'admin_board_list',
+            action: 'unblind',
+            successMessage: '블라인드 해제가 Firebase에 저장되었습니다.',
+        });
+        if (!saved.ok) return;
+        {
+            const row = btn.closest('tr');
+            const statusCell = row.cells[5];
+            const actionCell = row.cells[6];
+            
+            row.style.opacity = '1';
+            row.style.backgroundColor = 'transparent';
+            row.querySelector('.post-title').style.textDecoration = 'none';
+            
+            statusCell.innerHTML = '<span class="status-badge status-active">진행 중</span>';
+            actionCell.innerHTML = `
+                <div class="action-btns">
+                    <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">상세/댓글</button>
+                    <button class="btn-sm btn-blind" onclick="blindPost(this, '${postId}')">블라인드</button>
+                </div>
+            `;
+        }
+    }
+</script>
+
+</body>
+</html>

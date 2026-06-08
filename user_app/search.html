@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-VDZBSH2YBT');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>P!CKLE - 검색 및 탐험 (검색 결과 리스트 통합)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    body {
+        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
+        -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+    }
+
+    /* === 상단 헤더 & 검색바 === */
+    header {
+        position: sticky; top: 0; width: 100%;
+        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px);
+        z-index: 900; padding: 15px 20px; border-bottom: 1px solid var(--border-color);
+        box-sizing: border-box; transition: top 0.3s ease-in-out;
+    }
+    
+    /* 💡 검색바 모서리 둥글게 최신 스타일 적용 */
+    .search-bar-container {
+        display: flex; align-items: center; background-color: var(--card-bg);
+        border: 1px solid var(--border-color); border-radius: 20px; padding: 12px 18px;
+        transition: border-color 0.2s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .search-bar-container:focus-within { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+    
+    .search-icon { font-size: 1.2rem; color: var(--text-sub); margin-right: 10px; }
+    .search-input {
+        flex: 1; background: transparent; border: none; color: #fff;
+        font-family: 'Pretendard', sans-serif; font-size: 1rem; font-weight: 600; outline: none;
+    }
+    .search-input::placeholder { color: #52525b; font-weight: 500; }
+    .btn-clear { background: none; border: none; color: var(--text-sub); font-size: 1.2rem; cursor: pointer; display: none; padding: 0; transition: color 0.2s; }
+    .btn-clear:active { color: var(--neon-pink); }
+
+    /* === 메인 컨텐츠 === */
+    main { padding: 20px 20px 120px 20px; }
+
+    .section-title { font-family: 'Pretendard', sans-serif; font-size: 1.1rem; font-weight: 900; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    .section-title span { color: var(--neon-green); }
+
+    /* 1. 실시간 급상승 검색어 */
+    .trending-box { background-color: var(--card-bg); border-radius: 20px; border: 1px solid var(--border-color); padding: 5px 20px; margin-bottom: 35px; }
+    .trending-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #222; cursor: pointer; transition: background-color 0.2s; }
+    .trending-item:last-child { border-bottom: none; }
+    .trending-item:active { background-color: rgba(255,255,255,0.05); }
+    
+    .trend-left { display: flex; align-items: center; gap: 15px; }
+    .trend-rank { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--text-sub); width: 20px; text-align: center; }
+    .trend-rank.top { color: var(--neon-green); }
+    .trend-keyword { font-size: 1rem; font-weight: 700; color: #e4e4e7; }
+    
+    .trend-badge { font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; }
+    .badge-up { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); }
+    .badge-new { background-color: rgba(0, 240, 255, 0.15); color: var(--neon-blue); }
+    .badge-stay { color: #52525b; font-weight: 600; }
+
+    /* 2. 에디터 추천 탐험 카테고리 */
+    .explore-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 40px; }
+    .explore-card { background-color: #27272a; border-radius: 16px; padding: 18px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+    .explore-card:active { transform: scale(0.96); border-color: var(--neon-blue); background-color: rgba(0, 240, 255, 0.1); }
+    .explore-icon { font-size: 1.5rem; background-color: #18181b; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    .explore-text { font-size: 0.95rem; font-weight: 800; color: #fff; }
+
+    /* 3. 불판 리스트 디자인 (터지기 직전 프리뷰 & 검색 결과 공통) */
+    .poll-list { display: flex; flex-direction: column; gap: 15px; }
+    .poll-card { background-color: var(--card-bg); border-radius: 20px; border: 1px solid var(--border-color); padding: 18px; cursor: pointer; transition: 0.2s; }
+    .poll-card:active { border-color: var(--neon-green); transform: scale(0.98); background-color: rgba(57, 255, 20, 0.05); }
+    
+    .poll-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .poll-fire { font-size: 0.75rem; font-weight: 800; color: var(--theme-gold); background: rgba(255, 204, 0, 0.15); padding: 4px 10px; border-radius: 10px; border: 1px solid rgba(255,204,0,0.3); }
+    .poll-time { font-size: 0.75rem; color: #52525b; font-weight: 700; background: #27272a; padding: 4px 10px; border-radius: 10px; }
+    
+    .poll-title { font-size: 1.05rem; font-weight: 800; color: #fff; line-height: 1.4; margin-bottom: 15px; word-break: keep-all; }
+    
+    .vs-preview { display: flex; align-items: center; gap: 10px; }
+    .vs-item { flex: 1; background-color: #09090b; border: 1px solid #3f3f46; padding: 12px 10px; border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 700; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-center { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; color: var(--text-sub); }
+
+    /* === 검색 결과 전용 UI === */
+    .search-result-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .result-keyword { font-size: 1.3rem; font-weight: 900; color: var(--neon-green); }
+    .result-count { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; }
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--text-sub); }
+    .empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+
+    /* 화면 전환을 위한 유틸리티 */
+    .hidden { display: none !important; }
+
+    /* === 💡 통합 하단 네비게이션 === */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0; border-top: 1px solid var(--border-color); z-index: 900; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s;}
+    .nav-icon { font-size: 1.4rem; }
+    
+    /* 검색 탭 Active 상태 적용 */
+    .nav-btn.active { color: var(--neon-green); }
+    .nav-btn.active .nav-icon { text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+    
+    .nav-btn.fire-btn .nav-icon { background-color: var(--neon-green); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: #000; font-size: 1.6rem; transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3); }
+
+</style>
+</head>
+<body>
+
+<header id="mainHeader">
+    <div class="search-bar-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="관심있는 논쟁거리를 검색해보세요" oninput="toggleClearBtn()" onkeypress="handleEnter(event)">
+        <button class="btn-clear" id="clearBtn" onclick="clearSearch()">✕</button>
+    </div>
+</header>
+
+<main>
+    <!-- ========================================== -->
+    <!-- 🟢 기본 탐험(Discovery) UI (검색 전 노출) -->
+    <!-- ========================================== -->
+    <div id="defaultExploreUI">
+        
+        <!-- 1. 실시간 급상승 검색어 -->
+        <div class="section-title"><span>🔥</span> 실시간 급상승 불판</div>
+        <div class="trending-box">
+            <div class="trending-item" onclick="triggerSearch('환승연애')">
+                <div class="trend-left">
+                    <span class="trend-rank top">1</span>
+                    <span class="trend-keyword">환승연애</span>
+                </div>
+                <span class="trend-badge badge-up">▲ 급상승</span>
+            </div>
+            <div class="trending-item" onclick="triggerSearch('블박 과실')">
+                <div class="trend-left">
+                    <span class="trend-rank top">2</span>
+                    <span class="trend-keyword">블박 과실</span>
+                </div>
+                <span class="trend-badge badge-stay">- 유지</span>
+            </div>
+            <div class="trending-item" onclick="triggerSearch('평생 라면')">
+                <div class="trend-left">
+                    <span class="trend-rank top">3</span>
+                    <span class="trend-keyword">평생 라면</span>
+                </div>
+                <span class="trend-badge badge-new">N NEW</span>
+            </div>
+            <div class="trending-item" onclick="triggerSearch('소개팅 룩')">
+                <div class="trend-left">
+                    <span class="trend-rank">4</span>
+                    <span class="trend-keyword">소개팅 룩</span>
+                </div>
+                <span class="trend-badge badge-up">▲ 2</span>
+            </div>
+            <div class="trending-item" onclick="triggerSearch('민초단')">
+                <div class="trend-left">
+                    <span class="trend-rank">5</span>
+                    <span class="trend-keyword">민초단</span>
+                </div>
+                <span class="trend-badge badge-stay">- 유지</span>
+            </div>
+        </div>
+
+        <!-- 2. 에디터 추천 탐험 카테고리 -->
+        <div class="section-title"><span>🧭</span> 에디터 추천 탐험</div>
+        <div class="explore-grid">
+            <div class="explore-card" onclick="triggerSearch('#명예의전당')">
+                <div class="explore-icon">🏆</div>
+                <div class="explore-text">명예의 전당</div>
+            </div>
+            <div class="explore-card" onclick="triggerSearch('#먹잘알')">
+                <div class="explore-icon">🍕</div>
+                <div class="explore-text">먹잘알/푸파</div>
+            </div>
+            <div class="explore-card" onclick="triggerSearch('#연애상담')">
+                <div class="explore-icon">💔</div>
+                <div class="explore-text">연애/썸/이별</div>
+            </div>
+            <div class="explore-card" onclick="triggerSearch('#직장생활')">
+                <div class="explore-icon">💼</div>
+                <div class="explore-text">K-직장인</div>
+            </div>
+        </div>
+
+        <!-- 3. 지금 터지기 직전인 핫 불판 프리뷰 -->
+        <div class="section-title"><span>⏱️</span> 지금 터지기 직전인 불판</div>
+        <div class="poll-list">
+            <div class="poll-card" onclick="location.href='detail.html'">
+                <div class="poll-header">
+                    <span class="poll-fire">🔥 981명 참전 중</span>
+                    <span class="poll-time">10분 후 종료</span>
+                </div>
+                <div class="poll-title">회식 자리에서 고기 굽기, 막내의 의무인가 센스의 영역인가?</div>
+                <div class="vs-preview">
+                    <div class="vs-item">당연히 막내가 굽지</div>
+                    <span class="vs-center">VS</span>
+                    <div class="vs-item">잘 굽는 사람이 굽자</div>
+                </div>
+            </div>
+
+            <div class="poll-card" onclick="location.href='detail.html'">
+                <div class="poll-header">
+                    <span class="poll-fire">🔥 1,204명 참전 중</span>
+                    <span class="poll-time">25분 후 종료</span>
+                </div>
+                <div class="poll-title">아이폰 쌩폰으로 쓰기 vs 강화유리+범퍼케이스 풀무장하기</div>
+                <div class="vs-preview">
+                    <div class="vs-item">잡스의 철학 쌩폰</div>
+                    <span class="vs-center">VS</span>
+                    <div class="vs-item">액정 깨지면 멘탈도 깨짐</div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- // defaultExploreUI -->
+
+
+    <!-- ========================================== -->
+    <!-- 🟢 검색 결과 리스트 UI (검색 실행 시 노출) -->
+    <!-- ========================================== -->
+    <div id="searchResultsUI" class="hidden">
+        <div class="search-result-header">
+            <div class="result-keyword" id="searchKeywordDisplay">'키워드'</div>
+            <div class="result-count">검색 결과 3건</div>
+        </div>
+        
+        <div class="poll-list">
+            <!-- 검색 결과 카드 1 -->
+            <div class="poll-card" onclick="location.href='detail.html'">
+                <div class="poll-header">
+                    <span class="poll-fire">🔥 12,402명 참전 중</span>
+                    <span class="poll-time">진행 중</span>
+                </div>
+                <div class="poll-title" id="resTitle1">검색된 제목이 노출됩니다.</div>
+                <div class="vs-preview">
+                    <div class="vs-item">A 의견입니다</div>
+                    <span class="vs-center">VS</span>
+                    <div class="vs-item">B 의견입니다</div>
+                </div>
+            </div>
+
+            <!-- 검색 결과 카드 2 -->
+            <div class="poll-card" onclick="location.href='detail.html'">
+                <div class="poll-header">
+                    <span class="poll-fire">🔥 8,912명 참전 중</span>
+                    <span class="poll-time">마감 완료</span>
+                </div>
+                <div class="poll-title">관련된 또 다른 흥미로운 논쟁거리입니다.</div>
+                <div class="vs-preview">
+                    <div class="vs-item">무조건 찬성</div>
+                    <span class="vs-center">VS</span>
+                    <div class="vs-item">절대 반대</div>
+                </div>
+            </div>
+
+            <!-- 검색 결과 카드 3 -->
+            <div class="poll-card" onclick="location.href='detail.html'">
+                <div class="poll-header">
+                    <span class="poll-fire">🔥 3,110명 참전 중</span>
+                    <span class="poll-time">2시간 후 종료</span>
+                </div>
+                <div class="poll-title">해시태그나 내용에 키워드가 포함된 불판입니다.</div>
+                <div class="vs-preview">
+                    <div class="vs-item">이게 맞지</div>
+                    <span class="vs-center">VS</span>
+                    <div class="vs-item">저게 맞지</div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- // searchResultsUI -->
+
+</main>
+
+<nav class="bottom-nav">
+    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="alert('준비 중입니다!')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    
+    <div class="nav-btn fire-btn" onclick="location.href='index.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    
+    <!-- 🔍 검색 탭 활성화 -->
+    <div class="nav-btn active"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="alert('준비 중입니다!')"><span class="nav-icon">👤</span><span>마이</span></div>
+</nav>
+
+<script>
+    // 상단 검색바 스크롤 애니메이션
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const header = document.getElementById('mainHeader');
+        
+        if (scrollTop > lastScrollTop && scrollTop > 50) {
+            header.style.top = '-80px'; 
+        } else {
+            header.style.top = '0';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+
+    // 검색창 입력 시 'X' 초기화 버튼 제어
+    function toggleClearBtn() {
+        const input = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        if (input.value.length > 0) {
+            clearBtn.style.display = 'block';
+        } else {
+            clearBtn.style.display = 'none';
+            // 만약 검색창이 비워지면 다시 탐험 UI 노출
+            showExploreUI();
+        }
+    }
+
+    // 'X' 버튼 클릭 시
+    function clearSearch() {
+        const input = document.getElementById('searchInput');
+        input.value = '';
+        document.getElementById('clearBtn').style.display = 'none';
+        showExploreUI();
+        input.focus();
+    }
+
+    // 엔터키 입력 시 검색 실행
+    function handleEnter(event) {
+        if (event.key === 'Enter') {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if(keyword) {
+                executeSearch(keyword);
+            }
+        }
+    }
+
+    // 태그나 급상승 검색어 클릭 시 실행
+    function triggerSearch(keyword) {
+        document.getElementById('searchInput').value = keyword;
+        toggleClearBtn();
+        executeSearch(keyword);
+    }
+
+    // 💡 검색 실행 (결과창 노출) 함수
+    function executeSearch(keyword) {
+        if(navigator.vibrate) navigator.vibrate(20);
+        document.getElementById('searchInput').blur(); // 모바일 키보드 내림
+        
+        // 탐험 UI 숨기고 결과 UI 노출
+        document.getElementById('defaultExploreUI').classList.add('hidden');
+        document.getElementById('searchResultsUI').classList.remove('hidden');
+        
+        // 검색 키워드 텍스트 변경
+        document.getElementById('searchKeywordDisplay').innerText = `'${keyword}'`;
+        
+        // 디자인적 시뮬레이션을 위해 첫 번째 결과의 제목에 키워드를 섞어줌
+        document.getElementById('resTitle1').innerText = `[${keyword}] 관련 논쟁! 당신의 생각은?`;
+        
+        window.scrollTo(0,0);
+    }
+
+    // 💡 탐험 화면(기본)으로 돌아가는 함수
+    function showExploreUI() {
+        document.getElementById('searchResultsUI').classList.add('hidden');
+        document.getElementById('defaultExploreUI').classList.remove('hidden');
+        window.scrollTo(0,0);
+    }
+</script>
+
+</body>
+</html>

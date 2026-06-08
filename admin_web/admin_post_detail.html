@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin: 불판 상세 및 댓글 관리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --sidebar-bg: #121214;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+    /* === 💡 완벽 복원된 사이드바 === */
+    .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    .nav-item.active { background-color: rgba(57, 255, 20, 0.05); color: var(--neon-green); border-left-color: var(--neon-green); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #d4d4d8; }
+    .nav-sub-item.active { color: #fff; font-weight: 700; }
+    .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+
+    /* === 메인 컨텐츠 영역 === */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: var(--bg-color); }
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 5; }
+    .page-title { font-size: 1.3rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; color: #fff; }
+    .back-btn { font-size: 1.2rem; color: var(--text-sub); cursor: pointer; text-decoration: none; transition: 0.2s; }
+    .back-btn:hover { color: var(--neon-green); }
+    .admin-profile { display: flex; align-items: center; gap: 15px; }
+    .admin-avatar { width: 36px; height: 36px; background-color: var(--neon-green); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-weight: 900; }
+
+    .content-container { padding: 30px 40px; display: flex; flex-direction: column; gap: 30px; }
+
+    /* 1. 불판 요약 정보 카드 */
+    .post-summary-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; display: flex; gap: 30px; }
+    .post-info-left { flex: 2; border-right: 1px solid var(--border-color); padding-right: 30px; }
+    .post-info-right { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+
+    .badge-wrap { display: flex; gap: 10px; margin-bottom: 15px; }
+    .cat-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
+    .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
+    
+    .post-title { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 0 0 10px 0; line-height: 1.4; word-break: keep-all; }
+    .post-meta { font-size: 0.85rem; color: var(--text-sub); display: flex; gap: 15px; }
+    .post-meta span { display: flex; align-items: center; gap: 5px; }
+
+    /* 투표 게이지 바 */
+    .vote-board { margin-top: 25px; background-color: #09090b; padding: 20px; border-radius: 12px; border: 1px solid #27272a; }
+    .vote-text-wrap { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 800; font-size: 1rem; }
+    .vote-a-text { color: var(--neon-blue); }
+    .vote-b-text { color: var(--neon-pink); }
+    .vote-bar-bg { width: 100%; height: 16px; background-color: #27272a; border-radius: 8px; display: flex; overflow: hidden; }
+    .vote-bar-a { height: 100%; background-color: var(--neon-blue); display: flex; align-items: center; padding-left: 10px; font-size: 0.75rem; font-weight: 900; color: #000; }
+    .vote-bar-b { height: 100%; background-color: var(--neon-pink); display: flex; justify-content: flex-end; align-items: center; padding-right: 10px; font-size: 0.75rem; font-weight: 900; color: #fff; }
+
+    /* 우측 요약 통계 */
+    .stat-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: #09090b; border-radius: 8px; border: 1px solid #27272a; }
+    .stat-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; }
+    .stat-val { font-size: 1.2rem; font-weight: 900; color: #fff; font-family: 'Black Han Sans', sans-serif; }
+    
+    .btn-action-post { width: 100%; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; border: none; font-size: 0.95rem; transition: 0.2s; }
+    .btn-stop-post { background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); border: 1px solid var(--neon-pink); }
+    .btn-stop-post:hover { background-color: var(--neon-pink); color: #fff; }
+
+    /* 2. 댓글(참견) 리스트 영역 */
+    .comment-section { background-color: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
+    .section-header { padding: 20px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background-color: #121214; }
+    .section-title { font-size: 1.1rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
+    
+    .filter-group { display: flex; gap: 10px; }
+    .admin-select, .admin-input { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; outline: none; transition: 0.2s;}
+    .admin-input:focus, .admin-select:focus { border-color: var(--neon-green); }
+    .admin-select { cursor: pointer; }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #09090b; padding: 15px 25px; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; }
+    td { padding: 15px 25px; border-bottom: 1px solid #222; font-size: 0.9rem; font-weight: 600; vertical-align: middle; }
+    tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+
+    /* 댓글 내 유저 뱃지 */
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 32px; height: 32px; background-color: #3f3f46; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1rem; }
+    .nickname { color: #fff; font-weight: 800; font-size: 0.9rem; }
+    .uid { color: var(--text-sub); font-size: 0.75rem; font-family: monospace; }
+    
+    .pick-badge { padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 900; }
+    .pick-a { background-color: rgba(0, 240, 255, 0.15); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .pick-b { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); }
+
+    .comment-text { color: #e4e4e7; line-height: 1.4; word-break: break-all; max-width: 400px; }
+    .comment-date { font-size: 0.75rem; color: var(--text-sub); margin-top: 4px; display: block; }
+    
+    .report-count { display: inline-flex; align-items: center; gap: 4px; background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+    
+    /* 💡 시스템 자동 블라인드 뱃지 */
+    .auto-blind-badge { display: inline-block; background-color: #27272a; color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; }
+
+    /* 액션 버튼 (댓글) */
+    .action-btns { display: flex; gap: 8px; }
+    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-sm:active { transform: scale(0.95); }
+    .btn-blind { background-color: rgba(255, 0, 127, 0.1); border: 1px solid var(--neon-pink); color: var(--neon-pink); }
+    .btn-blind:hover { background-color: var(--neon-pink); color: #fff; }
+    .btn-restore { background-color: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); }
+
+</style>
+<!-- Firebase (App + Analytics + Firestore) -->
+<script type="module" src="js/firebase-init.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area"><h1 class="logo">P!CKLE</h1><div class="logo-sub">ADMINISTRATOR 2.6</div></div>
+    <ul class="nav-menu">
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
+        <li class="nav-item active"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item active">· 일반 불판 관리</li>
+        <li class="nav-sub-item">· 스폰(최애) 불판 설정</li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item">· 광고주 및 정산 관리</li>
+        <li class="nav-sub-item">· 파트너(대행사) 관리</li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div></li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+      <div class="page-title">
+        <a href="admin_post_list.html" class="back-btn">❮</a> 
+        상세 모니터링 및 댓글 관리
+      </div>
+      <div class="admin-profile">
+          <span style="font-size:0.9rem; font-weight:700;">최고관리자 님</span>
+          <div class="admin-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content-container">
+        
+        <div class="post-summary-card">
+            <div class="post-info-left">
+                <div class="badge-wrap">
+                    <span class="cat-badge">💔 연애 / 썸 / 이별</span>
+                    <span class="status-badge">진행 중 (Active)</span>
+                    <span style="font-size:0.8rem; color:var(--text-sub); align-self:center;">ID: #10425</span>
+                </div>
+                <h2 class="post-title">10년지기 이성친구와 단둘이 1박 2일 여행가기 허용?</h2>
+                <div class="post-meta">
+                    <span>👤 작성자: <strong>프로불편러</strong> (UID: 88412)</span>
+                    <span>🕒 등록일: 2026.05.20 14:30</span>
+                </div>
+
+                <div class="vote-board">
+                    <div class="vote-text-wrap">
+                        <div class="vote-a-text">A. 허용 (쿨하게 가능)</div>
+                        <div class="vote-b-text">B. 절대 불가 (미쳤냐)</div>
+                    </div>
+                    <div class="vote-bar-bg">
+                        <div class="vote-bar-a" style="width: 15%;">15%</div>
+                        <div class="vote-bar-b" style="width: 85%;">85%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-info-right">
+                <div class="stat-box">
+                    <span class="stat-label">누적 투표수</span>
+                    <span class="stat-val" style="color:var(--theme-gold);">15,240</span>
+                </div>
+                <!-- 💡 공유수 통계 추가 -->
+                <div class="stat-box">
+                    <span class="stat-label">누적 공유(Share)수</span>
+                    <span class="stat-val" style="color:var(--neon-blue);">156</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">작성된 참견(댓글)</span>
+                    <span class="stat-val">1,024</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">누적 신고 접수</span>
+                    <span class="stat-val" style="color:var(--neon-pink);">12</span>
+                </div>
+                <button class="btn-action-post btn-stop-post" onclick="alert('이 불판을 강제로 블라인드 처리합니다.')">👁️ 이 불판 강제 블라인드(숨김)</button>
+            </div>
+        </div>
+
+        <div class="comment-section">
+            <div class="section-header">
+                <h3 class="section-title">💬 참견(댓글) 실시간 모니터링</h3>
+                <div class="filter-group">
+                    <select class="admin-select">
+                        <option>진영 전체 보기</option>
+                        <option>A 진영 댓글만</option>
+                        <option>B 진영 댓글만</option>
+                    </select>
+                    <select class="admin-select" style="border-color: var(--neon-pink); color: var(--neon-pink);">
+                        <option>상태: 전체</option>
+                        <option>🚨 신고 누적 댓글</option>
+                        <option>👁️ 블라인드 처리됨</option>
+                    </select>
+                    <!-- 💡 댓글 내용 포함 검색으로 UI 확장 -->
+                    <input type="text" class="admin-input" placeholder="닉네임 또는 댓글 내용 검색..." style="width: 250px;">
+                    <button class="btn-sm btn-blind" style="background:#27272a; color:#fff; border:1px solid #3f3f46;">검색</button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">작성자 (스탠스)</th>
+                        <th style="width: 45%;">참견(댓글) 내용</th>
+                        <th style="width: 10%; text-align:center;">신고 누적</th>
+                        <th style="width: 20%; text-align:right;">관리자 액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="avatar">🤬</div>
+                                <div>
+                                    <div class="nickname">유교보이 <span class="pick-badge pick-b">B 픽</span></div>
+                                    <div class="uid">UID: 45102</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="comment-text">아니 상식적으로 말이 되냐? 애인 놔두고 1박 2일 단둘이? 이건 선 넘었지 당장 헤어짐 ㅡㅡ</div>
+                            <span class="comment-date">2026.05.20 15:42</span>
+                        </td>
+                        <td style="text-align:center;"><span style="color:var(--text-sub); font-size:0.8rem;">0 건</span></td>
+                        <td style="text-align:right;">
+                            <div class="action-btns" style="justify-content: flex-end;">
+                                <button class="btn-sm btn-blind" onclick="blindComment(this, '유교보이')">🚨 즉시 숨김(제재)</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 💡 알고리즘에 의해 자동 숨김 처리된 댓글 UI 예시 -->
+                    <tr style="opacity: 0.6; background-color: rgba(255, 0, 127, 0.03);">
+                        <td>
+                            <div class="user-info">
+                                <div class="avatar">🤡</div>
+                                <div>
+                                    <div class="nickname">쿨찐러 <span class="pick-badge pick-a">A 픽</span></div>
+                                    <div class="uid">UID: 99421</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="auto-blind-badge">🤖 1시간 내 10회 이상 신고로 시스템 자동 숨김됨</span>
+                            <div class="comment-text" style="color:var(--text-sub); text-decoration: line-through;">B 고른 X들은 다 모쏠 아다 새X들이냐? ㅋㅋ 쿨하지 못하게 찌질하게 구네 ㅉㅉ</div>
+                            <span class="comment-date">2026.05.20 16:01</span>
+                        </td>
+                        <td style="text-align:center;"><span class="report-count">🚨 15건</span></td>
+                        <td style="text-align:right;">
+                            <div class="action-btns" style="justify-content: flex-end;">
+                                <button class="btn-sm btn-restore" onclick="restoreComment(this)">제재 무효 및 복구</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="avatar">🤔</div>
+                                <div>
+                                    <div class="nickname">고민중독 <span class="pick-badge pick-b">B 픽</span></div>
+                                    <div class="uid">UID: 12041</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="comment-text">솔직히 낮에 잠깐 밥먹는건 몰라도 숙박은 좀 아니지 않나... 서로 선은 지켜야지</div>
+                            <span class="comment-date">2026.05.20 16:15</span>
+                        </td>
+                        <td style="text-align:center;"><span style="color:var(--text-sub); font-size:0.8rem;">1 건</span></td>
+                        <td style="text-align:right;">
+                            <div class="action-btns" style="justify-content: flex-end;">
+                                <button class="btn-sm btn-blind" onclick="blindComment(this, '고민중독')">🚨 즉시 숨김(제재)</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    // 💡 수동 제재 클릭 시, 시스템 알고리즘에 편입됨을 알리는 로직
+    async function blindComment(btn, username) {
+        if(!confirm(`[${username}] 유저의 댓글을 즉시 숨김(블라인드) 처리하시겠습니까?\n\n※ 확인 시, 해당 댓글은 모든 유저에게 가려지며 [제재 벌점 알고리즘]에 위반 사실이 등록되어 시스템이 자동으로 누적 벌점을 부과합니다.`)) return;
+        const FB = window.PickleAdminFirebase;
+        const row = btn.closest('tr');
+        const commentText = row?.cells[1]?.querySelector('.comment-text')?.innerText || '';
+        const saved = await FB.persistNew('comment_moderation', {
+            username,
+            action: 'blind',
+            commentText,
+        }, {
+            page: 'admin_post_detail',
+            action: 'blind_comment',
+            successMessage: '✅ 숨김 처리 및 제재가 Firebase에 기록되었습니다.',
+        });
+        if (!saved.ok) return;
+        {
+            
+            // UI 변경
+            row.style.opacity = '0.5';
+            row.style.backgroundColor = 'transparent';
+            
+            const textCell = row.cells[1].querySelector('.comment-text');
+            textCell.style.textDecoration = 'line-through';
+            textCell.style.color = 'var(--text-sub)';
+            
+            const dateCell = row.cells[1].querySelector('.comment-date');
+            dateCell.style.color = 'var(--neon-pink)';
+            dateCell.style.fontWeight = '800';
+            dateCell.innerText = '관리자에 의해 즉각 숨김(제재) 처리됨';
+            
+            const actionCell = row.cells[3];
+            actionCell.innerHTML = `
+                <div class="action-btns" style="justify-content: flex-end;">
+                    <button class="btn-sm btn-restore" onclick="restoreComment(this)">제재 무효 및 복구</button>
+                </div>
+            `;
+            
+        }
+    }
+
+    // 댓글 숨김 해제(복구)
+    async function restoreComment(btn) {
+        if(!confirm('이 댓글의 숨김 조치를 해제하고, 부과된 시스템 벌점을 무효화 하시겠습니까?')) return;
+        const FB = window.PickleAdminFirebase;
+        const row = btn.closest('tr');
+        const commentText = row?.cells[1]?.querySelector('.comment-text')?.innerText || '';
+        const saved = await FB.persistNew('comment_moderation', {
+            action: 'restore',
+            commentText,
+        }, {
+            page: 'admin_post_detail',
+            action: 'restore_comment',
+            successMessage: '조치 해제가 Firebase에 기록되었습니다.',
+        });
+        if (!saved.ok) return;
+        {
+            
+            row.style.opacity = '1';
+            row.style.backgroundColor = 'transparent';
+            
+            const textCell = row.cells[1].querySelector('.comment-text');
+            textCell.style.textDecoration = 'none';
+            textCell.style.color = '#e4e4e7';
+            
+            // 시스템 뱃지가 있다면 숨김 처리
+            const autoBadge = row.cells[1].querySelector('.auto-blind-badge');
+            if(autoBadge) autoBadge.style.display = 'none';
+            
+            const dateCell = row.cells[1].querySelector('.comment-date');
+            dateCell.style.color = 'var(--text-sub)';
+            dateCell.style.fontWeight = 'normal';
+            dateCell.innerText = '숨김 해제됨 (방금 전)';
+            
+            const actionCell = row.cells[3];
+            actionCell.innerHTML = `
+                <div class="action-btns" style="justify-content: flex-end;">
+                    <button class="btn-sm btn-blind" onclick="blindComment(this, '유저')">🚨 즉시 숨김(제재)</button>
+                </div>
+            `;
+            
+        }
+    }
+</script>
+
+</body>
+</html>

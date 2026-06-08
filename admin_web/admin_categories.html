@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin: 카테고리 관리 (드래그 앤 드롭 적용)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --sidebar-bg: #121214;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+        --theme-gold: #ffcc00;
+    }
+
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+    /* === 사이드바 === */
+    .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; flex-shrink: 0; overflow-y: auto; scrollbar-width: none;}
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
+
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; gap: 12px; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; justify-content: space-between;}
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    .nav-item.active { background-color: rgba(57, 255, 20, 0.05); color: var(--neon-green); border-left-color: var(--neon-green); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #fff; }
+
+    /* === 메인 컨텐츠 영역 === */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: none; background-color: var(--bg-color); }
+    .main-content::-webkit-scrollbar { display: none; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 5; }
+    .page-title { font-size: 1.4rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .admin-profile { display: flex; align-items: center; gap: 15px; }
+    .admin-avatar { width: 36px; height: 36px; background-color: var(--neon-green); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-weight: 900; }
+
+    .content-container { padding: 30px 40px; max-width: 1200px; margin: 0 auto; width: 100%;}
+
+    /* 헤더 및 추가 버튼 */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .header-info { display: flex; align-items: center; gap: 15px; }
+    .info-text { font-size: 0.9rem; color: var(--text-sub); font-weight: 600; }
+    .info-text span { color: #fff; font-weight: 800; }
+    
+    .btn-add { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 0.95rem; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(57,255,20,0.3); }
+
+    /* 카테고리 리스트 UI */
+    .category-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+    .category-item { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .category-item:hover { border-color: #52525b; }
+    .category-item.hidden-state { background-color: #09090b; border-color: #27272a; }
+    
+    /* 💡 드래그 중인 아이템 스타일 */
+    .category-item.dragging { opacity: 0.5; border: 2px dashed var(--neon-green); background-color: rgba(57, 255, 20, 0.05); transform: scale(1.02); z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+    /* 관리자 고정(필수) 카테고리 강조 */
+    .category-item.fixed-state { border-left: 4px solid var(--theme-gold); }
+
+    .cat-left { display: flex; align-items: center; gap: 15px; }
+    .drag-handle { color: #52525b; font-size: 1.2rem; cursor: grab; padding: 5px; }
+    .drag-handle:active { cursor: grabbing; color: #fff; }
+    
+    .cat-icon { font-size: 1.5rem; width: 40px; height: 40px; background-color: #27272a; border-radius: 50%; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+    .cat-info { display: flex; align-items: center; gap: 12px; }
+    .cat-name { font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 8px; min-width: 180px; transition: 0.3s;}
+    .cat-stats { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; }
+    .cat-stats span { color: var(--theme-gold); font-weight: 800; transition: 0.3s;}
+
+    /* 상태 뱃지 */
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; transition: 0.3s;}
+    .badge-active { background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
+    .badge-hidden { background-color: rgba(161, 161, 170, 0.15); color: var(--text-sub); border: 1px solid rgba(161, 161, 170, 0.3); }
+
+    /* 액션 버튼 */
+    .action-btns { display: flex; gap: 8px; }
+    .btn-action { background-color: transparent; border: 1px solid #3f3f46; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-action:hover { background-color: #27272a; border-color: #fff; }
+    .btn-toggle-hide { color: var(--text-sub); border-color: #3f3f46; }
+    .btn-toggle-active { color: var(--neon-green); border-color: var(--neon-green); }
+    .btn-delete { color: var(--neon-pink); border-color: transparent; }
+    .btn-delete:hover { background-color: rgba(255, 0, 127, 0.1); border-color: var(--neon-pink); color: var(--neon-pink); }
+    .btn-disabled { color: #52525b; border-color: transparent; cursor: not-allowed; }
+
+    /* === 모달 === */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+    .modal-container { background: var(--bg-color); border: 1px solid var(--theme-gold); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); width: 500px; }
+    @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-header { padding: 20px 30px; border-bottom: 1px solid var(--border-color); background: #121214; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 1.2rem; font-weight: 900; color: var(--theme-gold); margin: 0; }
+    .btn-close { background: none; border: none; color: var(--text-sub); font-size: 1.5rem; cursor: pointer; transition: 0.2s;}
+    .btn-close:hover { color: #fff; transform: rotate(90deg); }
+    .modal-body { padding: 30px; }
+    
+    .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .form-label { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
+    .form-label .req { color: var(--neon-pink); }
+    .form-input { background: #09090b; border: 1px solid #3f3f46; border-radius: 8px; color: #fff; font-size: 0.95rem; font-family: 'Pretendard', sans-serif; padding: 12px 15px; width: 100%; outline: none; transition: 0.2s; box-sizing: border-box; }
+    .form-input:focus { border-color: var(--neon-green); }
+    
+    /* 이모지 선택기 UI */
+    .emoji-selector { display: flex; gap: 10px; align-items: center; }
+    .current-emoji { font-size: 2rem; width: 50px; height: 50px; background: #27272a; display: flex; justify-content: center; align-items: center; border-radius: 8px; border: 1px solid #3f3f46; cursor: pointer; transition: 0.2s; }
+    .current-emoji:hover { border-color: var(--theme-gold); }
+    .emoji-hint { font-size: 0.75rem; color: var(--text-sub); }
+
+    /* 토글 스위치 */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3f3f46; transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+    input:checked + .slider { background-color: var(--neon-green); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; border-top: 1px solid #27272a; padding: 20px 0 0 0; }
+    .btn-modal-cancel { padding: 10px 20px; border-radius: 8px; border: 1px solid #52525b; background: transparent; color: #fff; cursor: pointer; font-weight: 800; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-modal-cancel:hover { background: #27272a; }
+    .btn-modal-submit { padding: 10px 24px; border-radius: 8px; border: none; background: var(--neon-green); color: #000; font-weight: 900; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-modal-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(57,255,20,0.3); }
+
+</style>
+<!-- Firebase (App + Analytics + Firestore) -->
+<script type="module" src="js/firebase-init.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <h1 class="logo" onclick="location.href='dashboard.html'">P!CKLE</h1>
+        <div class="logo-sub">ADMINISTRATOR 2.6</div>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
+        <li class="nav-item active"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div></li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div></li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <h2 class="page-title"><span style="font-size:1.5rem;">📁</span> 카테고리 관리</h2>
+        <div class="admin-profile">
+            <span style="font-size:0.9rem; font-weight:700;">최고관리자 님</span>
+            <div class="admin-avatar">A</div>
+        </div>
+    </header>
+
+    <div class="content-container">
+        
+        <div class="section-header">
+            <div class="header-info">
+                <div class="info-text">총 카테고리: <span id="totalCatCount">12개</span></div>
+                <div class="info-text">운영 중(Active): <span style="color:var(--neon-green);" id="activeCatCount">11개</span></div>
+            </div>
+            <button class="btn-add" onclick="openCategoryModal('new')">➕ 새 카테고리 추가</button>
+        </div>
+
+        <div class="category-list" id="categoryListContainer">
+            
+            <div class="category-item fixed-state">
+                <div class="cat-left">
+                    <div class="drag-handle" style="opacity: 0.2; cursor:not-allowed;">≡</div>
+                    <div class="cat-icon">🏆</div>
+                    <div class="cat-info">
+                        <div class="cat-name">명예의 전당 <span class="badge badge-active">Active</span></div>
+                        <div class="cat-stats">불판: <span>5,102</span></div>
+                    </div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-action btn-disabled" disabled>시스템 고정</button>
+                </div>
+            </div>
+
+            <div class="category-item fixed-state">
+                <div class="cat-left">
+                    <div class="drag-handle" style="opacity: 0.2; cursor:not-allowed;">≡</div>
+                    <div class="cat-icon">📣</div>
+                    <div class="cat-info">
+                        <div class="cat-name">픽클 오피셜 <span class="badge badge-active">Active</span></div>
+                        <div class="cat-stats">불판: <span>124</span></div>
+                    </div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-action btn-disabled" disabled>시스템 고정</button>
+                </div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">💔</div>
+                    <div class="cat-info"><div class="cat-name">연애 / 썸 / 이별 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>8,921</span></div></div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-action" onclick="openCategoryModal('edit', '💔', '연애 / 썸 / 이별')">수정</button>
+                    <button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button>
+                    <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
+                </div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🤯</div>
+                    <div class="cat-info"><div class="cat-name">뇌정지 밸런스 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>6,150</span></div></div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-action" onclick="openCategoryModal('edit', '🤯', '뇌정지 밸런스')">수정</button>
+                    <button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button>
+                    <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
+                </div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🤬</div>
+                    <div class="cat-info"><div class="cat-name">빌런 / 썰 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>4,890</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🤬', '빌런 / 썰')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🍕</div>
+                    <div class="cat-info"><div class="cat-name">먹잘알 / 푸파 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>5,230</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🍕', '먹잘알 / 푸파')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">👗</div>
+                    <div class="cat-info"><div class="cat-name">OOTD / 참견 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>2,105</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '👗', 'OOTD / 참견')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">💸</div>
+                    <div class="cat-info"><div class="cat-name">텅장 / 소비 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>3,750</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '💸', '텅장 / 소비')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🚗</div>
+                    <div class="cat-info"><div class="cat-name">블박 / 과실비율 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>1,840</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🚗', '블박 / 과실비율')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🧠</div>
+                    <div class="cat-info"><div class="cat-name">MBTI / 심리 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>7,620</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🧠', 'MBTI / 심리')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🎤</div>
+                    <div class="cat-info"><div class="cat-name">돌판 / K-POP <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>4,120</span></div></div>
+                </div>
+                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🎤', '돌판 / K-POP')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
+            </div>
+
+            <div class="category-item draggable-item hidden-state">
+                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon" style="filter:grayscale(100%); opacity:0.5;">🙇‍♂️</div>
+                    <div class="cat-info"><div class="cat-name" style="color:var(--text-sub);">명절 / 잔소리 <span class="badge badge-hidden">Hidden</span></div><div class="cat-stats">불판: <span style="color:var(--text-sub);">120</span></div></div>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-action" onclick="openCategoryModal('edit', '🙇‍♂️', '명절 / 잔소리')">수정</button>
+                    <button class="btn-action btn-toggle-active" onclick="toggleStatus(this, true)">✨ 활성화</button>
+                    <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
+                </div>
+            </div>
+
+        </div>
+        
+        <div style="font-size: 0.8rem; color: var(--text-sub); text-align: center; margin-bottom: 40px;">
+            ※ 좌측 ≡ 아이콘을 드래그하여 앱 메인 탭에 노출될 순서를 변경할 수 있습니다.
+        </div>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="categoryModal">
+      <div class="modal-container">
+          <div class="modal-header">
+              <h3 class="modal-title" id="modalTitle">➕ 신규 카테고리 추가</h3>
+              <button class="btn-close" onclick="closeCategoryModal()">✕</button>
+          </div>
+          <div class="modal-body">
+              
+              <div class="form-group">
+                  <span class="form-label">카테고리 아이콘 (이모지) <span class="req">*</span></span>
+                  <div class="emoji-selector">
+                      <div class="current-emoji" id="catIconInput" onclick="changeEmojiPrompt()">🌟</div>
+                      <div class="emoji-hint">클릭하여 주제에 맞는 이모지를 변경하세요.</div>
+                  </div>
+              </div>
+
+              <div class="form-group">
+                  <span class="form-label">카테고리명 (최대 15자) <span class="req">*</span></span>
+                  <input type="text" class="form-input" id="catNameInput" placeholder="예: MBTI 탐구">
+              </div>
+
+              <div class="form-group">
+                  <span class="form-label">설명 (선택)</span>
+                  <input type="text" class="form-input" id="catDescInput" placeholder="카테고리 하단에 표시될 간략한 설명을 적어주세요.">
+              </div>
+
+              <div class="form-group" style="flex-direction: row; justify-content: space-between; align-items: center; border-top: 1px solid #27272a; padding-top: 15px; margin-top: 10px;">
+                  <div style="display:flex; flex-direction: column; gap:4px;">
+                      <span class="form-label" style="color:#fff;">앱 노출 (활성화)</span>
+                      <span style="font-size: 0.75rem; color: var(--text-sub);">스위치를 끄면 앱 사용자에게 임시로 숨겨집니다.</span>
+                  </div>
+                  <label class="switch"><input type="checkbox" id="catStatusInput" checked><span class="slider"></span></label>
+              </div>
+
+              <div class="modal-actions">
+                  <button class="btn-modal-cancel" onclick="closeCategoryModal()">취소</button>
+                  <button class="btn-modal-submit" id="btnModalSubmit" onclick="saveCategory()">저장 완료</button>
+              </div>
+
+          </div>
+      </div>
+  </div>
+
+  <script>
+      let currentEditMode = 'new';
+      
+      // 이모지 변경 시뮬레이션
+      function changeEmojiPrompt() {
+          const newEmoji = prompt("사용할 이모지를 입력하세요 (예: ⚽, 🚀, 💻)", "🔥");
+          if(newEmoji) {
+              document.getElementById('catIconInput').innerText = newEmoji;
+          }
+      }
+
+      // 숨김 / 활성 토글 UI 스크립트
+      function toggleStatus(btn, isHidden = false) {
+          const item = btn.closest('.category-item');
+          if(isHidden) {
+              item.classList.remove('hidden-state');
+              item.querySelector('.cat-icon').style = '';
+              item.querySelector('.cat-name').style.color = '#fff';
+              item.querySelector('.cat-name .badge').className = 'badge badge-active';
+              item.querySelector('.cat-name .badge').innerText = 'Active';
+              item.querySelector('.cat-stats span').style.color = 'var(--theme-gold)';
+              
+              btn.className = 'btn-action btn-toggle-hide';
+              btn.innerText = '👁️ 숨기기';
+              btn.setAttribute('onclick', 'toggleStatus(this, false)');
+          } else {
+              if(confirm('이 카테고리를 유저 앱에서 숨김 처리하시겠습니까?\\n기존 불판 데이터는 보존됩니다.')){
+                  item.classList.add('hidden-state');
+                  item.querySelector('.cat-icon').style = 'filter: grayscale(100%); opacity: 0.5;';
+                  item.querySelector('.cat-name').style.color = 'var(--text-sub)';
+                  item.querySelector('.cat-name .badge').className = 'badge badge-hidden';
+                  item.querySelector('.cat-name .badge').innerText = 'Hidden';
+                  item.querySelector('.cat-stats span').style.color = 'var(--text-sub)';
+                  
+                  btn.className = 'btn-action btn-toggle-active';
+                  btn.innerText = '✨ 활성화';
+                  btn.setAttribute('onclick', 'toggleStatus(this, true)');
+              }
+          }
+      }
+
+      // 삭제 로직
+      function deleteCategory(btn) {
+          const item = btn.closest('.category-item');
+          const catName = item.querySelector('.cat-name').childNodes[0].nodeValue.trim();
+          if(confirm(`[${catName}] 카테고리를 정말 삭제하시겠습니까?\\n이 작업은 되돌릴 수 없습니다.`)) {
+              item.remove();
+              alert('삭제가 완료되었습니다.');
+          }
+      }
+
+      // 모달 오픈 로직
+      function openCategoryModal(mode, icon = '🌟', name = '') {
+          currentEditMode = mode;
+          const modal = document.getElementById('categoryModal');
+          const title = document.getElementById('modalTitle');
+          
+          if(mode === 'new') {
+              title.innerHTML = '➕ 신규 카테고리 추가';
+              document.getElementById('catIconInput').innerText = '🌟';
+              document.getElementById('catNameInput').value = '';
+              document.getElementById('catDescInput').value = '';
+              document.getElementById('catStatusInput').checked = true;
+          } else {
+              title.innerHTML = '✏️ 카테고리 설정 수정';
+              document.getElementById('catIconInput').innerText = icon;
+              document.getElementById('catNameInput').value = name;
+              document.getElementById('catDescInput').value = '기존에 설정된 카테고리 설명 텍스트입니다.';
+              document.getElementById('catStatusInput').checked = true;
+          }
+          
+          modal.style.display = 'flex';
+      }
+
+      function closeCategoryModal() {
+          document.getElementById('categoryModal').style.display = 'none';
+      }
+
+      // 신규 카테고리 저장 로직
+      async function saveCategory() {
+          const FB = window.PickleAdminFirebase;
+          const name = document.getElementById('catNameInput').value.trim();
+          const icon = document.getElementById('catIconInput').innerText;
+          const desc = document.getElementById('catDescInput').value.trim();
+          const isActive = document.getElementById('catStatusInput').checked;
+
+          if(!name) {
+              alert('카테고리명은 필수 입력 사항입니다!');
+              return;
+          }
+
+          const categoryData = { name, icon, desc, isActive, mode: currentEditMode };
+
+          if(currentEditMode === 'new') {
+              const listContainer = document.getElementById('categoryListContainer');
+              
+              const newItem = document.createElement('div');
+              // 드래그 가능한 클래스 추가
+              newItem.className = isActive ? 'category-item draggable-item' : 'category-item draggable-item hidden-state';
+              
+              const badgeClass = isActive ? 'badge-active' : 'badge-hidden';
+              const badgeText = isActive ? 'Active' : 'Hidden';
+              const iconStyle = isActive ? '' : 'filter: grayscale(100%); opacity: 0.5;';
+              const nameColor = isActive ? '#fff' : 'var(--text-sub)';
+              const statColor = isActive ? 'var(--theme-gold)' : 'var(--text-sub)';
+
+              newItem.innerHTML = `
+                  <div class="cat-left">
+                      <div class="drag-handle">≡</div>
+                      <div class="cat-icon" style="${iconStyle}">${icon}</div>
+                      <div class="cat-info">
+                          <div class="cat-name" style="color:${nameColor};">${name} <span class="badge ${badgeClass}">${badgeText}</span></div>
+                          <div class="cat-stats">불판: <span style="color:${statColor}">0</span></div>
+                      </div>
+                  </div>
+                  <div class="action-btns">
+                      <button class="btn-action" onclick="openCategoryModal('edit', '${icon}', '${name}')">수정</button>
+                      <button class="btn-action ${isActive ? 'btn-toggle-hide' : 'btn-toggle-active'}" onclick="toggleStatus(this, ${!isActive})">${isActive ? '👁️ 숨기기' : '✨ 활성화'}</button>
+                      <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
+                  </div>
+              `;
+              
+              listContainer.appendChild(newItem);
+              // 새로 추가된 아이템에도 드래그 기능 적용
+              makeDraggable(newItem);
+              
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+              const created = await FB.persistNew('categories', categoryData, {
+                  page: 'admin_categories',
+                  successMessage: `[${name}] 카테고리가 Firebase에 추가되었습니다!`,
+              });
+              if (!created.ok) return;
+          } else {
+              const docId = FB.slugify(name);
+              const updated = await FB.persist('categories', docId, categoryData, {
+                  page: 'admin_categories',
+                  successMessage: `[${name}] 카테고리 정보가 Firebase에 수정되었습니다!`,
+              });
+              if (!updated.ok) return;
+          }
+          
+          closeCategoryModal();
+      }
+
+      // ==========================================
+      // 💡 드래그 앤 드롭(Drag & Drop) 정렬 스크립트
+      // ==========================================
+      const container = document.getElementById('categoryListContainer');
+      let draggedItem = null;
+
+      function makeDraggable(item) {
+          // 시스템 고정 항목은 드래그 기능에서 제외
+          if (item.classList.contains('fixed-state')) return;
+
+          item.setAttribute('draggable', 'true');
+
+          item.addEventListener('dragstart', function(e) {
+              draggedItem = item;
+              // 시각적 효과를 위해 setTimeout 사용
+              setTimeout(() => {
+                  item.classList.add('dragging');
+              }, 0);
+          });
+
+          item.addEventListener('dragend', function() {
+              draggedItem.classList.remove('dragging');
+              draggedItem = null;
+          });
+      }
+
+      // 컨테이너 드래그 오버 로직
+      container.addEventListener('dragover', function(e) {
+          e.preventDefault(); // 기본 드롭 방지 로직 해제
+          
+          const afterElement = getDragAfterElement(container, e.clientY);
+          const dragging = document.querySelector('.dragging');
+          
+          if (dragging) {
+              if (afterElement == null) {
+                  container.appendChild(dragging);
+              } else {
+                  // 시스템 고정 항목 위로는 이동하지 못하도록 방어
+                  if(!afterElement.classList.contains('fixed-state')) {
+                      container.insertBefore(dragging, afterElement);
+                  }
+              }
+          }
+      });
+
+      // 마우스 위치에 따른 삽입 위치 계산
+      function getDragAfterElement(container, y) {
+          // 고정된 항목과 현재 드래그 중인 항목은 제외하고 계산
+          const draggableElements = [...container.querySelectorAll('.category-item:not(.dragging):not(.fixed-state)')];
+
+          return draggableElements.reduce((closest, child) => {
+              const box = child.getBoundingClientRect();
+              const offset = y - box.top - box.height / 2;
+              
+              if (offset < 0 && offset > closest.offset) {
+                  return { offset: offset, element: child };
+              } else {
+                  return closest;
+              }
+          }, { offset: Number.NEGATIVE_INFINITY }).element;
+      }
+
+      // 초기 로드 시 기존의 드래그 가능 아이템들에 이벤트 바인딩
+      document.querySelectorAll('.draggable-item').forEach(makeDraggable);
+  </script>
+
+</body>
+</html>
