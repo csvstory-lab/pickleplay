@@ -1,0 +1,247 @@
+.profile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 28px rgba(57, 255, 20, 0.05);
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-glow-green);
+}
+
+.profile-greeting {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.profile-greeting span {
+  color: var(--neon-green);
+}
+
+.profile-email {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  word-break: break-all;
+}
+
+.nickname-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.nickname-row input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.btn-save {
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--neon-green);
+  color: #0a0a0a;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: box-shadow 0.2s;
+}
+
+.btn-save:hover {
+  box-shadow: var(--shadow-glow-green);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.activity-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+}
+
+.activity-card h2 {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.mp-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mp-tab {
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: #121214;
+  color: var(--text-sub);
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.mp-tab.active {
+  background: var(--neon-green);
+  color: #0a0a0a;
+  border-color: var(--neon-green);
+}
+
+.mp-panel {
+  display: none;
+}
+
+.mp-panel.active {
+  display: block;
+}
+
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.activity-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+}
+
+.activity-cat {
+  color: var(--neon-blue);
+  font-weight: 800;
+}
+
+.activity-badge {
+  background: #27272a;
+  color: var(--text-sub);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+}
+
+.activity-choice {
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+}
+
+.activity-choice.choice-a {
+  background: var(--neon-green-dim);
+  color: var(--neon-green);
+}
+
+.activity-choice.choice-b {
+  background: var(--neon-pink-dim);
+  color: var(--neon-pink);
+}
+
+.activity-head time {
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.activity-topic {
+  display: block;
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.activity-vs {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+
+.activity-vs span {
+  color: var(--neon-pink);
+  margin: 0 4px;
+}
+
+.activity-link {
+  font-size: 0.78rem;
+  color: var(--neon-green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.activity-empty,
+.activity-loading,
+.activity-error {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  padding: 24px 8px;
+  line-height: 1.5;
+}
+
+.activity-error {
+  color: #ff6b6b;
+}
+
+.btn-logout {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.2s;
+  margin-bottom: 8px;
+}
+
+.btn-logout:hover {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  background: var(--neon-pink-dim);
+}

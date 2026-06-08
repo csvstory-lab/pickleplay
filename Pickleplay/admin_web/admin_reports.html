@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin: 신고 및 제재 관리 (3단계 자동화 시스템 적용)</title>
+<!-- 💡 오직 Pretendard 폰트만 적용 (Black Han Sans 완전 삭제) -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --sidebar-bg: #121214;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+        
+        --alert-red: #ff3333;
+        --safe-gray: #3f3f46;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    /* === 사이드바 === */
+    .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; flex-shrink: 0; overflow-y: auto; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
+    
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    
+    .nav-item.active { background-color: rgba(255, 51, 51, 0.05); color: var(--alert-red); border-left-color: var(--alert-red); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #d4d4d8; }
+    .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+
+    /* === 메인 컨텐츠 영역 === */
+    .main-content { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color); min-width: 0; }
+    
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); z-index: 5; flex-wrap: wrap; gap: 15px; }
+    .page-title { font-size: 1.4rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 10px; color: #fff; }
+    
+    .header-actions { display: flex; align-items: center; gap: 15px; }
+    .ai-switch-wrap { display: flex; align-items: center; gap: 10px; background: #121214; padding: 8px 15px; border-radius: 8px; border: 1px solid #3f3f46; }
+    .ai-switch-label { font-size: 0.85rem; font-weight: 800; color: #fff; }
+    .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3f3f46; transition: .3s; border-radius: 20px; }
+    .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--neon-blue); }
+    input:checked + .slider:before { transform: translateX(16px); }
+
+    .content-container { padding: 30px 40px; overflow-y: auto; flex: 1; scrollbar-width: none; }
+    .content-container::-webkit-scrollbar { display: none; }
+
+    /* KPI 요약 */
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .kpi-info { display: flex; flex-direction: column; gap: 5px; }
+    .kpi-title { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
+    .kpi-val { font-size: 1.6rem; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+    .val-alert { color: var(--alert-red); animation: blink 2s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* 필터 바 */
+    .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+    .filter-select, .filter-input { background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; font-family: 'Pretendard', sans-serif; outline: none; }
+    .filter-input { width: 250px; }
+    .filter-select:focus, .filter-input:focus { border-color: var(--alert-red); }
+    .btn-search { background: #3f3f46; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-search:hover { background: #52525b; }
+
+    /* 리스트 및 테이블 */
+    .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #121214; padding: 15px 20px; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; }
+    td { padding: 15px 20px; border-bottom: 1px solid #222; font-size: 0.9rem; font-weight: 600; vertical-align: middle; }
+    tbody tr:hover { background-color: rgba(255, 51, 51, 0.03); }
+
+    /* 테이블 요소 */
+    .type-badge { display: inline-block; font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; }
+    .t-post { background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .t-comment { background: rgba(255, 204, 0, 0.1); color: var(--theme-gold); border: 1px solid rgba(255, 204, 0, 0.3); }
+    
+    /* 💡 AI/자동 블라인드 뱃지 추가 */
+    .auto-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 800; background: #27272a; padding: 2px 6px; border-radius: 4px; margin-top: 6px; color: #d4d4d8; }
+    .auto-badge.red { background: rgba(255, 51, 51, 0.15); color: var(--alert-red); }
+
+    .report-reason { font-weight: 900; color: #fff; font-size: 0.95rem; margin-bottom: 4px; display: block; }
+    .report-target { font-size: 0.85rem; color: #a1a1aa; line-height: 1.4; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .count-badge { font-weight: 900; font-size: 1.2rem; color: var(--alert-red); }
+    
+    .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+    .s-pending { background: rgba(255, 51, 51, 0.15); color: var(--alert-red); border: 1px solid var(--alert-red); }
+    .s-done { background: rgba(255, 255, 255, 0.05); color: var(--text-sub); border: 1px solid var(--safe-gray); }
+
+    /* 액션 버튼 */
+    .action-btns { display: flex; gap: 8px; justify-content: center; }
+    .btn-action { padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; gap: 4px; font-family: 'Pretendard', sans-serif;}
+    .btn-action:active { transform: scale(0.95); }
+    .btn-sanction { background-color: var(--alert-red); color: #fff; box-shadow: 0 0 10px rgba(255, 51, 51, 0.3); }
+    .btn-sanction:hover { background-color: #ff1a1a; box-shadow: 0 0 15px rgba(255, 51, 51, 0.5); }
+    .btn-view { background-color: transparent; border: 1px solid var(--safe-gray); color: #fff; }
+    .btn-view:hover { background-color: #27272a; }
+
+    /* === 💡 심사 및 제재 조치 모달 (법정) === */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+    .modal-container { background: var(--bg-color); border: 1px solid var(--alert-red); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(255, 51, 51, 0.15); animation: popIn 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); width: 1000px; max-height: 90vh; }
+    @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .modal-header { padding: 20px 30px; border-bottom: 1px solid var(--border-color); background: #121214; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 1.25rem; font-weight: 900; color: var(--alert-red); margin: 0; display: flex; align-items: center; gap: 8px; }
+    .btn-close { background: none; border: none; color: var(--text-sub); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+    .btn-close:hover { color: #fff; }
+    
+    .modal-body { display: flex; flex: 1; overflow: hidden; flex-wrap: wrap; }
+    
+    /* 좌측: 원본 및 로그 */
+    .modal-left { flex: 1; min-width: 400px; border-right: 1px solid var(--border-color); padding: 30px; overflow-y: auto; background: var(--bg-color); scrollbar-width: none; }
+    .modal-left::-webkit-scrollbar { display: none; }
+    .section-title { font-size: 1rem; font-weight: 900; color: #fff; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .bad-content-box { background: #121214; border: 1px solid #3f3f46; border-radius: 12px; padding: 20px; margin-bottom: 25px; position: relative; }
+    .bad-author { font-size: 0.85rem; color: var(--neon-pink); font-weight: 800; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-add-block { background: #27272a; border: 1px solid #3f3f46; color: #fff; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+    .btn-add-block:hover { background: #fff; color: #000; }
+    .bad-text { font-size: 0.95rem; color: #e4e4e7; line-height: 1.5; word-break: break-all; }
+    
+    .reporter-log { background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid #27272a; }
+    .log-item { display: flex; gap: 15px; padding: 10px 0; border-bottom: 1px solid #27272a; }
+    .log-item:last-child { border-bottom: none; }
+    .log-reason { font-weight: 800; color: var(--alert-red); font-size: 0.85rem; width: 80px; flex-shrink: 0; }
+    .log-msg { font-size: 0.85rem; color: var(--text-sub); }
+
+    /* 우측: 주관성 0% 제재 조치 폼 */
+    .modal-right { flex: 1.2; min-width: 450px; padding: 30px; background: #121214; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    
+    .action-group { display: flex; flex-direction: column; gap: 10px; }
+    .action-label { font-size: 0.95rem; font-weight: 800; color: var(--neon-blue); display: flex; align-items: center; gap: 6px; }
+    
+    /* 제재 포인트 선택 (라디오) */
+    .penalty-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .penalty-label { display: flex; justify-content: space-between; align-items: center; background: #09090b; border: 1px solid #3f3f46; padding: 14px 18px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .penalty-label:hover { border-color: #71717a; background: #18181b; }
+    .pl-left { display: flex; align-items: center; gap: 10px; }
+    .radio-input { appearance: none; width: 18px; height: 18px; border: 2px solid #52525b; border-radius: 50%; outline: none; margin: 0; position: relative; flex-shrink: 0; }
+    .radio-input:checked { border-color: var(--alert-red); }
+    .radio-input:checked::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: var(--alert-red); border-radius: 50%; }
+    .pl-text { font-size: 0.9rem; font-weight: 700; color: #d4d4d8; }
+    .pl-point { font-size: 0.95rem; font-weight: 900; color: var(--alert-red); }
+    .radio-input:checked ~ .pl-left .pl-text { color: #fff; font-weight: 900; }
+
+    /* 알고리즘 자동 계산 결과판 */
+    .calc-result-box { background: rgba(255, 51, 51, 0.05); border: 1px solid rgba(255, 51, 51, 0.3); padding: 15px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .calc-left { display: flex; flex-direction: column; gap: 4px; }
+    .calc-text { font-size: 0.8rem; color: #a1a1aa; font-weight: 700; }
+    .calc-score { font-size: 1.1rem; font-weight: 900; color: #fff; }
+    .calc-punish { font-size: 1.1rem; font-weight: 900; color: var(--alert-red); background: rgba(255,0,127,0.1); padding: 6px 12px; border-radius: 6px; }
+
+    .form-textarea { width: 100%; padding: 15px; border: 1px solid #3f3f46; border-radius: 8px; background: #09090b; color: #fff; font-size: 0.9rem; font-family: 'Pretendard', sans-serif; outline: none; min-height: 80px; resize: none; }
+    .form-textarea:focus { border-color: var(--neon-blue); }
+
+    /* 💡 가이드라인 발송 체크박스 추가 */
+    .checkbox-wrap { display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; cursor: pointer; background: #09090b; padding: 15px; border-radius: 8px; border: 1px solid #27272a; }
+    .checkbox-wrap input { width: 18px; height: 18px; accent-color: var(--neon-blue); flex-shrink: 0; margin-top: 2px; }
+    .checkbox-info { display: flex; flex-direction: column; gap: 4px; }
+    .checkbox-info span { font-size: 0.9rem; font-weight: 800; color: #fff; }
+    .checkbox-info small { font-size: 0.75rem; color: var(--text-sub); line-height: 1.4; }
+
+    .btn-submit-sanction { margin-top: 20px; padding: 18px; border-radius: 12px; font-size: 1.1rem; font-weight: 900; cursor: pointer; border: none; background: var(--alert-red); color: #fff; box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3); transition: 0.2s; display: flex; justify-content: center; gap: 8px; font-family: 'Pretendard', sans-serif; }
+    .btn-submit-sanction:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 51, 51, 0.5); }
+
+</style>
+<!-- Firebase (App + Analytics + Firestore) -->
+<script type="module" src="js/firebase-init.js"></script>
+</head>
+<body>
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="logo-area">
+        <h1 class="logo" onclick="location.href='dashboard.html'">P!CKLE</h1>
+        <div class="logo-sub">ADMINISTRATOR 2.6</div>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item" onclick="location.href='dashboard.html'">
+            <div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div>
+        </li>
+        <li class="nav-item" onclick="location.href='admin_users.html'">
+            <div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div>
+        </li>
+        <li class="nav-item" onclick="alert('카테고리 관리로 이동합니다.')">
+            <div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div>
+        </li>
+        
+        <!-- 🔥 불판 관리 & 하위 메뉴 -->
+        <li class="nav-item" onclick="alert('불판 관리로 이동합니다.')">
+            <div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div>
+        </li>
+        <li class="nav-sub-item">· 일반 불판 관리</li>
+        <li class="nav-sub-item">· 스폰(최애) 불판 설정</li>
+        
+        <!-- 💰 광고(스폰) 정산 & 하위 메뉴 -->
+        <li class="nav-item" onclick="alert('스폰서 정산 관리로 이동합니다.')">
+            <div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div>
+        </li>
+        <li class="nav-sub-item">· 광고주 및 정산 관리</li>
+        <li class="nav-sub-item">· 파트너(대행사) 관리</li>
+        
+        <li class="nav-item" onclick="alert('이벤트 관리로 이동합니다.')">
+            <div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div>
+        </li>
+        
+        <!-- 🚨 상태 뱃지가 포함된 메뉴들 -->
+        <li class="nav-item active" onclick="location.href='admin_reports.html'">
+            <div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div>
+            <span class="badge-danger">12</span>
+        </li>
+        
+        <li class="nav-item" onclick="alert('AI 필터링 설정으로 이동합니다.')">
+            <div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div>
+        </li>
+        <li class="nav-item" onclick="alert('통계 및 분석으로 이동합니다.')">
+            <div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div>
+        </li>
+        <li class="nav-item" onclick="location.href='admin_cs.html'">
+            <div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div>
+        </li>
+        <li class="nav-item" onclick="location.href='admin_settings.html'">
+            <div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div>
+        </li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+    
+    <header class="top-header">
+        <h2 class="page-title">🚨 신고 및 제재 관리</h2>
+        <div class="header-actions">
+            <div class="ai-switch-wrap">
+                <span class="ai-switch-label">🤖 AI 악플/유해물 자동 차단 연동 중</span>
+                <span class="switch"><input type="checkbox" checked><span class="slider"></span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="content-container">
+        
+        <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">금일 신규 접수</span><span class="kpi-val val-alert">32 건</span></div><div class="kpi-icon" style="font-size:1.5rem;">📥</div></div>
+            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">심사/처리 대기</span><span class="kpi-val" style="color:var(--theme-gold);">18 건</span></div><div class="kpi-icon" style="font-size:1.5rem;">⏳</div></div>
+            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">자동 블라인드 (유저 10회+)</span><span class="kpi-val" style="color:var(--neon-blue);">5 건</span></div><div class="kpi-icon" style="font-size:1.5rem;">🤖</div></div>
+            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">이용 정지/영구 차단 유저</span><span class="kpi-val" style="color:var(--neon-pink);">45 명</span></div><div class="kpi-icon" style="font-size:1.5rem;">🚫</div></div>
+        </div>
+
+        <div class="filter-bar">
+            <select class="filter-select"><option>상태 전체</option><option>심사 대기</option><option>처리 완료</option></select>
+            <select class="filter-select"><option>구분 전체</option><option>불판(게시물)</option><option>댓글</option></select>
+            <select class="filter-select"><option>신고사유 전체</option><option>욕설/비방</option><option>광고/도배</option><option>음란/우회단어</option></select>
+            <input type="text" class="filter-input" placeholder="신고자, 피신고자, 본문 검색...">
+            <button class="btn-search">검색 조건 조회</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">접수 일시</th>
+                        <th style="width: 8%;">구분</th>
+                        <th style="width: 40%;">신고 사유 및 대상 콘텐츠</th>
+                        <th style="width: 10%; text-align: center;">누적 건수</th>
+                        <th style="width: 10%; text-align: center;">상태</th>
+                        <th style="width: 20%; text-align: center;">관리자 액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 💡 Case 1: 집단 지성 자정 작용 (자동 블라인드) -->
+                    <tr>
+                        <td>26.05.21 14:32</td>
+                        <td><span class="type-badge t-comment">💬 댓글</span></td>
+                        <td>
+                            <span class="report-reason">심한 욕설 및 비방 (어그로)</span>
+                            <span class="report-target">"아니 글쓴이 뇌가 없나 진짜 ㅋㅋㅋ 수준 꼬라지 하고는 ㅉㅉ 걍 앱 지워라"</span>
+                            <div class="auto-badge red">🚨 1시간 내 10회 누적 (임시 블라인드 됨)</div>
+                        </td>
+                        <td style="text-align: center;"><span class="count-badge">12</span></td>
+                        <td style="text-align: center;"><span class="status-badge s-pending">심사 대기</span></td>
+                        <td style="text-align: center;">
+                            <div class="action-btns">
+                                <button class="btn-action btn-sanction" onclick="openSanctionModal('comment', '욕설')">사후 심사/제재</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 💡 Case 2: AV 배우 실명 등 우회 단어 (불판) -->
+                    <tr>
+                        <td>26.05.21 12:10</td>
+                        <td><span class="type-badge t-post">🔥 불판</span></td>
+                        <td>
+                            <span class="report-reason">선정성 / 우회 단어 의심</span>
+                            <span class="report-target">"미카미 유아 vs 후카다 에이미 진짜 누가 더 원탑이냐? ㅋㅋㅋ"</span>
+                            <div class="auto-badge">⚠️ AI 필터 우회 의심 (유저 신고 접수)</div>
+                        </td>
+                        <td style="text-align: center;"><span class="count-badge">5</span></td>
+                        <td style="text-align: center;"><span class="status-badge s-pending">심사 대기</span></td>
+                        <td style="text-align: center;">
+                            <div class="action-btns">
+                                <button class="btn-action btn-sanction" onclick="openSanctionModal('post', '음란물')">내용 심사/제재</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Case 3: Vision AI (이미지 모자이크) -->
+                    <tr style="background-color: rgba(255,255,255,0.01);">
+                        <td>26.05.21 09:15</td>
+                        <td><span class="type-badge t-post">🔥 불판</span></td>
+                        <td>
+                            <span class="report-reason" style="color:var(--text-sub);">AI 이미지 필터링 감지 (Nudity 88%)</span>
+                            <span class="report-target">[OOTD] 오늘 수영장 룩 평가 좀 부탁해용 (이미지 포함)</span>
+                            <div class="auto-badge" style="background:rgba(0, 240, 255, 0.1); color:var(--neon-blue);">🤖 AI 이미지 모자이크 처리됨</div>
+                        </td>
+                        <td style="text-align: center; color:var(--text-sub); font-weight:800;">-</td>
+                        <td style="text-align: center;"><span class="status-badge s-pending">심사 대기</span></td>
+                        <td style="text-align: center;">
+                            <div class="action-btns">
+                                <button class="btn-action btn-view" onclick="alert('AI가 모자이크 처리한 원본 이미지를 확인합니다.')">원본 확인</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- 💡 심사 및 제재 조치 모달 (주관성 0% 법정) -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="sanctionModal">
+      <div class="modal-container">
+          <div class="modal-header">
+              <h3 class="modal-title">🚨 신고 내역 상세 심사 (주관성 배제)</h3>
+              <button class="btn-close" onclick="closeSanctionModal()">✕</button>
+          </div>
+          
+          <div class="modal-body">
+              <!-- 좌측: 신고 대상 콘텐츠 및 로그 -->
+              <div class="modal-left">
+                  <div class="section-title"><span>👀 신고된 원본 콘텐츠 확인</span> <span class="type-badge t-post" id="modalBadge">🔥 불판</span></div>
+                  
+                  <div class="bad-content-box">
+                      <div class="bad-author">
+                          <span>피신고자: 음란마귀 (UID: 88241)</span>
+                          <!-- 💡 우회 단어 발견 시 즉시 금칙어 추가 기능 -->
+                          <button class="btn-add-block" onclick="alert('해당 단어를 AI 금칙어 DB에 즉시 등록했습니다.')">우회 단어 금칙어 등록 +</button>
+                      </div>
+                      <div class="bad-text" id="modalText">"미카미 유아 vs 후카다 에이미 진짜 누가 더 원탑이냐? ㅋㅋㅋ"</div>
+                  </div>
+
+                  <div class="section-title">🗣️ 접수된 신고 로그</div>
+                  <div class="reporter-log">
+                      <div class="log-item">
+                          <div class="log-reason">음란/선정성</div><div class="log-msg">"AV 배우 실명 거론하며 분위기 흐립니다." (유저 A)</div>
+                      </div>
+                      <div class="log-item">
+                          <div class="log-reason">불쾌감 조성</div><div class="log-msg">"이런 글 좀 안 올라오게 해주세요." (유저 B 외 3명)</div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- 우측: 3단계 객관적 제재 폼 -->
+              <div class="modal-right">
+                  <div class="section-title" style="color:var(--neon-blue);">⚖️ 시스템 자동 제재 적용 (Step 3)</div>
+                  
+                  <div class="action-group">
+                      <div class="action-label">1. 위반 사실 (사유) 확인 및 벌점 부과</div>
+                      <div class="penalty-grid">
+                          <label class="penalty-label">
+                              <div class="pl-left">
+                                  <input type="radio" name="penaltyAction" class="radio-input" value="0" checked onchange="updateCalc(0)">
+                                  <span class="pl-text">무혐의 (제재 없음)</span>
+                              </div>
+                              <span class="pl-point" style="color:var(--text-sub);">0 점</span>
+                          </label>
+                          <label class="penalty-label">
+                              <div class="pl-left">
+                                  <input type="radio" name="penaltyAction" class="radio-input" value="10" onchange="updateCalc(10)">
+                                  <span class="pl-text">욕설 / 비방 / 어그로 조장</span>
+                              </div>
+                              <span class="pl-point">+ 10 점</span>
+                          </label>
+                          <label class="penalty-label">
+                              <div class="pl-left">
+                                  <input type="radio" name="penaltyAction" class="radio-input" value="30" onchange="updateCalc(30)">
+                                  <span class="pl-text">불법 광고 / 스팸 도배</span>
+                              </div>
+                              <span class="pl-point">+ 30 점</span>
+                          </label>
+                          <label class="penalty-label">
+                              <div class="pl-left">
+                                  <input type="radio" name="penaltyAction" id="radioNsfw" class="radio-input" value="50" onchange="updateCalc(50)">
+                                  <span class="pl-text">음란물 / 법적 위반 / 우회 단어</span>
+                              </div>
+                              <span class="pl-point">+ 50 점</span>
+                          </label>
+                          <label class="penalty-label" style="border-color: rgba(255, 51, 51, 0.4);">
+                              <div class="pl-left">
+                                  <input type="radio" name="penaltyAction" class="radio-input" value="100" onchange="updateCalc(100)">
+                                  <span class="pl-text" style="color:var(--alert-red);">즉시 영구 차단 (관리자 직권)</span>
+                              </div>
+                              <span class="pl-point">+ 100 점</span>
+                          </label>
+                      </div>
+                  </div>
+
+                  <!-- 💡 알고리즘 자동 계산 결과 -->
+                  <div class="calc-result-box">
+                      <div class="calc-left">
+                          <span class="calc-text">기존 벌점(20점) + 부과 벌점 = 누적 벌점</span>
+                          <span class="calc-score" id="totalScore">20 점</span>
+                      </div>
+                      <div class="calc-punish" id="autoPunish">제재 없음</div>
+                  </div>
+
+                  <!-- 💡 가이드라인 발송 체크박스 -->
+                  <label class="checkbox-wrap">
+                      <input type="checkbox" checked id="chkGuide">
+                      <div class="checkbox-info">
+                          <span>콘텐츠 강제 삭제 및 알림톡 발송</span>
+                          <small>해당 콘텐츠는 즉시 삭제되며, 유저에게 [제재 사유 및 규정 FAQ 가이드 링크]가 포함된 경고 메시지가 자동 발송됩니다.</small>
+                      </div>
+                  </label>
+
+                  <button class="btn-submit-sanction" onclick="executeSanction()">
+                      <span>🔨</span> 시스템 알고리즘에 따라 제재 확정
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+<script>
+    // 기존 벌점을 20점으로 가정한 시뮬레이션
+    const currentScore = 20;
+
+    // 모달창 열기
+    function openSanctionModal(type, reasonType) {
+        document.getElementById('sanctionModal').style.display = 'flex';
+        const badge = document.getElementById('modalBadge');
+        const modalText = document.getElementById('modalText');
+        
+        if(type === 'post') {
+            badge.className = 'type-badge t-post';
+            badge.innerText = '🔥 불판';
+            modalText.innerText = '"미카미 유아 vs 후카다 에이미 진짜 누가 더 원탑이냐? ㅋㅋㅋ"';
+            document.getElementById('radioNsfw').checked = true;
+            updateCalc(50);
+        } else {
+            badge.className = 'type-badge t-comment';
+            badge.innerText = '💬 댓글';
+            modalText.innerText = '"아니 글쓴이 뇌가 없나 진짜 ㅋㅋㅋ 수준 꼬라지 하고는 ㅉㅉ 걍 앱 지워라"';
+            // 욕설 라디오버튼 체크 로직 등 생략 (기본 무혐의 0점 세팅)
+            updateCalc(0); 
+        }
+    }
+
+    function closeSanctionModal() {
+        document.getElementById('sanctionModal').style.display = 'none';
+    }
+
+    // 💡 3단계 알고리즘: 벌점에 따른 제재 수위 자동 계산 로직
+    function updateCalc(addPoint) {
+        const total = currentScore + parseInt(addPoint);
+        document.getElementById('totalScore').innerText = total + " 점";
+        
+        const punishBox = document.getElementById('autoPunish');
+        if(total >= 100) {
+            punishBox.innerText = "🚨 영구 차단 (Auto Ban)";
+            punishBox.style.background = "var(--alert-red)";
+            punishBox.style.color = "#fff";
+        } else if(total >= 50) {
+            punishBox.innerText = "🛑 7일 이용 정지";
+            punishBox.style.background = "rgba(255,51,51,0.2)";
+            punishBox.style.color = "var(--alert-red)";
+        } else if(total >= 30) {
+            punishBox.innerText = "⚠️ 3일 이용 정지";
+            punishBox.style.background = "rgba(255,204,0,0.2)";
+            punishBox.style.color = "var(--theme-gold)";
+        } else {
+            punishBox.innerText = "제재 없음 (경고 누적)";
+            punishBox.style.background = "transparent";
+            punishBox.style.color = "#a1a1aa";
+        }
+    }
+
+    // 제재 실행
+    async function executeSanction() {
+        const isGuideChecked = document.getElementById('chkGuide').checked;
+        let msg = "선택하신 사유에 따라 시스템이 누적 벌점과 제재를 자동으로 적용합니다.\n진행하시겠습니까?";
+        if(isGuideChecked) msg += "\n\n(※ 처리 직후 유저에게 규정 가이드 안내 메시지가 발송됩니다.)";
+        if(!confirm(msg)) return;
+
+        const FB = window.PickleAdminFirebase;
+        const form = FB.collectForm(document.getElementById('sanctionModal'));
+        const res = await FB.persistNew('report_sanctions', {
+            fields: form.fields,
+            toggles: form.checkboxes,
+            sendGuide: isGuideChecked,
+        }, {
+            page: 'admin_reports',
+            action: 'sanction',
+            successMessage: '✅ 시스템 제재 조치가 Firebase에 기록되었습니다.',
+        });
+        if (res.ok) closeSanctionModal();
+    }
+</script>
+
+</body>
+</html>

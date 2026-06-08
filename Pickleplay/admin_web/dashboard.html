@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin Dashboard 2.5 (레이아웃 최적화)</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --sidebar-bg: #121214;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+    /* === 사이드바 === */
+    .sidebar { width: 260px; flex-shrink: 0; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
+
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    
+    /* 💡 좌우 분할 구조 복구 (뱃지 지원) */
+    .nav-item { padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    .nav-item.active { background-color: rgba(57, 255, 20, 0.05); color: var(--neon-green); border-left-color: var(--neon-green); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #fff; }
+    
+    /* 신고 뱃지 디자인 복구 */
+    .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 900; }
+
+    /* === 메인 컨텐츠 영역 === */
+    .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; background-color: var(--bg-color); scrollbar-width: none; }
+    .main-content::-webkit-scrollbar { display: none; }
+    
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; gap: 15px; }
+    .page-title { font-size: 1.4rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; }
+    
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .quick-action-btn { background-color: #27272a; border: 1px solid #3f3f46; color: #e4e4e7; padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .quick-action-btn:hover { background-color: #fff; color: #000; }
+
+    .admin-profile { display: flex; align-items: center; gap: 10px; }
+    .admin-avatar { width: 36px; height: 36px; background-color: var(--neon-green); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-weight: 900; }
+
+    .dashboard-container { padding: 30px 40px; max-width: 1400px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 35px; }
+
+    /* 시스템 헬스 체크 전광판 */
+    .system-health-bar { display: flex; flex-wrap: wrap; gap: 20px; background-color: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2); padding: 15px 25px; border-radius: 12px; align-items: center; }
+    .health-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 700; color: #d4d4d8; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); animation: blink 2s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .health-val { color: #fff; font-family: 'Black Han Sans', sans-serif; letter-spacing: 1px; }
+
+    /* 공통 섹션 타이틀 */
+    .kpi-section-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+
+    /* 반응형 그리드 1 (누적 지표) */
+    .kpi-grid-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+    .kpi-card-sm { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; }
+    .kpi-card-sm:hover { transform: translateY(-4px); border-color: var(--neon-green); box-shadow: 0 4px 15px rgba(57, 255, 20, 0.05); }
+    .kpi-title-sm { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; margin-bottom: 8px; transition: color 0.2s; }
+    .kpi-card-sm:hover .kpi-title-sm { color: #fff; }
+    .kpi-value-sm { font-family: 'Black Han Sans', sans-serif; font-size: 1.8rem; color: #fff; }
+
+    /* 반응형 그리드 2 (일간 트래픽) */
+    .kpi-grid-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+    .kpi-card { background-color: rgba(39, 39, 42, 0.3); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; }
+    .kpi-card:hover { transform: translateY(-4px); border-color: var(--neon-green); background-color: rgba(57, 255, 20, 0.02); }
+    .kpi-title { font-size: 0.9rem; color: var(--text-sub); font-weight: 700; margin-bottom: 10px; }
+    .kpi-card:hover .kpi-title { color: #fff; }
+    .kpi-value { font-family: 'Black Han Sans', sans-serif; font-size: 2rem; color: var(--neon-green); margin-bottom: 5px; }
+    .kpi-change { font-size: 0.8rem; font-weight: 700; }
+    .change-up { color: #aaff00; }
+    .kpi-card.danger-card:hover { border-color: var(--neon-pink); background-color: rgba(255, 0, 127, 0.02); }
+
+    /* 복합 그리드 (불판 / CS) */
+    .content-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+    @media (max-width: 1100px) { .content-grid { grid-template-columns: 1fr; } }
+    
+    .panel-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .panel-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
+    .btn-more { background: none; border: 1px solid #3f3f46; color: var(--text-sub); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-more:hover { color: #fff; border-color: #fff; }
+
+    .list-wrapper { display: flex; flex-direction: column; gap: 10px; }
+    .list-item { background-color: #09090b; border: 1px solid #27272a; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; flex-wrap: wrap; gap: 10px; }
+    .list-item:hover { border-color: var(--neon-blue); transform: translateX(5px); }
+    
+    .trend-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px; }
+    .trend-rank { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--neon-green); width: 20px; text-align: center; flex-shrink: 0; }
+    .trend-title { font-size: 0.95rem; font-weight: 700; color: #e4e4e7; line-height: 1.3; }
+    .trend-stats { font-size: 0.8rem; color: var(--text-sub); font-weight: 800; white-space: nowrap; }
+
+    .cs-title { font-size: 0.9rem; font-weight: 700; color: #e4e4e7; margin-bottom: 4px; }
+    .cs-meta { font-size: 0.75rem; color: var(--text-sub); display: flex; gap: 10px; }
+    .badge-urgent { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; white-space: nowrap; }
+
+    /* 💡 하단으로 내려간 포인트 경제 지표 (Economy Engine) */
+    .economy-panel { position: relative; background: linear-gradient(135deg, rgba(255,204,0,0.05), transparent); border: 1px solid #3f3f46; border-radius: 16px; padding: 25px; overflow: hidden; }
+    .economy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .eco-card { background: #09090b; border: 1px solid #27272a; border-radius: 12px; padding: 20px; text-align: center; }
+    .eco-title { font-size: 0.85rem; font-weight: 800; color: var(--text-sub); margin-bottom: 8px; }
+    .eco-val { font-family: 'Black Han Sans', sans-serif; font-size: 2rem; color: var(--theme-gold); }
+    .eco-val.debt { color: var(--neon-pink); }
+    
+    .engine-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(9,9,11,0.85); backdrop-filter: blur(5px); z-index: 2; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: 0.3s; border-radius: 16px; }
+    .engine-overlay.hidden { opacity: 0; pointer-events: none; }
+    .lock-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .lock-text { color: #fff; font-weight: 900; font-size: 1.1rem; text-align: center; }
+    .lock-sub { color: var(--text-sub); font-size: 0.8rem; margin-top: 5px; text-align: center; padding: 0 15px; }
+    .btn-test-toggle { background: transparent; border: 1px solid var(--theme-gold); color: var(--theme-gold); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: bold; flex-shrink: 0; }
+    .btn-test-toggle:hover { background: rgba(255,204,0,0.1); }
+</style>
+<!-- Firebase (App + Analytics + Firestore) -->
+<script type="module" src="js/firebase-init.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <h1 class="logo" onclick="location.href='dashboard.html'">P!CKLE</h1>
+        <div class="logo-sub">ADMINISTRATOR 2.5</div>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item active" onclick="location.href='dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
+        <li class="nav-item" onclick="location.href='admin_users.html'"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
+        
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item" onclick="alert('준비 중입니다.')">· 일반 불판 관리</li>
+        <li class="nav-sub-item" onclick="alert('준비 중입니다.')">· 스폰(최애) 불판 설정</li>
+        
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item" onclick="alert('준비 중입니다.')">· 광고주 및 정산 관리</li>
+        <li class="nav-sub-item" onclick="alert('준비 중입니다.')">· 파트너(대행사) 관리</li>
+        
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div></li>
+        <li class="nav-item" onclick="alert('준비 중입니다.')"><div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div></li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <h2 class="page-title">관제탑 (Overview)</h2>
+        <div class="header-right">
+            <button class="quick-action-btn" onclick="alert('전체 푸시 알림 발송 창을 엽니다.')">📢 전체 푸시</button>
+            <button class="quick-action-btn" onclick="alert('이벤트 등록 페이지로 이동합니다.')">🎁 이벤트 등록</button>
+            <div class="admin-profile">
+                <span style="font-size:0.9rem; font-weight:700; color: #d4d4d8;">최고관리자 님</span>
+                <div class="admin-avatar">A</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <div class="system-health-bar">
+            <div class="health-item"><div class="status-dot"></div> 시스템 상태: <span class="health-val" style="color:var(--neon-green);">정상 (Normal)</span></div>
+            <div class="health-item">🔌 API 지연율: <span class="health-val">24ms</span></div>
+            <div class="health-item">🔥 실시간 접속 유저: <span class="health-val" style="color:var(--neon-blue);">4,102명</span></div>
+        </div>
+
+        <div>
+            <div class="kpi-section-title">📌 전체 누적 지표</div>
+            <div class="kpi-grid-top">
+                <div class="kpi-card-sm" onclick="location.href='admin_users.html'">
+                    <div class="kpi-title-sm">총 가입 회원수</div>
+                    <div class="kpi-value-sm">142,890</div>
+                </div>
+                <div class="kpi-card-sm" onclick="alert('상세 통계 준비 중')">
+                    <div class="kpi-title-sm">총 누적 투표수</div>
+                    <div class="kpi-value-sm">3,541,028</div>
+                </div>
+                <div class="kpi-card-sm" onclick="alert('스폰서 정산 준비 중')">
+                    <div class="kpi-title-sm">누적 광고(스폰) 수익</div>
+                    <div class="kpi-value-sm">₩ 84,200,000</div>
+                </div>
+                <div class="kpi-card-sm" style="border-color: var(--neon-blue);" onclick="alert('불판 관리 준비 중')">
+                    <div class="kpi-title-sm" style="color:var(--neon-blue);">현재 진행 중인 불판</div>
+                    <div class="kpi-value-sm" style="color:var(--neon-blue);">1,245</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="kpi-section-title">⏱️ 오늘(Today)의 트래픽</div>
+            <div class="kpi-grid-main">
+                <div class="kpi-card" onclick="alert('DAU 상세 조회')">
+                    <div class="kpi-title">일간 방문자 (DAU)</div>
+                    <div class="kpi-value">28,450</div>
+                    <div class="kpi-change change-up">▲ 15.2% (전일 대비)</div>
+                </div>
+                <div class="kpi-card" onclick="alert('PV 상세 조회')">
+                    <div class="kpi-title">페이지 뷰 (PV)</div>
+                    <div class="kpi-value">452,100</div>
+                    <div class="kpi-change change-up">▲ 8.4% (전일 대비)</div>
+                </div>
+                <div class="kpi-card" onclick="location.href='admin_users.html'">
+                    <div class="kpi-title">오늘 가입한 신규 유저</div>
+                    <div class="kpi-value" style="color:#fff;">1,842</div>
+                </div>
+                <div class="kpi-card danger-card" style="border-color: var(--neon-pink);" onclick="alert('신고 접수 조회')">
+                    <div class="kpi-title" style="color: var(--neon-pink);">오늘 접수된 신고 건수</div>
+                    <div class="kpi-value" style="color: var(--neon-pink);">45</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3 class="panel-title"><span style="font-size:1.2rem;">🔥</span> 실시간 급상승 불판 (Top 5)</h3>
+                    <button class="btn-more" onclick="alert('불판 관리로 이동')">전체 보기</button>
+                </div>
+                <div class="list-wrapper">
+                    <div class="list-item" onclick="alert('상세 뷰')">
+                        <div class="trend-left">
+                            <span class="trend-rank">1</span>
+                            <span class="trend-title">평생 라면 한 종류만 먹어야 한다면?</span>
+                        </div>
+                        <span class="trend-stats">투표 12,450 / 참견 842</span>
+                    </div>
+                    <div class="list-item" onclick="alert('상세 뷰')">
+                        <div class="trend-left">
+                            <span class="trend-rank">2</span>
+                            <span class="trend-title">회식 자리 고기 굽기, 막내의 의무인가?</span>
+                        </div>
+                        <span class="trend-stats">투표 9,840 / 참견 1,204</span>
+                    </div>
+                    <div class="list-item" onclick="alert('상세 뷰')">
+                        <div class="trend-left">
+                            <span class="trend-rank" style="color:#52525b;">3</span>
+                            <span class="trend-title">[스폰서] 굽네치킨 신메뉴 A vs B 매운맛 대결</span>
+                        </div>
+                        <span class="trend-stats">투표 8,100 / 참견 450</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3 class="panel-title"><span style="font-size:1.2rem;">🎧</span> 미답변 문의 접수 (CS)</h3>
+                    <button class="btn-more" onclick="alert('CS 관리로 이동')">처리하러 가기</button>
+                </div>
+                <div class="list-wrapper">
+                    <div class="list-item" onclick="alert('CS 상세 뷰')">
+                        <div>
+                            <div class="cs-title">앱 접속이 너무 느려요 (버그/오류)</div>
+                            <div class="cs-meta"><span>작성자: 쩝쩝박사</span><span>10분 전</span></div>
+                        </div>
+                        <span class="badge-urgent">긴급</span>
+                    </div>
+                    <div class="list-item" onclick="alert('CS 상세 뷰')">
+                        <div>
+                            <div class="cs-title">제휴 및 광고(스폰서) 문의 드립니다.</div>
+                            <div class="cs-meta"><span>작성자: OOO마케팅</span><span>2시간 전</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="kpi-section-title">
+                <span>💰 포인트 경제 지표 (Economy)</span>
+                <button class="btn-test-toggle" onclick="toggleEcoPreview()">엔진 활성화 (테스트)</button>
+            </div>
+            
+            <div class="economy-panel">
+                <div class="engine-overlay" id="ecoOverlay">
+                    <div class="lock-icon">🔒</div>
+                    <div class="lock-text">포인트 엔진이 비활성화되어 있습니다.</div>
+                    <div class="lock-sub">상단의 [엔진 활성화] 버튼을 눌러 실시간 재무 지표 트래킹을 시작하세요.</div>
+                </div>
+
+                <div class="economy-grid">
+                    <div class="eco-card">
+                        <div class="eco-title">총 누적 발행량 (지급)</div>
+                        <div class="eco-val" id="valIssue">0</div>
+                    </div>
+                    <div class="eco-card">
+                        <div class="eco-title">총 누적 소진량 (회수)</div>
+                        <div class="eco-val" id="valBurn" style="color: #fff;">0</div>
+                    </div>
+                    <div class="eco-card">
+                        <div class="eco-title">미소진 잔여 포인트 (재무적 부채) ⚠️</div>
+                        <div class="eco-val debt" id="valDebt">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    let isEcoOn = false;
+    function toggleEcoPreview() {
+        const overlay = document.getElementById('ecoOverlay');
+        const vIssue = document.getElementById('valIssue');
+        const vBurn = document.getElementById('valBurn');
+        const vDebt = document.getElementById('valDebt');
+
+        isEcoOn = !isEcoOn;
+
+        if(isEcoOn) {
+            overlay.classList.add('hidden');
+            vIssue.innerText = "28,450,000";
+            vBurn.innerText = "15,200,000";
+            vDebt.innerText = "13,250,000";
+        } else {
+            overlay.classList.remove('hidden');
+            vIssue.innerText = "0";
+            vBurn.innerText = "0";
+            vDebt.innerText = "0";
+        }
+    }
+</script>
+
+</body>
+</html>
