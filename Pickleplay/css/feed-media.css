@@ -1,0 +1,394 @@
+/* P!CKLE — 피드 다이내믹 미디어 레이아웃 */
+
+.poll-card.has-media {
+  padding: 0;
+  overflow: hidden;
+}
+
+.poll-card.has-media .poll-card-body {
+  padding: 16px 18px 18px;
+}
+
+.poll-media {
+  width: 100%;
+  background: #0c0c0e;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── 이미지 ─── */
+.poll-media--single {
+  aspect-ratio: 16 / 10;
+  max-height: 280px;
+  overflow: hidden;
+}
+
+.poll-media--single img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.poll-media--dual-h {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  aspect-ratio: 2 / 1;
+  max-height: 240px;
+}
+
+.poll-media--dual-h .media-split {
+  position: relative;
+  overflow: hidden;
+  min-height: 120px;
+}
+
+.poll-media--dual-h .media-split-a {
+  border-right: 2px solid var(--bg);
+}
+
+.poll-media--dual-h img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.poll-media--dual-v {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  aspect-ratio: 4 / 5;
+  max-height: 360px;
+}
+
+.poll-media--dual-v .media-split {
+  position: relative;
+  overflow: hidden;
+  min-height: 100px;
+}
+
+.poll-media--dual-v .media-split-a {
+  border-bottom: 2px solid var(--bg);
+}
+
+.poll-media--dual-v img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.media-split .media-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.media-tag-a {
+  background: rgba(57, 255, 20, 0.9);
+  color: #0a0a0a;
+}
+
+.media-tag-b {
+  background: rgba(255, 0, 127, 0.9);
+  color: #fff;
+}
+
+.media-split .media-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px 8px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+  z-index: 2;
+}
+
+.poll-card.poll-card--text-only .poll-title {
+  font-size: 1.15rem;
+}
+
+/* ─── 동영상 embed 공통 ─── */
+.poll-media--video {
+  padding: 0;
+  height: auto;
+}
+
+.video-embed-wrap {
+  position: relative;
+  width: 100%;
+  height: auto;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-embed-wrap iframe,
+.video-embed-wrap .video-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #000;
+}
+
+/* 가로 16:9 (단일·일반) */
+.video-embed-wrap--landscape {
+  aspect-ratio: 16 / 9;
+}
+
+/* 세로 숏폼 9:16 (단일) */
+.video-embed-wrap--portrait {
+  aspect-ratio: 9 / 16;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.poll-media--video-single.is-portrait-single {
+  display: flex;
+  justify-content: center;
+  height: auto;
+}
+
+.poll-media--video-single.is-portrait-single .video-embed-wrap--portrait {
+  width: min(100%, 320px);
+  max-height: none;
+}
+
+.poll-media--video-single.is-landscape-single .video-embed-wrap--landscape {
+  max-height: min(50vh, 280px);
+}
+
+.poll-media--video-dual .media-tag,
+.poll-media--video-dual .media-name,
+.poll-media--video-dual .media-vs-divider {
+  pointer-events: none;
+}
+
+.poll-media--video-dual .video-embed-wrap {
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.poll-media--video-dual .media-vs-divider {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #0a0a0a;
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-pink));
+  box-shadow: 0 0 16px rgba(255, 0, 127, 0.45);
+}
+
+/* ═══════════════════════════════════════════
+   숏폼 A | B 좌우 대결 — shorts-split-layout
+   ═══════════════════════════════════════════ */
+.poll-media.shorts-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  align-items: start;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  aspect-ratio: unset;
+  position: relative;
+}
+
+.poll-media.shorts-split-layout .media-split--video {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+.poll-media.shorts-split-layout .media-split-a {
+  border-right: 2px solid var(--neon-pink);
+}
+
+.poll-media.shorts-split-layout .media-split-b {
+  border-left: 1px solid rgba(57, 255, 20, 0.25);
+}
+
+/* 각 칸: 너비 50% → 높이는 9:16 비율로 자동 확장 */
+.poll-media.shorts-split-layout .video-embed-wrap--portrait {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+}
+
+.poll-media.shorts-split-layout .video-embed-wrap--portrait .video-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ═══════════════════════════════════════════
+   가로 영상 A | B 좌우 — landscape-split-layout
+   ═══════════════════════════════════════════ */
+.poll-media.landscape-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  align-items: start;
+  height: auto;
+  max-height: none;
+  aspect-ratio: unset;
+  position: relative;
+}
+
+.poll-media.landscape-split-layout .media-split--video {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  background: #000;
+}
+
+.poll-media.landscape-split-layout .media-split-a {
+  border-right: 2px solid var(--border);
+}
+
+.poll-media.landscape-split-layout .video-embed-wrap--landscape {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: none;
+}
+
+/* ═══════════════════════════════════════════
+   숏폼 상하 스택 — shorts-stack-layout
+   ═══════════════════════════════════════════ */
+.poll-media.shorts-stack-layout {
+  display: grid;
+  grid-template-rows: auto auto;
+  height: auto;
+  max-height: none;
+  aspect-ratio: unset;
+  position: relative;
+}
+
+.poll-media.shorts-stack-layout .media-split--video {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+  width: 100%;
+  background: #000;
+}
+
+.poll-media.shorts-stack-layout .media-split-a {
+  border-bottom: 2px solid var(--neon-pink);
+}
+
+.poll-media.shorts-stack-layout .video-embed-wrap--portrait {
+  width: min(100%, 300px);
+  aspect-ratio: 9 / 16;
+  height: auto;
+  max-height: none;
+}
+
+/* ═══════════════════════════════════════════
+   가로 영상 상하 — landscape-stack-layout
+   ═══════════════════════════════════════════ */
+.poll-media.landscape-stack-layout {
+  display: grid;
+  grid-template-rows: auto auto;
+  height: auto;
+  position: relative;
+}
+
+.poll-media.landscape-stack-layout .media-split--video {
+  width: 100%;
+  height: auto;
+}
+
+.poll-media.landscape-stack-layout .media-split-a {
+  border-bottom: 2px solid var(--border);
+}
+
+.poll-media.landscape-stack-layout .video-embed-wrap--landscape {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(36vh, 220px);
+}
+
+/* ═══════════════════════════════════════════
+   숏폼 + 가로 혼합 좌우 — mixed-split-layout
+   ═══════════════════════════════════════════ */
+.poll-media.mixed-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  height: auto;
+  position: relative;
+}
+
+.poll-media.mixed-split-layout .media-split--video {
+  height: auto;
+  min-width: 0;
+}
+
+.poll-media.mixed-split-layout .is-short-form .video-embed-wrap--portrait {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: none;
+  height: auto;
+}
+
+.poll-media.mixed-split-layout .is-landscape .video-embed-wrap--landscape {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+}
+
+.video-cell-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 12px;
+  text-align: center;
+}
+
+.video-fallback-msg {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  font-weight: 700;
+}
+
+.video-fallback-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
