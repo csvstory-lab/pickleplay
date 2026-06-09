@@ -110,8 +110,11 @@
     return new URL(getRedirectAfterLogin(), window.location.href).href;
   }
 
-  /** 카카오 / 구글 / 네이버 OAuth */
+  /** 카카오 / 구글 OAuth — window.PICKLE_SUPABASE_CONFIG */
   async function signInWithOAuth(provider) {
+    if (provider !== 'kakao' && provider !== 'google') {
+      throw new Error('지원하지 않는 로그인 방식입니다.');
+    }
     var sb = getSupabaseClient();
     var options = { redirectTo: getOAuthRedirectTo() };
 
