@@ -188,6 +188,7 @@
         margin-top: 15px;
     }
     .btn-submit:active { transform: scale(0.95); }
+    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
     /* === 하단 네비게이션 === */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0; border-top: 1px solid var(--border-color); z-index: 900; }
@@ -347,7 +348,7 @@
         </div>
     </div>
 
-    <button class="btn-submit" onclick="validateAndSubmit()">🚀 불판 지피기 (등록)</button>
+    <button type="button" class="btn-submit" id="btnSubmitPost" onclick="validateAndSubmit()">🚀 불판 지피기 (등록)</button>
 
 </main>
 
@@ -359,6 +360,11 @@
     <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/media-upload.js"></script>
 <script>
     // 마우스 드래그 스크롤
     const slider = document.getElementById('chipSlider');
@@ -405,10 +411,16 @@
     let currentMode = 'single';
     let currentOri = 'horizontal';
     let uploadStatus = { single: false, vsA: false, vsB: false };
+    let uploadFiles = { single: null, vsA: null, vsB: null };
+
+    function resetUploadState() {
+        uploadStatus = { single: false, vsA: false, vsB: false };
+        uploadFiles = { single: null, vsA: null, vsB: null };
+    }
 
     function setMainMode(mode) {
         currentMode = mode;
-        uploadStatus = { single: false, vsA: false, vsB: false }; 
+        resetUploadState(); 
         document.getElementById('btnSingle').classList.remove('active', 'highlight');
         document.getElementById('btnVs').classList.remove('active', 'highlight');
         document.getElementById('btnText').classList.remove('active', 'highlight');
@@ -424,7 +436,7 @@
 
     function setOrientation(ori) {
         currentOri = ori;
-        uploadStatus = { single: false, vsA: false, vsB: false }; 
+        resetUploadState(); 
         document.getElementById('btnHori').classList.remove('active');
         document.getElementById('btnVerti').classList.remove('active');
         if(ori === 'horizontal') document.getElementById('btnHori').classList.add('active');
@@ -441,6 +453,7 @@
         // 슬롯 생성 함수
         const makeSlot = (id, label, ratioClass, iconColor) => `
             <div class="media-input-wrap">
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="file_${id}" onchange="onPhotoSelected('${id}', this)">
                 <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}', this)">
                     <div class="icon-plus" style="color:${iconColor || 'var(--text-sub)'};">➕</div>
                     <div class="upload-txt">${label} 사진 첨부</div>
@@ -475,24 +488,49 @@
     renderUploadArea();
 
     // 💡 사진 업로드 클릭 시 로직 (URL이 있으면 차단)
-    function mockUpload(type, element) {
+    function mockUpload(type) {
         const urlInput = document.getElementById('url_' + type);
-        if(urlInput && urlInput.value.trim() !== '') {
-            alert('이미 영상 URL이 입력되어 있습니다.\\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.');
+        if (urlInput && urlInput.value.trim() !== '') {
+            alert('이미 영상 URL이 입력되어 있습니다.\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.');
             return;
         }
+        document.getElementById('file_' + type)?.click();
+    }
+
+    function onPhotoSelected(type, input) {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        try {
+            if (window.PickleMedia?.validateImageFile) {
+                window.PickleMedia.validateImageFile(file);
+            }
+        } catch (err) {
+            alert(err.message || '이미지를 선택할 수 없습니다.');
+            input.value = '';
+            return;
+        }
+
+        uploadFiles[type] = file;
         uploadStatus[type] = true;
-        element.classList.add('uploaded');
-        element.innerHTML = `<div class="icon-plus">✅</div><div class="upload-txt">사진 첨부 완료!</div>`;
+
+        const box = document.getElementById('box_' + type);
+        box.classList.add('uploaded');
+        box.style.opacity = '1';
+        box.style.border = '';
+        box.innerHTML = '<div class="icon-plus">✅</div><div class="upload-txt">사진 첨부 완료!</div>';
     }
 
     // 💡 영상 URL 입력 시 로직 (사진 업로드 상자 비활성화 디자인)
     function checkUrlInput(type) {
         const urlInput = document.getElementById('url_' + type);
         const box = document.getElementById('box_' + type);
+        const fileInput = document.getElementById('file_' + type);
         
         if(urlInput.value.trim() !== '') {
-            uploadStatus[type] = false; // 사진 업로드 무효화
+            uploadStatus[type] = false;
+            uploadFiles[type] = null;
+            if (fileInput) fileInput.value = '';
             box.classList.remove('uploaded');
             box.style.border = '2px dashed #3f3f46';
             box.style.opacity = '0.4';
@@ -506,8 +544,101 @@
         }
     }
 
-    // 💡 등록 전 밸리데이션
-    function validateAndSubmit() {
+    function getSupabaseClient() {
+        const cfg = window.PICKLE_SUPABASE_CONFIG;
+        if (!cfg?.url || !cfg?.anonKey) {
+            throw new Error('Supabase 접속 정보가 없습니다. js/supabase-config.js 를 확인해 주세요.');
+        }
+        if (!window.supabase?.createClient) {
+            throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
+        }
+        return window.PickleSupabase
+            ? window.PickleSupabase.getClient()
+            : window.supabase.createClient(cfg.url.trim(), cfg.anonKey.trim());
+    }
+
+    async function buildMediaPayload(userId) {
+        if (currentMode === 'text') {
+            return { media_mode: 'text' };
+        }
+
+        if (currentMode === 'single') {
+            const urlVal = document.getElementById('url_single')?.value.trim() || '';
+            if (urlVal) {
+                return {
+                    media_mode: 'single',
+                    media_orientation: currentOri,
+                    media_url_1: urlVal,
+                };
+            }
+            if (uploadFiles.single) {
+                const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId);
+                return {
+                    media_mode: 'single',
+                    media_orientation: currentOri,
+                    media_url_1: uploadedUrl,
+                };
+            }
+        }
+
+        if (currentMode === 'vs') {
+            const urlA = document.getElementById('url_vsA')?.value.trim() || '';
+            const urlB = document.getElementById('url_vsB')?.value.trim() || '';
+            let mediaUrl1 = urlA || null;
+            let mediaUrl2 = urlB || null;
+
+            if (!urlA && uploadFiles.vsA) {
+                mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId);
+            }
+            if (!urlB && uploadFiles.vsB) {
+                mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId);
+            }
+
+            return {
+                media_mode: 'vs',
+                media_orientation: currentOri,
+                media_url_1: mediaUrl1,
+                media_url_2: mediaUrl2,
+            };
+        }
+
+        throw new Error('미디어 정보를 구성할 수 없습니다.');
+    }
+
+    function stripEmptyFields(obj) {
+        return Object.fromEntries(
+            Object.entries(obj).filter(([, value]) => value !== null && value !== undefined && value !== '')
+        );
+    }
+
+    function buildPostPayload(mediaFields) {
+        const selectedCategory = document.querySelector('.cat-chip.selected');
+        const customStart = document.getElementById('inputStartDate')?.value || null;
+        const customEnd = document.getElementById('inputEndDate')?.value || null;
+        const user = window.PickleAuth?.getUser?.();
+
+        const payload = {
+            category: selectedCategory.textContent.trim(),
+            title: document.getElementById('inputTitle').value.trim(),
+            description: document.getElementById('inputDesc').value.trim() || null,
+            option_a: document.getElementById('inputA').value.trim(),
+            option_b: document.getElementById('inputB').value.trim(),
+            duration: selectedDuration,
+            start_at: selectedDuration === 'custom' ? customStart : null,
+            end_at: selectedDuration === 'custom' ? customEnd : null,
+            hashtags: document.getElementById('inputHashtag').value.trim() || null,
+            ...mediaFields,
+        };
+
+        if (user?.id) {
+            payload.author_id = user.id;
+        }
+
+        return stripEmptyFields(payload);
+    }
+
+    // 💡 등록 전 밸리데이션 + Supabase 저장
+    async function validateAndSubmit() {
         const selectedCategory = document.querySelector('.cat-chip.selected');
         if (!selectedCategory) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
 
@@ -520,20 +651,59 @@
         } else if (currentMode === 'vs') {
             const urlA = document.getElementById('url_vsA') ? document.getElementById('url_vsA').value.trim() : '';
             const urlB = document.getElementById('url_vsB') ? document.getElementById('url_vsB').value.trim() : '';
-            
+
             const hasA = uploadStatus.vsA || urlA !== '';
             const hasB = uploadStatus.vsB || urlB !== '';
-            
+
             if (!hasA || !hasB) { alert('A와 B 각각 사진을 첨부하거나 영상 URL을 입력해주세요!'); return; }
         }
 
         const aVal = document.getElementById('inputA').value.trim();
         const bVal = document.getElementById('inputB').value.trim();
         if (aVal === '' || bVal === '') { alert('A/B 선택지 내용을 완성해주세요!'); return; }
+        if (aVal === bVal) { alert('A와 B 선택지는 서로 달라야 합니다!'); return; }
 
-        alert('🔥 완벽합니다! 불판이 예약/등록 되었습니다.');
-        location.href = 'detail.html';
+        const btnSubmit = document.getElementById('btnSubmitPost');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = '등록 중…';
+
+        try {
+            if (window.PickleAuth?.init) {
+                await window.PickleAuth.init();
+            }
+
+            const user = window.PickleAuth?.getUser?.();
+            const needsUpload = currentMode !== 'text' && (
+                (currentMode === 'single' && uploadFiles.single) ||
+                (currentMode === 'vs' && (uploadFiles.vsA || uploadFiles.vsB))
+            );
+
+            if (needsUpload && !user) {
+                alert('사진을 업로드하려면 로그인이 필요합니다.');
+                window.PickleAuth?.goToLogin?.({ redirect: 'create.html', from: 'create' });
+                return;
+            }
+
+            const mediaFields = await buildMediaPayload(user?.id || 'guest');
+            const payload = buildPostPayload(mediaFields);
+            const sb = getSupabaseClient();
+            const { error } = await sb.from('pickle_posts').insert(payload);
+
+            if (error) throw error;
+
+            alert('🔥 완벽합니다! 불판이 등록되었습니다.');
+            location.href = 'index.html?created=1';
+        } catch (err) {
+            alert('등록 실패: ' + (err.message || String(err)));
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = '🚀 불판 지피기 (등록)';
+        }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.PickleAuth?.init?.();
+    });
 </script>
 
 </body>

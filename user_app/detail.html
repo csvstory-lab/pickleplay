@@ -12,6 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 불판 상세 (버그 수정 및 액션 복구)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -74,6 +75,15 @@
     .issue-title { font-size: 1.45rem; font-weight: 900; line-height: 1.4; margin: 0 0 12px 0; word-break: keep-all; text-align: center; }
     .meta-row-top { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
     .meta-tag { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); }
+    .meta-tag.meta-tag-cat {
+        background-color: rgba(57, 255, 20, 0.12);
+        color: var(--neon-green);
+        border: 1px solid rgba(57, 255, 20, 0.35);
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-weight: 800;
+    }
+
     .timer-badge { display: inline-flex; align-items: center; background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); border: 1px solid var(--neon-pink); padding: 3px 8px; border-radius: 8px; font-family: 'Black Han Sans', sans-serif; font-size: 0.8rem; }
     
     .point-reward-badge { display: none; align-items: center; gap: 5px; background: linear-gradient(90deg, var(--theme-gold), #ff8c00); color: #000; font-family: 'Black Han Sans', sans-serif; font-size: 0.8rem; padding: 3px 8px; border-radius: 8px; font-weight: 900; box-shadow: 0 0 10px rgba(255, 204, 0, 0.4); }
@@ -89,6 +99,35 @@
     .play-state-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 3rem; color: rgba(255,255,255,0.9); opacity: 0; transition: 0.2s; pointer-events: none; }
     .play-state-icon.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: var(--bg-color); color: #fff; font-family: 'Black Han Sans', sans-serif; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px solid var(--text-sub); z-index: 100; pointer-events: none; }
+
+    .single-media-wrap { width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid #3f3f46; }
+    .single-media-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .single-media-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .split-embed { width: 100%; height: 100%; }
+    .split-embed iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .split-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .detail-media-empty { text-align: center; padding: 40px 20px; background: #18181b; border-radius: 16px; border: 1px dashed #52525b; color: var(--text-sub); font-weight: 700; }
+    .detail-media-empty span { font-size: 2rem; display: block; margin-bottom: 8px; }
+    .detail-desc { padding: 0 20px 10px; font-size: 0.9rem; color: var(--text-sub); line-height: 1.5; text-align: center; word-break: keep-all; }
+
+    .youtube-watch-fallback {
+        display: block; position: relative; width: 100%; height: 100%;
+        border-radius: 16px; overflow: hidden; text-decoration: none; color: #fff;
+    }
+    .youtube-watch-fallback img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .youtube-watch-placeholder {
+        width: 100%; height: 100%; min-height: 180px; display: flex; align-items: center;
+        justify-content: center; font-size: 3rem; background: #18181b;
+    }
+    .youtube-watch-btn {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.85); border: 2px solid #ff4444; color: #fff;
+        font-weight: 900; font-size: 0.95rem; padding: 12px 20px; border-radius: 999px;
+        white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .youtube-watch-hint {
+        margin: 10px 0 0; font-size: 0.75rem; color: var(--text-sub); text-align: center; line-height: 1.4;
+    }
 
     .smart-hint { text-align: center; font-size: 0.8rem; font-weight: 800; color: var(--neon-green); margin: 10px 0; }
 
@@ -275,46 +314,33 @@
 <main>
     <div class="post-author-box">
         <div class="author-info">
-            <div class="author-pic">👗</div>
+            <div class="author-pic" id="detailAuthorPic">🔥</div>
             <div class="author-text">
-                <div class="name">패션피플 <span class="grade-badge">Lv.3 룩덕후</span></div>
+                <div class="name"><span id="detailAuthorName">픽클러</span> <span class="grade-badge" id="detailCategoryBadge" hidden></span></div>
             </div>
         </div>
         <button class="btn-mypick" onclick="this.classList.toggle('active'); this.innerText = this.classList.contains('active') ? '나의 픽 ✔' : '+ 나의 픽';">+ 나의 픽</button>
     </div>
 
     <div class="issue-header-box">
-        <h2 class="issue-title">내일 소개팅 첫 데이트룩! 청순 원피스 vs 힙한 와이드팬츠</h2>
-        <div class="meta-row-top">
-            <span class="meta-tag">#OOTD</span>
-            <span class="meta-tag">#데이트룩</span>
-            <span class="timer-badge">⏱ 23:59:59</span>
-            <span class="point-reward-badge">💰 참전 시 +10P</span>
-        </div>
+        <h2 class="issue-title" id="detailTitle">불판 불러오는 중…</h2>
+        <div class="meta-row-top" id="detailMetaTags"></div>
     </div>
 
+    <p class="detail-desc" id="detailDescription" hidden></p>
+
     <div class="master-media-container" id="videoContainer">
-        <div class="vertical-split-container">
-            <div class="split-half split-left" onclick="handleTap('A', event, this)">
-                <div class="media-placeholder">A. 청순 원피스<br>👗✨</div>
-                <div class="play-state-icon">▶</div>
-            </div>
-            <div class="vs-badge">VS</div>
-            <div class="split-half split-right" onclick="handleTap('B', event, this)">
-                <div class="media-placeholder">B. 힙한 와이드팬츠<br>👖😎</div>
-                <div class="play-state-icon">▶</div>
-            </div>
-        </div>
+        <div class="detail-media-empty"><span>⏳</span><p>미디어 로딩 중…</p></div>
     </div>
 
     <div class="smart-hint" id="smartHint">👆 1번 터치=재생, 따닥!(더블탭)=투표!</div>
 
     <div class="options-box" id="optionsBox">
         <div class="opt-item" id="optBtnA" onclick="castVote('A', event, this)">
-            <span class="opt-label-a">A</span> 남심 저격! 청순가련 꾸안꾸 원피스
+            <span class="opt-label-a">A</span> …
         </div>
         <div class="opt-item" id="optBtnB" onclick="castVote('B', event, this)">
-            <span class="opt-label-b">B</span> 나만의 매력 어필! 트렌디한 와이드팬츠
+            <span class="opt-label-b">B</span> …
         </div>
     </div>
 
@@ -329,9 +355,9 @@
 
     <div class="issue-footer-box">
         <div class="stats-row">
-            <div class="stats-left">
-                <span>🔥 15,201 참여</span>
-                <span>💬 920 댓글</span>
+            <div class="stats-left" id="detailStats">
+                <span>🔥 NEW</span>
+                <span>💬 0 댓글</span>
             </div>
             <span class="btn-report" onclick="openReportModal()">🚨 신고</span>
         </div>
@@ -357,7 +383,7 @@
         
         <div class="comment-active-area" id="commentActive">
             <div class="comment-input-box">
-                <input type="text" class="comment-input" placeholder="패션 훈수를 자유롭게 남겨보세요.">
+                <input type="text" class="comment-input" id="detailCommentInput" placeholder="훈수를 자유롭게 남겨보세요.">
                 <button class="comment-submit">등록</button>
             </div>
             <div class="comment-list">
@@ -373,6 +399,12 @@
     </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-upload.js"></script>
+<script src="../js/pickle-media-view.js"></script>
+<script src="../js/pickle-detail.js"></script>
 <script>
     // 💡 JS 충돌 방지: 카카오 SDK 초기화 예외 처리
     try {
@@ -415,13 +447,24 @@
         }
     }
 
+    function getSharePayload() {
+        var post = window.PickleDetail?.getCurrentPost?.();
+        return {
+            title: post?.title ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
+            text: post
+                ? (post.option_a || '') + ' vs ' + (post.option_b || '') + '. 당신의 선택은?'
+                : '픽클 불판에 참전하세요!',
+        };
+    }
+
     function sendKakaoMessage() {
+        var share = getSharePayload();
         try {
             Kakao.Share.sendDefault({
                 objectType: 'feed',
                 content: {
-                    title: 'P!CKLE - 내일 소개팅 첫 데이트룩!',
-                    description: '청순 원피스 vs 힙한 와이드팬츠. 당신의 뇌정지 선택은?',
+                    title: share.title,
+                    description: share.text,
                     imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
                     link: { mobileWebUrl: window.location.href, webUrl: window.location.href },
                 },
@@ -442,10 +485,11 @@
 
     // 💡 OS 기본 공유 (더보기) 스크립트 복구
     function nativeShare() {
+        var share = getSharePayload();
         if (navigator.share) {
             navigator.share({
-                title: 'P!CKLE - 내일 소개팅 첫 데이트룩!',
-                text: '청순 원피스 vs 힙한 와이드팬츠. 당신의 뇌정지 선택은?',
+                title: share.title,
+                text: share.text,
                 url: window.location.href,
             }).catch(console.error);
         } else {

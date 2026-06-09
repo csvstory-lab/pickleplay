@@ -123,8 +123,6 @@
       rel: '0',
       playsinline: '1',
       modestbranding: '1',
-      iv_load_policy: '3',
-      enablejsapi: '1',
     });
 
     if (typeof window !== 'undefined' && window.location?.origin) {
@@ -134,7 +132,7 @@
       }
     }
 
-    return `https://www.youtube.com/embed/${id}?${params.toString()}`;
+    return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
   }
 
   function parseTikTokId(url) {

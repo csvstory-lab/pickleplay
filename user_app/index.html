@@ -12,6 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 메인 피드 (섹션 타이틀 폰트 깔끔하게 수정)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -169,6 +170,36 @@
     }
     .btn-pick:active { transform: scale(0.98); }
 
+    /* 👑 킹왕짱 썸네일 (블라인드 훅 — 제목·이미지만) */
+    .king-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .king-card:active { transform: scale(0.98); }
+    .king-thumb {
+        width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden;
+        margin-bottom: 16px; background: #27272a; border: 1px solid #3f3f46;
+    }
+    .king-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .king-thumb { position: relative; }
+    .media-badge {
+        position: absolute; bottom: 10px; left: 10px; z-index: 2;
+        background: rgba(0,0,0,0.75); color: #fff; font-size: 0.75rem; font-weight: 800;
+        padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
+    }
+    .media-badge-yt { color: #ff4444; border-color: rgba(255,68,68,0.4); }
+    .king-thumb-video { flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-sub); }
+    .king-thumb-placeholder {
+        width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden;
+        margin-bottom: 16px; background: linear-gradient(135deg, #1f1f22 0%, #27272a 100%);
+        border: 1px dashed #52525b; display: flex; align-items: center; justify-content: center;
+        font-size: 3rem;
+    }
+
+    .feed-loading, .feed-empty {
+        padding: 30px 20px; text-align: center; color: var(--text-sub);
+        font-size: 0.9rem; font-weight: 700; line-height: 1.5;
+    }
+    .feed-error { color: var(--neon-pink); }
+    .king-empty { min-width: 85%; scroll-snap-align: center; }
+
     /* 🔥 실시간 리스트 */
     .list-section { padding: 0 20px; }
     .list-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 18px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
@@ -297,81 +328,14 @@
         </div>
         
         <div class="horizontal-scroll-container" id="aiCurationContainer">
-            <div class="king-card">
-                <div class="tags">✨ 20대 여성이 지금 열광하는 이슈</div>
-                <h2 class="title">소개팅 첫 만남, 제발 이것만은 피해줘! 최악의 패션은?</h2>
-                <div class="blind-vs-box">
-                    <div class="blind-opt a">A. 투머치 힙합퍼 (체인 주렁주렁)</div>
-                    <div class="vs-badge">VS</div>
-                    <div class="blind-opt b">B. 등산복 아재룩 (형광 바람막이)</div>
-                </div>
-                <button class="btn-pick" onclick="location.href='detail.html'">결과가 궁금하다면? 참전하기 🔥</button>
-            </div>
-
-            <div class="king-card">
-                <div class="tags">🧠 MBTI 과몰입러를 위한 픽</div>
-                <h2 class="title">"나 차 사고 났어 ㅠㅠ" 애인의 말에 더 정떨어지는 대답은?</h2>
-                <div class="blind-vs-box">
-                    <div class="blind-opt a">A. 보험 처리 했어? 사진 찍어둬! (T)</div>
-                    <div class="vs-badge">VS</div>
-                    <div class="blind-opt b">B. 헉 많이 안 다쳤어? 병원부터 가! (F)</div>
-                </div>
-                <button class="btn-pick" onclick="location.href='detail.html'">결과가 궁금하다면? 참전하기 🔥</button>
-            </div>
-
-            <div class="king-card">
-                <div class="tags">💖 내 관심사(연애) 맞춤 추천</div>
-                <h2 class="title">둘 중 하나만 골라야 한다면? 영혼까지 털리는 최악의 이별 사유</h2>
-                <div class="blind-vs-box">
-                    <div class="blind-opt a">A. 아무 말 없이 잠수 이별</div>
-                    <div class="vs-badge">VS</div>
-                    <div class="blind-opt b">B. 내 친구랑 눈맞은 환승 이별</div>
-                </div>
-                <button class="btn-pick" onclick="location.href='detail.html'">결과가 궁금하다면? 참전하기 🔥</button>
-            </div>
+            <div class="feed-loading">불판 불러오는 중…</div>
         </div>
     </section>
 
     <section class="list-section">
         <div class="section-title" style="margin-bottom: 15px;">🔥 실시간 타오르는 불판</div>
-        
-        <div class="list-card" onclick="location.href='detail.html'">
-            <div class="list-header"><span class="list-cat">🤬 빌런/썰</span></div>
-            <h3 class="title">알바 대타 당일 펑크 낸 알바생 vs 그 자리에서 쌍욕 박은 사장님</h3>
-            <div class="text-vs-box">
-                <span class="opt-text opt-a">[A] 알바가 선 넘음</span><span class="vs-mark">VS</span><span class="opt-text opt-b">[B] 사장이 급발진</span>
-            </div>
-            <div class="list-meta"><span>🔥 3,210명 참전</span></div>
-        </div>
-        
-        <div class="list-card" onclick="location.href='detail.html'">
-            <div class="list-header"><span class="list-cat">🍕 먹잘알/푸파</span></div>
-            <h3 class="title">탕수육 영원한 난제. 소스 없이 그냥 고기만 먹어도 맛있는 건?</h3>
-            <div class="text-vs-box">
-                <span class="opt-text opt-a">[A] 눅눅 쫀득 부먹</span><span class="vs-mark">VS</span><span class="opt-text opt-b">[B] 바삭바삭 찍먹</span>
-            </div>
-            <div class="list-meta"><span>🔥 6,400명 참전</span></div>
-        </div>
-
-        <div class="list-card sponsor-card" onclick="location.href='detail.html'">
-            <div class="list-header">
-                <span class="list-cat sponsor-badge">🎁 스폰서 (투표 시 100% 쿠폰)</span>
-                <span style="font-size:0.75rem; color:var(--text-sub); font-weight:800;">Ad</span>
-            </div>
-            <h3 class="title">야식의 제왕 굽네치킨! 이번 주말 내 배를 채울 단 하나의 치킨은?</h3>
-            <div class="text-vs-box">
-                <span class="opt-text opt-a">[A] 근본 고추바사삭</span><span class="vs-mark">VS</span><span class="opt-text opt-b">[B] 맵단짠 볼케이노</span>
-            </div>
-            <div class="list-meta"><span style="color:var(--theme-gold);">🔥 현재 12,500명 혜택 수령 중!</span></div>
-        </div>
-
-        <div class="list-card" onclick="location.href='detail.html'">
-            <div class="list-header"><span class="list-cat">🚗 블박/과실</span></div>
-            <h3 class="title">골목길 무회전 킥보드 돌진 vs 과속 배달 오토바이. 100:0 가능한가?</h3>
-            <div class="text-vs-box">
-                <span class="opt-text opt-a">[A] 킥보드 과실 100</span><span class="vs-mark">VS</span><span class="opt-text opt-b">[B] 쌍방 과실이다</span>
-            </div>
-            <div class="list-meta"><span>🔥 1,200명 참전</span></div>
+        <div id="hotFeedList">
+            <div class="feed-loading">잠시만요…</div>
         </div>
     </section>
 </main>
@@ -384,6 +348,12 @@
     <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-upload.js"></script>
+<script src="../js/pickle-media-view.js"></script>
+<script src="../js/pickle-feed.js"></script>
 <script>
     // 헤더 스크롤 제어
     let lastScrollTop = 0;

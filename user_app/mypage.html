@@ -81,6 +81,8 @@
         padding: 18px 20px; margin-bottom: 20px; cursor: pointer; transition: 0.2s;
         box-shadow: 0 4px 15px rgba(255, 204, 0, 0.05);
     }
+    /* 포인트 UI — 관리자 활성화 시 .feature-hidden 클래스 제거 */
+    .point-summary-box.feature-hidden { display: none !important; }
     .point-summary-box:active { transform: scale(0.97); background: rgba(255,204,0,0.25); }
     .point-left { display: flex; flex-direction: column; gap: 4px; }
     .point-val { font-family: 'Black Han Sans', sans-serif; font-size: 1.6rem; color: var(--theme-gold); letter-spacing: 1px; }
@@ -115,6 +117,11 @@
 
     /* 3. 리스트 영역 */
     .list-container { padding: 15px 20px; display: flex; flex-direction: column; gap: 15px; }
+    .empty-state {
+        text-align: center; padding: 48px 20px;
+        color: var(--text-sub); font-size: 0.9rem; font-weight: 700;
+        line-height: 1.5;
+    }
     .hidden { display: none !important; }
     
     .record-card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 15px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
@@ -375,52 +382,47 @@
     <div class="point-history-container">
         <div class="pt-total-box">
             <div class="pt-total-label">현재 사용 가능한 포인트</div>
-            <div class="pt-total-val">4,250 P</div>
-            <div style="font-size:0.75rem; color:var(--neon-pink); margin-top:8px; font-weight:700;">※ 300P가 7일 이내에 소멸 예정입니다.</div>
+            <div class="pt-total-val">0 P</div>
         </div>
-        <div class="pt-item"><div class="pt-info"><span class="pt-title">출석체크 이벤트 달성</span><span class="pt-date">2026.05.21 08:30</span></div><span class="pt-amount pt-plus">+ 10 P</span></div>
-        <div class="pt-item"><div class="pt-info"><span class="pt-title">[스폰] BBQ 치킨 할인쿠폰 응모</span><span class="pt-date">2026.05.20 19:12</span></div><span class="pt-amount pt-minus">- 100 P</span></div>
-        <div class="pt-item"><div class="pt-info"><span class="pt-title">🔥 '평생 라면 vs 치킨' 불판 생성</span><span class="pt-date">2026.05.15 12:00</span></div><span class="pt-amount pt-plus">+ 50 P</span></div>
-        <div class="pt-item"><div class="pt-info"><span class="pt-title">🎉 신규 회원 가입 환영 보상</span><span class="pt-date">2026.04.12 10:11</span></div><span class="pt-amount pt-plus">+ 1,000 P</span></div>
     </div>
 </div>
 
 <main>
     <div class="profile-header">
-        <button class="btn-settings" onclick="openPanel('settingsPanel')">⚙️</button>
+        <button class="btn-settings" id="btnGoSettings" onclick="location.href='settings.html'">⚙️</button>
         <div class="profile-info-row">
-            <div class="profile-avatar" id="mainAvatar">🤤</div>
+            <div class="profile-avatar" id="mainAvatar">🥒</div>
             <div class="profile-text">
-                <div class="profile-name" id="mainNickname">쩝쩝박사 <span class="grade-badge">Lv.5</span></div>
-                <div class="profile-bio" id="mainBio">세상의 모든 맛을 논리적으로 평가합니다. (먹잘알 불판 전문)</div>
+                <div class="profile-name" id="mainNickname">픽클러 <span class="grade-badge">Lv.1</span></div>
+                <div class="profile-bio" id="mainBio"></div>
             </div>
         </div>
 
-        <div class="point-summary-box" onclick="openPointSheet()">
+        <div class="point-summary-box feature-hidden" onclick="openPointSheet()">
             <div class="point-left">
-                <div class="point-val">💰 4,250 <span>P</span></div>
-                <div class="point-expire">⏳ 7일 내 소멸 예정 300 P</div>
+                <div class="point-val">💰 0 <span>P</span></div>
+                <div class="point-expire">⏳ 소멸 예정 포인트 없음</div>
             </div>
             <div class="point-right">내역 보기 ❯</div>
         </div>
 
         <div class="fandom-stats">
             <div class="stat-box" onclick="openFandomSheet('follower')">
-                <span class="stat-num">4,102</span>
+                <span class="stat-num" id="statFollowerCount">0</span>
                 <span class="stat-label">나를 픽한 ></span>
             </div>
             <div class="stat-box" onclick="openFandomSheet('following')">
-                <span class="stat-num">128</span>
+                <span class="stat-num" id="statFollowingCount">0</span>
                 <span class="stat-label">내가 픽한 ></span>
             </div>
         </div>
 
         <div class="exp-container">
             <div class="exp-header">
-                <span class="private-rank">현재 상위 <span class="highlight">12%</span> 픽클러 🚀 <button class="btn-guide" onclick="openGuideModal()">ⓘ 가이드</button></span>
-                <span class="exp-text">Lv.6까지 25%</span>
+                <span class="private-rank">현재 상위 <span class="highlight" id="rankPercent">—</span> 픽클러 🚀 <button class="btn-guide" onclick="openGuideModal()">ⓘ 가이드</button></span>
+                <span class="exp-text" id="expText">—</span>
             </div>
-            <div class="progress-track"><div class="progress-fill"></div></div>
+            <div class="progress-track"><div class="progress-fill" style="width:0%;"></div></div>
         </div>
     </div>
 
@@ -431,38 +433,15 @@
     </div>
 
     <div class="list-container" id="createdArea">
-        <div class="record-card" onclick="location.href='detail.html'">
-            <div class="card-header"><span class="status-badge ing" style="color:var(--neon-blue); font-weight:800;">● 진행 중</span><span class="card-date">2시간 전</span></div>
-            <div class="card-title">금요일 퇴근 후 스트레스 박살내는 최고의 조합은? 치맥 vs 삼쏘</div>
-            <div class="card-footer-stats"><span class="stat-fire" style="color:var(--theme-gold);">🔥 24.1K 참여</span><span>💬 1.4K 댓글</span></div>
-        </div>
-        <div class="record-card" onclick="location.href='detail.html'">
-            <div class="card-header"><span class="status-badge done" style="color:var(--neon-pink); font-weight:800;">● 마감 완료</span><span class="card-date">2026. 05. 15</span></div>
-            <div class="card-title">평생 단 하나만 먹어야 한다면? 평생 라면 vs 평생 치킨</div>
-            <div class="card-footer-stats"><span class="stat-fire" style="color:var(--theme-gold);">🔥 89.1K 참여 (랭킹 1위 달성🏆)</span><span>💬 4.1K 댓글</span></div>
-        </div>
+        <div class="empty-state" id="createdEmpty">아직 생성한 불판이 없습니다.</div>
     </div>
 
     <div class="list-container hidden" id="votedArea">
-        <div class="record-card" onclick="location.href='detail.html'">
-            <div class="card-header"><span class="status-badge done" style="color:var(--neon-pink); font-weight:800;">● 마감 완료</span><span class="card-date">2026. 05. 16</span></div>
-            <div class="card-title">골목길 무회전 킥보드 돌진 vs 과속 배달 오토바이. 과실 비율은?</div>
-            <div class="vote-result-box">
-                <div class="my-pick-info">내 픽: <span>B. 과속 오토바이</span></div>
-                <div class="result-win">🎉 승리 (68%)</div>
-            </div>
-        </div>
+        <div class="empty-state" id="votedEmpty">아직 참전한 불판이 없습니다.</div>
     </div>
 
     <div class="list-container hidden" id="savedArea">
-        <div class="gift-card">
-            <div class="gift-header"><span class="gift-badge badge-available">● 사용 가능</span><span class="gift-date">2026.05.31 까지</span></div>
-            <div>
-                <div class="gift-title">🍗 [스폰] BBQ 치킨 3,000원 할인 쿠폰</div>
-                <div class="gift-desc">이벤트 포인트(100P) 응모 당첨 내역</div>
-            </div>
-            <div class="pin-box" onclick="copyPin('BBQ-2026-PCKL')">BBQ-2026-PCKL</div>
-        </div>
+        <div class="empty-state" id="savedEmpty">보관함이 비어 있습니다.</div>
     </div>
 </main>
 
@@ -483,7 +462,7 @@
                 프로필 편집 <span class="arrow-icon">›</span>
             </div>
             <div class="settings-item no-click">
-                SNS 계정 연동 <span class="item-subtext">카카오톡 연동됨</span>
+                SNS 계정 연동 <span class="item-subtext" id="snsLinkStatus">확인 중…</span>
             </div>
         </div>
 
@@ -533,7 +512,7 @@
 
         <!-- 💡 로그아웃, 회원탈퇴 그룹 -->
         <div class="settings-group">
-            <div class="settings-item text-danger" onclick="if(confirm('로그아웃 하시겠습니까?')){alert('로그아웃 되었습니다.'); closePanel('settingsPanel');}">로그아웃</div>
+            <div class="settings-item text-danger" id="btnLogout">로그아웃</div>
             <div class="settings-item text-danger" style="font-size: 0.9rem;" onclick="if(confirm('탈퇴 시 모든 기록이 삭제됩니다. 진행하시겠습니까?')){alert('탈퇴 처리되었습니다.');}">회원 탈퇴</div>
         </div>
     </div>
@@ -560,16 +539,16 @@
             </div>
         </div>
         <div class="input-group">
-            <div class="input-label"><span>닉네임</span><span class="char-count" id="nickCount">4/10</span></div>
+            <div class="input-label"><span>닉네임</span><span class="char-count" id="nickCount">0/10</span></div>
             <div class="input-wrapper">
-                <input type="text" class="input-field" id="nicknameInput" value="쩝쩝박사" maxlength="10" onkeyup="updateCharCount('nicknameInput', 'nickCount')">
+                <input type="text" class="input-field" id="nicknameInput" value="" maxlength="10" placeholder="닉네임 입력" onkeyup="updateCharCount('nicknameInput', 'nickCount')">
                 <button class="btn-check-dup" onclick="checkDuplicate()">중복 확인</button>
             </div>
             <div class="input-hint" id="nicknameHint" style="display:none; color:var(--neon-green); font-size:0.8rem; margin-top:8px;">사용 가능한 닉네임입니다.</div>
         </div>
         <div class="input-group">
-            <div class="input-label"><span>상태메시지 (한줄 소개)</span><span class="char-count" id="bioCount">23/30</span></div>
-            <textarea class="textarea-field" id="bioInput" rows="3" maxlength="30" onkeyup="updateCharCount('bioInput', 'bioCount')">세상의 모든 맛을 논리적으로 평가합니다.</textarea>
+            <div class="input-label"><span>상태메시지 (한줄 소개)</span><span class="char-count" id="bioCount">0/30</span></div>
+            <textarea class="textarea-field" id="bioInput" rows="3" maxlength="30" placeholder="한줄 소개를 입력해 주세요." onkeyup="updateCharCount('bioInput', 'bioCount')"></textarea>
         </div>
     </div>
 </div>
@@ -877,6 +856,11 @@
     function closeAllModals() {
         overlay.classList.remove('open');
         document.querySelectorAll('.bottom-sheet, .guide-modal').forEach(el => el.classList.remove('open'));
+        const settings = document.getElementById('settingsPanel');
+        if (settings && settings.classList.contains('open')) {
+            closePanel('settingsPanel');
+            return;
+        }
         if(!document.getElementById('settingsPanel').classList.contains('open')) {
             document.body.style.overflow = '';
         }
@@ -890,16 +874,10 @@
         const contentEl = document.getElementById('fandomListContent');
         if (type === 'follower') {
             titleEl.innerText = '나를 픽한 픽클러 (팔로워)';
-            contentEl.innerHTML = `
-                <div class="fandom-item"><div class="fandom-profile"><div class="fandom-avatar">😎</div><div><div class="fandom-name">질주본능블박러</div><div class="fandom-lvl">Lv.4</div></div></div><button class="btn-follow follow" onclick="toggleFollow(this)">맞픽 하기</button></div>
-                <div class="fandom-item"><div class="fandom-profile"><div class="fandom-avatar">👗</div><div><div class="fandom-name">패션피플</div><div class="fandom-lvl">Lv.3</div></div></div><button class="btn-follow following" onclick="toggleFollow(this)">픽 취소</button></div>
-            `;
         } else {
             titleEl.innerText = '내가 픽한 픽클러 (팔로잉)';
-            contentEl.innerHTML = `
-                <div class="fandom-item"><div class="fandom-profile"><div class="fandom-avatar">🤯</div><div><div class="fandom-name">밸런스파괴자</div><div class="fandom-lvl">Lv.3</div></div></div><button class="btn-follow following" onclick="toggleFollow(this)">픽 취소</button></div>
-            `;
         }
+        contentEl.innerHTML = '<div class="empty-state" style="padding:30px 10px;">아직 목록이 없습니다.</div>';
     }
     function toggleFollow(btn) {
         if (btn.classList.contains('following')) { btn.classList.remove('following'); btn.classList.add('follow'); btn.innerText = '픽 하기'; } 
@@ -946,7 +924,7 @@
     function saveProfile() {
         const newNick = document.getElementById('nicknameInput').value;
         if(newNick.length < 2) { alert("닉네임을 2글자 이상 입력해주세요."); return; }
-        document.getElementById('mainNickname').innerHTML = `${newNick} <span class="grade-badge">Lv.5</span>`;
+        document.getElementById('mainNickname').innerHTML = `${newNick} <span class="grade-badge">Lv.1</span>`;
         document.getElementById('mainBio').innerText = document.getElementById('bioInput').value;
         document.getElementById('mainAvatar').innerHTML = document.getElementById('editAvatarPreview').innerHTML;
         alert("프로필이 성공적으로 업데이트 되었습니다! ✨");
@@ -1000,6 +978,10 @@
         }
     }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/mypage-page.js"></script>
 
 </body>
 </html>
