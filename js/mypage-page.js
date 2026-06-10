@@ -90,10 +90,27 @@
       var user = await requireAuth();
       if (!user) return;
       renderProfile(user);
+      bindLogout();
     } catch (err) {
       console.error('[P!CKLE Mypage]', err);
       window.location.replace('login.html?redirect=mypage.html');
     }
+  }
+
+  function bindLogout() {
+    var btn = document.getElementById('btnLogout');
+    if (!btn) return;
+    btn.addEventListener('click', async function () {
+      if (!confirm('로그아웃 하시겠습니까?')) return;
+      try {
+        var sb = getSupabaseClient();
+        var result = await sb.auth.signOut();
+        if (result.error) throw result.error;
+        window.location.replace('login.html');
+      } catch (err) {
+        alert(err.message || '로그아웃에 실패했습니다.');
+      }
+    });
   }
 
   window.PickleMypage = {

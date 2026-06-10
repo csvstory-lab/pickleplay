@@ -190,6 +190,17 @@
     .item-subtext { font-size: 0.85rem; color: var(--neon-blue); font-weight: 700; background: rgba(0, 240, 255, 0.1); padding: 4px 8px; border-radius: 8px; }
     .text-danger { color: var(--alert-red); }
 
+    .settings-company-footer {
+        margin-top: 28px;
+        padding: 20px 5px 12px;
+        border-top: 1px solid var(--border-color);
+        font-size: 0.75rem;
+        color: var(--text-sub);
+        line-height: 1.65;
+        word-break: keep-all;
+        text-align: center;
+    }
+
     /* 토글 스위치 UI */
     .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -389,7 +400,7 @@
 
 <main>
     <div class="profile-header">
-        <button class="btn-settings" id="btnGoSettings" onclick="location.href='settings.html'">⚙️</button>
+        <button class="btn-settings" id="btnGoSettings" type="button" onclick="openPanel('settingsPanel')">⚙️</button>
         <div class="profile-info-row">
             <div class="profile-avatar" id="mainAvatar">🥒</div>
             <div class="profile-text">
@@ -515,6 +526,10 @@
             <div class="settings-item text-danger" id="btnLogout">로그아웃</div>
             <div class="settings-item text-danger" style="font-size: 0.9rem;" onclick="if(confirm('탈퇴 시 모든 기록이 삭제됩니다. 진행하시겠습니까?')){alert('탈퇴 처리되었습니다.');}">회원 탈퇴</div>
         </div>
+
+        <footer class="settings-company-footer">
+            (주)굿임팩트 | 대표: 이준수 | 사업자등록번호: 123-45-67890 | 주소: 서울특별시 강남구 테헤란로 123, 8층 | 통신판매업신고번호: 제2026-서울강남-0001호
+        </footer>
     </div>
 </div>
 
@@ -795,7 +810,7 @@
             </div>
         </label>
 
-        <button class="btn-submit-legal" onclick="submitLegalForm()">법적 게시중단 요청서 제출</button>
+        <button type="button" class="btn-submit-legal" onclick="submitLegalForm()">법적 게시중단 요청서 제출</button>
     </div>
 </div>
 
