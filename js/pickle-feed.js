@@ -176,6 +176,24 @@
     return new Date(start.getTime() + addMs);
   }
 
+  function formatListRemainingLabel(endsAt) {
+    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
+
+    var ms = endsAt.getTime() - Date.now();
+    if (ms <= 0) return '⏳ 마감됨';
+    if (ms < 60 * 60 * 1000) return '⏳ 마감 임박!';
+
+    var hours = Math.floor(ms / (60 * 60 * 1000));
+    return '⏳ ' + hours + '시간 남음';
+  }
+
+  function formatRemainingLabelForEl(endsAt, el) {
+    if (el && el.closest('.list-meta')) {
+      return formatListRemainingLabel(endsAt);
+    }
+    return formatFeedRemainingLabel(endsAt);
+  }
+
   function formatFeedRemainingLabel(endsAt) {
     if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
 
@@ -195,7 +213,7 @@
       var endsAt = new Date(iso);
       if (Number.isNaN(endsAt.getTime())) return;
 
-      el.textContent = formatFeedRemainingLabel(endsAt);
+      el.textContent = formatRemainingLabelForEl(endsAt, el);
 
       if (endsAt.getTime() - Date.now() <= 0) {
         el.classList.add('is-ended');
@@ -601,10 +619,50 @@
     );
   }
 
+  function renderListVsBox(post) {
+    return (
+      '<div class="text-vs-box">' +
+      '<span class="vs-a">' +
+      escapeHtml(safeStr(post && post.option_a, '')) +
+      '</span>' +
+      '<span class="vs-label">VS</span>' +
+      '<span class="vs-b">' +
+      escapeHtml(safeStr(post && post.option_b, '')) +
+      '</span>' +
+      '</div>'
+    );
+  }
+
+  function renderListMetaFooter(post) {
+    var endsAt = computeEndsAt(post);
+    var endsIso =
+      endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt.toISOString() : '';
+    var timerText = formatListRemainingLabel(endsAt);
+    var endedClass =
+      endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
+
+    return (
+      '<div class="list-meta">' +
+      '<span class="list-meta-participants">🔥 ' +
+      safeTotalVotes(post).toLocaleString() +
+      '명 참전</span>' +
+      '<span class="list-meta-sep">·</span>' +
+      '<span class="list-meta-timer feed-meta-timer' +
+      endedClass +
+      '"' +
+      (endsIso ? ' data-ends-at="' + escapeHtml(endsIso) + '"' : '') +
+      '>' +
+      escapeHtml(timerText) +
+      '</span>' +
+      '</div>'
+    );
+  }
+
   function buildListCardHtml(post) {
     if (!post || post.id == null) return '';
 
     var sponsorClass = post.is_sponsor ? ' sponsor-card' : '';
+    var catClass = post.is_sponsor ? ' list-cat sponsor-badge' : ' list-cat';
 
     return (
       '<article class="list-card' +
@@ -612,22 +670,16 @@
       '" data-id="' +
       escapeHtml(post.id) +
       '" role="button" tabindex="0">' +
+      '<span class="' +
+      catClass.trim() +
+      '">' +
+      escapeHtml(safeStr(post.categoryLabel, '🔥 불판')) +
+      '</span>' +
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +
-      renderFeedMetaRow(post, 'list') +
-      '<div class="list-ab-compact">' +
-      '<span class="list-ab-a">[A: ' +
-      escapeHtml(safeStr(post.option_a, '')) +
-      ']</span>' +
-      '<span class="list-ab-vs">vs</span>' +
-      '<span class="list-ab-b">[B: ' +
-      escapeHtml(safeStr(post.option_b, '')) +
-      ']</span>' +
-      '</div>' +
-      '<div class="list-participants">🔥 ' +
-      safeTotalVotes(post).toLocaleString() +
-      '명 참전</div>' +
+      renderListVsBox(post) +
+      renderListMetaFooter(post) +
       '</article>'
     );
   }

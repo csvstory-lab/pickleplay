@@ -63,7 +63,7 @@ iframe {
 
 /* A/B 선택지 — 좁은 화면·긴 텍스트 시 세로 배치 */
 .king-ab-box,
-.list-ab-compact,
+.list-card .text-vs-box,
 .text-vs-box {
   display: flex;
   flex-wrap: wrap;
@@ -74,8 +74,8 @@ iframe {
 
 .king-ab-a,
 .king-ab-b,
-.list-ab-a,
-.list-ab-b,
+.list-card .text-vs-box .vs-a,
+.list-card .text-vs-box .vs-b,
 .text-vs-box .vs-side {
   flex: 1 1 auto;
   min-width: 0;
@@ -85,22 +85,22 @@ iframe {
 
 @media (max-width: 400px) {
   .king-ab-box,
-  .list-ab-compact,
+  .list-card .text-vs-box,
   .text-vs-box {
     flex-direction: column;
     align-items: stretch;
   }
 
   .king-ab-vs,
-  .list-ab-vs,
+  .list-card .text-vs-box .vs-label,
   .text-vs-box .vs-label {
     align-self: center;
   }
 
   .king-ab-a,
   .king-ab-b,
-  .list-ab-a,
-  .list-ab-b {
+  .list-card .text-vs-box .vs-a,
+  .list-card .text-vs-box .vs-b {
     text-align: center;
   }
 }
@@ -170,10 +170,6 @@ iframe {
 
 .king-card .pickle-meta-row {
   margin-bottom: 12px;
-}
-
-.list-card .pickle-meta-row {
-  margin-bottom: 8px;
 }
 
 .issue-header-box .pickle-meta-row {
