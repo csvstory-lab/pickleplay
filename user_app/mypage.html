@@ -1018,23 +1018,7 @@
         else if(nick === "운영자") { hint.innerText = "사용할 수 없는 닉네임입니다."; hint.style.color = "var(--alert-red)"; }
         else { hint.innerText = "멋진 닉네임이네요! 사용 가능합니다."; hint.style.color = "var(--neon-green)"; }
     }
-    function saveProfile() {
-        const newNick = document.getElementById('nicknameInput').value;
-        if(newNick.length < 2) { alert("닉네임을 2글자 이상 입력해주세요."); return; }
-        
-        // 메인 화면에 즉시 데이터 반영
-        document.getElementById('mainNickname').innerHTML = newNick + ' <span class="grade-badge">Lv.5</span>';
-        document.getElementById('mainBio').innerText = document.getElementById('bioInput').value;
-        document.getElementById('mainAvatar').innerHTML = document.getElementById('editAvatarPreview').innerHTML;
-        
-        alert("프로필이 성공적으로 업데이트 되었습니다! ✨");
-        
-        // 💡 핵심: 프로필 창과 설정 창을 순차적으로 모두 닫음
-        closePanel('profileEditPanel');
-        setTimeout(() => {
-            closePanel('settingsPanel');
-        }, 100); // 부드러운 전환을 위해 약간의 딜레이 추가
-    }
+    // saveProfile() — js/mypage-page.js (Supabase auth.updateUser 영구 저장)
 
     // --- 서브 탭 전환 로직 (CS / 정책 공통) ---
     function switchInnerTab(tabName, group) {

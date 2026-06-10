@@ -29,29 +29,61 @@
   function getDisplayName(user) {
     if (!user) return '픽클러';
     var meta = user.user_metadata || {};
-    if (meta.nickname) return String(meta.nickname).trim();
+    if (meta.nickname && String(meta.nickname).trim()) {
+      return String(meta.nickname).trim();
+    }
     if (user.email) return user.email.split('@')[0];
     return '픽클러';
   }
 
   function getBioText(user) {
     var meta = user.user_metadata || {};
-    var bio = meta.bio ? String(meta.bio).trim() : '';
-    return bio || DEFAULT_BIO_TEXT;
+    if (meta.bio !== undefined && meta.bio !== null) {
+      var savedBio = String(meta.bio).trim();
+      return savedBio || DEFAULT_BIO_TEXT;
+    }
+    return DEFAULT_BIO_TEXT;
+  }
+
+  function getBioInputValue(user) {
+    var meta = user.user_metadata || {};
+    if (meta.bio !== undefined && meta.bio !== null) {
+      return String(meta.bio);
+    }
+    return '';
+  }
+
+  function hasCustomAvatar(user) {
+    var meta = user.user_metadata || {};
+    return !!(
+      (meta.avatar_html && String(meta.avatar_html).trim()) ||
+      (meta.avatar_emoji && String(meta.avatar_emoji).trim())
+    );
   }
 
   function getAvatarHtml(user) {
     var meta = user.user_metadata || {};
-    var avatarUrl = meta.avatar_url || meta.picture || meta.avatar || '';
-    if (avatarUrl) {
-      return (
-        '<img src="' +
-        escapeHtml(avatarUrl) +
-        '" alt="프로필 사진">'
-      );
+
+    if (meta.avatar_html && String(meta.avatar_html).trim()) {
+      return String(meta.avatar_html);
     }
-    var emoji = meta.avatar_emoji ? String(meta.avatar_emoji).trim() : '';
-    return escapeHtml(emoji || DEFAULT_AVATAR);
+
+    if (meta.avatar_emoji && String(meta.avatar_emoji).trim()) {
+      return escapeHtml(String(meta.avatar_emoji).trim());
+    }
+
+    if (!hasCustomAvatar(user)) {
+      var avatarUrl = meta.avatar_url || meta.picture || meta.avatar || '';
+      if (avatarUrl) {
+        return (
+          '<img src="' +
+          escapeHtml(avatarUrl) +
+          '" alt="프로필 사진">'
+        );
+      }
+    }
+
+    return escapeHtml(DEFAULT_AVATAR);
   }
 
   function getAuthProvider(user) {
@@ -89,8 +121,7 @@
 
   function fillProfileEditForm(user) {
     var name = getDisplayName(user);
-    var meta = user.user_metadata || {};
-    var bio = meta.bio ? String(meta.bio).trim() : '';
+    var bio = getBioInputValue(user);
 
     var nickInput = document.getElementById('nicknameInput');
     if (nickInput) {
@@ -185,6 +216,71 @@
     });
   }
 
+  async function saveProfile() {
+    var newNick = document.getElementById('nicknameInput').value.trim();
+    if (newNick.length < 2) {
+      alert('닉네임을 2글자 이상 입력해주세요.');
+      return;
+    }
+
+    var bioInput = document.getElementById('bioInput');
+    var avatarPreview = document.getElementById('editAvatarPreview');
+    var saveBtn = document.querySelector('.btn-save');
+    var newBio = bioInput ? bioInput.value : '';
+    var avatarHtml = avatarPreview ? avatarPreview.innerHTML : '';
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = '저장 중…';
+    }
+
+    try {
+      var sb = getSupabaseClient();
+      var mergedMeta = Object.assign({}, (currentUser && currentUser.user_metadata) || {}, {
+        nickname: newNick,
+        bio: newBio,
+        avatar_html: avatarHtml,
+      });
+
+      var result = await sb.auth.updateUser({
+        data: mergedMeta,
+      });
+
+      if (result.error) throw result.error;
+
+      if (result.data && result.data.user) {
+        renderProfile(result.data.user);
+      } else {
+        document.getElementById('mainNickname').innerHTML =
+          escapeHtml(newNick) + ' ' + GRADE_BADGE_HTML;
+        if (bioInput) {
+          document.getElementById('mainBio').innerText =
+            newBio.trim() || DEFAULT_BIO_TEXT;
+        }
+        if (avatarPreview) {
+          document.getElementById('mainAvatar').innerHTML = avatarHtml;
+        }
+      }
+
+      alert('프로필이 성공적으로 저장되었습니다! ✨');
+
+      if (typeof closePanel === 'function') {
+        closePanel('profileEditPanel');
+        setTimeout(function () {
+          closePanel('settingsPanel');
+        }, 100);
+      }
+    } catch (error) {
+      console.error('프로필 저장 실패:', error.message);
+      alert('프로필 저장에 실패했습니다: ' + error.message);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '완료';
+      }
+    }
+  }
+
   async function initMypage() {
     try {
       var b = window.PickleSupabaseBootstrap;
@@ -213,10 +309,13 @@
     getSupabaseClient: getSupabaseClient,
     renderProfile: renderProfile,
     fillProfileEditForm: fillProfileEditForm,
+    saveProfile: saveProfile,
     getCurrentUser: function () {
       return currentUser;
     },
   };
+
+  window.saveProfile = saveProfile;
 
   document.addEventListener('DOMContentLoaded', initMypage);
 })();
