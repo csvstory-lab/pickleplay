@@ -195,6 +195,8 @@
     .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
     .nav-icon { font-size: 1.4rem; }
     .nav-btn.fire-btn .nav-icon { background-color: var(--neon-green); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: #000; font-size: 1.6rem; transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3); }
+    .nav-btn.active { color: var(--neon-green); }
+    .nav-btn.active .nav-icon { text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
 
     /* 바텀 시트 */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -209,6 +211,7 @@
     .grid-item:active { background-color: var(--neon-green); color: #000; transform: scale(0.95); }
     .grid-item.highlight { border: 1px solid var(--neon-pink); color: var(--neon-pink); }
 </style>
+<link rel="stylesheet" href="../css/responsive-layout.css">
 </head>
 <body>
 
@@ -355,7 +358,7 @@
 <nav class="bottom-nav">
     <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
     <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="location.href='index.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    <div class="nav-btn fire-btn active" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
     <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
     <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>

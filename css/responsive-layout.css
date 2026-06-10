@@ -1,0 +1,64 @@
+/**
+ * P!CKLE — 반응형 레이아웃 · 미디어 · 텍스트 넘침 방지
+ */
+
+/* 최상위 가로 스크롤 차단 */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+main {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 반응형 미디어 설정 */
+img,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+  box-sizing: border-box;
+  border-radius: 8px;
+}
+
+/* embed 컨테이너 내부 iframe은 비율 유지 */
+.video-embed-wrap iframe,
+.single-media-wrap iframe,
+.split-embed iframe,
+.master-media-container iframe {
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.master-media-container,
+.vertical-split-container,
+.single-media-wrap {
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.vertical-split-container .split-half {
+  min-width: 0;
+}
+
+/* 긴 링크 · 텍스트 넘침 방지 */
+.record-card,
+.post-content-area,
+.vote-content,
+.list-card,
+.king-card {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  max-width: 100%;
+  box-sizing: border-box;
+}

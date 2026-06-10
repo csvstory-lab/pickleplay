@@ -231,6 +231,7 @@
     .btn-submit-report:active { background: var(--alert-red); color: #fff; }
 
 </style>
+<link rel="stylesheet" href="../css/responsive-layout.css">
 </head>
 <body>
 
@@ -327,15 +328,15 @@
         <div class="meta-row-top" id="detailMetaTags"></div>
     </div>
 
-    <p class="detail-desc" id="detailDescription" hidden></p>
+    <p class="detail-desc post-content-area" id="detailDescription" hidden></p>
 
-    <div class="master-media-container" id="videoContainer">
+    <div class="master-media-container post-content-area" id="videoContainer">
         <div class="detail-media-empty"><span>⏳</span><p>미디어 로딩 중…</p></div>
     </div>
 
     <div class="smart-hint" id="smartHint">👆 1번 터치=재생, 따닥!(더블탭)=투표!</div>
 
-    <div class="options-box" id="optionsBox">
+    <div class="options-box vote-content" id="optionsBox">
         <div class="opt-item" id="optBtnA" onclick="castVote('A', event, this)">
             <span class="opt-label-a">A</span> …
         </div>
