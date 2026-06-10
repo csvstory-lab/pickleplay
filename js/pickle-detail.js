@@ -6,6 +6,7 @@
 
   var currentPost = null;
   var timerInterval = null;
+  var currentPostId = null;
 
   var CATEGORY_LABELS = {
     hot: '🔥 HOT',
@@ -185,6 +186,224 @@
     }
   }
 
+  function formatCommentTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    var sec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (sec < 60) return '방금 전';
+    if (sec < 3600) return Math.floor(sec / 60) + '분 전';
+    if (sec < 86400) return Math.floor(sec / 3600) + '시간 전';
+    if (sec < 604800) return Math.floor(sec / 86400) + '일 전';
+    return d.toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  function commentAuthorLabel(comment) {
+    if (comment.users && comment.users.nickname) {
+      return comment.users.nickname;
+    }
+    return '픽커';
+  }
+
+  function renderCommentItemHtml(comment) {
+    var body = comment.filtered_content || comment.content || '';
+    return (
+      '<div class="comment-item" data-comment-id="' +
+      escapeHtml(comment.id) +
+      '">' +
+      '<div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem;">💬</div>' +
+      '<div class="comment-content">' +
+      '<div class="comment-user"><span>' +
+      escapeHtml(commentAuthorLabel(comment)) +
+      '</span><span style="font-size:0.7rem;color:#71717a;">' +
+      escapeHtml(formatCommentTime(comment.created_at)) +
+      '</span></div>' +
+      '<div class="comment-text">' +
+      escapeHtml(body) +
+      '</div>' +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  async function fetchCommentsList(sb, postId) {
+    var result = await sb
+      .from('comments')
+      .select(
+        'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )'
+      )
+      .eq('post_id', postId)
+      .eq('visibility_status', 'visible')
+      .order('created_at', { ascending: false });
+
+    if (result.error) throw result.error;
+    return result.data || [];
+  }
+
+  function updateCommentHeader(count) {
+    var headerEl = $('detailCommentCount');
+    if (headerEl) {
+      headerEl.textContent = '댓글 (' + Number(count || 0).toLocaleString() + ')';
+    }
+
+    var lockSub = document.querySelector('#commentLock .lock-subtext');
+    if (lockSub) {
+      lockSub.textContent =
+        '지금 참전하고 ' +
+        Number(count || 0).toLocaleString() +
+        '개의 훈수를 확인하세요.';
+    }
+  }
+
+  function renderCommentsList(comments) {
+    var listEl = $('detailCommentList');
+    if (!listEl) return;
+
+    if (!comments.length) {
+      listEl.innerHTML =
+        '<p class="comments-empty-msg" id="detailCommentEmpty">아직 댓글이 없습니다. 첫 훈수를 남겨보세요!</p>';
+      return;
+    }
+
+    listEl.innerHTML = comments.map(renderCommentItemHtml).join('');
+  }
+
+  async function loadComments(postId) {
+    if (!postId) return [];
+
+    try {
+      var sb = window.PickleSupabase.getClient();
+      var comments = await fetchCommentsList(sb, postId);
+      renderCommentsList(comments);
+      updateCommentHeader(comments.length);
+      renderStats(cachedVoteStats, comments.length);
+      return comments;
+    } catch (err) {
+      console.error('[P!CKLE Detail] 댓글 로드 실패', err);
+      var listEl = $('detailCommentList');
+      if (listEl) {
+        listEl.innerHTML =
+          '<p class="comments-empty-msg">댓글을 불러오지 못했습니다.</p>';
+      }
+      return [];
+    }
+  }
+
+  async function submitComment() {
+    var inputEl = $('detailCommentInput');
+    var submitBtn = $('detailCommentSubmit');
+    var text = inputEl ? inputEl.value.trim() : '';
+
+    if (!text) {
+      alert('댓글 내용을 입력해주세요.');
+      return;
+    }
+
+    if (!currentPostId) {
+      alert('불판 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    var sb = window.PickleSupabase.getClient();
+    var authResult = await sb.auth.getUser();
+
+    if (authResult.error) {
+      console.error('[P!CKLE Detail] auth', authResult.error);
+      alert('로그인 상태를 확인할 수 없습니다. 다시 로그인해 주세요.');
+      return;
+    }
+
+    var user = authResult.data && authResult.data.user;
+    if (!user) {
+      alert('댓글을 남기려면 로그인이 필요합니다.');
+      window.location.href =
+        'login.html?redirect=' +
+        encodeURIComponent(
+          'detail.html?id=' + encodeURIComponent(currentPostId)
+        );
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '등록 중…';
+    }
+
+    try {
+      var insertResult = await sb
+        .from('comments')
+        .insert({
+          user_id: user.id,
+          post_id: currentPostId,
+          content: text,
+          filtered_content: text,
+          ai_filter_status: 'passed',
+          visibility_status: 'visible',
+        })
+        .select(
+          'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )'
+        )
+        .single();
+
+      if (insertResult.error) throw insertResult.error;
+
+      if (inputEl) inputEl.value = '';
+
+      var listEl = $('detailCommentList');
+      var emptyEl = $('detailCommentEmpty');
+      if (emptyEl) emptyEl.remove();
+
+      if (listEl) {
+        listEl.insertAdjacentHTML(
+          'afterbegin',
+          renderCommentItemHtml(insertResult.data)
+        );
+      }
+
+      var count = listEl
+        ? listEl.querySelectorAll('.comment-item').length
+        : 1;
+      updateCommentHeader(count);
+      renderStats(cachedVoteStats, count);
+    } catch (err) {
+      console.error('[P!CKLE Detail] 댓글 등록 실패', err);
+      alert(
+        '댓글 등록에 실패했습니다. ' + (err.message || String(err))
+      );
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '등록';
+      }
+    }
+  }
+
+  function bindCommentForm() {
+    var submitBtn = $('detailCommentSubmit');
+    var inputEl = $('detailCommentInput');
+
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        submitComment();
+      });
+    }
+
+    if (inputEl) {
+      inputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          submitComment();
+        }
+      });
+    }
+  }
+
   async function fetchVoteStats(sb, postId) {
     var empty = { votesA: 0, votesB: 0, total: 0 };
 
@@ -325,7 +544,7 @@
     var statsEl = $('detailStats');
     if (!statsEl) return;
 
-    var total = voteStats.total || 0;
+    var total = voteStats && voteStats.total ? voteStats.total : 0;
     var label = total > 0 ? '🔥 ' + total.toLocaleString() + '명 참전' : '🔥 NEW';
 
     statsEl.innerHTML =
@@ -336,8 +555,12 @@
       ' 댓글</span>';
   }
 
+  var cachedVoteStats = { votesA: 0, votesB: 0, total: 0 };
+
   function renderDetail(post, voteStats, commentCount) {
     currentPost = post;
+    currentPostId = post.id;
+    cachedVoteStats = voteStats || { votesA: 0, votesB: 0, total: 0 };
     document.title = 'P!CKLE - ' + (post.title || '불판 상세');
 
     renderAuthor(post);
@@ -373,6 +596,9 @@
     }
 
     renderStats(voteStats, commentCount);
+    updateCommentHeader(commentCount);
+    loadComments(post.id);
+    bindCommentForm();
   }
 
   function showError(message) {
@@ -419,6 +645,8 @@
     getCurrentPost: function () {
       return currentPost;
     },
+    submitComment: submitComment,
+    loadComments: loadComments,
   };
 
   document.addEventListener('DOMContentLoaded', loadDetail);

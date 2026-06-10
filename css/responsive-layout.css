@@ -22,9 +22,20 @@ img,
 video,
 iframe {
   max-width: 100%;
-  height: auto;
   box-sizing: border-box;
   border-radius: 8px;
+}
+
+video,
+iframe {
+  height: auto;
+}
+
+.king-thumb img,
+.king-thumb-img {
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
 }
 
 /* embed 컨테이너 내부 iframe은 비율 유지 */

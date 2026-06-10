@@ -180,6 +180,8 @@
     .comment-pick-a { color: var(--neon-blue); font-size: 0.7rem; border: 1px solid var(--neon-blue); padding: 2px 6px; border-radius: 4px; }
     .comment-pick-b { color: var(--neon-pink); font-size: 0.7rem; border: 1px solid var(--neon-pink); padding: 2px 6px; border-radius: 4px; }
     .comment-text { font-size: 0.95rem; line-height: 1.4; }
+    .comments-empty-msg { text-align: center; color: var(--text-sub); font-size: 0.88rem; font-weight: 700; padding: 24px 12px; margin: 0; }
+    .comment-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* 바텀 시트 및 모달 공통 */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: 0.3s; }
@@ -359,28 +361,20 @@
     </div>
 
     <div class="comments-section">
-        <div class="comments-header"><span>댓글 (920)</span><span style="font-size: 0.8rem; color: var(--text-sub);">최신순 ▾</span></div>
+        <div class="comments-header"><span id="detailCommentCount">댓글 (0)</span><span style="font-size: 0.8rem; color: var(--text-sub);">최신순 ▾</span></div>
         
         <div class="comment-lock-screen" id="commentLock">
             <div class="lock-icon">🔒</div>
             <div class="lock-text">투표 후 댓글을 볼 수 있어요!</div>
-            <div class="lock-subtext">지금 참전하고 920개의 훈수를 확인하세요.</div>
+            <div class="lock-subtext">지금 참전하고 훈수를 확인하세요.</div>
         </div>
         
         <div class="comment-active-area" id="commentActive">
             <div class="comment-input-box">
-                <input type="text" class="comment-input" id="detailCommentInput" placeholder="훈수를 자유롭게 남겨보세요.">
-                <button class="comment-submit">등록</button>
+                <input type="text" class="comment-input" id="detailCommentInput" placeholder="훈수를 자유롭게 남겨보세요." maxlength="2000">
+                <button type="button" class="comment-submit" id="detailCommentSubmit">등록</button>
             </div>
-            <div class="comment-list">
-                <div class="comment-item">
-                    <div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem;">👗</div>
-                    <div class="comment-content">
-                        <div class="comment-user"><span>원피스무새</span><span class="comment-pick-a">A 픽</span></div>
-                        <div class="comment-text">첫 데이트는 무조건 원피스지. 스트릿 입고 나가면 친구 만나러 나온 줄 앎.</div>
-                    </div>
-                </div>
-            </div>
+            <div class="comment-list" id="detailCommentList"></div>
         </div>
     </div>
 </main>
@@ -518,6 +512,10 @@
             document.getElementById('commentLock').style.display = 'none';
             const commentActive = document.getElementById('commentActive');
             commentActive.classList.add('show');
+
+            if (window.PickleDetail && typeof window.PickleDetail.loadComments === 'function') {
+                window.PickleDetail.loadComments(new URLSearchParams(window.location.search).get('id'));
+            }
             
             setTimeout(() => {
                 blindFeedback.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -111,12 +111,34 @@
     return safeStr(raw, '');
   }
 
+  function isVideoUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    if (window.PickleMedia && window.PickleMedia.isValidVideoUrl) {
+      return window.PickleMedia.isValidVideoUrl(url);
+    }
+    return /youtube|youtu\.be|tiktok|vimeo|\.mp4|\.webm/i.test(url);
+  }
+
   function safeThumbnailUrl(post) {
     if (!post) return null;
-    var url = post.thumbnail_url;
-    if (typeof url !== 'string') return null;
-    url = url.trim();
-    return url || null;
+
+    var candidates = [
+      post.thumbnail_url,
+      post.media_url_1,
+      post.option_a_image_url,
+      post.media_url_2,
+      post.option_b_image_url,
+    ];
+
+    for (var i = 0; i < candidates.length; i++) {
+      var url = candidates[i];
+      if (typeof url !== 'string') continue;
+      url = url.trim();
+      if (!url || isVideoUrl(url)) continue;
+      return url;
+    }
+
+    return null;
   }
 
   function safeTotalVotes(post) {
@@ -302,7 +324,7 @@
     }
   }
 
-  function renderFeedMetaRow(post) {
+  function renderFeedMetaRow(post, variant) {
     var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
     var endsAt = computeEndsAt(post);
     var endsIso =
@@ -310,10 +332,16 @@
     var timerText = formatFeedRemainingLabel(endsAt);
     var endedClass =
       endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
+    var catClass =
+      variant === 'list'
+        ? 'pickle-meta-cat list-cat'
+        : 'pickle-meta-cat king-cat';
 
     return (
       '<div class="pickle-meta-row">' +
-      '<span class="pickle-meta-cat">[ ' +
+      '<span class="' +
+      catClass +
+      '">[ ' +
       escapeHtml(categoryText) +
       ' ]</span>' +
       '<span class="pickle-meta-timer feed-meta-timer' +
@@ -505,6 +533,7 @@
           post.pctA = pct.a;
           post.pctB = pct.b;
           post.commentCount = commentCountMap.get(post.id) || 0;
+          post.thumbnail_url = safeThumbnailUrl(post);
           return post;
         } catch (err) {
           console.warn('[P!CKLE Feed] 게시물 정규화 실패', row && row.id, err);
@@ -518,10 +547,12 @@
     var thumbUrl = safeThumbnailUrl(post);
     if (thumbUrl) {
       return (
-        '<div class="king-thumb">' +
-        '<img src="' +
+        '<div class="king-thumb king-thumb-has-image">' +
+        '<img class="king-thumb-img" src="' +
         escapeHtml(thumbUrl) +
-        '" alt="" loading="lazy">' +
+        '" alt="' +
+        escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
+        '" loading="lazy" decoding="async">' +
         '</div>'
       );
     }
@@ -565,7 +596,7 @@
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
       renderKingAbBox(post) +
-      '<button type="button" class="btn-pick">🔥 참전하기</button>' +
+      '<button type="button" class="btn-pick">결과가 궁금하다면? 참전하기 🔥</button>' +
       '</article>'
     );
   }
@@ -584,7 +615,7 @@
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +
-      renderFeedMetaRow(post) +
+      renderFeedMetaRow(post, 'list') +
       '<div class="list-ab-compact">' +
       '<span class="list-ab-a">[A: ' +
       escapeHtml(safeStr(post.option_a, '')) +
