@@ -368,6 +368,7 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/media-upload.js"></script>
+<script src="../js/create-page.js"></script>
 <script>
     // 마우스 드래그 스크롤
     const slider = document.getElementById('chipSlider');
@@ -547,19 +548,6 @@
         }
     }
 
-    function getSupabaseClient() {
-        const cfg = window.PICKLE_SUPABASE_CONFIG;
-        if (!cfg?.url || !cfg?.anonKey) {
-            throw new Error('Supabase 접속 정보가 없습니다. js/supabase-config.js 를 확인해 주세요.');
-        }
-        if (!window.supabase?.createClient) {
-            throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
-        }
-        return window.PickleSupabase
-            ? window.PickleSupabase.getClient()
-            : window.supabase.createClient(cfg.url.trim(), cfg.anonKey.trim());
-    }
-
     async function buildMediaPayload(userId) {
         if (currentMode === 'text') {
             return { media_mode: 'text' };
@@ -608,39 +596,7 @@
         throw new Error('미디어 정보를 구성할 수 없습니다.');
     }
 
-    function stripEmptyFields(obj) {
-        return Object.fromEntries(
-            Object.entries(obj).filter(([, value]) => value !== null && value !== undefined && value !== '')
-        );
-    }
-
-    function buildPostPayload(mediaFields) {
-        const selectedCategory = document.querySelector('.cat-chip.selected');
-        const customStart = document.getElementById('inputStartDate')?.value || null;
-        const customEnd = document.getElementById('inputEndDate')?.value || null;
-        const user = window.PickleAuth?.getUser?.();
-
-        const payload = {
-            category: selectedCategory.textContent.trim(),
-            title: document.getElementById('inputTitle').value.trim(),
-            description: document.getElementById('inputDesc').value.trim() || null,
-            option_a: document.getElementById('inputA').value.trim(),
-            option_b: document.getElementById('inputB').value.trim(),
-            duration: selectedDuration,
-            start_at: selectedDuration === 'custom' ? customStart : null,
-            end_at: selectedDuration === 'custom' ? customEnd : null,
-            hashtags: document.getElementById('inputHashtag').value.trim() || null,
-            ...mediaFields,
-        };
-
-        if (user?.id) {
-            payload.author_id = user.id;
-        }
-
-        return stripEmptyFields(payload);
-    }
-
-    // 💡 등록 전 밸리데이션 + Supabase 저장
+    // 💡 등록 전 밸리데이션 + Supabase posts 저장
     async function validateAndSubmit() {
         const selectedCategory = document.querySelector('.cat-chip.selected');
         if (!selectedCategory) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
@@ -671,33 +627,19 @@
         btnSubmit.textContent = '등록 중…';
 
         try {
-            if (window.PickleAuth?.init) {
-                await window.PickleAuth.init();
-            }
-
-            const user = window.PickleAuth?.getUser?.();
-            const needsUpload = currentMode !== 'text' && (
-                (currentMode === 'single' && uploadFiles.single) ||
-                (currentMode === 'vs' && (uploadFiles.vsA || uploadFiles.vsB))
-            );
-
-            if (needsUpload && !user) {
-                alert('사진을 업로드하려면 로그인이 필요합니다.');
-                window.PickleAuth?.goToLogin?.({ redirect: 'create.html', from: 'create' });
-                return;
-            }
-
-            const mediaFields = await buildMediaPayload(user?.id || 'guest');
-            const payload = buildPostPayload(mediaFields);
-            const sb = getSupabaseClient();
-            const { error } = await sb.from('pickle_posts').insert(payload);
-
-            if (error) throw error;
-
-            alert('🔥 완벽합니다! 불판이 등록되었습니다.');
-            location.href = 'index.html?created=1';
+            const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
+            if (result?.cancelled) return;
         } catch (err) {
-            alert('등록 실패: ' + (err.message || String(err)));
+            const msg = err.message || String(err);
+            if (msg.includes('title') && msg.includes('column')) {
+                alert('title 컬럼이 없습니다. supabase/06_posts_add_title.sql 을 실행해 주세요.');
+            } else if (msg.includes('media_type') || msg.includes('video_dual')) {
+                alert('미디어 컬럼이 없습니다. supabase/08_posts_media_columns.sql 을 실행해 주세요.');
+            } else if (msg.includes('author_id') || msg.includes('foreign key')) {
+                alert('회원 프로필이 없습니다. 로그아웃 후 다시 로그인해 주세요.');
+            } else {
+                alert('등록 실패: ' + msg);
+            }
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.textContent = '🚀 불판 지피기 (등록)';
