@@ -6,6 +6,7 @@
   'use strict';
 
   var FORM_MODE = { LOGIN: 'login', SIGNUP: 'signup' };
+  var FEED_PATH = 'index.html';
 
   function bootstrap() {
     return window.PickleSupabaseBootstrap;
@@ -34,8 +35,14 @@
     return true;
   }
 
+  /** 로그인 성공 후 이동 — 기본 메인 피드(index.html) */
   function getRedirectAfterLogin() {
-    return new URLSearchParams(window.location.search).get('redirect') || 'mypage.html';
+    return new URLSearchParams(window.location.search).get('redirect') || FEED_PATH;
+  }
+
+  /** OAuth 콜백 — Supabase 대시보드 Redirect URL과 일치해야 함 */
+  function getOAuthRedirectTo() {
+    return window.location.origin + '/index.html';
   }
 
   function formatAuthError(err) {
@@ -60,22 +67,30 @@
     var modeToggleLink = document.getElementById('btnEmailSignup');
     var emailInput = document.getElementById('mainEmailInput');
     var pwInput = document.getElementById('mainPwInput');
+    var pwConfirmInput = document.getElementById('password-confirm');
     var authBlock = document.querySelector('.email-auth-block');
-    if (!primaryBtn || !modeToggleLink || !emailInput || !pwInput) return;
+    if (!primaryBtn || !modeToggleLink || !emailInput || !pwInput || !pwConfirmInput) {
+      return;
+    }
 
     var formMode = FORM_MODE.LOGIN;
 
     function setFormMode(mode) {
       formMode = mode === FORM_MODE.SIGNUP ? FORM_MODE.SIGNUP : FORM_MODE.LOGIN;
+
       if (authBlock) {
         authBlock.dataset.mode = formMode;
       }
+
       if (formMode === FORM_MODE.SIGNUP) {
-        primaryBtn.textContent = '회원가입 완료';
-        modeToggleLink.textContent = '로그인으로 돌아가기';
+        primaryBtn.textContent = '픽클 회원가입';
+        modeToggleLink.textContent = '이미 계정이 있으신가요? 로그인';
+        pwInput.autocomplete = 'new-password';
       } else {
         primaryBtn.textContent = '로그인';
         modeToggleLink.textContent = '이메일로 가입하기';
+        pwInput.autocomplete = 'current-password';
+        pwConfirmInput.value = '';
       }
     }
 
@@ -83,6 +98,7 @@
       return {
         email: emailInput.value.trim(),
         password: pwInput.value,
+        passwordConfirm: pwConfirmInput.value,
       };
     }
 
@@ -101,6 +117,11 @@
       if (isSignup && creds.password.length < 6) {
         alert('비밀번호는 6자 이상 입력해 주세요.');
         pwInput.focus();
+        return null;
+      }
+      if (isSignup && creds.password !== creds.passwordConfirm) {
+        alert('비밀번호 확인이 일치하지 않습니다.');
+        pwConfirmInput.focus();
         return null;
       }
       return creds;
@@ -126,7 +147,8 @@
       try {
         if (isSignup) {
           await signUpWithEmail(creds.email, creds.password, creds.email.split('@')[0]);
-          alert('가입이 완료되었습니다! 로그인해 주세요.');
+          alert('가입 완료! 로그인해주세요.');
+          pwConfirmInput.value = '';
           setFormMode(FORM_MODE.LOGIN);
         } else {
           await signInWithEmail(creds.email, creds.password);
@@ -137,22 +159,21 @@
       } finally {
         primaryBtn.disabled = false;
         primaryBtn.textContent =
-          formMode === FORM_MODE.SIGNUP ? '회원가입 완료' : '로그인';
+          formMode === FORM_MODE.SIGNUP ? '픽클 회원가입' : '로그인';
       }
     });
 
-    pwInput.addEventListener('keydown', function (e) {
+    function onEnterSubmit(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
         primaryBtn.click();
       }
-    });
+    }
+
+    pwInput.addEventListener('keydown', onEnterSubmit);
+    pwConfirmInput.addEventListener('keydown', onEnterSubmit);
 
     setFormMode(FORM_MODE.LOGIN);
-  }
-
-  function getOAuthRedirectTo() {
-    return new URL(getRedirectAfterLogin(), window.location.href).href;
   }
 
   async function signInWithOAuth(provider) {
@@ -163,7 +184,9 @@
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
     var sb = getSupabaseClient();
-    var options = { redirectTo: getOAuthRedirectTo() };
+    var options = {
+      redirectTo: getOAuthRedirectTo(),
+    };
 
     if (provider === 'kakao') {
       options.queryParams = { prompt: 'login' };
@@ -243,6 +266,7 @@
     signInWithEmail: signInWithEmail,
     signUpOrSignIn: signUpOrSignIn,
     getRedirectAfterLogin: getRedirectAfterLogin,
+    getOAuthRedirectTo: getOAuthRedirectTo,
     guardConfigForUserAction: guardConfigForUserAction,
     init: initLoginPage,
   };

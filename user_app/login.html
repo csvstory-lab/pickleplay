@@ -113,6 +113,8 @@
         background-color: #353538;
         box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
     }
+    #password-confirm { display: none; }
+    .email-auth-block[data-mode="signup"] #password-confirm { display: block; }
     .btn-email-login {
         width: 100%; padding: 17px 20px;
         min-height: 54px;
@@ -281,6 +283,7 @@
         <div class="email-auth-block">
             <input type="email" id="mainEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
             <input type="password" id="mainPwInput" class="email-field" placeholder="비밀번호" autocomplete="current-password">
+            <input type="password" id="password-confirm" class="email-field" placeholder="비밀번호 확인" autocomplete="new-password">
             <button type="button" id="btnEmailLogin" class="btn-email-login">로그인</button>
             <button type="button" id="btnEmailSignup" class="btn-email-signup-link">이메일로 가입하기</button>
         </div>
