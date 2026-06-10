@@ -68,6 +68,10 @@
     var emailInput = document.getElementById('mainEmailInput');
     var pwInput = document.getElementById('mainPwInput');
     var pwConfirmInput = document.getElementById('password-confirm');
+    var signupDetailWrap = document.getElementById('signupDetailWrap');
+    var age14Checkbox = document.getElementById('signup-age14');
+    var marketingCheckbox = document.getElementById('signup-marketing');
+    var ageGroupSelect = document.getElementById('signup-age-group');
     var authBlock = document.querySelector('.email-auth-block');
     if (!primaryBtn || !modeToggleLink || !emailInput || !pwInput || !pwConfirmInput) {
       return;
@@ -75,11 +79,32 @@
 
     var formMode = FORM_MODE.LOGIN;
 
+    function getSelectedGender() {
+      var selected = document.querySelector('input[name="signupGender"]:checked');
+      return selected ? selected.value : '';
+    }
+
+    function resetSignupFields() {
+      pwConfirmInput.value = '';
+      if (age14Checkbox) age14Checkbox.checked = false;
+      if (marketingCheckbox) marketingCheckbox.checked = false;
+      if (ageGroupSelect) ageGroupSelect.value = '';
+      document.querySelectorAll('input[name="signupGender"]').forEach(function (el) {
+        el.checked = false;
+      });
+    }
+
     function setFormMode(mode) {
       formMode = mode === FORM_MODE.SIGNUP ? FORM_MODE.SIGNUP : FORM_MODE.LOGIN;
 
       if (authBlock) {
         authBlock.dataset.mode = formMode;
+      }
+      if (signupDetailWrap) {
+        signupDetailWrap.setAttribute(
+          'aria-hidden',
+          formMode === FORM_MODE.SIGNUP ? 'false' : 'true'
+        );
       }
 
       if (formMode === FORM_MODE.SIGNUP) {
@@ -90,7 +115,7 @@
         primaryBtn.textContent = '로그인';
         modeToggleLink.textContent = '이메일로 가입하기';
         pwInput.autocomplete = 'current-password';
-        pwConfirmInput.value = '';
+        resetSignupFields();
       }
     }
 
@@ -119,12 +144,36 @@
         pwInput.focus();
         return null;
       }
-      if (isSignup && creds.password !== creds.passwordConfirm) {
+      return creds;
+    }
+
+    function validateSignupDetails(creds) {
+      if (creds.password !== creds.passwordConfirm) {
         alert('비밀번호 확인이 일치하지 않습니다.');
         pwConfirmInput.focus();
         return null;
       }
-      return creds;
+      if (!age14Checkbox || !age14Checkbox.checked) {
+        alert('만 14세 이상임에 동의해 주세요.');
+        if (age14Checkbox) age14Checkbox.focus();
+        return null;
+      }
+      var gender = getSelectedGender();
+      if (!gender) {
+        alert('성별을 선택해 주세요.');
+        return null;
+      }
+      var ageGroup = ageGroupSelect ? ageGroupSelect.value : '';
+      if (!ageGroup) {
+        alert('연령대를 선택해 주세요.');
+        if (ageGroupSelect) ageGroupSelect.focus();
+        return null;
+      }
+      return {
+        gender: gender,
+        ageGroup: ageGroup,
+        marketingConsent: !!(marketingCheckbox && marketingCheckbox.checked),
+      };
     }
 
     modeToggleLink.addEventListener('click', function (e) {
@@ -139,6 +188,12 @@
       var creds = validateCredentials(isSignup);
       if (!creds) return;
 
+      var signupMeta = null;
+      if (isSignup) {
+        signupMeta = validateSignupDetails(creds);
+        if (!signupMeta) return;
+      }
+
       var loadingLabel = isSignup ? '가입 처리 중…' : '로그인 중…';
 
       primaryBtn.disabled = true;
@@ -146,9 +201,14 @@
 
       try {
         if (isSignup) {
-          await signUpWithEmail(creds.email, creds.password, creds.email.split('@')[0]);
+          await signUpWithEmail(creds.email, creds.password, {
+            nickname: creds.email.split('@')[0],
+            gender: signupMeta.gender,
+            age_group: signupMeta.ageGroup,
+            marketing_consent: signupMeta.marketingConsent,
+          });
           alert('가입 완료! 로그인해주세요.');
-          pwConfirmInput.value = '';
+          resetSignupFields();
           setFormMode(FORM_MODE.LOGIN);
         } else {
           await signInWithEmail(creds.email, creds.password);
@@ -184,32 +244,32 @@
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
     var sb = getSupabaseClient();
-    var options = {
-      redirectTo: getOAuthRedirectTo(),
+    var oauthOptions = {
+      redirectTo: window.location.origin + '/index.html',
     };
-
-    if (provider === 'kakao') {
-      options.queryParams = { prompt: 'login' };
-    }
 
     var result = await sb.auth.signInWithOAuth({
       provider: provider,
-      options: options,
+      options: oauthOptions,
     });
 
     if (result.error) throw result.error;
     return result.data;
   }
 
-  async function signUpWithEmail(email, password, nickname) {
+  async function signUpWithEmail(email, password, profileData) {
+    var meta = profileData || {};
     var sb = getSupabaseClient();
     var result = await sb.auth.signUp({
       email: String(email).trim(),
       password: password,
       options: {
         data: {
-          nickname: String(nickname || '').trim() || '픽클러',
+          nickname: String(meta.nickname || '').trim() || '픽클러',
           signup_platform: 'email',
+          gender: meta.gender || null,
+          age_group: meta.age_group || null,
+          marketing_consent: !!meta.marketing_consent,
         },
       },
     });
@@ -227,9 +287,9 @@
     return result.data;
   }
 
-  async function signUpOrSignIn(email, password, nickname) {
+  async function signUpOrSignIn(email, password, profileData) {
     try {
-      return await signUpWithEmail(email, password, nickname);
+      return await signUpWithEmail(email, password, profileData);
     } catch (err) {
       var msg = err.message || '';
       if (/already|registered|exists|duplicate/i.test(msg)) {

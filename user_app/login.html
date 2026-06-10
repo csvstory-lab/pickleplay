@@ -113,8 +113,136 @@
         background-color: #353538;
         box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
     }
-    #password-confirm { display: none; }
-    .email-auth-block[data-mode="signup"] #password-confirm { display: block; }
+    /* 가입 모드 — 상세 필드 부드럽게 펼침 */
+    .signup-detail-wrap {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+    .email-auth-block[data-mode="signup"] .signup-detail-wrap {
+        grid-template-rows: 1fr;
+    }
+    .signup-detail-inner {
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .signup-info-notice {
+        margin: 0;
+        padding: 0 2px 2px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #71717a;
+        line-height: 1.45;
+        word-break: keep-all;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .email-auth-block[data-mode="signup"] .signup-info-notice {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .signup-check-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        padding: 2px 0;
+    }
+    .signup-check-row input[type="checkbox"] {
+        appearance: none;
+        width: 20px; height: 20px;
+        margin: 2px 0 0;
+        border: 2px solid var(--input-border);
+        border-radius: 6px;
+        background-color: var(--input-bg);
+        cursor: pointer;
+        position: relative;
+        flex-shrink: 0;
+        transition: 0.2s;
+    }
+    .signup-check-row input[type="checkbox"]:checked {
+        background-color: var(--neon-green);
+        border-color: var(--neon-green);
+    }
+    .signup-check-row input[type="checkbox"]:checked::after {
+        content: '✔';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        color: #000;
+        font-weight: 900;
+    }
+    .signup-check-label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #d4d4d8;
+        line-height: 1.4;
+    }
+    .signup-check-label .req { color: var(--neon-pink); margin-right: 4px; }
+    .signup-check-label .opt { color: var(--text-sub); margin-right: 4px; }
+    .signup-field-label {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #a1a1aa;
+        padding-left: 4px;
+        margin-top: 2px;
+    }
+    .signup-field-label .req { color: var(--neon-pink); }
+    .gender-toggle {
+        display: flex;
+        gap: 10px;
+    }
+    .gender-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+    .gender-btn {
+        flex: 1;
+        text-align: center;
+        padding: 14px 12px;
+        min-height: 48px;
+        border: 2px solid var(--input-border);
+        border-radius: 14px;
+        background-color: var(--input-bg);
+        color: var(--text-sub);
+        font-size: 0.95rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 #000;
+        transition: border-color 0.2s, color 0.2s, background-color 0.2s, box-shadow 0.2s;
+    }
+    .gender-toggle input:checked + .gender-btn {
+        border-color: var(--neon-green);
+        background-color: rgba(57, 255, 20, 0.12);
+        color: #fff;
+        box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
+    }
+    .signup-select {
+        width: 100%;
+        padding: 16px 18px;
+        min-height: 52px;
+        background-color: var(--input-bg);
+        border: 2px solid var(--input-border);
+        border-radius: 14px;
+        color: var(--input-text);
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1.02rem;
+        font-weight: 600;
+        outline: none;
+        appearance: none;
+        box-shadow: 3px 3px 0 #000;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .signup-select:focus {
+        border-color: var(--neon-green);
+        box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
+    }
+    .signup-select option { background: var(--card-bg); color: #fff; }
     .btn-email-login {
         width: 100%; padding: 17px 20px;
         min-height: 54px;
@@ -280,10 +408,44 @@
     </div>
 
     <div class="login-section">
-        <div class="email-auth-block">
+        <div class="email-auth-block" data-mode="login">
             <input type="email" id="mainEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
             <input type="password" id="mainPwInput" class="email-field" placeholder="비밀번호" autocomplete="current-password">
-            <input type="password" id="password-confirm" class="email-field" placeholder="비밀번호 확인" autocomplete="new-password">
+
+            <div class="signup-detail-wrap" id="signupDetailWrap" aria-hidden="true">
+                <div class="signup-detail-inner">
+                    <p class="signup-info-notice">🔥 정확한 통계와 맞춤형 불판 최적화를 위해 꼭 필요한 정보입니다.</p>
+                    <input type="password" id="password-confirm" class="email-field" placeholder="비밀번호 확인" autocomplete="new-password">
+
+                    <label class="signup-check-row">
+                        <input type="checkbox" id="signup-age14">
+                        <span class="signup-check-label"><span class="req">[필수]</span> 만 14세 이상입니다.</span>
+                    </label>
+                    <label class="signup-check-row">
+                        <input type="checkbox" id="signup-marketing">
+                        <span class="signup-check-label"><span class="opt">[선택]</span> 마케팅 정보 수신 동의</span>
+                    </label>
+
+                    <span class="signup-field-label">성별 <span class="req">*</span></span>
+                    <div class="gender-toggle" role="radiogroup" aria-label="성별">
+                        <input type="radio" name="signupGender" id="signup-gender-male" value="male">
+                        <label for="signup-gender-male" class="gender-btn">남</label>
+                        <input type="radio" name="signupGender" id="signup-gender-female" value="female">
+                        <label for="signup-gender-female" class="gender-btn">여</label>
+                    </div>
+
+                    <span class="signup-field-label">연령대 <span class="req">*</span></span>
+                    <select id="signup-age-group" class="signup-select">
+                        <option value="">연령대 선택</option>
+                        <option value="10s">10대</option>
+                        <option value="20s">20대</option>
+                        <option value="30s">30대</option>
+                        <option value="40s">40대</option>
+                        <option value="50plus">50대 이상</option>
+                    </select>
+                </div>
+            </div>
+
             <button type="button" id="btnEmailLogin" class="btn-email-login">로그인</button>
             <button type="button" id="btnEmailSignup" class="btn-email-signup-link">이메일로 가입하기</button>
         </div>
@@ -304,95 +466,6 @@
             회원가입 시 <span>이용약관</span> 및 <span>개인정보처리방침</span>에 동의하게 됩니다.
         </div>
     </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 💡 이메일 회원가입 / 로그인 슬라이드 패널      -->
-    <!-- ============================================== -->
-    <div id="emailPanel" class="slide-panel">
-        <div class="panel-header">
-            <button class="btn-back" onclick="closeEmailForm()">←</button>
-            <h2 class="panel-title">이메일 회원가입</h2>
-        </div>
-        <div class="panel-content">
-            
-            <!-- 계정 정보 -->
-            <div class="input-group">
-                <label class="input-label">이메일 주소 (아이디)</label>
-                <input type="email" id="emailInput" class="input-field" placeholder="pickle@example.com">
-            </div>
-            
-            <div class="input-group">
-                <label class="input-label">비밀번호</label>
-                <input type="password" id="pwInput" class="input-field" placeholder="영문, 숫자 포함 8자 이상">
-            </div>
-            
-            <div class="input-group">
-                <label class="input-label">비밀번호 확인</label>
-                <input type="password" id="pwConfirmInput" class="input-field" placeholder="비밀번호를 다시 한번 입력해주세요">
-            </div>
-
-            <!-- 유저 정보 (데이터용) -->
-            <div class="input-group">
-                <label class="input-label">앱에서 사용할 닉네임</label>
-                <input type="text" id="nickInput" class="input-field" placeholder="도파민 폭발 닉네임을 정해주세요">
-            </div>
-
-            <div class="info-notice">
-                💡 P!CKLE은 원활한 시장조사 및 <strong>맞춤형 불판 큐레이션(추천)</strong>을 위해 최소한의 필수 정보만을 수집하고 있습니다.
-            </div>
-
-            <div class="row-group">
-                <div class="input-group">
-                    <label class="input-label">출생 연도</label>
-                    <select id="birthYear" class="select-field">
-                        <option value="">연도 선택</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">성별</label>
-                    <select id="gender" class="select-field">
-                        <option value="">성별 선택</option>
-                        <option value="M">남성</option>
-                        <option value="F">여성</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- 약관 동의 -->
-            <div class="terms-box">
-                <label class="checkbox-wrap all-agree-wrap">
-                    <input type="checkbox" id="checkAll" onchange="toggleAllTerms()">
-                    <span class="check-label">아래 약관에 모두 동의합니다.</span>
-                </label>
-                
-                <label class="checkbox-wrap">
-                    <input type="checkbox" class="term-item req-term">
-                    <span class="check-label"><span class="req">[필수]</span> 만 14세 이상입니다.</span>
-                </label>
-                <label class="checkbox-wrap">
-                    <input type="checkbox" class="term-item req-term">
-                    <span class="check-label"><span class="req">[필수]</span> P!CKLE 이용약관 동의</span>
-                    <button class="btn-view-terms" onclick="event.preventDefault(); alert('이용약관 내용이 팝업으로 뜹니다.')">보기</button>
-                </label>
-                <label class="checkbox-wrap">
-                    <input type="checkbox" class="term-item req-term">
-                    <span class="check-label"><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
-                    <button class="btn-view-terms" onclick="event.preventDefault(); alert('개인정보 처리방침이 팝업으로 뜹니다.')">보기</button>
-                </label>
-                <label class="checkbox-wrap">
-                    <input type="checkbox" class="term-item opt-term">
-                    <span class="check-label"><span class="opt">[선택]</span> 마케팅 정보 수신 동의 (이벤트/혜택 알림)</span>
-                </label>
-            </div>
-
-            <!-- 💡 픽클러 데뷔하기 버튼 적용 -->
-            <button type="button" class="btn-submit-form" onclick="processEmailAuth()">🥒 픽클러 데뷔하기 🚀</button>
-            
-            <div style="text-align:center; font-size:0.85rem; color:var(--text-sub); margin-top:25px; padding-bottom: 20px;">
-                상세 정보 입력이 필요하면 <button type="button" class="btn-email-signup-link" style="display:inline;padding:0;" onclick="openEmailForm()">여기</button>에서 가입할 수 있습니다.
-            </div>
-        </div>
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -420,95 +493,6 @@
         } catch (err) {
             if (err && err.message !== 'Supabase config not ready') {
                 alert(err.message || '소셜 로그인에 실패했습니다.');
-            }
-        }
-    }
-
-    // 출생 연도 드롭다운 자동 생성 로직 (14세 이상 기준)
-    function populateBirthYears() {
-        const yearSelect = document.getElementById('birthYear');
-        const currentYear = new Date().getFullYear();
-        for (let y = currentYear - 14; y >= 1950; y--) {
-            const option = document.createElement('option');
-            option.value = y;
-            option.text = y + "년생";
-            yearSelect.appendChild(option);
-        }
-    }
-    window.onload = populateBirthYears;
-
-    function openEmailForm() { document.getElementById('emailPanel').classList.add('open'); }
-    function closeEmailForm() { document.getElementById('emailPanel').classList.remove('open'); }
-
-    // 약관 전체 동의 체크 로직
-    function toggleAllTerms() {
-        const isChecked = document.getElementById('checkAll').checked;
-        const termItems = document.querySelectorAll('.term-item');
-        termItems.forEach(item => item.checked = isChecked);
-    }
-
-    // 하위 체크박스 해제 시 전체동의 해제 로직
-    document.querySelectorAll('.term-item').forEach(item => {
-        item.addEventListener('change', function() {
-            const allChecked = Array.from(document.querySelectorAll('.term-item')).every(cb => cb.checked);
-            document.getElementById('checkAll').checked = allChecked;
-        });
-    });
-
-    // 이메일 가입 폼 꼼꼼한 검증(Validation) + Supabase signUp
-    async function processEmailAuth() {
-        const email = document.getElementById('emailInput').value.trim();
-        const pw = document.getElementById('pwInput').value.trim();
-        const pwConfirm = document.getElementById('pwConfirmInput').value.trim();
-        const nick = document.getElementById('nickInput').value.trim();
-        const year = document.getElementById('birthYear').value;
-        const gender = document.getElementById('gender').value;
-
-        if (email === '' || !email.includes('@')) { alert('올바른 이메일 주소를 입력해주세요.'); document.getElementById('emailInput').focus(); return; }
-        if (pw.length < 8) { alert('비밀번호는 8자 이상 입력해주세요.'); document.getElementById('pwInput').focus(); return; }
-        if (pw !== pwConfirm) { alert('비밀번호가 일치하지 않습니다.'); document.getElementById('pwConfirmInput').focus(); return; }
-        if (nick === '') { alert('앱에서 사용할 닉네임을 입력해주세요.'); document.getElementById('nickInput').focus(); return; }
-        if (year === '') { alert('출생 연도를 선택해주세요.'); document.getElementById('birthYear').focus(); return; }
-        if (gender === '') { alert('성별을 필수 선택해주세요.'); document.getElementById('gender').focus(); return; }
-
-        // 필수 약관 동의 체크
-        const reqTerms = document.querySelectorAll('.req-term');
-        for (let i = 0; i < reqTerms.length; i++) {
-            if (!reqTerms[i].checked) {
-                alert('가입을 위해 [필수] 약관 항목에 모두 동의해주세요.');
-                return;
-            }
-        }
-
-        // 검증 통과 → Supabase signUp / signInWithPassword
-        if (!window.PickleLogin) {
-            alert('인증 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
-            return;
-        }
-
-        const btnSubmit = document.querySelector('.btn-submit-form');
-        if (btnSubmit) {
-            btnSubmit.disabled = true;
-            btnSubmit.textContent = '가입 처리 중…';
-        }
-
-        try {
-            const data = await window.PickleLogin.signUpOrSignIn(email, pw, nick);
-
-            if (data.session) {
-                alert('🎉 P!CKLE에 오신 것을 환영합니다, ' + nick + '님!');
-                location.href = getRedirectAfterLogin();
-                return;
-            }
-
-            alert('가입 완료! 이메일 인증을 켜 두었다면 메일 확인 후 로그인해 주세요.');
-            closeEmailForm();
-        } catch (err) {
-            alert(err.message || '회원가입/로그인에 실패했습니다.');
-        } finally {
-            if (btnSubmit) {
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = '🥒 픽클러 데뷔하기 🚀';
             }
         }
     }
