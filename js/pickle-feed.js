@@ -20,6 +20,8 @@
     '<p>🔥 불판을 뜨겁게 달구는 중입니다...</p>' +
     '</div>';
 
+  var feedTimerInterval = null;
+
   var POSTS_SELECT_VARIANTS = [
     [
       'id',
@@ -35,6 +37,10 @@
       'layout_style',
       'thumbnail_url',
       'tags',
+      'duration',
+      'start_at',
+      'end_at',
+      'end_date',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -53,6 +59,9 @@
       'media_url_2',
       'layout_style',
       'thumbnail_url',
+      'duration',
+      'start_at',
+      'end_at',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -74,8 +83,8 @@
   ];
 
   var PICKLE_POSTS_SELECT_VARIANTS = [
-    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, thumbnail_url, hashtags, tags, created_at',
-    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, hashtags, created_at',
+    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, thumbnail_url, hashtags, tags, duration, start_at, end_at, created_at',
+    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, hashtags, duration, end_at, created_at',
     'id, category, title, option_a, option_b, media_mode, created_at',
   ];
 
@@ -113,6 +122,82 @@
   function safeTotalVotes(post) {
     var n = Number(post && post.totalVotes);
     return Number.isFinite(n) && n >= 0 ? n : 0;
+  }
+
+  function computeEndsAt(post) {
+    if (!post) return null;
+
+    var endRaw = post.end_at || post.end_date;
+    if (endRaw) {
+      var endDate = new Date(endRaw);
+      return Number.isNaN(endDate.getTime()) ? null : endDate;
+    }
+
+    if (!post.created_at) return null;
+
+    var start = post.start_at ? new Date(post.start_at) : new Date(post.created_at);
+    if (Number.isNaN(start.getTime())) return null;
+
+    var duration = post.duration || '24h';
+    var addMs = 0;
+
+    if (duration === '24h') {
+      addMs = 24 * 60 * 60 * 1000;
+    } else if (duration === '3') {
+      addMs = 3 * 24 * 60 * 60 * 1000;
+    } else if (duration === '7') {
+      addMs = 7 * 24 * 60 * 60 * 1000;
+    } else {
+      addMs = 24 * 60 * 60 * 1000;
+    }
+
+    return new Date(start.getTime() + addMs);
+  }
+
+  function formatFeedRemainingLabel(endsAt) {
+    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
+
+    var ms = endsAt.getTime() - Date.now();
+    if (ms <= 0) return '⏳ 마감됨';
+    if (ms < 60 * 60 * 1000) return '⏳ 마감 임박!';
+
+    var hours = Math.floor(ms / (60 * 60 * 1000));
+    return '⏳ ' + String(hours).padStart(2, '0') + '시간 남음';
+  }
+
+  function tickFeedTimers() {
+    document.querySelectorAll('.feed-meta-timer[data-ends-at]').forEach(function (el) {
+      var iso = el.getAttribute('data-ends-at');
+      if (!iso) return;
+
+      var endsAt = new Date(iso);
+      if (Number.isNaN(endsAt.getTime())) return;
+
+      el.textContent = formatFeedRemainingLabel(endsAt);
+
+      if (endsAt.getTime() - Date.now() <= 0) {
+        el.classList.add('is-ended');
+      } else {
+        el.classList.remove('is-ended');
+      }
+    });
+  }
+
+  function startFeedTimerRefresh() {
+    if (feedTimerInterval) {
+      clearInterval(feedTimerInterval);
+      feedTimerInterval = null;
+    }
+
+    tickFeedTimers();
+    feedTimerInterval = setInterval(tickFeedTimers, 30000);
+  }
+
+  function stopFeedTimerRefresh() {
+    if (feedTimerInterval) {
+      clearInterval(feedTimerInterval);
+      feedTimerInterval = null;
+    }
   }
 
   function detailUrl(id) {
@@ -179,6 +264,10 @@
           media_type: row.media_mode || null,
           thumbnail_url: safeThumbnailUrl(row),
           tags: safeTags(row),
+          duration: row.duration || '24h',
+          start_at: row.start_at || null,
+          end_at: row.end_at || row.end_date || null,
+          end_date: row.end_date || row.end_at || null,
           is_sponsor: false,
           created_at: row.created_at || null,
           authorNickname: null,
@@ -198,6 +287,10 @@
         media_type: row.media_type || null,
         thumbnail_url: safeThumbnailUrl(row),
         tags: safeTags(row),
+        duration: row.duration || '24h',
+        start_at: row.start_at || null,
+        end_at: row.end_at || row.end_date || null,
+        end_date: row.end_date || row.end_at || null,
         is_sponsor: !!row.is_sponsor,
         created_at: row.created_at || null,
         authorNickname:
@@ -209,45 +302,27 @@
     }
   }
 
-  function formatHashtags(raw) {
-    try {
-      if (raw === null || raw === undefined || raw === '') return [];
-      return safeStr(raw, '')
-        .split(/\s+/)
-        .map(function (tag) {
-          tag = tag.trim();
-          if (!tag) return '';
-          return tag.startsWith('#') ? tag : '#' + tag;
-        })
-        .filter(Boolean)
-        .slice(0, 5);
-    } catch (err) {
-      console.warn('[P!CKLE Feed] formatHashtags 실패', err);
-      return [];
-    }
-  }
-
-  function renderMetaRow(post, prefix) {
-    prefix = prefix || 'king';
+  function renderFeedMetaRow(post) {
     var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
-    var tagSpans = formatHashtags(safeTags(post))
-      .map(function (tag) {
-        return (
-          '<span class="' + prefix + '-hashtag">' + escapeHtml(tag) + '</span>'
-        );
-      })
-      .join('');
+    var endsAt = computeEndsAt(post);
+    var endsIso =
+      endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt.toISOString() : '';
+    var timerText = formatFeedRemainingLabel(endsAt);
+    var endedClass =
+      endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
 
     return (
-      '<div class="' +
-      prefix +
-      '-meta-row">' +
-      '<span class="' +
-      prefix +
-      '-category">[ ' +
+      '<div class="pickle-meta-row">' +
+      '<span class="pickle-meta-cat">[ ' +
       escapeHtml(categoryText) +
       ' ]</span>' +
-      tagSpans +
+      '<span class="pickle-meta-timer feed-meta-timer' +
+      endedClass +
+      '"' +
+      (endsIso ? ' data-ends-at="' + escapeHtml(endsIso) + '"' : '') +
+      '>' +
+      escapeHtml(timerText) +
+      '</span>' +
       '</div>'
     );
   }
@@ -485,7 +560,7 @@
       escapeHtml(safeStr(post.title, '불판')) +
       '">' +
       renderKingThumb(post) +
-      renderMetaRow(post, 'king') +
+      renderFeedMetaRow(post) +
       '<h2 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
@@ -509,7 +584,7 @@
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +
-      renderMetaRow(post, 'list') +
+      renderFeedMetaRow(post) +
       '<div class="list-ab-compact">' +
       '<span class="list-ab-a">[A: ' +
       escapeHtml(safeStr(post.option_a, '')) +
@@ -579,6 +654,7 @@
 
     container.innerHTML = htmlParts.join('');
     bindCardNavigation(container, '.king-card');
+    startFeedTimerRefresh();
   }
 
   function renderFeedList(posts) {
@@ -607,6 +683,7 @@
       : '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">표시할 불판이 없습니다.</p></div>';
 
     bindCardNavigation(container, '.list-card');
+    startFeedTimerRefresh();
   }
 
   function showFeedError(message, detail) {
@@ -642,6 +719,7 @@
     var king = document.getElementById('aiCurationContainer');
     var list = document.getElementById('hotFeedList');
 
+    stopFeedTimerRefresh();
     showLoading(king);
     showLoading(list);
 

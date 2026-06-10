@@ -95,10 +95,78 @@ iframe {
 }
 
 @media (max-width: 340px) {
-  .king-meta-row {
+  .pickle-meta-row {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* === 상단 메타 정보 (피드·상세 공통) === */
+.pickle-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pickle-meta-cat {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--neon-green, #39ff14);
+  background: rgba(57, 255, 20, 0.08);
+  border: 1px solid rgba(57, 255, 20, 0.28);
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pickle-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #a1f5a1;
+  background: rgba(57, 255, 20, 0.06);
+  border: 1px solid rgba(57, 255, 20, 0.18);
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pickle-meta-timer {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--neon-pink, #ff007f);
+  background: rgba(255, 0, 127, 0.08);
+  border: 1px solid rgba(255, 0, 127, 0.35);
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  font-family: 'Black Han Sans', sans-serif;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.pickle-meta-timer.is-ended {
+  color: #a1a1aa;
+  border-color: #52525b;
+  background: #27272a;
+}
+
+.king-card .pickle-meta-row {
+  margin-bottom: 12px;
+}
+
+.list-card .pickle-meta-row {
+  margin-bottom: 8px;
+}
+
+.issue-header-box .pickle-meta-row {
+  justify-content: center;
 }
 
 .record-card,

@@ -55,11 +55,13 @@
       media_mode: row.media_mode || 'text',
       media_type: row.media_mode,
       layout_style: row.media_orientation || row.layout_style,
-      hashtags: row.hashtags || row.tags,
+      hashtags: row.hashtags || row.tags || '',
+      tags: row.tags || row.hashtags || '',
       created_at: row.created_at,
       duration: row.duration,
       start_at: row.start_at,
-      end_at: row.end_at,
+      end_at: row.end_at || row.end_date,
+      end_date: row.end_date || row.end_at,
       authorNickname: null,
     };
   }
@@ -77,25 +79,39 @@
       media_mode: mapMediaTypeToMode(row.media_type),
       media_type: row.media_type,
       layout_style: row.layout_style,
-      hashtags: row.hashtags || row.tags,
+      hashtags: row.hashtags || row.tags || '',
+      tags: row.tags || row.hashtags || '',
       created_at: row.created_at,
       duration: row.duration,
       start_at: row.start_at,
-      end_at: row.end_at,
+      end_at: row.end_at || row.end_date,
+      end_date: row.end_date || row.end_at,
       authorNickname:
         row.users && row.users.nickname ? row.users.nickname : null,
     };
   }
 
+  function safeTagsValue(post) {
+    if (!post) return '';
+    var raw = post.tags;
+    if (raw === null || raw === undefined || raw === '') {
+      raw = post.hashtags;
+    }
+    if (raw === null || raw === undefined) return '';
+    return String(raw);
+  }
+
   function formatHashtags(raw) {
     if (!raw) return [];
-    return raw
+    return String(raw)
       .split(/\s+/)
       .map(function (tag) {
+        tag = tag.trim();
+        if (!tag) return '';
         return tag.startsWith('#') ? tag : '#' + tag;
       })
       .filter(Boolean)
-      .slice(0, 3);
+      .slice(0, 5);
   }
 
   function firstEmoji(text) {
@@ -104,12 +120,18 @@
   }
 
   function computeEndsAt(post) {
-    if (post.end_at) return new Date(post.end_at);
+    var endRaw = post.end_at || post.end_date;
+    if (endRaw) {
+      var endDate = new Date(endRaw);
+      return Number.isNaN(endDate.getTime()) ? null : endDate;
+    }
     if (!post.created_at) return null;
 
     var start = post.start_at
       ? new Date(post.start_at)
       : new Date(post.created_at);
+    if (Number.isNaN(start.getTime())) return null;
+
     var duration = post.duration || '24h';
 
     if (duration === '24h') {
@@ -124,30 +146,17 @@
     if (duration === 'custom' && post.end_at) {
       return new Date(post.end_at);
     }
-    return null;
+    return new Date(start.getTime() + 24 * 60 * 60 * 1000);
   }
 
   function formatCountdown(endsAt) {
-    if (!endsAt) return '⏱ 진행 중';
+    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
     var ms = endsAt.getTime() - Date.now();
-    if (ms <= 0) return '⏱ 마감됨';
+    if (ms <= 0) return '⏳ 마감됨';
+    if (ms < 60 * 60 * 1000) return '⏳ 마감 임박!';
 
-    var totalSec = Math.floor(ms / 1000);
-    var h = Math.floor(totalSec / 3600);
-    var m = Math.floor((totalSec % 3600) / 60);
-    var s = totalSec % 60;
-
-    function pad(n) {
-      return String(n).padStart(2, '0');
-    }
-
-    if (h >= 24) {
-      var days = Math.floor(h / 24);
-      h = h % 24;
-      return '⏱ D-' + days + ' ' + pad(h) + ':' + pad(m) + ':' + pad(s);
-    }
-
-    return '⏱ ' + pad(h) + ':' + pad(m) + ':' + pad(s);
+    var hours = Math.floor(ms / (60 * 60 * 1000));
+    return '⏳ ' + String(hours).padStart(2, '0') + '시간 남음';
   }
 
   function startTimer(post) {
@@ -161,12 +170,18 @@
     if (!timerEl) return;
 
     function tick() {
-      timerEl.textContent = formatCountdown(endsAt);
+      var label = formatCountdown(endsAt);
+      timerEl.textContent = label;
+      if (endsAt && endsAt.getTime() - Date.now() <= 0) {
+        timerEl.classList.add('is-ended');
+      } else {
+        timerEl.classList.remove('is-ended');
+      }
     }
 
     tick();
     if (endsAt) {
-      timerInterval = setInterval(tick, 1000);
+      timerInterval = setInterval(tick, 30000);
     }
   }
 
@@ -255,18 +270,21 @@
     var html = [];
     var catLabel = categoryDisplay(post.category);
 
-    if (post.category) {
-      html.push(
-        '<span class="meta-tag meta-tag-cat">' + escapeHtml(catLabel) + '</span>'
-      );
-    }
+    html.push(
+      '<span class="pickle-meta-cat">[ ' + escapeHtml(catLabel) + ' ]</span>'
+    );
 
-    formatHashtags(post.hashtags).forEach(function (tag) {
-      html.push('<span class="meta-tag">' + escapeHtml(tag) + '</span>');
+    formatHashtags(safeTagsValue(post)).forEach(function (tag) {
+      html.push(
+        '<span class="pickle-meta-tag">' + escapeHtml(tag) + '</span>'
+      );
     });
 
-    html.push('<span class="timer-badge" id="detailTimer">⏱ --:--:--</span>');
+    html.push(
+      '<span class="pickle-meta-timer" id="detailTimer">⏳ --</span>'
+    );
 
+    metaEl.className = 'pickle-meta-row meta-row-top';
     metaEl.innerHTML = html.join('');
     startTimer(post);
   }
