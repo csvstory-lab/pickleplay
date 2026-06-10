@@ -156,6 +156,59 @@
     window.location.href = 'login.html?redirect=create.html&from=create';
   }
 
+  function validateCustomEndDate() {
+    var getDuration = window.getPickleCreateDuration;
+    if (!getDuration || getDuration() !== 'custom') {
+      return true;
+    }
+
+    var endInput = document.getElementById('inputEndDate');
+    var endVal = endInput?.value?.trim();
+    if (!endVal) {
+      alert('마감 일시를 선택해 주세요.');
+      return false;
+    }
+
+    var end = new Date(endVal);
+    if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
+      alert('마감 일시는 현재 시간 이후로만 설정할 수 있습니다.');
+      return false;
+    }
+
+    return true;
+  }
+
+  /** @returns {boolean} true면 호출측에서 추가 alert 불필요 */
+  function handleInsertError(err) {
+    var msg = String(err?.message || err || '').toLowerCase();
+    var code = String(err?.code || '');
+
+    var missingColumn =
+      (msg.indexOf('title') !== -1 && msg.indexOf('column') !== -1) ||
+      (msg.indexOf('media_type') !== -1 && msg.indexOf('column') !== -1) ||
+      msg.indexOf("could not find the 'title'") !== -1 ||
+      msg.indexOf("could not find the 'media_type'") !== -1;
+
+    if (missingColumn) {
+      alert('SQL 마이그레이션이 필요합니다. (title 또는 media_type 컬럼 누락)');
+      return true;
+    }
+
+    var fkError =
+      msg.indexOf('author_id') !== -1 ||
+      msg.indexOf('foreign key') !== -1 ||
+      msg.indexOf('violates foreign key') !== -1 ||
+      code === '23503';
+
+    if (fkError) {
+      alert('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+      goLogin();
+      return true;
+    }
+
+    return false;
+  }
+
   /**
    * @param {function(string): Promise<object>} buildMediaPayload — create.html 미디어 업로드
    */
@@ -198,6 +251,9 @@
       alert('A와 B 선택지는 서로 달라야 합니다!');
       return { cancelled: true };
     }
+    if (!validateCustomEndDate()) {
+      return { cancelled: true };
+    }
 
     var rawMedia = await buildMediaPayload(user.id);
     var mediaFields = mapMediaForPosts(rawMedia);
@@ -205,6 +261,9 @@
 
     var insertResult = await sb.from('posts').insert([payload]).select('id').single();
     if (insertResult.error) {
+      if (handleInsertError(insertResult.error)) {
+        return { cancelled: true };
+      }
       throw insertResult.error;
     }
 
@@ -217,5 +276,7 @@
     submitPost: submitPost,
     mapMediaForPosts: mapMediaForPosts,
     resolveCategorySlug: resolveCategorySlug,
+    handleInsertError: handleInsertError,
+    validateCustomEndDate: validateCustomEndDate,
   };
 })();

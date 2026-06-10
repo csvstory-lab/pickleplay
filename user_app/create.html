@@ -140,6 +140,13 @@
 
     .icon-plus { font-size: 2rem; margin-bottom: 5px; }
     .upload-txt { font-size: 0.9rem; font-weight: 700; text-align: center; line-height: 1.4; }
+    .upload-size-hint {
+        font-size: 0.72rem;
+        color: #71717a;
+        margin: 0 0 8px 0;
+        line-height: 1.4;
+        font-weight: 500;
+    }
 
     /* A/B 입력 필드 */
     .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
@@ -296,10 +303,6 @@
         <div id="customDateWrap" style="display: none;">
             <div class="date-input-row">
                 <div>
-                    <label class="date-label">🟢 오픈(시작) 일시</label>
-                    <input type="datetime-local" id="inputStartDate" class="input-box" style="margin: 0; padding: 12px;">
-                </div>
-                <div>
                     <label class="date-label">🔴 종료(마감) 일시</label>
                     <input type="datetime-local" id="inputEndDate" class="input-box" style="margin: 0; padding: 12px;">
                 </div>
@@ -404,11 +407,41 @@
     }
 
     let selectedDuration = '24h';
+    window.getPickleCreateDuration = function () { return selectedDuration; };
+
+    function toDatetimeLocalValue(date) {
+        const d = date || new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    function refreshEndDateMin() {
+        const el = document.getElementById('inputEndDate');
+        if (el) el.min = toDatetimeLocalValue(new Date());
+    }
+
     function setDuration(btn, val) {
         document.querySelectorAll('.duration-btn').forEach(el => el.classList.remove('active'));
         btn.classList.add('active'); selectedDuration = val;
         const customWrap = document.getElementById('customDateWrap');
         customWrap.style.display = (val === 'custom') ? 'block' : 'none';
+        if (val === 'custom') refreshEndDateMin();
+    }
+
+    function validateCustomEndDate() {
+        if (selectedDuration !== 'custom') return true;
+        const endInput = document.getElementById('inputEndDate');
+        const endVal = endInput?.value?.trim();
+        if (!endVal) {
+            alert('마감 일시를 선택해 주세요.');
+            return false;
+        }
+        const end = new Date(endVal);
+        if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
+            alert('마감 일시는 현재 시간 이후로만 설정할 수 있습니다.');
+            return false;
+        }
+        return true;
     }
 
     // 💡 미디어 업로드 관리 변수
@@ -452,7 +485,9 @@
     function renderUploadArea() {
         const container = document.getElementById('uploadContainer');
         container.innerHTML = ''; 
-        if (currentMode === 'text') return; 
+        if (currentMode === 'text') return;
+
+        const sizeHint = '<p class="upload-size-hint">(※ 최대 5MB 이하의 이미지 파일만 가능)</p>';
 
         // 슬롯 생성 함수
         const makeSlot = (id, label, ratioClass, iconColor) => `
@@ -468,19 +503,19 @@
 
         if (currentMode === 'single') {
             const ratioClass = currentOri === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
-            container.innerHTML = makeSlot('single', '가로/세로', ratioClass);
+            container.innerHTML = sizeHint + makeSlot('single', '가로/세로', ratioClass);
         }
 
         if (currentMode === 'vs') {
             if (currentOri === 'horizontal') {
-                container.innerHTML = `
+                container.innerHTML = sizeHint + `
                     <div class="vs-upload-group">
                         ${makeSlot('vsA', 'A', 'ratio-vs', 'var(--neon-blue)')}
                         <div class="vs-badge-upload">VS</div>
                         ${makeSlot('vsB', 'B', 'ratio-vs', 'var(--neon-pink)')}
                     </div>`;
             } else {
-                container.innerHTML = `
+                container.innerHTML = sizeHint + `
                     <div class="vs-upload-group row-layout">
                         ${makeSlot('vsA', 'A', 'ratio-vs-vert', 'var(--neon-blue)')}
                         <div class="vs-badge-upload">VS</div>
@@ -504,6 +539,13 @@
     function onPhotoSelected(type, input) {
         const file = input.files?.[0];
         if (!file) return;
+
+        const MAX_BYTES = 5 * 1024 * 1024;
+        if (file.size > MAX_BYTES) {
+            alert('사진 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
+            input.value = '';
+            return;
+        }
 
         try {
             if (window.PickleMedia?.validateImageFile) {
@@ -621,6 +663,7 @@
         const bVal = document.getElementById('inputB').value.trim();
         if (aVal === '' || bVal === '') { alert('A/B 선택지 내용을 완성해주세요!'); return; }
         if (aVal === bVal) { alert('A와 B 선택지는 서로 달라야 합니다!'); return; }
+        if (!validateCustomEndDate()) return;
 
         const btnSubmit = document.getElementById('btnSubmitPost');
         btnSubmit.disabled = true;
@@ -630,15 +673,8 @@
             const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
             if (result?.cancelled) return;
         } catch (err) {
-            const msg = err.message || String(err);
-            if (msg.includes('title') && msg.includes('column')) {
-                alert('title 컬럼이 없습니다. supabase/06_posts_add_title.sql 을 실행해 주세요.');
-            } else if (msg.includes('media_type') || msg.includes('video_dual')) {
-                alert('미디어 컬럼이 없습니다. supabase/08_posts_media_columns.sql 을 실행해 주세요.');
-            } else if (msg.includes('author_id') || msg.includes('foreign key')) {
-                alert('회원 프로필이 없습니다. 로그아웃 후 다시 로그인해 주세요.');
-            } else {
-                alert('등록 실패: ' + msg);
+            if (!window.PickleCreatePage.handleInsertError(err)) {
+                alert('등록 실패: ' + (err.message || String(err)));
             }
         } finally {
             btnSubmit.disabled = false;
@@ -648,6 +684,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         window.PickleAuth?.init?.();
+        refreshEndDateMin();
+        const endInput = document.getElementById('inputEndDate');
+        if (endInput) {
+            endInput.addEventListener('focus', refreshEndDateMin);
+        }
     });
 </script>
 
