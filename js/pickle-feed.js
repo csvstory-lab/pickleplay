@@ -20,6 +20,65 @@
     '<p>🔥 불판을 뜨겁게 달구는 중입니다...</p>' +
     '</div>';
 
+  var POSTS_SELECT_VARIANTS = [
+    [
+      'id',
+      'title',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'option_a_image_url',
+      'option_b_image_url',
+      'media_type',
+      'media_url_1',
+      'media_url_2',
+      'layout_style',
+      'thumbnail_url',
+      'tags',
+      'is_sponsor',
+      'visibility_status',
+      'created_at',
+      'users:author_id ( nickname )',
+    ].join(', '),
+    [
+      'id',
+      'title',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'option_a_image_url',
+      'option_b_image_url',
+      'media_type',
+      'media_url_1',
+      'media_url_2',
+      'layout_style',
+      'thumbnail_url',
+      'is_sponsor',
+      'visibility_status',
+      'created_at',
+      'users:author_id ( nickname )',
+    ].join(', '),
+    [
+      'id',
+      'title',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'media_type',
+      'media_url_1',
+      'media_url_2',
+      'is_sponsor',
+      'visibility_status',
+      'created_at',
+    ].join(', '),
+  ];
+
+  var PICKLE_POSTS_SELECT_VARIANTS = [
+    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, thumbnail_url, hashtags, tags, created_at',
+    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, hashtags, created_at',
+    'id, category, title, option_a, option_b, media_mode, created_at',
+  ];
+
   function escapeHtml(str) {
     return String(str ?? '')
       .replace(/&/g, '&amp;')
@@ -28,11 +87,40 @@
       .replace(/"/g, '&quot;');
   }
 
+  function safeStr(value, fallback) {
+    if (value === null || value === undefined) return fallback || '';
+    return String(value);
+  }
+
+  function safeTags(post) {
+    if (!post) return '';
+    var raw = post.tags;
+    if (raw === null || raw === undefined || raw === '') {
+      raw = post.hashtags;
+    }
+    if (raw === null || raw === undefined) return '';
+    return safeStr(raw, '');
+  }
+
+  function safeThumbnailUrl(post) {
+    if (!post) return null;
+    var url = post.thumbnail_url;
+    if (typeof url !== 'string') return null;
+    url = url.trim();
+    return url || null;
+  }
+
+  function safeTotalVotes(post) {
+    var n = Number(post && post.totalVotes);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  }
+
   function detailUrl(id) {
     return 'detail.html?id=' + encodeURIComponent(id);
   }
 
   function goDetail(id) {
+    if (!id) return;
     window.location.href = detailUrl(id);
   }
 
@@ -48,107 +136,169 @@
   }
 
   function calcPercent(votesA, votesB) {
-    var total = votesA + votesB;
+    var a = Number(votesA) || 0;
+    var b = Number(votesB) || 0;
+    var total = a + b;
     if (total === 0) return { a: 50, b: 50, total: 0 };
-    var a = Math.round((votesA / total) * 100);
-    return { a: a, b: 100 - a, total: total };
+    var pctA = Math.round((a / total) * 100);
+    return { a: pctA, b: 100 - pctA, total: total };
   }
 
   function categoryLabel(category) {
     if (!category) return '🔥 불판';
-    return CATEGORY_LABELS[category] || escapeHtml(category);
+    return CATEGORY_LABELS[category] || safeStr(category, '🔥 불판');
+  }
+
+  function isSchemaColumnError(error) {
+    if (!error) return false;
+    var msg = safeStr(error.message, '').toLowerCase();
+    return (
+      msg.indexOf('column') !== -1 ||
+      msg.indexOf('does not exist') !== -1 ||
+      msg.indexOf('could not find') !== -1 ||
+      error.code === '42703' ||
+      error.code === 'PGRST204'
+    );
   }
 
   function normalizePostRow(row, source) {
-    if (source === 'pickle_posts') {
-    return {
-      id: row.id,
-      title: row.title || '',
-      category: row.category,
-      categoryLabel: categoryLabel(row.category),
-      option_a: row.option_a || '',
-      option_b: row.option_b || '',
-      media_url_1: row.media_url_1,
-      media_url_2: row.media_url_2,
-      media_mode: row.media_mode,
-      media_type: row.media_mode,
-      thumbnail_url: row.thumbnail_url || null,
-      tags: row.tags || row.hashtags || '',
-      is_sponsor: false,
-      created_at: row.created_at,
-      authorNickname: null,
-    };
-    }
+    if (!row || row.id == null) return null;
 
-    return {
-      id: row.id,
-      title: row.title || '',
-      category: row.category,
-      categoryLabel: categoryLabel(row.category),
-      option_a: row.option_a_name || '',
-      option_b: row.option_b_name || '',
-      media_url_1: row.media_url_1 || row.option_a_image_url,
-      media_url_2: row.media_url_2 || row.option_b_image_url,
-      media_mode: row.media_type,
-      media_type: row.media_type,
-      thumbnail_url: row.thumbnail_url || null,
-      tags: row.tags || row.hashtags || '',
-      is_sponsor: !!row.is_sponsor,
-      created_at: row.created_at,
-      authorNickname: row.users && row.users.nickname ? row.users.nickname : null,
-    };
+    try {
+      if (source === 'pickle_posts') {
+        return {
+          id: row.id,
+          title: safeStr(row.title, '제목 없음'),
+          category: row.category || null,
+          categoryLabel: categoryLabel(row.category),
+          option_a: safeStr(row.option_a, ''),
+          option_b: safeStr(row.option_b, ''),
+          media_url_1: row.media_url_1 || null,
+          media_url_2: row.media_url_2 || null,
+          media_mode: row.media_mode || null,
+          media_type: row.media_mode || null,
+          thumbnail_url: safeThumbnailUrl(row),
+          tags: safeTags(row),
+          is_sponsor: false,
+          created_at: row.created_at || null,
+          authorNickname: null,
+        };
+      }
+
+      return {
+        id: row.id,
+        title: safeStr(row.title, '제목 없음'),
+        category: row.category || null,
+        categoryLabel: categoryLabel(row.category),
+        option_a: safeStr(row.option_a_name, ''),
+        option_b: safeStr(row.option_b_name, ''),
+        media_url_1: row.media_url_1 || row.option_a_image_url || null,
+        media_url_2: row.media_url_2 || row.option_b_image_url || null,
+        media_mode: row.media_type || null,
+        media_type: row.media_type || null,
+        thumbnail_url: safeThumbnailUrl(row),
+        tags: safeTags(row),
+        is_sponsor: !!row.is_sponsor,
+        created_at: row.created_at || null,
+        authorNickname:
+          row.users && row.users.nickname ? safeStr(row.users.nickname, '') : null,
+      };
+    } catch (err) {
+      console.warn('[P!CKLE Feed] normalizePostRow 실패', row && row.id, err);
+      return null;
+    }
   }
 
   function formatHashtags(raw) {
-    if (!raw) return [];
-    return String(raw)
-      .split(/\s+/)
+    try {
+      if (raw === null || raw === undefined || raw === '') return [];
+      return safeStr(raw, '')
+        .split(/\s+/)
+        .map(function (tag) {
+          tag = tag.trim();
+          if (!tag) return '';
+          return tag.startsWith('#') ? tag : '#' + tag;
+        })
+        .filter(Boolean)
+        .slice(0, 5);
+    } catch (err) {
+      console.warn('[P!CKLE Feed] formatHashtags 실패', err);
+      return [];
+    }
+  }
+
+  function renderMetaRow(post, prefix) {
+    prefix = prefix || 'king';
+    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
+    var tagSpans = formatHashtags(safeTags(post))
       .map(function (tag) {
-        tag = tag.trim();
-        if (!tag) return '';
-        return tag.startsWith('#') ? tag : '#' + tag;
+        return (
+          '<span class="' + prefix + '-hashtag">' + escapeHtml(tag) + '</span>'
+        );
       })
-      .filter(Boolean)
-      .slice(0, 5);
+      .join('');
+
+    return (
+      '<div class="' +
+      prefix +
+      '-meta-row">' +
+      '<span class="' +
+      prefix +
+      '-category">[ ' +
+      escapeHtml(categoryText) +
+      ' ]</span>' +
+      tagSpans +
+      '</div>'
+    );
   }
 
   async function fetchVoteStatsMap(sb, postIds) {
     var map = new Map();
     if (!postIds.length) return map;
 
-    var rpc = await sb.rpc('get_post_vote_stats', { post_ids: postIds });
-    if (!rpc.error && rpc.data) {
-      rpc.data.forEach(function (st) {
-        map.set(st.post_id, {
-          votesA: Number(st.votes_a) || 0,
-          votesB: Number(st.votes_b) || 0,
-          total: Number(st.total) || 0,
+    try {
+      var rpc = await sb.rpc('get_post_vote_stats', { post_ids: postIds });
+      if (!rpc.error && rpc.data) {
+        rpc.data.forEach(function (st) {
+          if (!st || !st.post_id) return;
+          map.set(st.post_id, {
+            votesA: Number(st.votes_a) || 0,
+            votesB: Number(st.votes_b) || 0,
+            total: Number(st.total) || 0,
+          });
         });
+        return map;
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Feed] RPC 투표 집계 실패', err);
+    }
+
+    try {
+      var fallback = await sb
+        .from('votes')
+        .select('post_id, choice')
+        .in('post_id', postIds);
+
+      if (fallback.error) {
+        console.warn('[P!CKLE Feed] 투표 집계 실패', fallback.error);
+        return map;
+      }
+
+      postIds.forEach(function (id) {
+        map.set(id, { votesA: 0, votesB: 0, total: 0 });
       });
-      return map;
+
+      (fallback.data || []).forEach(function (row) {
+        if (!row || !row.post_id) return;
+        var st = map.get(row.post_id) || { votesA: 0, votesB: 0, total: 0 };
+        if (row.choice === 'A') st.votesA += 1;
+        if (row.choice === 'B') st.votesB += 1;
+        st.total += 1;
+        map.set(row.post_id, st);
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Feed] votes 테이블 집계 실패', err);
     }
-
-    var fallback = await sb
-      .from('votes')
-      .select('post_id, choice')
-      .in('post_id', postIds);
-
-    if (fallback.error) {
-      console.warn('[P!CKLE Feed] 투표 집계 실패', fallback.error);
-      return map;
-    }
-
-    postIds.forEach(function (id) {
-      map.set(id, { votesA: 0, votesB: 0, total: 0 });
-    });
-
-    (fallback.data || []).forEach(function (row) {
-      var st = map.get(row.post_id) || { votesA: 0, votesB: 0, total: 0 };
-      if (row.choice === 'A') st.votesA += 1;
-      if (row.choice === 'B') st.votesB += 1;
-      st.total += 1;
-      map.set(row.post_id, st);
-    });
 
     return map;
   }
@@ -157,59 +307,79 @@
     var map = new Map();
     if (!postIds.length) return map;
 
-    var result = await sb
-      .from('comments')
-      .select('post_id')
-      .in('post_id', postIds)
-      .eq('visibility_status', 'visible');
+    try {
+      var result = await sb
+        .from('comments')
+        .select('post_id')
+        .in('post_id', postIds)
+        .eq('visibility_status', 'visible');
 
-    if (result.error) {
-      console.warn('[P!CKLE Feed] 댓글 수 조회 실패', result.error);
-      return map;
+      if (result.error) {
+        console.warn('[P!CKLE Feed] 댓글 수 조회 실패', result.error);
+        return map;
+      }
+
+      (result.data || []).forEach(function (row) {
+        if (!row || !row.post_id) return;
+        map.set(row.post_id, (map.get(row.post_id) || 0) + 1);
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Feed] 댓글 수 조회 예외', err);
     }
-
-    (result.data || []).forEach(function (row) {
-      map.set(row.post_id, (map.get(row.post_id) || 0) + 1);
-    });
 
     return map;
   }
 
+  async function queryWithColumnFallback(sb, table, variants, applyFilters) {
+    var lastError = null;
+
+    for (var i = 0; i < variants.length; i++) {
+      var query = sb.from(table).select(variants[i]);
+      query = applyFilters(query);
+      var result = await query;
+
+      if (!result.error) {
+        if (i > 0) {
+          console.info('[P!CKLE Feed]', table, '선택 컬럼 폴백 적용 (variant', i + 1, ')');
+        }
+        return result;
+      }
+
+      lastError = result.error;
+
+      if (!isSchemaColumnError(result.error)) {
+        return result;
+      }
+
+      console.warn(
+        '[P!CKLE Feed]',
+        table,
+        '컬럼 누락 — 조회 재시도',
+        i + 1,
+        result.error.message
+      );
+    }
+
+    return { data: null, error: lastError };
+  }
+
   async function fetchFromPostsTable(sb) {
-    return sb
-      .from('posts')
-      .select(
-        [
-          'id',
-          'title',
-          'category',
-          'option_a_name',
-          'option_b_name',
-          'option_a_image_url',
-          'option_b_image_url',
-          'media_type',
-          'media_url_1',
-          'media_url_2',
-          'layout_style',
-          'thumbnail_url',
-          'tags',
-          'is_sponsor',
-          'visibility_status',
-          'created_at',
-          'users:author_id ( nickname )',
-        ].join(', ')
-      )
-      .eq('visibility_status', 'visible')
-      .order('created_at', { ascending: false });
+    return queryWithColumnFallback(sb, 'posts', POSTS_SELECT_VARIANTS, function (q) {
+      return q
+        .eq('visibility_status', 'visible')
+        .order('created_at', { ascending: false });
+    });
   }
 
   async function fetchFromPicklePostsTable(sb) {
-    return sb
-      .from('pickle_posts')
-      .select(
-        'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, thumbnail_url, hashtags, created_at'
-      )
-      .order('created_at', { ascending: false });
+    return queryWithColumnFallback(
+      sb,
+      'pickle_posts',
+      PICKLE_POSTS_SELECT_VARIANTS,
+      function (q) {
+        return q.order('created_at', { ascending: false });
+      }
+    );
   }
 
   /**
@@ -225,58 +395,63 @@
       console.warn('[P!CKLE Feed] posts 조회 실패, pickle_posts 폴백', result.error);
       source = 'pickle_posts';
       result = await fetchFromPicklePostsTable(sb);
-      if (result.error) throw result.error;
+      if (result.error) {
+        throw new Error(result.error.message || String(result.error));
+      }
     }
 
     var rows = result.data || [];
     if (!rows.length) return [];
 
-    var postIds = rows.map(function (r) {
-      return r.id;
-    });
+    var postIds = rows
+      .map(function (r) {
+        return r && r.id;
+      })
+      .filter(Boolean);
 
     var voteStatsMap = await fetchVoteStatsMap(sb, postIds);
     var commentCountMap = await fetchCommentCountMap(sb, postIds);
 
-    return rows.map(function (row) {
-      var post = normalizePostRow(row, source);
-      var st = voteStatsMap.get(post.id) || { votesA: 0, votesB: 0, total: 0 };
-      var pct = calcPercent(st.votesA, st.votesB);
-      post.votesA = st.votesA;
-      post.votesB = st.votesB;
-      post.totalVotes = pct.total;
-      post.pctA = pct.a;
-      post.pctB = pct.b;
-      post.commentCount = commentCountMap.get(post.id) || 0;
-      return post;
-    });
-  }
+    return rows
+      .map(function (row) {
+        try {
+          var post = normalizePostRow(row, source);
+          if (!post) return null;
 
-  function formatTimeAgo(iso) {
-    if (!iso) return '방금 전';
-    var diff = Date.now() - new Date(iso).getTime();
-    var min = Math.floor(diff / 60000);
-    if (min < 1) return '방금 전';
-    if (min < 60) return min + '분 전';
-    var hr = Math.floor(min / 60);
-    if (hr < 24) return hr + '시간 전';
-    var day = Math.floor(hr / 24);
-    if (day < 7) return day + '일 전';
-    return new Date(iso).toLocaleDateString('ko-KR');
+          var st = voteStatsMap.get(post.id) || {
+            votesA: 0,
+            votesB: 0,
+            total: 0,
+          };
+          var pct = calcPercent(st.votesA, st.votesB);
+          post.votesA = st.votesA;
+          post.votesB = st.votesB;
+          post.totalVotes = pct.total;
+          post.pctA = pct.a;
+          post.pctB = pct.b;
+          post.commentCount = commentCountMap.get(post.id) || 0;
+          return post;
+        } catch (err) {
+          console.warn('[P!CKLE Feed] 게시물 정규화 실패', row && row.id, err);
+          return null;
+        }
+      })
+      .filter(Boolean);
   }
 
   function renderKingThumb(post) {
-    if (post.thumbnail_url) {
+    var thumbUrl = safeThumbnailUrl(post);
+    if (thumbUrl) {
       return (
         '<div class="king-thumb">' +
         '<img src="' +
-        escapeHtml(post.thumbnail_url) +
+        escapeHtml(thumbUrl) +
         '" alt="" loading="lazy">' +
         '</div>'
       );
     }
 
-    var cat = escapeHtml(post.categoryLabel || '불판');
+    var cat = escapeHtml(safeStr(post && post.categoryLabel, '불판'));
     return (
       '<div class="king-thumb king-thumb-fallback">' +
       '<span class="king-fallback-cat">' +
@@ -286,40 +461,76 @@
     );
   }
 
-  function renderKingMetaRow(post) {
-    var tagSpans = formatHashtags(post.tags)
-      .map(function (tag) {
-        return '<span class="king-hashtag">' + escapeHtml(tag) + '</span>';
-      })
-      .join('');
-
-    return (
-      '<div class="king-meta-row">' +
-      '<span class="king-category">' +
-      escapeHtml(post.categoryLabel) +
-      '</span>' +
-      tagSpans +
-      '</div>'
-    );
-  }
-
   function renderKingAbBox(post) {
     return (
       '<div class="king-ab-box">' +
       '<span class="king-ab-a">[A: ' +
-      escapeHtml(post.option_a) +
+      escapeHtml(safeStr(post && post.option_a, '')) +
       ']</span>' +
       '<span class="king-ab-vs">vs</span>' +
       '<span class="king-ab-b">[B: ' +
-      escapeHtml(post.option_b) +
+      escapeHtml(safeStr(post && post.option_b, '')) +
       ']</span>' +
       '</div>'
     );
   }
 
+  function buildKingCardHtml(post) {
+    if (!post || post.id == null) return '';
+
+    return (
+      '<article class="king-card" data-id="' +
+      escapeHtml(post.id) +
+      '" role="button" tabindex="0" aria-label="' +
+      escapeHtml(safeStr(post.title, '불판')) +
+      '">' +
+      renderKingThumb(post) +
+      renderMetaRow(post, 'king') +
+      '<h2 class="title">' +
+      escapeHtml(safeStr(post.title, '제목 없음')) +
+      '</h2>' +
+      renderKingAbBox(post) +
+      '<button type="button" class="btn-pick">🔥 참전하기</button>' +
+      '</article>'
+    );
+  }
+
+  function buildListCardHtml(post) {
+    if (!post || post.id == null) return '';
+
+    var sponsorClass = post.is_sponsor ? ' sponsor-card' : '';
+
+    return (
+      '<article class="list-card' +
+      sponsorClass +
+      '" data-id="' +
+      escapeHtml(post.id) +
+      '" role="button" tabindex="0">' +
+      '<h3 class="title">' +
+      escapeHtml(safeStr(post.title, '제목 없음')) +
+      '</h3>' +
+      renderMetaRow(post, 'list') +
+      '<div class="list-ab-compact">' +
+      '<span class="list-ab-a">[A: ' +
+      escapeHtml(safeStr(post.option_a, '')) +
+      ']</span>' +
+      '<span class="list-ab-vs">vs</span>' +
+      '<span class="list-ab-b">[B: ' +
+      escapeHtml(safeStr(post.option_b, '')) +
+      ']</span>' +
+      '</div>' +
+      '<div class="list-participants">🔥 ' +
+      safeTotalVotes(post).toLocaleString() +
+      '명 참전</div>' +
+      '</article>'
+    );
+  }
+
   function bindCardNavigation(root, selector) {
+    if (!root) return;
     root.querySelectorAll(selector).forEach(function (card) {
       var id = card.dataset.id;
+      if (!id) return;
       card.addEventListener('click', function () {
         goDetail(id);
       });
@@ -345,31 +556,28 @@
     var container = document.getElementById('aiCurationContainer');
     if (!container) return;
 
-    if (!posts.length) {
+    var safePosts = (posts || []).filter(Boolean);
+    if (!safePosts.length) {
       renderEmptyState(container);
       return;
     }
 
-    container.innerHTML = posts
-      .map(function (post) {
-        return (
-          '<article class="king-card" data-id="' +
-          escapeHtml(post.id) +
-          '" role="button" tabindex="0" aria-label="' +
-          escapeHtml(post.title) +
-          '">' +
-          renderKingThumb(post) +
-          renderKingMetaRow(post) +
-          '<h2 class="title">' +
-          escapeHtml(post.title) +
-          '</h2>' +
-          renderKingAbBox(post) +
-          '<button type="button" class="btn-pick">🔥 참전하기</button>' +
-          '</article>'
-        );
-      })
-      .join('');
+    var htmlParts = [];
+    safePosts.forEach(function (post) {
+      try {
+        var html = buildKingCardHtml(post);
+        if (html) htmlParts.push(html);
+      } catch (err) {
+        console.warn('[P!CKLE Feed] 킹 카드 렌더 스킵', post && post.id, err);
+      }
+    });
 
+    if (!htmlParts.length) {
+      renderEmptyState(container);
+      return;
+    }
+
+    container.innerHTML = htmlParts.join('');
     bindCardNavigation(container, '.king-card');
   }
 
@@ -377,56 +585,57 @@
     var container = document.getElementById('hotFeedList');
     if (!container) return;
 
-    if (!posts.length) {
-      container.innerHTML = '';
+    var safePosts = (posts || []).filter(Boolean);
+    if (!safePosts.length) {
+      container.innerHTML =
+        '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">더 많은 불판이 곧 올라옵니다 🔥</p></div>';
       return;
     }
 
-    container.innerHTML = posts
-      .map(function (post) {
-        var sponsorClass = post.is_sponsor ? ' sponsor-card' : '';
-        var catClass = post.is_sponsor ? ' sponsor-badge' : '';
-        return (
-          '<article class="list-card' +
-          sponsorClass +
-          '" data-id="' +
-          escapeHtml(post.id) +
-          '" role="button" tabindex="0">' +
-          '<div class="list-header"><span class="list-cat' +
-          catClass +
-          '">' +
-          escapeHtml(post.categoryLabel) +
-          '</span></div>' +
-          '<h3 class="title">' +
-          escapeHtml(post.title) +
-          '</h3>' +
-          '<div class="list-ab-compact">' +
-          '<span class="list-ab-a">[A: ' +
-          escapeHtml(post.option_a) +
-          ']</span>' +
-          '<span class="list-ab-vs">vs</span>' +
-          '<span class="list-ab-b">[B: ' +
-          escapeHtml(post.option_b) +
-          ']</span>' +
-          '</div>' +
-          '<div class="list-participants">🔥 ' +
-          post.totalVotes.toLocaleString() +
-          '명 참전</div>' +
-          '</article>'
-        );
-      })
-      .join('');
+    var htmlParts = [];
+    safePosts.forEach(function (post) {
+      try {
+        var html = buildListCardHtml(post);
+        if (html) htmlParts.push(html);
+      } catch (err) {
+        console.warn('[P!CKLE Feed] 리스트 카드 렌더 스킵', post && post.id, err);
+      }
+    });
+
+    container.innerHTML = htmlParts.length
+      ? htmlParts.join('')
+      : '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">표시할 불판이 없습니다.</p></div>';
 
     bindCardNavigation(container, '.list-card');
   }
 
-  function showFeedError(message) {
+  function showFeedError(message, detail) {
     var king = document.getElementById('aiCurationContainer');
     var list = document.getElementById('hotFeedList');
+    var full = message + (detail ? '\n' + detail : '');
     var html =
-      '<div class="feed-empty feed-error">' + escapeHtml(message) + '</div>';
+      '<div class="feed-empty feed-error">' +
+      escapeHtml(message) +
+      (detail
+        ? '<p style="font-size:0.75rem;margin-top:8px;opacity:0.85;word-break:break-all;">' +
+          escapeHtml(detail) +
+          '</p>'
+        : '') +
+      '</div>';
     if (king) king.innerHTML = html;
     if (list) list.innerHTML = '';
+    console.error('[P!CKLE Feed]', full);
+  }
+
+  function formatErrorDetail(err) {
+    if (!err) return '알 수 없는 오류';
+    if (typeof err === 'string') return err;
+    var parts = [];
+    if (err.message) parts.push(err.message);
+    if (err.code) parts.push('code: ' + err.code);
+    if (err.details) parts.push(String(err.details));
+    if (err.hint) parts.push('hint: ' + err.hint);
+    return parts.length ? parts.join(' | ') : String(err);
   }
 
   async function loadPickleFeed() {
@@ -445,13 +654,37 @@
         return;
       }
 
-      renderKingCards(all.slice(0, 3));
-      renderFeedList(all.slice(3));
+      var kingPosts = all.slice(0, 3);
+      var listPosts = all.slice(3);
+
+      try {
+        renderKingCards(kingPosts);
+      } catch (kingErr) {
+        console.error('[P!CKLE Feed] 킹왕짱 렌더 실패', kingErr);
+        if (king) {
+          king.innerHTML =
+            '<div class="feed-empty feed-error">킹왕짱 영역을 그리지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;">' +
+            escapeHtml(formatErrorDetail(kingErr)) +
+            '</p></div>';
+        }
+      }
+
+      try {
+        renderFeedList(listPosts);
+      } catch (listErr) {
+        console.error('[P!CKLE Feed] 리스트 렌더 실패', listErr);
+        if (list) {
+          list.innerHTML =
+            '<div class="feed-empty feed-error">리스트를 그리지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;">' +
+            escapeHtml(formatErrorDetail(listErr)) +
+            '</p></div>';
+        }
+      }
     } catch (err) {
-      console.error('[P!CKLE Feed]', err);
-      showFeedError(
-        '불판을 불러오지 못했습니다. ' + (err.message || String(err))
-      );
+      var detail = formatErrorDetail(err);
+      console.error('[P!CKLE Feed] loadPickleFeed 실패', err);
+      alert('불판을 불러오지 못했습니다.\n\n' + detail);
+      showFeedError('불판을 불러오지 못했습니다.', detail);
     }
   }
 
