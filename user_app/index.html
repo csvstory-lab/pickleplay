@@ -147,23 +147,46 @@
     /* 👑 킹왕짱 이슈 카드 */
     .king-card {
         background: linear-gradient(145deg, #1f1f22, #121214);
-        border: 2px solid var(--neon-pink); border-radius: 24px; padding: 22px 18px;
+        border: 2px solid var(--neon-pink);
+        border-radius: 24px;
+        padding: 24px 20px;
         box-shadow: 0 10px 30px rgba(255, 0, 127, 0.15);
-        min-width: 85%; scroll-snap-align: center; flex-shrink: 0;
-        display: flex; flex-direction: column; gap: 0;
-        cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+        flex: 0 0 auto;
+        width: min(calc(100vw - 40px), 440px);
+        min-width: 88%;
+        max-width: 100%;
+        scroll-snap-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .king-card:active { transform: scale(0.98); }
 
+    .king-card .pickle-meta-row {
+        margin-bottom: 0;
+        gap: 10px;
+    }
+
     .king-card .title {
-        font-size: 1.25rem; font-weight: 900; line-height: 1.35; margin: 0 0 14px 0;
+        font-size: 1.35rem;
+        font-weight: 900;
+        line-height: 1.4;
+        margin: 0;
         word-break: keep-all;
     }
 
     .king-thumb {
-        width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden;
-        margin-bottom: 12px; background: #0f0f11; border: 1px solid #3f3f46;
-        position: relative; min-height: 140px;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 0;
+        background: #0f0f11;
+        border: 1px solid #3f3f46;
+        position: relative;
+        min-height: 160px;
     }
     .king-thumb-has-image {
         background-color: #0f0f11;
@@ -196,11 +219,11 @@
     .king-ab-box {
         display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px;
         background: #09090b; border: 1px solid #3f3f46; border-radius: 14px;
-        padding: 14px 12px; margin-bottom: 16px;
+        padding: 16px 14px; margin-bottom: 0;
     }
     .king-ab-a, .king-ab-b {
         flex: 1 1 auto; min-width: 0; max-width: 100%;
-        font-size: 0.88rem; font-weight: 800; text-align: center; word-break: keep-all;
+        font-size: 0.95rem; font-weight: 800; text-align: center; word-break: keep-all;
     }
     .king-ab-a { color: var(--neon-blue); }
     .king-ab-b { color: var(--neon-pink); }
@@ -210,10 +233,11 @@
     }
 
     .btn-pick {
-        width: 100%; padding: 15px; border-radius: 14px; border: none;
+        width: 100%; padding: 16px 18px; border-radius: 14px; border: none;
         background: linear-gradient(90deg, var(--neon-pink), #ff5500); color: white;
-        font-family: 'Black Han Sans', sans-serif; font-size: 0.98rem; letter-spacing: 0.3px;
+        font-family: 'Black Han Sans', sans-serif; font-size: 1rem; letter-spacing: 0.3px;
         line-height: 1.35; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.35); transition: 0.2s;
+        margin-top: 2px;
     }
     .btn-pick:active { transform: scale(0.98); }
 
@@ -243,19 +267,24 @@
     .list-section { padding: 0 20px 12px; }
     .list-card {
         display: flex; flex-direction: column; gap: 15px;
-        background-color: #18181b;
-        border: 1px solid #27272a;
+        background-color: #27272a;
+        border: 1px solid #3f3f46;
         border-radius: 16px;
         padding: 20px;
         margin-bottom: 20px;
         cursor: pointer;
         transition: 0.2s;
+        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
     }
-    .list-card:active { transform: translate(1px, 1px); border-color: #3f3f46; }
+    .list-card:active {
+        transform: translate(1px, 1px);
+        border-color: #52525b;
+        box-shadow: 0 1px 8px rgba(0, 0, 0, 0.22);
+    }
 
     .list-card.sponsor-card {
-        border-color: rgba(255, 204, 0, 0.35);
-        background: linear-gradient(180deg, rgba(255, 204, 0, 0.04) 0%, #18181b 100%);
+        border-color: rgba(255, 204, 0, 0.4);
+        background: linear-gradient(180deg, rgba(255, 204, 0, 0.06) 0%, #27272a 100%);
     }
 
     .list-cat {
