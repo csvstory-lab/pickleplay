@@ -17,6 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     :root {
         --bg-color: #09090b;
         --card-bg: #18181b;
@@ -162,16 +164,19 @@
     /* ⚙️ 통합 슬라이드 패널 구조 (Depth 1 & Depth 2) */
     /* ============================================== */
     .slide-panel {
-        position: fixed; top: 0; right: 0; width: 100%; height: 100%; max-width: 480px; margin: 0 auto;
+        position: fixed; top: 0; right: 0; width: 100%; height: 100%;
+        max-width: min(480px, 100vw);
+        margin: 0 auto;
         background-color: var(--bg-color); transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
         display: flex; flex-direction: column;
+        overflow-x: hidden;
     }
     .slide-panel.open { transform: translateX(0); }
     
     /* Depth 1 (Settings) */
     #settingsPanel { z-index: 9100; }
     /* Depth 2 (Sub menus) */
-    .depth-2-panel { z-index: 9200; background-color: #121214; }
+    .depth-2-panel { z-index: 9200; background-color: #121214; min-width: 0; overflow-x: hidden; }
 
     .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); }
     .header-left { display: flex; align-items: center; }
@@ -179,7 +184,7 @@
     .panel-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; margin: 0; letter-spacing: -0.5px; }
     
     /* 설정 메뉴 리스트 스타일 */
-    .settings-content { flex: 1; overflow-y: auto; padding: 0 20px 40px 20px; }
+    .settings-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 20px 40px 20px; min-width: 0; max-width: 100%; }
     .settings-group { margin-top: 30px; }
     .settings-group-title { font-size: 0.85rem; font-weight: 800; color: var(--neon-green); margin-bottom: 10px; padding-left: 5px; }
     .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 5px; border-bottom: 1px solid #222; font-size: 1.05rem; font-weight: 600; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
@@ -210,22 +215,54 @@
     input:checked + .toggle-slider:before { transform: translateX(22px); }
 
     /* ✏️ 프로필 편집 스타일 */
-    .edit-content { flex: 1; overflow-y: auto; padding: 30px 20px; }
-    .edit-avatar-box { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; }
-    .edit-avatar { width: 100px; height: 100px; border-radius: 50%; background-color: #27272a; display: flex; justify-content: center; align-items: center; font-size: 3rem; border: 2px solid var(--border-color); overflow: hidden; }
-    .edit-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-action-btns { display: flex; gap: 10px; margin-top: 15px; }
+    .edit-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 30px 20px;
+        min-width: 0;
+        width: 100%;
+    }
+    .edit-avatar-box { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; max-width: 100%; }
+    .edit-avatar { width: 100px; height: 100px; border-radius: 50%; background-color: #27272a; display: flex; justify-content: center; align-items: center; font-size: 3rem; border: 2px solid var(--border-color); overflow: hidden; flex-shrink: 0; }
+    .edit-avatar img { width: 100%; height: 100%; object-fit: cover; max-width: 100%; }
+    .avatar-action-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; justify-content: center; max-width: 100%; }
     .btn-avatar-action { background-color: #27272a; color: #fff; border: 1px solid #3f3f46; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
     .btn-avatar-action:active { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); transform: scale(0.95); }
-    .input-group { margin-bottom: 25px; }
+    .input-group { margin-bottom: 25px; min-width: 0; width: 100%; max-width: 100%; }
     .input-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 800; color: #d4d4d8; margin-bottom: 10px; padding-left: 5px; }
-    .char-count { color: #52525b; font-weight: 600; font-size: 0.8rem; }
-    .input-wrapper { display: flex; gap: 10px; }
-    .input-field { flex: 1; background-color: var(--card-bg); border: 1px solid var(--border-color); color: #fff; font-family: 'Pretendard', sans-serif; font-size: 1rem; padding: 15px; border-radius: 12px; outline: none; }
+    .char-count { color: #52525b; font-weight: 600; font-size: 0.8rem; flex-shrink: 0; }
+    .input-wrapper { display: flex; gap: 10px; min-width: 0; width: 100%; max-width: 100%; }
+    .input-field {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1rem;
+        padding: 15px;
+        border-radius: 12px;
+        outline: none;
+    }
     .input-field:focus { border-color: var(--neon-green); }
-    .btn-check-dup { background-color: #27272a; color: #fff; border: 1px solid #3f3f46; border-radius: 12px; padding: 0 15px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .btn-check-dup { background-color: #27272a; color: #fff; border: 1px solid #3f3f46; border-radius: 12px; padding: 0 15px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
     .btn-check-dup:active { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
-    .textarea-field { width: 100%; background-color: var(--card-bg); border: 1px solid var(--border-color); color: #fff; font-family: 'Pretendard', sans-serif; font-size: 1rem; padding: 15px; border-radius: 12px; outline: none; resize: none; box-sizing: border-box; }
+    .textarea-field {
+        width: 100%;
+        max-width: 100%;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1rem;
+        padding: 15px;
+        border-radius: 12px;
+        outline: none;
+        resize: none;
+    }
     .textarea-field:focus { border-color: var(--neon-green); }
 
     /* 🚨 내 계정 상태 및 제재 내역 (관리자 연동 UI) */
@@ -312,7 +349,15 @@
     /* ============================================== */
     /* 🚨 권리침해 신고 폼 전용 스타일 (신규 추가된 부분) */
     /* ============================================== */
-    .legal-warning { background: rgba(255, 51, 51, 0.1); border: 1px solid var(--alert-red); padding: 15px; border-radius: 12px; margin-bottom: 25px; }
+    .legal-warning {
+        width: 100%;
+        max-width: 100%;
+        background: rgba(255, 51, 51, 0.1);
+        border: 1px solid var(--alert-red);
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
     .legal-w-title { font-size: 0.9rem; font-weight: 900; color: var(--alert-red); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .legal-w-desc { font-size: 0.8rem; color: #d4d4d8; line-height: 1.5; word-break: keep-all; }
     .legal-w-desc strong { color: #fff; text-decoration: underline; }
@@ -320,21 +365,58 @@
     .legal-form-label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-sub); margin-bottom: 8px; }
     .legal-form-label span { color: var(--alert-red); }
 
-    .legal-form-input, .legal-form-select, .legal-form-textarea { width: 100%; background: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.9rem; padding: 14px 15px; border-radius: 8px; outline: none; margin-bottom: 20px; transition: 0.2s; }
+    .legal-form-input, .legal-form-select, .legal-form-textarea {
+        width: 100%;
+        max-width: 100%;
+        background: #09090b;
+        border: 1px solid #3f3f46;
+        color: #fff;
+        font-family: 'Pretendard', sans-serif;
+        font-size: 0.9rem;
+        padding: 14px 15px;
+        border-radius: 8px;
+        outline: none;
+        margin-bottom: 20px;
+        transition: 0.2s;
+    }
     .legal-form-input:focus, .legal-form-select:focus, .legal-form-textarea:focus { border-color: var(--alert-red); }
     .legal-form-textarea { height: 120px; resize: none; }
 
-    .file-upload-box { background: #09090b; border: 1px dashed #52525b; padding: 20px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 20px; }
+    .file-upload-box {
+        width: 100%;
+        max-width: 100%;
+        background: #09090b;
+        border: 1px dashed #52525b;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-bottom: 20px;
+        word-break: keep-all;
+    }
     .file-upload-box:active { background: #18181b; border-color: var(--alert-red); }
     .file-icon { font-size: 1.5rem; margin-bottom: 5px; color: var(--text-sub); }
     .file-text { font-size: 0.85rem; font-weight: 700; color: #fff; }
     .file-sub { font-size: 0.75rem; color: #71717a; margin-top: 4px; }
 
-    .agree-box { display: flex; align-items: flex-start; gap: 10px; background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid #27272a; margin-bottom: 30px; cursor: pointer; }
+    .agree-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+        max-width: 100%;
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #27272a;
+        margin-bottom: 30px;
+        cursor: pointer;
+    }
     .agree-box input { width: 20px; height: 20px; accent-color: var(--alert-red); flex-shrink: 0; margin-top: 2px; }
-    .agree-text { font-size: 0.8rem; color: #d4d4d8; line-height: 1.5; font-weight: 500; }
+    .agree-text { font-size: 0.8rem; color: #d4d4d8; line-height: 1.5; font-weight: 500; word-break: keep-all; min-width: 0; }
 
-    .btn-submit-legal { width: 100%; background: var(--alert-red); color: #fff; border: none; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 900; font-family: 'Pretendard', sans-serif; cursor: pointer; transition: 0.2s; }
+    .btn-submit-legal { width: 100%; max-width: 100%; background: var(--alert-red); color: #fff; border: none; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 900; font-family: 'Pretendard', sans-serif; cursor: pointer; transition: 0.2s; }
     .btn-submit-legal:active { transform: scale(0.98); }
 </style>
 </head>
@@ -542,7 +624,7 @@
             <button class="btn-back" onclick="closePanel('profileEditPanel')">←</button>
             <h2 class="panel-title">프로필 편집</h2>
         </div>
-        <button class="btn-save" onclick="saveProfile()" style="background:none; border:none; color:var(--neon-green); font-size:1.05rem; font-weight:800; cursor:pointer;">완료</button>
+        <button type="button" class="btn-save" onclick="saveProfile()" style="background:none; border:none; color:var(--neon-green); font-size:1.05rem; font-weight:800; cursor:pointer;">완료</button>
     </div>
     <div class="edit-content">
         <div class="edit-avatar-box">
@@ -939,11 +1021,19 @@
     function saveProfile() {
         const newNick = document.getElementById('nicknameInput').value;
         if(newNick.length < 2) { alert("닉네임을 2글자 이상 입력해주세요."); return; }
-        document.getElementById('mainNickname').innerHTML = `${newNick} <span class="grade-badge">Lv.1</span>`;
+        
+        // 메인 화면에 즉시 데이터 반영
+        document.getElementById('mainNickname').innerHTML = newNick + ' <span class="grade-badge">Lv.5</span>';
         document.getElementById('mainBio').innerText = document.getElementById('bioInput').value;
         document.getElementById('mainAvatar').innerHTML = document.getElementById('editAvatarPreview').innerHTML;
+        
         alert("프로필이 성공적으로 업데이트 되었습니다! ✨");
+        
+        // 💡 핵심: 프로필 창과 설정 창을 순차적으로 모두 닫음
         closePanel('profileEditPanel');
+        setTimeout(() => {
+            closePanel('settingsPanel');
+        }, 100); // 부드러운 전환을 위해 약간의 딜레이 추가
     }
 
     // --- 서브 탭 전환 로직 (CS / 정책 공통) ---
