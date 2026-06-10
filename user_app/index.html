@@ -157,13 +157,12 @@
 
     .king-card .title {
         font-size: 1.25rem; font-weight: 900; line-height: 1.35; margin: 0 0 14px 0;
-        word-break: keep-all; order: 1;
+        word-break: keep-all;
     }
 
     .king-thumb {
         width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden;
         margin-bottom: 12px; background: #0f0f11; border: 1px solid #3f3f46;
-        order: 2;
     }
     .king-thumb img {
         width: 100%; height: 100%; object-fit: cover; display: block;
@@ -185,20 +184,32 @@
         word-break: keep-all;
     }
 
-    .tags {
-        color: var(--neon-green); font-size: 0.78rem; font-weight: 800; margin-bottom: 12px;
+    .king-meta-row {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+        margin-bottom: 12px;
+    }
+    .king-category {
+        color: var(--neon-green); font-size: 0.78rem; font-weight: 800;
         background: rgba(57, 255, 20, 0.08); padding: 5px 10px; border-radius: 8px;
-        display: inline-block; align-self: flex-start; border: 1px solid rgba(57, 255, 20, 0.2);
-        order: 3;
+        border: 1px solid rgba(57, 255, 20, 0.2); white-space: nowrap;
+    }
+    .king-hashtag {
+        font-size: 0.74rem; font-weight: 700; color: #a1f5a1;
+        background: rgba(57, 255, 20, 0.06); padding: 4px 9px; border-radius: 999px;
+        border: 1px solid rgba(57, 255, 20, 0.15); white-space: nowrap;
     }
 
     .king-ab-box {
         display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px;
         background: #09090b; border: 1px solid #3f3f46; border-radius: 14px;
-        padding: 14px 12px; margin-bottom: 16px; order: 4;
+        padding: 14px 12px; margin-bottom: 16px;
     }
-    .king-ab-a { font-size: 0.88rem; font-weight: 800; color: var(--neon-blue); text-align: center; }
-    .king-ab-b { font-size: 0.88rem; font-weight: 800; color: var(--neon-pink); text-align: center; }
+    .king-ab-a, .king-ab-b {
+        flex: 1 1 auto; min-width: 0; max-width: 100%;
+        font-size: 0.88rem; font-weight: 800; text-align: center; word-break: keep-all;
+    }
+    .king-ab-a { color: var(--neon-blue); }
+    .king-ab-b { color: var(--neon-pink); }
     .king-ab-vs {
         font-family: 'Black Han Sans', sans-serif; font-size: 0.85rem; color: #71717a;
         text-transform: lowercase;
@@ -209,7 +220,6 @@
         background: linear-gradient(90deg, var(--neon-pink), #ff5500); color: white;
         font-family: 'Black Han Sans', sans-serif; font-size: 1.05rem; letter-spacing: 0.5px;
         cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.35); transition: 0.2s;
-        order: 5;
     }
     .btn-pick:active { transform: scale(0.98); }
 
@@ -258,9 +268,10 @@
         line-height: 1.35; word-break: keep-all;
     }
     .list-ab-compact {
-        display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 8px;
         font-size: 0.78rem; font-weight: 700; line-height: 1.35; margin-bottom: 8px;
     }
+    .list-ab-a, .list-ab-b { flex: 1 1 auto; min-width: 0; max-width: 100%; word-break: keep-all; text-align: center; }
     .list-ab-a { color: var(--neon-blue); }
     .list-ab-b { color: var(--neon-pink); }
     .list-ab-vs { font-family: 'Black Han Sans', sans-serif; font-size: 0.72rem; color: #52525b; }

@@ -73,6 +73,7 @@
       media_mode: row.media_mode,
       media_type: row.media_mode,
       thumbnail_url: row.thumbnail_url || null,
+      tags: row.tags || row.hashtags || '',
       is_sponsor: false,
       created_at: row.created_at,
       authorNickname: null,
@@ -91,10 +92,24 @@
       media_mode: row.media_type,
       media_type: row.media_type,
       thumbnail_url: row.thumbnail_url || null,
+      tags: row.tags || row.hashtags || '',
       is_sponsor: !!row.is_sponsor,
       created_at: row.created_at,
       authorNickname: row.users && row.users.nickname ? row.users.nickname : null,
     };
+  }
+
+  function formatHashtags(raw) {
+    if (!raw) return [];
+    return String(raw)
+      .split(/\s+/)
+      .map(function (tag) {
+        tag = tag.trim();
+        if (!tag) return '';
+        return tag.startsWith('#') ? tag : '#' + tag;
+      })
+      .filter(Boolean)
+      .slice(0, 5);
   }
 
   async function fetchVoteStatsMap(sb, postIds) {
@@ -177,6 +192,7 @@
           'media_url_2',
           'layout_style',
           'thumbnail_url',
+          'tags',
           'is_sponsor',
           'visibility_status',
           'created_at',
@@ -191,7 +207,7 @@
     return sb
       .from('pickle_posts')
       .select(
-        'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, created_at'
+        'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, thumbnail_url, hashtags, created_at'
       )
       .order('created_at', { ascending: false });
   }
@@ -270,6 +286,23 @@
     );
   }
 
+  function renderKingMetaRow(post) {
+    var tagSpans = formatHashtags(post.tags)
+      .map(function (tag) {
+        return '<span class="king-hashtag">' + escapeHtml(tag) + '</span>';
+      })
+      .join('');
+
+    return (
+      '<div class="king-meta-row">' +
+      '<span class="king-category">' +
+      escapeHtml(post.categoryLabel) +
+      '</span>' +
+      tagSpans +
+      '</div>'
+    );
+  }
+
   function renderKingAbBox(post) {
     return (
       '<div class="king-ab-box">' +
@@ -325,13 +358,11 @@
           '" role="button" tabindex="0" aria-label="' +
           escapeHtml(post.title) +
           '">' +
+          renderKingThumb(post) +
+          renderKingMetaRow(post) +
           '<h2 class="title">' +
           escapeHtml(post.title) +
           '</h2>' +
-          renderKingThumb(post) +
-          '<div class="tags">' +
-          escapeHtml(post.categoryLabel) +
-          '</div>' +
           renderKingAbBox(post) +
           '<button type="button" class="btn-pick">🔥 참전하기</button>' +
           '</article>'

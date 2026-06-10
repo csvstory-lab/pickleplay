@@ -354,6 +354,11 @@
     var statusText = visible ? '진행 중' : '종료/비공개';
     var total = stats && stats.total ? stats.total : 0;
     var title = post.title || post.option_a_name || '제목 없음';
+    var editBtn = visible
+      ? '<button type="button" class="btn-edit-post ing" data-post-id="' +
+        escapeHtml(post.id) +
+        '" aria-label="불판 수정">수정</button>'
+      : '';
 
     return (
       '<div class="record-card" data-id="' +
@@ -362,11 +367,14 @@
       escapeHtml(title) +
       '">' +
       '<div class="card-header">' +
+      '<div class="card-header-left">' +
       '<span class="status-badge ' +
       statusClass +
       '">' +
       escapeHtml(statusText) +
       '</span>' +
+      editBtn +
+      '</div>' +
       '<span class="card-date">' +
       escapeHtml(formatCardDate(post.created_at)) +
       '</span>' +
@@ -403,7 +411,113 @@
         }
       });
     });
+
+    container.querySelectorAll('.btn-edit-post').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var postId = btn.dataset.postId;
+        if (postId) {
+          openEditPostModal(postId);
+        }
+      });
+    });
   }
+
+  var editPostState = { postId: null, thumbFile: null };
+
+  // TODO: 투표 공정성을 위해 제목과 A/B 선택지는 수정 불가(Read-only) 처리
+  async function openEditPostModal(postId) {
+    editPostState = { postId: postId, thumbFile: null };
+
+    var overlay = document.getElementById('editPostOverlay');
+    var titleEl = document.getElementById('editPostTitleReadonly');
+    var optAEl = document.getElementById('editPostOptionAReadonly');
+    var optBEl = document.getElementById('editPostOptionBReadonly');
+    var descEl = document.getElementById('editPostDescription');
+    var thumbPreview = document.getElementById('editPostThumbPreview');
+    var thumbInput = document.getElementById('editPostThumbInput');
+
+    if (!overlay || !titleEl) return;
+
+    try {
+      var sb = getSupabaseClient();
+      var result = await sb
+        .from('posts')
+        .select('id, title, option_a_name, option_b_name, description, thumbnail_url')
+        .eq('id', postId)
+        .maybeSingle();
+
+      if (result.error) throw result.error;
+      if (!result.data) {
+        alert('불판 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      var post = result.data;
+      titleEl.value = post.title || '';
+      optAEl.value = post.option_a_name || '';
+      optBEl.value = post.option_b_name || '';
+      descEl.value = post.description || '';
+
+      if (post.thumbnail_url) {
+        thumbPreview.innerHTML =
+          '<img src="' + escapeHtml(post.thumbnail_url) + '" alt="썸네일 미리보기">';
+      } else {
+        thumbPreview.textContent = '썸네일 없음';
+      }
+
+      if (thumbInput) {
+        thumbInput.value = '';
+        thumbInput.onchange = function () {
+          var file = thumbInput.files && thumbInput.files[0];
+          if (!file) return;
+          editPostState.thumbFile = file;
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            thumbPreview.innerHTML =
+              '<img src="' + ev.target.result + '" alt="새 썸네일 미리보기">';
+          };
+          reader.readAsDataURL(file);
+        };
+      }
+
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 수정 팝업 로드 실패', err);
+      alert('불판 정보를 불러오지 못했습니다.');
+    }
+  }
+
+  function closeEditPostModal() {
+    var overlay = document.getElementById('editPostOverlay');
+    if (overlay) {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    document.body.style.overflow = '';
+    editPostState = { postId: null, thumbFile: null };
+  }
+
+  async function saveEditPost() {
+    if (!editPostState.postId) return;
+
+    // TODO: description·thumbnail_url만 Supabase update 연동 (제목·A/B는 Read-only 유지)
+    var descEl = document.getElementById('editPostDescription');
+    var description = descEl ? descEl.value.trim() : '';
+    console.info('[P!CKLE Mypage] 저장 예정', {
+      postId: editPostState.postId,
+      description: description,
+      hasNewThumb: !!editPostState.thumbFile,
+    });
+    alert('수정 기능은 준비 중입니다. (상세 설명·썸네일만 업데이트 예정)');
+    closeEditPostModal();
+  }
+
+  window.openEditPostModal = openEditPostModal;
+  window.closeEditPostModal = closeEditPostModal;
+  window.saveEditPost = saveEditPost;
 
   async function loadCreatedPosts(userId) {
     var container = document.getElementById('createdArea');

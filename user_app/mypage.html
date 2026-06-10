@@ -126,15 +126,59 @@
     }
     .hidden { display: none !important; }
     
-    .record-card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 15px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+    .record-card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 15px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative; }
     .record-card:active { transform: scale(0.98); border-color: var(--neon-green); }
-    .card-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.75rem; font-weight: 800; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; font-size: 0.75rem; font-weight: 800; gap: 8px; }
+    .card-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn-edit-post {
+        flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
+        background: transparent; cursor: pointer; transition: 0.2s; line-height: 1.2;
+    }
+    .btn-edit-post.ing {
+        color: var(--neon-green); border: 1px solid var(--neon-green);
+    }
+    .btn-edit-post.ing:active { background: rgba(57, 255, 20, 0.12); }
+    .btn-edit-post.done {
+        color: #a1a1aa; border: 1px solid #52525b;
+    }
     .status-badge.ing { color: var(--neon-blue); }
     .status-badge.done { color: var(--neon-pink); }
     .card-date { color: #52525b; }
     .card-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 12px; line-height: 1.4; word-break: keep-all; }
     .card-footer-stats { display: flex; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
     .stat-fire { color: var(--theme-gold); }
+
+    /* 불판 수정 팝업 (베이스 뼈대) */
+    .edit-post-overlay {
+        position: fixed; inset: 0; background: rgba(0, 0, 0, 0.72); z-index: 950;
+        display: none; align-items: flex-end; justify-content: center;
+    }
+    .edit-post-overlay.open { display: flex; }
+    .edit-post-sheet {
+        width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+        background: var(--card-bg); border-radius: 20px 20px 0 0;
+        border-top: 2px solid var(--neon-green); padding: 20px;
+    }
+    .edit-post-sheet h3 { margin: 0 0 16px; font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; }
+    .edit-field { margin-bottom: 14px; }
+    .edit-field label { display: block; font-size: 0.78rem; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; }
+    .edit-field input[readonly], .edit-field textarea[readonly] {
+        width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #3f3f46;
+        background: #27272a; color: #a1a1aa; font-size: 0.9rem; font-family: inherit;
+    }
+    .edit-field textarea { width: 100%; min-height: 88px; padding: 12px; border-radius: 12px; border: 1px solid #3f3f46; background: #09090b; color: #fff; font-size: 0.9rem; font-family: inherit; resize: vertical; }
+    .edit-thumb-preview {
+        width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; border: 1px dashed #52525b;
+        background: #09090b; overflow: hidden; display: flex; align-items: center; justify-content: center;
+        color: var(--text-sub); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;
+    }
+    .edit-thumb-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .edit-post-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-edit-cancel, .btn-edit-save {
+        flex: 1; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; border: none;
+    }
+    .btn-edit-cancel { background: #27272a; color: #fff; border: 1px solid #3f3f46; }
+    .btn-edit-save { background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000; }
 
     .vote-result-box { background-color: #27272a; border-radius: 10px; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
     .my-pick-info { font-size: 0.85rem; font-weight: 700; color: #d4d4d8; }
@@ -538,6 +582,39 @@
         <div class="empty-state" id="savedEmpty">보관함이 비어 있습니다.</div>
     </div>
 </main>
+
+<!-- 불판 수정 팝업 (상세 설명·썸네일만 편집 — 베이스 뼈대) -->
+<div class="edit-post-overlay" id="editPostOverlay" aria-hidden="true">
+    <div class="edit-post-sheet" role="dialog" aria-labelledby="editPostTitle">
+        <h3 id="editPostTitle">불판 수정</h3>
+        <div class="edit-field">
+            <label>제목 (수정 불가)</label>
+            <input type="text" id="editPostTitleReadonly" readonly>
+        </div>
+        <div class="edit-field">
+            <label>A 선택지 (수정 불가)</label>
+            <input type="text" id="editPostOptionAReadonly" readonly>
+        </div>
+        <div class="edit-field">
+            <label>B 선택지 (수정 불가)</label>
+            <input type="text" id="editPostOptionBReadonly" readonly>
+        </div>
+        <div class="edit-field">
+            <label for="editPostDescription">상세 설명</label>
+            <textarea id="editPostDescription" placeholder="불판에 대한 부가 설명을 수정할 수 있습니다."></textarea>
+        </div>
+        <div class="edit-field">
+            <label>리스트 썸네일</label>
+            <div class="edit-thumb-preview" id="editPostThumbPreview">썸네일 없음</div>
+            <input type="file" id="editPostThumbInput" accept="image/*" hidden>
+            <button type="button" class="btn-edit-cancel" style="width:100%;" onclick="document.getElementById('editPostThumbInput').click()">썸네일 변경</button>
+        </div>
+        <div class="edit-post-actions">
+            <button type="button" class="btn-edit-cancel" onclick="closeEditPostModal()">취소</button>
+            <button type="button" class="btn-edit-save" onclick="saveEditPost()">저장</button>
+        </div>
+    </div>
+</div>
 
 <!-- ============================================== -->
 <!-- ⚙️ 뎁스 1: 메인 설정 패널 -->

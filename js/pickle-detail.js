@@ -55,7 +55,7 @@
       media_mode: row.media_mode || 'text',
       media_type: row.media_mode,
       layout_style: row.media_orientation || row.layout_style,
-      hashtags: row.hashtags,
+      hashtags: row.hashtags || row.tags,
       created_at: row.created_at,
       duration: row.duration,
       start_at: row.start_at,
@@ -77,7 +77,7 @@
       media_mode: mapMediaTypeToMode(row.media_type),
       media_type: row.media_type,
       layout_style: row.layout_style,
-      hashtags: row.hashtags,
+      hashtags: row.hashtags || row.tags,
       created_at: row.created_at,
       duration: row.duration,
       start_at: row.start_at,
@@ -352,21 +352,9 @@
     var mediaEl = $('videoContainer');
     if (mediaEl && window.PickleMediaView) {
       mediaEl.innerHTML = window.PickleMediaView.buildDetailMediaHtml(post);
-      bindSplitTap(mediaEl);
     }
 
     renderStats(voteStats, commentCount);
-  }
-
-  function bindSplitTap(container) {
-    container.querySelectorAll('.split-half[data-side]').forEach(function (half) {
-      half.addEventListener('click', function (e) {
-        var side = half.dataset.side;
-        if (typeof window.handleTap === 'function') {
-          window.handleTap(side, e, half);
-        }
-      });
-    });
   }
 
   function showError(message) {

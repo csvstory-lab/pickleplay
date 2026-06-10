@@ -151,6 +151,14 @@
       payload.thumbnail_url = thumbnailUrl;
     }
 
+    if (formData.hashtags) {
+      payload.tags = formData.hashtags;
+    }
+
+    if (formData.description) {
+      payload.description = formData.description;
+    }
+
     Object.keys(payload).forEach(function (key) {
       if (payload[key] === null || payload[key] === undefined || payload[key] === '') {
         delete payload[key];
@@ -197,10 +205,11 @@
       (msg.indexOf('thumbnail_url') !== -1 && msg.indexOf('column') !== -1) ||
       msg.indexOf("could not find the 'title'") !== -1 ||
       msg.indexOf("could not find the 'media_type'") !== -1 ||
-      msg.indexOf("could not find the 'thumbnail_url'") !== -1;
+      msg.indexOf("could not find the 'thumbnail_url'") !== -1 ||
+      msg.indexOf("could not find the 'tags'") !== -1;
 
     if (missingColumn) {
-      alert('SQL 마이그레이션이 필요합니다. (title, media_type 또는 thumbnail_url 컬럼 누락)');
+      alert('SQL 마이그레이션이 필요합니다. (title, media_type, thumbnail_url 또는 tags 컬럼 누락)');
       return true;
     }
 

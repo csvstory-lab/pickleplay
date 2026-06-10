@@ -50,7 +50,57 @@ iframe {
   min-width: 0;
 }
 
-/* 긴 링크 · 텍스트 넘침 방지 */
+/* A/B 선택지 — 좁은 화면·긴 텍스트 시 세로 배치 */
+.king-ab-box,
+.list-ab-compact,
+.text-vs-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 10px;
+}
+
+.king-ab-a,
+.king-ab-b,
+.list-ab-a,
+.list-ab-b,
+.text-vs-box .vs-side {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  word-break: keep-all;
+}
+
+@media (max-width: 400px) {
+  .king-ab-box,
+  .list-ab-compact,
+  .text-vs-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .king-ab-vs,
+  .list-ab-vs,
+  .text-vs-box .vs-label {
+    align-self: center;
+  }
+
+  .king-ab-a,
+  .king-ab-b,
+  .list-ab-a,
+  .list-ab-b {
+    text-align: center;
+  }
+}
+
+@media (max-width: 340px) {
+  .king-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .record-card,
 .post-content-area,
 .vote-content,
