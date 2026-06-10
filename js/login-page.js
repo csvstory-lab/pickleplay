@@ -110,9 +110,17 @@
 
   function bindLoginForm() {
     var loginBtn = document.getElementById('btnEmailLogin');
+    var loginForm = document.getElementById('loginEmailForm');
     var emailInput = document.getElementById('mainEmailInput');
     var pwInput = document.getElementById('mainPwInput');
     if (!loginBtn || !emailInput || !pwInput) return;
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        loginBtn.click();
+      });
+    }
 
     function validateLogin() {
       var email = emailInput.value.trim();
@@ -159,6 +167,36 @@
 
     emailInput.addEventListener('keydown', onEnterSubmit);
     pwInput.addEventListener('keydown', onEnterSubmit);
+  }
+
+  function bindSocialLogin() {
+    var kakaoBtn = document.getElementById('btnKakaoOAuth');
+    var googleBtn = document.getElementById('btnGoogleOAuth');
+
+    function attachOAuthHandler(button, provider) {
+      if (!button) return;
+
+      button.addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        if (!guardConfigForUserAction()) return;
+
+        button.disabled = true;
+
+        try {
+          await signInWithOAuth(provider);
+        } catch (err) {
+          if (err && err.message !== 'Supabase config not ready') {
+            alert(err.message || '소셜 로그인에 실패했습니다.');
+          }
+        } finally {
+          button.disabled = false;
+        }
+      });
+    }
+
+    attachOAuthHandler(kakaoBtn, 'kakao');
+    attachOAuthHandler(googleBtn, 'google');
   }
 
   function bindSignupForm(screenApi) {
@@ -287,10 +325,11 @@
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
     var sb = getSupabaseClient();
+    var oauthRedirect = window.location.origin + '/index.html';
     var result = await sb.auth.signInWithOAuth({
       provider: provider,
       options: {
-        redirectTo: window.location.origin + '/index.html',
+        redirectTo: oauthRedirect,
       },
     });
 
@@ -343,6 +382,7 @@
   async function initLoginPage() {
     var screenApi = bindAuthScreens();
     bindLoginForm();
+    bindSocialLogin();
     bindSignupForm(screenApi);
 
     var b = bootstrap();
