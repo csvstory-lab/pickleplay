@@ -61,21 +61,22 @@
 
   function normalizePostRow(row, source) {
     if (source === 'pickle_posts') {
-      return {
-        id: row.id,
-        title: row.title || '',
-        category: row.category,
-        categoryLabel: categoryLabel(row.category),
-        option_a: row.option_a || '',
-        option_b: row.option_b || '',
-        media_url_1: row.media_url_1,
-        media_url_2: row.media_url_2,
-        media_mode: row.media_mode,
-        media_type: row.media_mode,
-        is_sponsor: false,
-        created_at: row.created_at,
-        authorNickname: null,
-      };
+    return {
+      id: row.id,
+      title: row.title || '',
+      category: row.category,
+      categoryLabel: categoryLabel(row.category),
+      option_a: row.option_a || '',
+      option_b: row.option_b || '',
+      media_url_1: row.media_url_1,
+      media_url_2: row.media_url_2,
+      media_mode: row.media_mode,
+      media_type: row.media_mode,
+      thumbnail_url: row.thumbnail_url || null,
+      is_sponsor: false,
+      created_at: row.created_at,
+      authorNickname: null,
+    };
     }
 
     return {
@@ -89,6 +90,7 @@
       media_url_2: row.media_url_2 || row.option_b_image_url,
       media_mode: row.media_type,
       media_type: row.media_type,
+      thumbnail_url: row.thumbnail_url || null,
       is_sponsor: !!row.is_sponsor,
       created_at: row.created_at,
       authorNickname: row.users && row.users.nickname ? row.users.nickname : null,
@@ -174,6 +176,7 @@
           'media_url_1',
           'media_url_2',
           'layout_style',
+          'thumbnail_url',
           'is_sponsor',
           'visibility_status',
           'created_at',
@@ -246,24 +249,38 @@
     return new Date(iso).toLocaleDateString('ko-KR');
   }
 
-  function renderThumb(post, className) {
-    if (window.PickleMediaView) {
-      return window.PickleMediaView.buildKingThumbHtml(post, className);
-    }
-    var url = post.media_url_1 || post.media_url_2;
-    if (url) {
+  function renderKingThumb(post) {
+    if (post.thumbnail_url) {
       return (
-        '<div class="' +
-        className +
-        '"><img src="' +
-        escapeHtml(url) +
-        '" alt="" loading="lazy"></div>'
+        '<div class="king-thumb">' +
+        '<img src="' +
+        escapeHtml(post.thumbnail_url) +
+        '" alt="" loading="lazy">' +
+        '</div>'
       );
     }
+
+    var cat = escapeHtml(post.categoryLabel || '불판');
     return (
-      '<div class="' +
-      className +
-      ' king-thumb-placeholder"><span>🔥</span></div>'
+      '<div class="king-thumb king-thumb-fallback">' +
+      '<span class="king-fallback-cat">' +
+      cat +
+      '</span>' +
+      '</div>'
+    );
+  }
+
+  function renderKingAbBox(post) {
+    return (
+      '<div class="king-ab-box">' +
+      '<span class="king-ab-a">[A: ' +
+      escapeHtml(post.option_a) +
+      ']</span>' +
+      '<span class="king-ab-vs">vs</span>' +
+      '<span class="king-ab-b">[B: ' +
+      escapeHtml(post.option_b) +
+      ']</span>' +
+      '</div>'
     );
   }
 
@@ -308,14 +325,15 @@
           '" role="button" tabindex="0" aria-label="' +
           escapeHtml(post.title) +
           '">' +
-          renderThumb(post, 'king-thumb') +
-          '<div class="tags">' +
-          escapeHtml(post.categoryLabel) +
-          '</div>' +
           '<h2 class="title">' +
           escapeHtml(post.title) +
           '</h2>' +
-          '<button type="button" class="btn-pick">결과가 궁금하다면? 참전하기 🔥</button>' +
+          renderKingThumb(post) +
+          '<div class="tags">' +
+          escapeHtml(post.categoryLabel) +
+          '</div>' +
+          renderKingAbBox(post) +
+          '<button type="button" class="btn-pick">🔥 참전하기</button>' +
           '</article>'
         );
       })
@@ -351,42 +369,18 @@
           '<h3 class="title">' +
           escapeHtml(post.title) +
           '</h3>' +
-          '<div class="text-vs-box">' +
-          '<span class="opt-text opt-a">[A] ' +
+          '<div class="list-ab-compact">' +
+          '<span class="list-ab-a">[A: ' +
           escapeHtml(post.option_a) +
-          '</span>' +
-          '<span class="vs-mark">VS</span>' +
-          '<span class="opt-text opt-b">[B] ' +
+          ']</span>' +
+          '<span class="list-ab-vs">vs</span>' +
+          '<span class="list-ab-b">[B: ' +
           escapeHtml(post.option_b) +
-          '</span>' +
+          ']</span>' +
           '</div>' +
-          '<div class="list-poll-bar">' +
-          '<div class="list-poll-bar-a" style="width:' +
-          post.pctA +
-          '%"></div>' +
-          '<div class="list-poll-bar-b" style="width:' +
-          post.pctB +
-          '%"></div>' +
-          '</div>' +
-          '<div class="list-poll-pcts">' +
-          '<span class="pct-a">' +
-          post.pctA +
-          '%</span>' +
-          '<span class="pct-b">' +
-          post.pctB +
-          '%</span>' +
-          '</div>' +
-          '<div class="list-meta">' +
-          '<span>🕐 ' +
-          escapeHtml(formatTimeAgo(post.created_at)) +
-          '</span>' +
-          '<span>🔥 ' +
+          '<div class="list-participants">🔥 ' +
           post.totalVotes.toLocaleString() +
-          '명 참전</span>' +
-          '<span>💬 ' +
-          post.commentCount.toLocaleString() +
-          '</span>' +
-          '</div>' +
+          '명 참전</div>' +
           '</article>'
         );
       })

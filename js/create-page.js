@@ -1,5 +1,9 @@
 /**
  * P!CKLE — create.html 불판 등록 (Supabase posts)
+ *
+ * DB 마이그레이션 (thumbnail_url):
+ *   supabase/11_posts_thumbnail_url.sql 실행
+ *   ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
  */
 (function () {
   'use strict';
@@ -130,7 +134,7 @@
     };
   }
 
-  function buildPostsInsertPayload(user, formData, mediaFields) {
+  function buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl) {
     var payload = {
       author_id: user.id,
       title: formData.title,
@@ -142,6 +146,10 @@
     };
 
     Object.assign(payload, mediaFields);
+
+    if (thumbnailUrl) {
+      payload.thumbnail_url = thumbnailUrl;
+    }
 
     Object.keys(payload).forEach(function (key) {
       if (payload[key] === null || payload[key] === undefined || payload[key] === '') {
@@ -186,11 +194,13 @@
     var missingColumn =
       (msg.indexOf('title') !== -1 && msg.indexOf('column') !== -1) ||
       (msg.indexOf('media_type') !== -1 && msg.indexOf('column') !== -1) ||
+      (msg.indexOf('thumbnail_url') !== -1 && msg.indexOf('column') !== -1) ||
       msg.indexOf("could not find the 'title'") !== -1 ||
-      msg.indexOf("could not find the 'media_type'") !== -1;
+      msg.indexOf("could not find the 'media_type'") !== -1 ||
+      msg.indexOf("could not find the 'thumbnail_url'") !== -1;
 
     if (missingColumn) {
-      alert('SQL 마이그레이션이 필요합니다. (title 또는 media_type 컬럼 누락)');
+      alert('SQL 마이그레이션이 필요합니다. (title, media_type 또는 thumbnail_url 컬럼 누락)');
       return true;
     }
 
@@ -209,10 +219,28 @@
     return false;
   }
 
+  async function uploadThumbnailIfAny(userId, getThumbnailFile) {
+    if (typeof getThumbnailFile !== 'function') return null;
+    var file = getThumbnailFile();
+    if (!file) return null;
+
+    var MAX_BYTES = 5 * 1024 * 1024;
+    if (file.size > MAX_BYTES) {
+      throw new Error('썸네일 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
+    }
+
+    if (!window.PickleMedia?.uploadPostImage) {
+      throw new Error('이미지 업로드 모듈을 불러오지 못했습니다.');
+    }
+
+    return window.PickleMedia.uploadPostImage(file, userId);
+  }
+
   /**
    * @param {function(string): Promise<object>} buildMediaPayload — create.html 미디어 업로드
+   * @param {function(): File|null} [getThumbnailFile] — 리스트 썸네일 (선택)
    */
-  async function submitPost(buildMediaPayload) {
+  async function submitPost(buildMediaPayload, getThumbnailFile) {
     if (window.PickleAuth?.init) {
       await window.PickleAuth.init();
     }
@@ -257,7 +285,8 @@
 
     var rawMedia = await buildMediaPayload(user.id);
     var mediaFields = mapMediaForPosts(rawMedia);
-    var payload = buildPostsInsertPayload(user, formData, mediaFields);
+    var thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
+    var payload = buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl);
 
     var insertResult = await sb.from('posts').insert([payload]).select('id').single();
     if (insertResult.error) {

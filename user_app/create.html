@@ -148,6 +148,14 @@
         font-weight: 500;
     }
 
+    .form-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        margin: 28px 0;
+    }
+
+    .form-group-thumbnail .upload-box { margin-top: 4px; }
+
     /* A/B 입력 필드 */
     .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
     .ab-input-wrapper { position: relative; }
@@ -290,6 +298,18 @@
         <label class="form-label">상세 설명 <span class="form-hint">(선택사항)</span></label>
         <textarea id="inputDesc" class="input-box" rows="2" maxlength="60" placeholder="제목에 다 담지 못한 디테일한 상황이나 룰을 60자 이내로 적어주세요."></textarea>
     </div>
+
+    <div class="form-group form-group-thumbnail">
+        <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint">(선택)</span></label>
+        <p class="upload-size-hint">(※ 5MB 이하, 16:9 비율 권장. 리스트에만 노출됩니다)</p>
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="fileThumbnail" onchange="onThumbnailSelected(this)">
+        <div class="upload-box ratio-16-9" id="boxThumbnail" onclick="document.getElementById('fileThumbnail').click()">
+            <div class="icon-plus">🖼️</div>
+            <div class="upload-txt">썸네일 이미지 첨부</div>
+        </div>
+    </div>
+
+    <div class="form-divider" aria-hidden="true"></div>
 
     <div class="form-group">
         <label class="form-label">불판 진행 기간</label>
@@ -449,6 +469,38 @@
     let currentOri = 'horizontal';
     let uploadStatus = { single: false, vsA: false, vsB: false };
     let uploadFiles = { single: null, vsA: null, vsB: null };
+    let thumbnailFile = null;
+
+    window.getPickleCreateThumbnailFile = function () {
+        return thumbnailFile;
+    };
+
+    function onThumbnailSelected(input) {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        const MAX_BYTES = 5 * 1024 * 1024;
+        if (file.size > MAX_BYTES) {
+            alert('사진 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
+            input.value = '';
+            return;
+        }
+
+        try {
+            if (window.PickleMedia?.validateImageFile) {
+                window.PickleMedia.validateImageFile(file);
+            }
+        } catch (err) {
+            alert(err.message || '이미지를 선택할 수 없습니다.');
+            input.value = '';
+            return;
+        }
+
+        thumbnailFile = file;
+        const box = document.getElementById('boxThumbnail');
+        box.classList.add('uploaded');
+        box.innerHTML = '<div class="icon-plus">✅</div><div class="upload-txt">썸네일 첨부 완료!</div>';
+    }
 
     function resetUploadState() {
         uploadStatus = { single: false, vsA: false, vsB: false };
@@ -670,7 +722,10 @@
         btnSubmit.textContent = '등록 중…';
 
         try {
-            const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
+            const result = await window.PickleCreatePage.submitPost(
+                buildMediaPayload,
+                window.getPickleCreateThumbnailFile
+            );
             if (result?.cancelled) return;
         } catch (err) {
             if (!window.PickleCreatePage.handleInsertError(err)) {
