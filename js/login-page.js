@@ -1,24 +1,37 @@
 /**
  * P!CKLE login.html — Supabase Auth 직접 연동
- * window.PICKLE_SUPABASE_CONFIG (url, anonKey) 사용
+ * window.PICKLE_SUPABASE_CONFIG + PickleSupabaseBootstrap
  */
 (function () {
   'use strict';
 
+  var FORM_MODE = { LOGIN: 'login', SIGNUP: 'signup' };
+
+  function bootstrap() {
+    return window.PickleSupabaseBootstrap;
+  }
+
   function getSupabaseClient() {
-    var cfg = window.PICKLE_SUPABASE_CONFIG;
-    if (!cfg || !cfg.url || !cfg.anonKey) {
+    var b = bootstrap();
+    if (!b) {
       throw new Error(
-        'Supabase 접속 정보가 없습니다. js/supabase-config.js 를 확인해 주세요.'
+        'Supabase 초기화 모듈이 없습니다. supabase-bootstrap.js 로드 순서를 확인해 주세요.'
       );
     }
-    if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-      throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
+    return b.getClient();
+  }
+
+  function guardConfigForUserAction() {
+    var b = bootstrap();
+    if (!b) {
+      alert('인증 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
+      return false;
     }
-    return window.supabase.createClient(
-      String(cfg.url).trim().replace(/\/+$/, ''),
-      String(cfg.anonKey).trim()
-    );
+    if (!b.isReady()) {
+      alert(b.getErrorMessage());
+      return false;
+    }
+    return true;
   }
 
   function getRedirectAfterLogin() {
@@ -43,75 +56,109 @@
   }
 
   function bindMainEmailAuth() {
-    var loginBtn = document.getElementById('btnEmailLogin');
-    var signupBtn = document.getElementById('btnEmailSignup');
+    var primaryBtn = document.getElementById('btnEmailLogin');
+    var modeToggleLink = document.getElementById('btnEmailSignup');
     var emailInput = document.getElementById('mainEmailInput');
     var pwInput = document.getElementById('mainPwInput');
-    if (!loginBtn || !signupBtn || !emailInput || !pwInput) return;
+    var authBlock = document.querySelector('.email-auth-block');
+    if (!primaryBtn || !modeToggleLink || !emailInput || !pwInput) return;
 
-    loginBtn.addEventListener('click', async function () {
-      var email = emailInput.value.trim();
-      var password = pwInput.value;
-      if (!email || !email.includes('@')) {
+    var formMode = FORM_MODE.LOGIN;
+
+    function setFormMode(mode) {
+      formMode = mode === FORM_MODE.SIGNUP ? FORM_MODE.SIGNUP : FORM_MODE.LOGIN;
+      if (authBlock) {
+        authBlock.dataset.mode = formMode;
+      }
+      if (formMode === FORM_MODE.SIGNUP) {
+        primaryBtn.textContent = '회원가입 완료';
+        modeToggleLink.textContent = '로그인으로 돌아가기';
+      } else {
+        primaryBtn.textContent = '로그인';
+        modeToggleLink.textContent = '이메일로 가입하기';
+      }
+    }
+
+    function readCredentials() {
+      return {
+        email: emailInput.value.trim(),
+        password: pwInput.value,
+      };
+    }
+
+    function validateCredentials(isSignup) {
+      var creds = readCredentials();
+      if (!creds.email || creds.email.indexOf('@') === -1) {
         alert('올바른 이메일 주소를 입력해 주세요.');
         emailInput.focus();
-        return;
+        return null;
       }
-      if (!password) {
+      if (!creds.password) {
         alert('비밀번호를 입력해 주세요.');
         pwInput.focus();
-        return;
+        return null;
       }
-
-      loginBtn.disabled = true;
-      loginBtn.textContent = '로그인 중…';
-      try {
-        await signInWithEmail(email, password);
-        window.location.href = getRedirectAfterLogin();
-      } catch (err) {
-        alert(formatAuthError(err));
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = '로그인';
-      }
-    });
-
-    signupBtn.addEventListener('click', async function () {
-      var email = emailInput.value.trim();
-      var password = pwInput.value;
-      if (!email || !email.includes('@')) {
-        alert('올바른 이메일 주소를 입력해 주세요.');
-        emailInput.focus();
-        return;
-      }
-      if (password.length < 6) {
+      if (isSignup && creds.password.length < 6) {
         alert('비밀번호는 6자 이상 입력해 주세요.');
         pwInput.focus();
-        return;
+        return null;
       }
+      return creds;
+    }
 
-      signupBtn.disabled = true;
+    modeToggleLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      setFormMode(formMode === FORM_MODE.LOGIN ? FORM_MODE.SIGNUP : FORM_MODE.LOGIN);
+    });
+
+    primaryBtn.addEventListener('click', async function () {
+      if (!guardConfigForUserAction()) return;
+
+      var isSignup = formMode === FORM_MODE.SIGNUP;
+      var creds = validateCredentials(isSignup);
+      if (!creds) return;
+
+      var loadingLabel = isSignup ? '가입 처리 중…' : '로그인 중…';
+
+      primaryBtn.disabled = true;
+      primaryBtn.textContent = loadingLabel;
+
       try {
-        await signUpWithEmail(email, password, email.split('@')[0]);
-        alert('가입이 완료되었습니다! 로그인해주세요.');
+        if (isSignup) {
+          await signUpWithEmail(creds.email, creds.password, creds.email.split('@')[0]);
+          alert('가입이 완료되었습니다! 로그인해 주세요.');
+          setFormMode(FORM_MODE.LOGIN);
+        } else {
+          await signInWithEmail(creds.email, creds.password);
+          window.location.href = getRedirectAfterLogin();
+        }
       } catch (err) {
         alert(formatAuthError(err));
       } finally {
-        signupBtn.disabled = false;
+        primaryBtn.disabled = false;
+        primaryBtn.textContent =
+          formMode === FORM_MODE.SIGNUP ? '회원가입 완료' : '로그인';
       }
     });
 
     pwInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') loginBtn.click();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        primaryBtn.click();
+      }
     });
+
+    setFormMode(FORM_MODE.LOGIN);
   }
 
   function getOAuthRedirectTo() {
     return new URL(getRedirectAfterLogin(), window.location.href).href;
   }
 
-  /** 카카오 / 구글 OAuth — window.PICKLE_SUPABASE_CONFIG */
   async function signInWithOAuth(provider) {
+    if (!guardConfigForUserAction()) {
+      throw new Error('Supabase config not ready');
+    }
     if (provider !== 'kakao' && provider !== 'google') {
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
@@ -171,6 +218,13 @@
 
   async function initLoginPage() {
     bindMainEmailAuth();
+
+    var b = bootstrap();
+    if (!b || !b.isReady()) {
+      console.warn('[P!CKLE Login]', b ? b.getErrorMessage() : 'bootstrap missing');
+      return;
+    }
+
     try {
       var sb = getSupabaseClient();
       var sessionResult = await sb.auth.getSession();
@@ -189,6 +243,7 @@
     signInWithEmail: signInWithEmail,
     signUpOrSignIn: signUpOrSignIn,
     getRedirectAfterLogin: getRedirectAfterLogin,
+    guardConfigForUserAction: guardConfigForUserAction,
     init: initLoginPage,
   };
 

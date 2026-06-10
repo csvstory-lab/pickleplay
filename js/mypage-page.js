@@ -6,17 +6,11 @@
   'use strict';
 
   function getSupabaseClient() {
-    var cfg = window.PICKLE_SUPABASE_CONFIG;
-    if (!cfg || !cfg.url || !cfg.anonKey) {
-      throw new Error('Supabase 접속 정보가 없습니다.');
+    var b = window.PickleSupabaseBootstrap;
+    if (!b) {
+      throw new Error('Supabase 초기화 모듈이 없습니다.');
     }
-    if (!window.supabase?.createClient) {
-      throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
-    }
-    return window.supabase.createClient(
-      String(cfg.url).trim().replace(/\/+$/, ''),
-      String(cfg.anonKey).trim()
-    );
+    return b.getClient();
   }
 
   function escapeHtml(str) {
@@ -87,6 +81,12 @@
 
   async function initMypage() {
     try {
+      var b = window.PickleSupabaseBootstrap;
+      if (!b || !b.isReady()) {
+        console.warn('[P!CKLE Mypage]', b ? b.getErrorMessage() : 'bootstrap missing');
+        window.location.replace('login.html?redirect=mypage.html');
+        return;
+      }
       var user = await requireAuth();
       if (!user) return;
       renderProfile(user);

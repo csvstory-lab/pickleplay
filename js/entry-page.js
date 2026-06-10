@@ -11,23 +11,16 @@
     window.location.replace(url);
   }
 
-  function getClient() {
-    var cfg = window.PICKLE_SUPABASE_CONFIG;
-    if (!cfg || !cfg.url || !cfg.anonKey) {
-      throw new Error('Supabase config missing');
-    }
-    if (!window.supabase?.createClient) {
-      throw new Error('Supabase JS missing');
-    }
-    return window.supabase.createClient(
-      String(cfg.url).trim().replace(/\/+$/, ''),
-      String(cfg.anonKey).trim()
-    );
-  }
-
   async function routeByAuth() {
+    var b = window.PickleSupabaseBootstrap;
+    if (!b || !b.isReady()) {
+      console.warn('[P!CKLE Entry]', b ? b.getErrorMessage() : 'bootstrap missing');
+      redirect(LOGIN_URL);
+      return;
+    }
+
     try {
-      var sb = getClient();
+      var sb = b.getClient();
       var result = await sb.auth.getUser();
       if (result.error) throw result.error;
       redirect(result.data.user ? FEED_URL : LOGIN_URL);

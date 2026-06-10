@@ -4,7 +4,8 @@
  * HTML에서 아래 순서로 script 를 넣은 뒤 사용하세요.
  * 1) @supabase/supabase-js (CDN)
  * 2) supabase-config.js
- * 3) supabase-client.js
+ * 3) supabase-bootstrap.js (권장)
+ * 4) supabase-client.js
  *
  * 사용 예:
  *   const sb = window.PickleSupabase.getClient();
@@ -37,6 +38,10 @@
   let cachedClient = null;
 
   function getClient() {
+    if (window.PickleSupabaseBootstrap?.isReady()) {
+      return window.PickleSupabaseBootstrap.getClient();
+    }
+
     if (!window.supabase || typeof window.supabase.createClient !== 'function') {
       throw new Error(
         '[P!CKLE] Supabase JS 라이브러리가 로드되지 않았습니다. ' +

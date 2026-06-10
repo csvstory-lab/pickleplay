@@ -27,6 +27,11 @@
         --text-sub: #a1a1aa;
         --border-color: #27272a;
         --kakao-bg: #FEE500;
+        /* 이메일 입력 — card-bg 대비 약 10% 밝게 */
+        --input-bg: #2f2f32;
+        --input-border: #3c3c3f;
+        --input-text: #ffffff;
+        --input-placeholder: #63636b;
     }
 
     * { box-sizing: border-box; }
@@ -35,14 +40,23 @@
         margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         min-height: 100vh; min-height: 100dvh;
-        display: flex; flex-direction: column; justify-content: flex-start;
+        display: flex; flex-direction: column; justify-content: center; align-items: stretch;
         -webkit-tap-highlight-color: transparent; overflow-x: hidden; overflow-y: auto;
+    }
+
+    /* 로고 ~ 구글 버튼 묶음 — 화면 세로 중앙 */
+    .login-page-wrap {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0 28px;
     }
 
     /* 메인 브랜딩 영역 */
     .hero-section {
         flex: none; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        text-align: center; padding: 32px 20px 10px;
+        text-align: center; padding: 0 20px;
+        margin-bottom: 28px;
     }
     
     .floating-emoji {
@@ -72,7 +86,7 @@
 
     /* 로그인 버튼 영역 */
     .login-section {
-        padding: 0 20px 28px; display: flex; flex-direction: column; gap: 8px;
+        padding: 0 20px; display: flex; flex-direction: column; gap: 10px;
         animation: slideUp 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
         transform: translateY(50px); opacity: 0;
     }
@@ -80,31 +94,34 @@
 
     /* 이메일 로그인 (네오브루탈) */
     .email-auth-block {
-        display: flex; flex-direction: column; gap: 8px;
+        display: flex; flex-direction: column; gap: 10px;
     }
     .email-field {
-        width: 100%; padding: 14px 16px;
-        background-color: var(--card-bg);
-        border: 2px solid var(--border-color);
+        width: 100%; padding: 16px 18px;
+        min-height: 52px;
+        background-color: var(--input-bg);
+        border: 2px solid var(--input-border);
         border-radius: 14px;
-        color: #fff; font-family: 'Pretendard', sans-serif;
-        font-size: 1rem; font-weight: 600;
-        outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        color: var(--input-text); font-family: 'Pretendard', sans-serif;
+        font-size: 1.02rem; font-weight: 600;
+        outline: none; transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
         box-shadow: 3px 3px 0 #000;
     }
-    .email-field::placeholder { color: #52525b; font-weight: 500; }
+    .email-field::placeholder { color: var(--input-placeholder); font-weight: 500; }
     .email-field:focus {
         border-color: var(--neon-green);
+        background-color: #353538;
         box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
     }
     .btn-email-login {
-        width: 100%; padding: 15px 18px;
-        margin-top: 2px;
+        width: 100%; padding: 17px 20px;
+        min-height: 54px;
+        margin-top: 4px;
         border: 2px solid #000; border-radius: 14px;
         background: linear-gradient(90deg, var(--neon-green), #aaff00);
         color: #000;
         font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.2rem; letter-spacing: 0.5px;
+        font-size: 1.22rem; letter-spacing: 0.5px;
         cursor: pointer;
         box-shadow: 4px 4px 0 #000;
         transition: transform 0.15s, box-shadow 0.15s;
@@ -119,14 +136,14 @@
         color: var(--text-sub);
         font-size: 0.85rem; font-weight: 800;
         text-decoration: underline;
-        cursor: pointer; padding: 4px 0 0;
+        cursor: pointer; padding: 8px 0 4px;
         align-self: center;
     }
     .btn-email-signup-link:active { color: var(--neon-green); }
     .auth-divider {
         display: flex; align-items: center; gap: 10px;
         color: #52525b; font-size: 0.75rem; font-weight: 800;
-        margin: 4px 0 2px;
+        margin: 10px 0 6px;
     }
     .auth-divider::before,
     .auth-divider::after {
@@ -134,8 +151,9 @@
     }
 
     .social-btn {
-        width: 100%; padding: 14px 18px; border-radius: 14px; border: none;
-        font-size: 0.95rem; font-weight: 900; font-family: 'Pretendard', sans-serif;
+        width: 100%; padding: 16px 20px; min-height: 54px;
+        border-radius: 14px; border: none;
+        font-size: 1rem; font-weight: 900; font-family: 'Pretendard', sans-serif;
         display: flex; align-items: center; justify-content: center; position: relative;
         cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
@@ -229,23 +247,27 @@
     }
     .btn-submit-form:active { transform: scale(0.96); }
 
-    /* 모바일 · 짧은 화면 레이아웃 콤팩트 */
+    /* 모바일 — 터치 영역·간격 확대 */
     @media (max-width: 480px), (max-height: 740px) {
-        .hero-section { padding: 24px 20px 6px; }
+        .login-page-wrap { padding: 16px 0 24px; }
+        .hero-section { margin-bottom: 32px; }
         .floating-emoji { font-size: 2.5rem; margin-bottom: 2px; }
         .brand-logo { font-size: 2.2rem; }
         .brand-slogan { font-size: 0.88rem; margin-top: 6px; }
-        .login-section { padding: 0 20px 20px; gap: 6px; }
-        .email-auth-block { gap: 6px; }
-        .email-field { padding: 13px 14px; font-size: 0.95rem; }
-        .btn-email-login { padding: 13px 16px; font-size: 1.05rem; }
-        .social-btn { padding: 13px 16px; font-size: 0.9rem; }
-        .login-footer { margin-top: 6px; font-size: 0.68rem; }
+        .login-section { padding: 0 20px; gap: 14px; }
+        .email-auth-block { gap: 14px; }
+        .email-field { padding: 17px 18px; min-height: 56px; font-size: 1.05rem; }
+        .btn-email-login { padding: 18px 20px; min-height: 56px; font-size: 1.15rem; margin-top: 6px; }
+        .btn-email-signup-link { padding: 10px 0 6px; }
+        .auth-divider { margin: 12px 0 8px; }
+        .social-btn { padding: 17px 20px; min-height: 56px; font-size: 0.98rem; }
+        .login-footer { margin-top: 12px; font-size: 0.68rem; }
     }
 </style>
 </head>
 <body>
 
+    <div class="login-page-wrap">
     <div class="hero-section">
         <div class="floating-emoji">🔥</div>
         <h1 class="brand-logo">P<span>!</span>CKLE</h1>
@@ -278,6 +300,7 @@
         <div class="login-footer">
             회원가입 시 <span>이용약관</span> 및 <span>개인정보처리방침</span>에 동의하게 됩니다.
         </div>
+    </div>
     </div>
 
     <!-- ============================================== -->
@@ -370,23 +393,31 @@
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase-config.js"></script>
+<script>window.__PICKLE_CONFIG_SCRIPT_OK = null;</script>
+<script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
+<script src="../js/supabase-bootstrap.js"></script>
 <script src="../js/login-page.js"></script>
 <script>
     function getRedirectAfterLogin() {
         return window.PickleLogin?.getRedirectAfterLogin?.() || 'index.html';
     }
 
-    /** 카카오 / 구글 — signInWithOAuth (PICKLE_SUPABASE_CONFIG) */
+    /** 카카오 / 구글 — signInWithOAuth */
     async function loginWithOAuth(provider) {
         if (!window.PickleLogin?.signInWithOAuth) {
             alert('인증 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
             return;
         }
+        if (window.PickleLogin.guardConfigForUserAction &&
+            !window.PickleLogin.guardConfigForUserAction()) {
+            return;
+        }
         try {
             await window.PickleLogin.signInWithOAuth(provider);
         } catch (err) {
-            alert(err.message || '소셜 로그인에 실패했습니다.');
+            if (err && err.message !== 'Supabase config not ready') {
+                alert(err.message || '소셜 로그인에 실패했습니다.');
+            }
         }
     }
 
