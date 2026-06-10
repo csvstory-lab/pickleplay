@@ -135,8 +135,17 @@
     );
   }
 
+  function resolveMediaMode(post) {
+    if (post.media_mode) return post.media_mode;
+    var t = post.media_type;
+    if (!t || t === 'none') return 'text';
+    if (t === 'dual' || t === 'video_dual') return 'vs';
+    if (t === 'single' || t === 'video') return 'single';
+    return 'text';
+  }
+
   function buildDetailMediaHtml(post) {
-    var mode = post.media_mode || 'text';
+    var mode = resolveMediaMode(post);
     var title = post.title || '불판';
 
     if (mode === 'text' || (!post.media_url_1 && !post.media_url_2)) {
