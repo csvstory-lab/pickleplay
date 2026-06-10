@@ -113,37 +113,62 @@
         background-color: #353538;
         box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
     }
-    /* 가입 모드 — 상세 필드 부드럽게 펼침 */
-    .signup-detail-wrap {
-        display: grid;
-        grid-template-rows: 0fr;
-        transition: grid-template-rows 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+    /* 로그인 / 회원가입 화면 분리 */
+    .auth-screen { width: 100%; }
+    .auth-screen.is-hidden { display: none; }
+
+    /* 회원가입 전용 화면 */
+    .signup-header {
+        padding: 0 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        animation: slideUp 0.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
     }
-    .email-auth-block[data-mode="signup"] .signup-detail-wrap {
-        grid-template-rows: 1fr;
+    .btn-back-to-login {
+        align-self: flex-start;
+        background: none;
+        border: none;
+        color: var(--text-sub);
+        font-family: 'Pretendard', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 800;
+        cursor: pointer;
+        padding: 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
-    .signup-detail-inner {
-        min-height: 0;
-        overflow: hidden;
+    .btn-back-to-login:active { color: var(--neon-green); }
+    .signup-title {
+        margin: 0;
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: 1.75rem;
+        letter-spacing: -0.5px;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .signup-section {
+        padding: 0 20px 28px;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        animation: slideUp 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
     }
     .signup-info-notice {
-        margin: 0;
-        padding: 0 2px 2px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #71717a;
-        line-height: 1.45;
+        margin: 4px 0 2px;
+        padding: 12px 14px;
+        border: 1px solid rgba(57, 255, 20, 0.35);
+        border-radius: 12px;
+        background: rgba(57, 255, 20, 0.06);
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #c8ff9e;
+        line-height: 1.5;
         word-break: keep-all;
-        opacity: 0;
-        transform: translateY(-4px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    .email-auth-block[data-mode="signup"] .signup-info-notice {
-        opacity: 1;
-        transform: translateY(0);
+        box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
     }
     .signup-check-row {
         display: flex;
@@ -300,83 +325,6 @@
     }
     .login-footer span { color: var(--text-sub); text-decoration: underline; cursor: pointer; }
 
-    /* ============================================== */
-    /* 💡 이메일 회원가입 / 로그인 슬라이드 패널      */
-    /* ============================================== */
-    .slide-panel {
-        position: fixed; top: 0; right: 0; width: 100%; height: 100%;
-        max-width: 480px; background-color: var(--bg-color); z-index: 9999;
-        transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
-        display: flex; flex-direction: column;
-    }
-    .slide-panel.open { transform: translateX(0); }
-
-    .panel-header {
-        display: flex; align-items: center; padding: 15px 20px;
-        border-bottom: 1px solid var(--border-color);
-        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px);
-    }
-    .btn-back { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 0; margin-right: 15px; }
-    .panel-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; margin: 0; letter-spacing: -0.5px; }
-    
-    .panel-content { flex: 1; overflow-y: auto; padding: 30px 20px 80px 20px; scrollbar-width: none; }
-    .panel-content::-webkit-scrollbar { display: none; }
-
-    /* 입력 폼 스타일 */
-    .input-group { margin-bottom: 25px; }
-    .input-label { display: block; font-size: 0.85rem; font-weight: 800; color: #d4d4d8; margin-bottom: 8px; padding-left: 5px; }
-    .input-field, .select-field {
-        width: 100%; background-color: var(--card-bg); border: 1px solid var(--border-color);
-        color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.95rem; padding: 14px 16px;
-        border-radius: 12px; outline: none; transition: 0.2s; box-sizing: border-box;
-    }
-    .input-field:focus, .select-field:focus { border-color: var(--neon-green); background-color: #121214; }
-    .input-field::placeholder { color: #52525b; }
-    
-    /* 성별/연령 행 레이아웃 */
-    .row-group { display: flex; gap: 15px; }
-    .row-group .input-group { flex: 1; margin-bottom: 0; }
-    .select-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; }
-
-    /* 데이터 수집 안내 문구 UI */
-    .info-notice {
-        background-color: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2);
-        padding: 12px 15px; border-radius: 12px; margin-bottom: 15px;
-        font-size: 0.8rem; font-weight: 700; color: #d4d4d8; line-height: 1.5; word-break: keep-all;
-    }
-    .info-notice strong { color: var(--neon-blue); font-weight: 900; }
-
-    /* 약관 동의 영역 (체크박스 커스텀) */
-    .terms-box { border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 25px; margin-bottom: 30px; }
-    .checkbox-wrap { display: flex; align-items: center; margin-bottom: 15px; cursor: pointer; }
-    .checkbox-wrap input[type="checkbox"] { 
-        appearance: none; width: 22px; height: 22px; border: 2px solid var(--border-color); 
-        border-radius: 6px; background-color: var(--card-bg); margin-right: 12px; 
-        cursor: pointer; position: relative; transition: 0.2s; flex-shrink: 0;
-    }
-    .checkbox-wrap input[type="checkbox"]:checked { background-color: var(--neon-green); border-color: var(--neon-green); }
-    .checkbox-wrap input[type="checkbox"]:checked::after {
-        content: '✔'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        font-size: 14px; color: #000; font-weight: 900;
-    }
-    .check-label { font-size: 0.9rem; color: #e4e4e7; font-weight: 600; flex: 1; line-height: 1.4; }
-    .check-label .req { color: var(--neon-pink); font-weight: 800; margin-right: 4px; }
-    .check-label .opt { color: var(--text-sub); font-weight: 800; margin-right: 4px; }
-    .btn-view-terms { background: none; border: none; color: var(--text-sub); text-decoration: underline; font-size: 0.75rem; cursor: pointer; padding: 0; }
-    
-    .all-agree-wrap { padding-bottom: 15px; border-bottom: 1px dashed #3f3f46; margin-bottom: 15px; }
-    .all-agree-wrap .check-label { font-weight: 900; font-size: 1rem; color: #fff; }
-
-    /* 💡 버튼 디자인 및 "픽클러 데뷔하기" 적용 */
-    .btn-submit-form {
-        width: 100%; padding: 18px; border-radius: 16px; border: none;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000;
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.25rem; letter-spacing: 0.5px;
-        cursor: pointer; box-shadow: 0 5px 20px rgba(57, 255, 20, 0.3);
-        transition: transform 0.2s;
-    }
-    .btn-submit-form:active { transform: scale(0.96); }
-
     /* 모바일 — 터치 영역·간격 확대 */
     @media (max-width: 480px), (max-height: 740px) {
         .login-page-wrap { padding: 16px 0 24px; }
@@ -392,80 +340,97 @@
         .auth-divider { margin: 12px 0 8px; }
         .social-btn { padding: 17px 20px; min-height: 56px; font-size: 0.98rem; }
         .login-footer { margin-top: 12px; font-size: 0.68rem; }
+        .signup-section { gap: 14px; }
+        .signup-header { padding-bottom: 16px; }
     }
 </style>
 </head>
 <body>
 
     <div class="login-page-wrap">
-    <div class="hero-section">
-        <div class="floating-emoji">🔥</div>
-        <h1 class="brand-logo">P<span>!</span>CKLE</h1>
-        <p class="brand-slogan">
-            도파민 터지는 세기의 밸런스 매치!<br>
-            <strong>1초 만에 가입</strong>하고 불판에 참전하세요.
-        </p>
-    </div>
 
-    <div class="login-section">
-        <div class="email-auth-block" data-mode="login">
-            <input type="email" id="mainEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
-            <input type="password" id="mainPwInput" class="email-field" placeholder="비밀번호" autocomplete="current-password">
+    <!-- 로그인 화면 -->
+    <div id="loginView" class="auth-screen">
+        <div class="hero-section">
+            <div class="floating-emoji">🔥</div>
+            <h1 class="brand-logo">P<span>!</span>CKLE</h1>
+            <p class="brand-slogan">
+                도파민 터지는 세기의 밸런스 매치!<br>
+                <strong>1초 만에 가입</strong>하고 불판에 참전하세요.
+            </p>
+        </div>
 
-            <div class="signup-detail-wrap" id="signupDetailWrap" aria-hidden="true">
-                <div class="signup-detail-inner">
-                    <p class="signup-info-notice">🔥 정확한 통계와 맞춤형 불판 최적화를 위해 꼭 필요한 정보입니다.</p>
-                    <input type="password" id="password-confirm" class="email-field" placeholder="비밀번호 확인" autocomplete="new-password">
-
-                    <label class="signup-check-row">
-                        <input type="checkbox" id="signup-age14">
-                        <span class="signup-check-label"><span class="req">[필수]</span> 만 14세 이상입니다.</span>
-                    </label>
-                    <label class="signup-check-row">
-                        <input type="checkbox" id="signup-marketing">
-                        <span class="signup-check-label"><span class="opt">[선택]</span> 마케팅 정보 수신 동의</span>
-                    </label>
-
-                    <span class="signup-field-label">성별 <span class="req">*</span></span>
-                    <div class="gender-toggle" role="radiogroup" aria-label="성별">
-                        <input type="radio" name="signupGender" id="signup-gender-male" value="male">
-                        <label for="signup-gender-male" class="gender-btn">남</label>
-                        <input type="radio" name="signupGender" id="signup-gender-female" value="female">
-                        <label for="signup-gender-female" class="gender-btn">여</label>
-                    </div>
-
-                    <span class="signup-field-label">연령대 <span class="req">*</span></span>
-                    <select id="signup-age-group" class="signup-select">
-                        <option value="">연령대 선택</option>
-                        <option value="10s">10대</option>
-                        <option value="20s">20대</option>
-                        <option value="30s">30대</option>
-                        <option value="40s">40대</option>
-                        <option value="50plus">50대 이상</option>
-                    </select>
-                </div>
+        <div class="login-section">
+            <div class="email-auth-block">
+                <input type="email" id="mainEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
+                <input type="password" id="mainPwInput" class="email-field" placeholder="비밀번호" autocomplete="current-password">
+                <button type="button" id="btnEmailLogin" class="btn-email-login">로그인</button>
+                <button type="button" id="btnEmailSignup" class="btn-email-signup-link">이메일로 가입하기</button>
             </div>
 
-            <button type="button" id="btnEmailLogin" class="btn-email-login">로그인</button>
-            <button type="button" id="btnEmailSignup" class="btn-email-signup-link">이메일로 가입하기</button>
-        </div>
+            <div class="auth-divider">또는</div>
 
-        <div class="auth-divider">또는</div>
+            <button type="button" class="social-btn btn-kakao" onclick="loginWithOAuth('kakao')">
+                <span class="social-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4c-4.97 0-9 3.185-9 7.115 0 2.54 1.7 4.76 4.3 6.01-.2.75-.73 2.67-.74 2.74-.02.16.1.18.2.14.08-.03 2.47-1.63 3.48-2.32.57.06 1.15.1 1.76.1 4.97 0 9-3.185 9-7.115S16.97 4 12 4z"/></svg></span>
+                카카오로 3초 만에 시작하기
+            </button>
 
-        <button type="button" class="social-btn btn-kakao" onclick="loginWithOAuth('kakao')">
-            <span class="social-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4c-4.97 0-9 3.185-9 7.115 0 2.54 1.7 4.76 4.3 6.01-.2.75-.73 2.67-.74 2.74-.02.16.1.18.2.14.08-.03 2.47-1.63 3.48-2.32.57.06 1.15.1 1.76.1 4.97 0 9-3.185 9-7.115S16.97 4 12 4z"/></svg></span>
-            카카오로 3초 만에 시작하기
-        </button>
+            <button type="button" class="social-btn btn-google" onclick="loginWithOAuth('google')">
+                <span class="social-icon"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
+                Google 계정으로 시작하기
+            </button>
 
-        <button type="button" class="social-btn btn-google" onclick="loginWithOAuth('google')">
-            <span class="social-icon"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
-            Google 계정으로 시작하기
-        </button>
-
-        <div class="login-footer">
-            회원가입 시 <span>이용약관</span> 및 <span>개인정보처리방침</span>에 동의하게 됩니다.
+            <div class="login-footer">
+                회원가입 시 <span>이용약관</span> 및 <span>개인정보처리방침</span>에 동의하게 됩니다.
+            </div>
         </div>
     </div>
+
+    <!-- 회원가입 전용 화면 -->
+    <div id="signupView" class="auth-screen is-hidden">
+        <div class="signup-header">
+            <button type="button" id="btnBackToLogin" class="btn-back-to-login">← 로그인으로 돌아가기</button>
+            <h2 class="signup-title">회원가입</h2>
+        </div>
+
+        <div class="signup-section">
+            <input type="email" id="signupEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
+            <input type="password" id="signupPwInput" class="email-field" placeholder="비밀번호 (8자+, 영문/숫자/특수문자)" autocomplete="new-password">
+            <input type="password" id="password-confirm" class="email-field" placeholder="비밀번호 확인" autocomplete="new-password">
+
+            <p class="signup-info-notice">🔥 정확한 통계와 맞춤형 불판 최적화를 위해 꼭 필요한 정보입니다.</p>
+
+            <label class="signup-check-row">
+                <input type="checkbox" id="signup-age14">
+                <span class="signup-check-label"><span class="req">[필수]</span> 만 14세 이상입니다.</span>
+            </label>
+            <label class="signup-check-row">
+                <input type="checkbox" id="signup-marketing">
+                <span class="signup-check-label"><span class="opt">[선택]</span> 마케팅 정보 수신 동의</span>
+            </label>
+
+            <span class="signup-field-label">성별 <span class="req">*</span></span>
+            <div class="gender-toggle" role="radiogroup" aria-label="성별">
+                <input type="radio" name="signupGender" id="signup-gender-male" value="male">
+                <label for="signup-gender-male" class="gender-btn">남</label>
+                <input type="radio" name="signupGender" id="signup-gender-female" value="female">
+                <label for="signup-gender-female" class="gender-btn">여</label>
+            </div>
+
+            <span class="signup-field-label">연령대 <span class="req">*</span></span>
+            <select id="signup-age-group" class="signup-select">
+                <option value="">연령대 선택</option>
+                <option value="10s">10대</option>
+                <option value="20s">20대</option>
+                <option value="30s">30대</option>
+                <option value="40s">40대</option>
+                <option value="50plus">50대 이상</option>
+            </select>
+
+            <button type="button" id="btnSignupSubmit" class="btn-email-login">픽클 회원가입</button>
+        </div>
+    </div>
+
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -5,8 +5,10 @@
 (function () {
   'use strict';
 
-  var FORM_MODE = { LOGIN: 'login', SIGNUP: 'signup' };
   var FEED_PATH = 'index.html';
+  var PASSWORD_RULE_MSG = '비밀번호는 8자 이상, 영문/숫자/특수문자를 포함해야 합니다.';
+  var STRONG_PASSWORD_RE =
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
   function bootstrap() {
     return window.PickleSupabaseBootstrap;
@@ -45,6 +47,10 @@
     return window.location.origin + '/index.html';
   }
 
+  function isStrongPassword(password) {
+    return STRONG_PASSWORD_RE.test(String(password || ''));
+  }
+
   function formatAuthError(err) {
     var msg = (err && err.message) ? err.message : '요청에 실패했습니다.';
     if (/invalid login credentials/i.test(msg)) {
@@ -54,7 +60,7 @@
       return '이미 가입된 이메일입니다. 로그인해 주세요.';
     }
     if (/password should be at least/i.test(msg)) {
-      return '비밀번호는 6자 이상 입력해 주세요.';
+      return PASSWORD_RULE_MSG;
     }
     if (/unable to validate email/i.test(msg)) {
       return '올바른 이메일 주소를 입력해 주세요.';
@@ -62,22 +68,108 @@
     return msg;
   }
 
-  function bindMainEmailAuth() {
-    var primaryBtn = document.getElementById('btnEmailLogin');
-    var modeToggleLink = document.getElementById('btnEmailSignup');
+  function bindAuthScreens() {
+    var loginView = document.getElementById('loginView');
+    var signupView = document.getElementById('signupView');
+    var goSignupBtn = document.getElementById('btnEmailSignup');
+    var backToLoginBtn = document.getElementById('btnBackToLogin');
+
+    function showLoginView() {
+      if (loginView) loginView.classList.remove('is-hidden');
+      if (signupView) signupView.classList.add('is-hidden');
+      window.scrollTo(0, 0);
+    }
+
+    function showSignupView() {
+      if (loginView) loginView.classList.add('is-hidden');
+      if (signupView) signupView.classList.remove('is-hidden');
+      window.scrollTo(0, 0);
+      var firstField = document.getElementById('signupEmailInput');
+      if (firstField) firstField.focus();
+    }
+
+    if (goSignupBtn) {
+      goSignupBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        showSignupView();
+      });
+    }
+
+    if (backToLoginBtn) {
+      backToLoginBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        showLoginView();
+      });
+    }
+
+    return {
+      showLoginView: showLoginView,
+      showSignupView: showSignupView,
+    };
+  }
+
+  function bindLoginForm() {
+    var loginBtn = document.getElementById('btnEmailLogin');
     var emailInput = document.getElementById('mainEmailInput');
     var pwInput = document.getElementById('mainPwInput');
+    if (!loginBtn || !emailInput || !pwInput) return;
+
+    function validateLogin() {
+      var email = emailInput.value.trim();
+      var password = pwInput.value;
+      if (!email || email.indexOf('@') === -1) {
+        alert('올바른 이메일 주소를 입력해 주세요.');
+        emailInput.focus();
+        return null;
+      }
+      if (!password) {
+        alert('비밀번호를 입력해 주세요.');
+        pwInput.focus();
+        return null;
+      }
+      return { email: email, password: password };
+    }
+
+    loginBtn.addEventListener('click', async function () {
+      if (!guardConfigForUserAction()) return;
+
+      var creds = validateLogin();
+      if (!creds) return;
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = '로그인 중…';
+
+      try {
+        await signInWithEmail(creds.email, creds.password);
+        window.location.href = getRedirectAfterLogin();
+      } catch (err) {
+        alert(formatAuthError(err));
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
+      }
+    });
+
+    function onEnterSubmit(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        loginBtn.click();
+      }
+    }
+
+    emailInput.addEventListener('keydown', onEnterSubmit);
+    pwInput.addEventListener('keydown', onEnterSubmit);
+  }
+
+  function bindSignupForm(screenApi) {
+    var signupBtn = document.getElementById('btnSignupSubmit');
+    var emailInput = document.getElementById('signupEmailInput');
+    var pwInput = document.getElementById('signupPwInput');
     var pwConfirmInput = document.getElementById('password-confirm');
-    var signupDetailWrap = document.getElementById('signupDetailWrap');
     var age14Checkbox = document.getElementById('signup-age14');
     var marketingCheckbox = document.getElementById('signup-marketing');
     var ageGroupSelect = document.getElementById('signup-age-group');
-    var authBlock = document.querySelector('.email-auth-block');
-    if (!primaryBtn || !modeToggleLink || !emailInput || !pwInput || !pwConfirmInput) {
-      return;
-    }
-
-    var formMode = FORM_MODE.LOGIN;
+    if (!signupBtn || !emailInput || !pwInput || !pwConfirmInput) return;
 
     function getSelectedGender() {
       var selected = document.querySelector('input[name="signupGender"]:checked');
@@ -85,6 +177,8 @@
     }
 
     function resetSignupFields() {
+      emailInput.value = '';
+      pwInput.value = '';
       pwConfirmInput.value = '';
       if (age14Checkbox) age14Checkbox.checked = false;
       if (marketingCheckbox) marketingCheckbox.checked = false;
@@ -94,61 +188,27 @@
       });
     }
 
-    function setFormMode(mode) {
-      formMode = mode === FORM_MODE.SIGNUP ? FORM_MODE.SIGNUP : FORM_MODE.LOGIN;
+    function validateSignup() {
+      var email = emailInput.value.trim();
+      var password = pwInput.value;
+      var passwordConfirm = pwConfirmInput.value;
 
-      if (authBlock) {
-        authBlock.dataset.mode = formMode;
-      }
-      if (signupDetailWrap) {
-        signupDetailWrap.setAttribute(
-          'aria-hidden',
-          formMode === FORM_MODE.SIGNUP ? 'false' : 'true'
-        );
-      }
-
-      if (formMode === FORM_MODE.SIGNUP) {
-        primaryBtn.textContent = '픽클 회원가입';
-        modeToggleLink.textContent = '이미 계정이 있으신가요? 로그인';
-        pwInput.autocomplete = 'new-password';
-      } else {
-        primaryBtn.textContent = '로그인';
-        modeToggleLink.textContent = '이메일로 가입하기';
-        pwInput.autocomplete = 'current-password';
-        resetSignupFields();
-      }
-    }
-
-    function readCredentials() {
-      return {
-        email: emailInput.value.trim(),
-        password: pwInput.value,
-        passwordConfirm: pwConfirmInput.value,
-      };
-    }
-
-    function validateCredentials(isSignup) {
-      var creds = readCredentials();
-      if (!creds.email || creds.email.indexOf('@') === -1) {
+      if (!email || email.indexOf('@') === -1) {
         alert('올바른 이메일 주소를 입력해 주세요.');
         emailInput.focus();
         return null;
       }
-      if (!creds.password) {
+      if (!password) {
         alert('비밀번호를 입력해 주세요.');
         pwInput.focus();
         return null;
       }
-      if (isSignup && creds.password.length < 6) {
-        alert('비밀번호는 6자 이상 입력해 주세요.');
+      if (!isStrongPassword(password)) {
+        alert(PASSWORD_RULE_MSG);
         pwInput.focus();
         return null;
       }
-      return creds;
-    }
-
-    function validateSignupDetails(creds) {
-      if (creds.password !== creds.passwordConfirm) {
+      if (password !== passwordConfirm) {
         alert('비밀번호 확인이 일치하지 않습니다.');
         pwConfirmInput.focus();
         return null;
@@ -169,71 +229,54 @@
         if (ageGroupSelect) ageGroupSelect.focus();
         return null;
       }
+
       return {
+        email: email,
+        password: password,
         gender: gender,
         ageGroup: ageGroup,
         marketingConsent: !!(marketingCheckbox && marketingCheckbox.checked),
       };
     }
 
-    modeToggleLink.addEventListener('click', function (e) {
-      e.preventDefault();
-      setFormMode(formMode === FORM_MODE.LOGIN ? FORM_MODE.SIGNUP : FORM_MODE.LOGIN);
-    });
-
-    primaryBtn.addEventListener('click', async function () {
+    signupBtn.addEventListener('click', async function () {
       if (!guardConfigForUserAction()) return;
 
-      var isSignup = formMode === FORM_MODE.SIGNUP;
-      var creds = validateCredentials(isSignup);
-      if (!creds) return;
+      var payload = validateSignup();
+      if (!payload) return;
 
-      var signupMeta = null;
-      if (isSignup) {
-        signupMeta = validateSignupDetails(creds);
-        if (!signupMeta) return;
-      }
-
-      var loadingLabel = isSignup ? '가입 처리 중…' : '로그인 중…';
-
-      primaryBtn.disabled = true;
-      primaryBtn.textContent = loadingLabel;
+      signupBtn.disabled = true;
+      signupBtn.textContent = '가입 처리 중…';
 
       try {
-        if (isSignup) {
-          await signUpWithEmail(creds.email, creds.password, {
-            nickname: creds.email.split('@')[0],
-            gender: signupMeta.gender,
-            age_group: signupMeta.ageGroup,
-            marketing_consent: signupMeta.marketingConsent,
-          });
-          alert('가입 완료! 로그인해주세요.');
-          resetSignupFields();
-          setFormMode(FORM_MODE.LOGIN);
-        } else {
-          await signInWithEmail(creds.email, creds.password);
-          window.location.href = getRedirectAfterLogin();
+        await signUpWithEmail(payload.email, payload.password, {
+          nickname: payload.email.split('@')[0],
+          gender: payload.gender,
+          age_group: payload.ageGroup,
+          marketing_consent: payload.marketingConsent,
+        });
+        alert('가입 완료! 로그인해주세요.');
+        resetSignupFields();
+        if (screenApi && screenApi.showLoginView) {
+          screenApi.showLoginView();
         }
       } catch (err) {
         alert(formatAuthError(err));
       } finally {
-        primaryBtn.disabled = false;
-        primaryBtn.textContent =
-          formMode === FORM_MODE.SIGNUP ? '픽클 회원가입' : '로그인';
+        signupBtn.disabled = false;
+        signupBtn.textContent = '픽클 회원가입';
       }
     });
 
     function onEnterSubmit(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        primaryBtn.click();
+        signupBtn.click();
       }
     }
 
     pwInput.addEventListener('keydown', onEnterSubmit);
     pwConfirmInput.addEventListener('keydown', onEnterSubmit);
-
-    setFormMode(FORM_MODE.LOGIN);
   }
 
   async function signInWithOAuth(provider) {
@@ -244,13 +287,11 @@
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
     var sb = getSupabaseClient();
-    var oauthOptions = {
-      redirectTo: window.location.origin + '/index.html',
-    };
-
     var result = await sb.auth.signInWithOAuth({
       provider: provider,
-      options: oauthOptions,
+      options: {
+        redirectTo: window.location.origin + '/index.html',
+      },
     });
 
     if (result.error) throw result.error;
@@ -300,7 +341,9 @@
   }
 
   async function initLoginPage() {
-    bindMainEmailAuth();
+    var screenApi = bindAuthScreens();
+    bindLoginForm();
+    bindSignupForm(screenApi);
 
     var b = bootstrap();
     if (!b || !b.isReady()) {
@@ -328,6 +371,7 @@
     getRedirectAfterLogin: getRedirectAfterLogin,
     getOAuthRedirectTo: getOAuthRedirectTo,
     guardConfigForUserAction: guardConfigForUserAction,
+    isStrongPassword: isStrongPassword,
     init: initLoginPage,
   };
 
