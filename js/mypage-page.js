@@ -568,16 +568,6 @@
     editPostState = { postId: null, thumbFile: null, existingThumbUrl: null };
   }
 
-  async function uploadEditThumbnail(userId, file) {
-    if (!file) return null;
-
-    if (!window.PickleMedia?.uploadPostImage) {
-      throw new Error('이미지 업로드 모듈을 불러오지 못했습니다.');
-    }
-
-    return window.PickleMedia.uploadPostImage(file, userId);
-  }
-
   async function updatePost() {
     var postId = editPostState.postId;
     if (!postId) return;
@@ -603,21 +593,44 @@
     }
 
     try {
-      var payload = { description: description };
+      var finalThumbnailUrl = editPostState.existingThumbUrl || null;
 
-      if (editPostState.thumbFile) {
-        var newThumbUrl = await uploadEditThumbnail(
-          user.id,
-          editPostState.thumbFile
-        );
-        if (newThumbUrl) {
-          payload.thumbnail_url = newThumbUrl;
+      var fileInput = document.getElementById('editPostThumbInput');
+      var thumbFile =
+        (fileInput && fileInput.files && fileInput.files[0]) ||
+        editPostState.thumbFile ||
+        null;
+
+      if (thumbFile) {
+        var fileExt = thumbFile.name.split('.').pop();
+        var fileName = 'thumb_update_' + Date.now() + '.' + fileExt;
+
+        var uploadResult = await sb.storage
+          .from('post_media')
+          .upload('thumbnails/' + fileName, thumbFile, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: thumbFile.type || undefined,
+          });
+
+        if (uploadResult.error) {
+          alert('썸네일 수정 업로드 실패: ' + uploadResult.error.message);
+          return;
         }
+
+        var publicUrlResult = sb.storage
+          .from('post_media')
+          .getPublicUrl('thumbnails/' + fileName);
+
+        finalThumbnailUrl = publicUrlResult.data.publicUrl;
       }
 
       var updateResult = await sb
         .from('posts')
-        .update(payload)
+        .update({
+          description: description,
+          thumbnail_url: finalThumbnailUrl,
+        })
         .eq('id', postId)
         .eq('author_id', user.id)
         .select('id')
