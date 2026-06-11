@@ -83,6 +83,69 @@
     };
   }
 
+  /** 로그인 유저 메타데이터 → comments.author_nickname / author_avatar_html */
+  function extractCommentAuthorSnapshot(user) {
+    var meta = (user && user.user_metadata) || {};
+    var nickname = meta.nickname ? String(meta.nickname).trim() : '';
+
+    if (!nickname && user && user.email) {
+      nickname = String(user.email).split('@')[0] || '';
+    }
+    if (!nickname) {
+      nickname = '픽클러';
+    }
+
+    var avatarHtml = '';
+    if (meta.avatar_html && String(meta.avatar_html).trim()) {
+      avatarHtml = String(meta.avatar_html).trim();
+    } else if (meta.avatar_emoji && String(meta.avatar_emoji).trim()) {
+      avatarHtml = String(meta.avatar_emoji).trim();
+    } else {
+      var avatarUrl = meta.avatar_url || meta.picture || meta.avatar || '';
+      if (avatarUrl) {
+        avatarHtml =
+          '<img src="' +
+          String(avatarUrl).replace(/"/g, '&quot;') +
+          '" alt="">';
+      } else {
+        avatarHtml = '🥒';
+      }
+    }
+
+    return {
+      author_nickname: nickname,
+      author_avatar_html: avatarHtml,
+    };
+  }
+
+  function normalizeCommentRow(row) {
+    if (!row) return row;
+
+    var nickname = row.author_nickname ? String(row.author_nickname).trim() : '';
+    var avatarHtml = row.author_avatar_html ? String(row.author_avatar_html).trim() : '';
+
+    if (!nickname && row.users && row.users.nickname) {
+      nickname = String(row.users.nickname).trim();
+    }
+
+    row.author_nickname = nickname || null;
+    row.author_avatar_html = avatarHtml || null;
+    return row;
+  }
+
+  function isCommentSchemaColumnError(error) {
+    if (!error) return false;
+    var msg = String(error.message || '').toLowerCase();
+    return (
+      msg.indexOf('author_nickname') !== -1 ||
+      msg.indexOf('author_avatar_html') !== -1 ||
+      msg.indexOf('column') !== -1 ||
+      msg.indexOf('could not find') !== -1 ||
+      error.code === '42703' ||
+      error.code === 'PGRST204'
+    );
+  }
+
   function normalizePostsRow(row) {
     return Object.assign(
       {
@@ -222,10 +285,23 @@
   }
 
   function commentAuthorLabel(comment) {
-    if (comment.users && comment.users.nickname) {
-      return comment.users.nickname;
+    if (comment && comment.author_nickname && String(comment.author_nickname).trim()) {
+      return String(comment.author_nickname).trim();
     }
-    return '픽커';
+    if (comment && comment.users && comment.users.nickname) {
+      return String(comment.users.nickname).trim();
+    }
+    return '픽클러';
+  }
+
+  function commentAuthorAvatarInner(comment) {
+    var raw =
+      comment && comment.author_avatar_html
+        ? String(comment.author_avatar_html).trim()
+        : '';
+    if (!raw) return escapeHtml('🥒');
+    if (raw.indexOf('<') !== -1) return raw;
+    return escapeHtml(raw);
   }
 
   function renderCommentItemHtml(comment) {
@@ -234,7 +310,9 @@
       '<div class="comment-item" data-comment-id="' +
       escapeHtml(comment.id) +
       '">' +
-      '<div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem;">💬</div>' +
+      '<div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:50%;">' +
+      commentAuthorAvatarInner(comment) +
+      '</div>' +
       '<div class="comment-content">' +
       '<div class="comment-user"><span>' +
       escapeHtml(commentAuthorLabel(comment)) +
@@ -249,18 +327,34 @@
     );
   }
 
-  async function fetchCommentsList(sb, postId) {
-    var result = await sb
-      .from('comments')
-      .select(
-        'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )'
-      )
-      .eq('post_id', postId)
-      .eq('visibility_status', 'visible')
-      .order('created_at', { ascending: false });
+  var COMMENT_SELECT_VARIANTS = [
+    'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html',
+    'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )',
+  ];
 
-    if (result.error) throw result.error;
-    return result.data || [];
+  async function fetchCommentsList(sb, postId) {
+    var lastError = null;
+
+    for (var i = 0; i < COMMENT_SELECT_VARIANTS.length; i++) {
+      var result = await sb
+        .from('comments')
+        .select(COMMENT_SELECT_VARIANTS[i])
+        .eq('post_id', postId)
+        .eq('visibility_status', 'visible')
+        .order('created_at', { ascending: false });
+
+      if (!result.error) {
+        return (result.data || []).map(normalizeCommentRow);
+      }
+
+      lastError = result.error;
+
+      if (!isCommentSchemaColumnError(result.error)) {
+        throw result.error;
+      }
+    }
+
+    throw lastError || new Error('댓글을 불러오지 못했습니다.');
   }
 
   function updateCommentHeader(count) {
@@ -353,22 +447,47 @@
     }
 
     try {
+      var authorSnapshot = extractCommentAuthorSnapshot(user);
+      var insertPayload = {
+        user_id: user.id,
+        post_id: currentPostId,
+        content: text,
+        filtered_content: text,
+        ai_filter_status: 'passed',
+        visibility_status: 'visible',
+        author_nickname: authorSnapshot.author_nickname,
+        author_avatar_html: authorSnapshot.author_avatar_html,
+      };
+
       var insertResult = await sb
         .from('comments')
-        .insert({
-          user_id: user.id,
-          post_id: currentPostId,
-          content: text,
-          filtered_content: text,
-          ai_filter_status: 'passed',
-          visibility_status: 'visible',
-        })
+        .insert(insertPayload)
         .select(
-          'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )'
+          'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html'
         )
         .single();
 
+      if (insertResult.error && isCommentSchemaColumnError(insertResult.error)) {
+        delete insertPayload.author_nickname;
+        delete insertPayload.author_avatar_html;
+        insertResult = await sb
+          .from('comments')
+          .insert(insertPayload)
+          .select(
+            'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )'
+          )
+          .single();
+      }
+
       if (insertResult.error) throw insertResult.error;
+
+      var newComment = normalizeCommentRow(insertResult.data);
+      if (!newComment.author_nickname) {
+        newComment.author_nickname = authorSnapshot.author_nickname;
+      }
+      if (!newComment.author_avatar_html) {
+        newComment.author_avatar_html = authorSnapshot.author_avatar_html;
+      }
 
       if (inputEl) inputEl.value = '';
 
@@ -379,7 +498,7 @@
       if (listEl) {
         listEl.insertAdjacentHTML(
           'afterbegin',
-          renderCommentItemHtml(insertResult.data)
+          renderCommentItemHtml(newComment)
         );
       }
 

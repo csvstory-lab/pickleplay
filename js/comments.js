@@ -31,14 +31,67 @@
     });
   }
 
+  function extractCommentAuthorSnapshot(user) {
+    const meta = (user && user.user_metadata) || {};
+    let nickname = meta.nickname ? String(meta.nickname).trim() : '';
+
+    if (!nickname && user && user.email) {
+      nickname = String(user.email).split('@')[0] || '';
+    }
+    if (!nickname) {
+      nickname = '픽클러';
+    }
+
+    let avatarHtml = '';
+    if (meta.avatar_html && String(meta.avatar_html).trim()) {
+      avatarHtml = String(meta.avatar_html).trim();
+    } else if (meta.avatar_emoji && String(meta.avatar_emoji).trim()) {
+      avatarHtml = String(meta.avatar_emoji).trim();
+    } else {
+      const avatarUrl = meta.avatar_url || meta.picture || meta.avatar || '';
+      if (avatarUrl) {
+        avatarHtml = `<img src="${String(avatarUrl).replace(/"/g, '&quot;')}" alt="">`;
+      } else {
+        avatarHtml = '🥒';
+      }
+    }
+
+    return {
+      author_nickname: nickname,
+      author_avatar_html: avatarHtml,
+    };
+  }
+
+  function normalizeCommentRow(comment) {
+    if (!comment) return comment;
+    let nickname = comment.author_nickname ? String(comment.author_nickname).trim() : '';
+    let avatarHtml = comment.author_avatar_html ? String(comment.author_avatar_html).trim() : '';
+    if (!nickname && comment.users?.nickname) {
+      nickname = String(comment.users.nickname).trim();
+    }
+    comment.author_nickname = nickname || null;
+    comment.author_avatar_html = avatarHtml || null;
+    return comment;
+  }
+
   function authorLabel(comment) {
+    if (comment?.author_nickname && String(comment.author_nickname).trim()) {
+      return String(comment.author_nickname).trim();
+    }
     const usersJoin = comment.users;
     const me = window.PickleAuth?.getUser();
     if (me && comment.user_id === me.id && me.email) {
       return window.PickleAuth.emailLocalPart(me.email);
     }
     if (usersJoin?.nickname) return usersJoin.nickname;
-    return '픽커';
+    return '픽클러';
+  }
+
+  function authorAvatarInner(comment) {
+    const raw = comment?.author_avatar_html ? String(comment.author_avatar_html).trim() : '';
+    if (!raw) return escapeHtml('🥒');
+    if (raw.indexOf('<') !== -1) return raw;
+    return escapeHtml(raw);
   }
 
   function displayBody(comment) {
@@ -49,8 +102,9 @@
     const name = authorLabel(comment);
     return `
       <li class="comment-item" data-comment-id="${comment.id}">
+        <div class="comment-author-avatar">${authorAvatarInner(comment)}</div>
         <div class="comment-meta">
-          <span class="comment-author">@${escapeHtml(name)}</span>
+          <span class="comment-author">${escapeHtml(name)}</span>
           <time class="comment-time" datetime="${escapeHtml(comment.created_at)}">${formatTime(comment.created_at)}</time>
         </div>
         <p class="comment-body">${escapeHtml(displayBody(comment))}</p>
@@ -100,25 +154,46 @@
     `;
   }
 
+  const COMMENT_SELECT_VARIANTS = [
+    'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html',
+    'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )',
+  ];
+
+  function isCommentSchemaColumnError(error) {
+    if (!error) return false;
+    const msg = String(error.message || '').toLowerCase();
+    return (
+      msg.includes('author_nickname') ||
+      msg.includes('author_avatar_html') ||
+      msg.includes('column') ||
+      msg.includes('could not find') ||
+      error.code === '42703' ||
+      error.code === 'PGRST204'
+    );
+  }
+
   async function fetchComments(postId) {
     const sb = window.PickleSupabase.getClient();
-    const { data, error } = await sb
-      .from('comments')
-      .select(
-        `
-        id,
-        content,
-        filtered_content,
-        created_at,
-        user_id,
-        users:user_id ( nickname )
-      `
-      )
-      .eq('post_id', postId)
-      .order('created_at', { ascending: false });
+    let lastError = null;
 
-    if (error) throw error;
-    return data || [];
+    for (let i = 0; i < COMMENT_SELECT_VARIANTS.length; i++) {
+      const { data, error } = await sb
+        .from('comments')
+        .select(COMMENT_SELECT_VARIANTS[i])
+        .eq('post_id', postId)
+        .order('created_at', { ascending: false });
+
+      if (!error) {
+        return (data || []).map(normalizeCommentRow);
+      }
+
+      lastError = error;
+      if (!isCommentSchemaColumnError(error)) {
+        throw error;
+      }
+    }
+
+    throw lastError || new Error('댓글을 불러오지 못했습니다.');
   }
 
   async function fetchCommentCount(postId) {
@@ -167,31 +242,49 @@
     }
 
     const sb = window.PickleSupabase.getClient();
-    const userId = window.PickleAuth.getUser().id;
+    const authResult = await sb.auth.getUser();
+    const user = authResult.data?.user;
+    if (!user) {
+      throw new Error('로그인이 필요합니다');
+    }
 
-    const { data, error } = await sb
+    const authorSnapshot = extractCommentAuthorSnapshot(user);
+    const insertPayload = {
+      user_id: user.id,
+      post_id: postId,
+      content: text,
+      filtered_content: text,
+      ai_filter_status: 'passed',
+      visibility_status: 'visible',
+      author_nickname: authorSnapshot.author_nickname,
+      author_avatar_html: authorSnapshot.author_avatar_html,
+    };
+
+    let { data, error } = await sb
       .from('comments')
-      .insert({
-        user_id: userId,
-        post_id: postId,
-        content: text,
-        filtered_content: text,
-        ai_filter_status: 'passed',
-        visibility_status: 'visible',
-      })
+      .insert(insertPayload)
       .select(
-        `
-        id,
-        content,
-        filtered_content,
-        created_at,
-        user_id,
-        users:user_id ( nickname )
-      `
+        'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html'
       )
       .single();
 
+    if (error && isCommentSchemaColumnError(error)) {
+      delete insertPayload.author_nickname;
+      delete insertPayload.author_avatar_html;
+      ({ data, error } = await sb
+        .from('comments')
+        .insert(insertPayload)
+        .select(
+          'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )'
+        )
+        .single());
+    }
+
     if (error) throw error;
+
+    data = normalizeCommentRow(data);
+    if (!data.author_nickname) data.author_nickname = authorSnapshot.author_nickname;
+    if (!data.author_avatar_html) data.author_avatar_html = authorSnapshot.author_avatar_html;
 
     const listEl = panelEl.querySelector('.comments-list');
     const emptyEl = panelEl.querySelector('.comments-empty');
