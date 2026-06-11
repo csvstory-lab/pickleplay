@@ -31,11 +31,22 @@ iframe {
   height: auto;
 }
 
+.king-feed-thumb {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  box-sizing: border-box;
+}
+
 .king-thumb img,
 .king-thumb-img {
-  height: 100%;
+  height: auto;
   max-height: none;
-  border-radius: 0;
+  border-radius: 16px;
+  position: static;
 }
 
 /* embed 컨테이너 내부 iframe은 비율 유지 */
@@ -58,39 +69,49 @@ iframe {
 }
 
 .media-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
-  gap: 10px;
-  width: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
-.media-container img,
-.media-container video,
-.media-container iframe {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 12px;
-  box-sizing: border-box;
-}
-
-.media-container .split-half {
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.vs-upload-group.media-container {
   position: relative;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.vs-upload-group.media-container .media-input-wrap {
+.media-container.media-layout-horizontal {
+  flex-direction: column;
+}
+
+.media-container.media-layout-vertical {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.media-container.media-layout-vertical .split-half {
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
   min-width: 0;
+  box-sizing: border-box;
+}
+
+.media-container.media-layout-horizontal .split-half {
+  width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+}
+
+.vs-upload-group.media-layout-horizontal {
+  flex-direction: column;
+}
+
+.vs-upload-group.media-layout-vertical {
+  flex-direction: row;
+}
+
+.vs-upload-group.media-layout-vertical .media-input-wrap {
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
+  min-width: 0;
   box-sizing: border-box;
 }
 

@@ -92,6 +92,20 @@
     .sub-toggle-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-sub); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
     .sub-toggle-btn.active { border-color: var(--neon-blue); color: var(--neon-blue); background: rgba(0, 240, 255, 0.1); }
 
+    .media-layout-group { margin-bottom: 14px; }
+    .media-layout-radios { display: flex; flex-direction: column; gap: 10px; }
+    .media-layout-option {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(39, 39, 42, 0.45); border: 1px solid var(--border-color);
+        border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: 0.2s;
+        box-sizing: border-box; max-width: 100%;
+    }
+    .media-layout-option:has(input:checked) {
+        border-color: var(--neon-green); background: rgba(57, 255, 20, 0.08);
+    }
+    .media-layout-option input { accent-color: var(--neon-green); width: 18px; height: 18px; flex-shrink: 0; }
+    .media-layout-label { font-size: 0.85rem; font-weight: 700; color: #e4e4e7; line-height: 1.35; }
+
     /* 불판 진행 기간 버튼 UI */
     .duration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 5px; }
     .duration-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 12px 0; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif; }
@@ -122,37 +136,26 @@
     .url-input::placeholder { color: #71717a; }
 
     .upload-box.ratio-16-9 { aspect-ratio: 16 / 9; }
-    .upload-box.ratio-9-16 { aspect-ratio: 9 / 16; width: 60%; margin: 0 auto; }
+    .upload-box.ratio-9-16 { aspect-ratio: 9 / 16; width: 100%; margin: 0; max-width: 100%; box-sizing: border-box; }
+    .vs-upload-group.media-layout-vertical .upload-box.ratio-9-16 { width: 100%; margin: 0; }
     
-    .vs-upload-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(45%, 1fr)); gap: 10px; width: 100%; max-width: 100%; box-sizing: border-box; position: relative; justify-content: center; align-items: stretch; }
-    .vs-upload-group.media-container .media-input-wrap { min-width: 0; max-width: 100%; box-sizing: border-box; }
-    .vs-upload-group .upload-box.ratio-vs,
-    .vs-upload-group .upload-box.ratio-vs-vert,
-    .vs-upload-group .upload-box.ratio-vs-square {
-        aspect-ratio: 1 / 1;
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-        margin: 0;
-        box-sizing: border-box;
+    .vs-upload-group {
+        display: flex; gap: 12px; width: 100%; max-width: 100%;
+        box-sizing: border-box; position: relative;
     }
-    .media-container img,
-    .media-container video,
-    .media-container iframe {
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-        aspect-ratio: 1 / 1;
-        object-fit: cover;
-        border-radius: 12px;
-        box-sizing: border-box;
+    .vs-upload-group.media-layout-horizontal { flex-direction: column; }
+    .vs-upload-group.media-layout-vertical { flex-direction: row; align-items: stretch; }
+    .vs-upload-group.media-layout-vertical .media-input-wrap {
+        width: 50%; flex: 0 0 50%; max-width: 50%; min-width: 0; box-sizing: border-box;
     }
 
     .vs-badge-upload {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background-color: var(--bg-color); color: #fff; font-family: 'Black Han Sans', sans-serif;
+        background: linear-gradient(145deg, #09090b 0%, #ff007f 120%);
+        color: #fff; font-family: 'Black Han Sans', sans-serif;
         width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;
-        border-radius: 50%; border: 2px solid #52525b; z-index: 10;
+        border-radius: 50%; border: 2px solid var(--neon-pink); z-index: 10;
+        box-shadow: 0 0 14px rgba(255, 0, 127, 0.45);
     }
 
     .icon-plus { font-size: 2rem; margin-bottom: 5px; }
@@ -356,9 +359,18 @@
             <button class="toggle-btn" id="btnText" onclick="setMainMode('text')">영상/이미지 없음</button>
         </div>
 
-        <div class="sub-toggle-wrapper show" id="orientationToggle">
-            <button class="sub-toggle-btn active" id="btnHori" onclick="setOrientation('horizontal')">가로형 (16:9)</button>
-            <button class="sub-toggle-btn" id="btnVerti" onclick="setOrientation('vertical')">세로형 (9:16)</button>
+        <div class="media-layout-group" id="mediaLayoutGroup">
+            <label class="form-label">미디어 배치 선택</label>
+            <div class="media-layout-radios">
+                <label class="media-layout-option">
+                    <input type="radio" name="media_layout" value="horizontal" checked onchange="onMediaLayoutChange()">
+                    <span class="media-layout-label">① 가로형 (16:9) — 위/아래 배치</span>
+                </label>
+                <label class="media-layout-option">
+                    <input type="radio" name="media_layout" value="vertical" onchange="onMediaLayoutChange()">
+                    <span class="media-layout-label">② 세로형 (9:16) — 좌/우 배치</span>
+                </label>
+            </div>
         </div>
         
         <div id="uploadContainer"></div>
@@ -524,6 +536,16 @@
         uploadFiles = { single: null, vsA: null, vsB: null };
     }
 
+    function getMediaLayout() {
+        const checked = document.querySelector('input[name="media_layout"]:checked');
+        return checked?.value === 'vertical' ? 'vertical' : 'horizontal';
+    }
+
+    function onMediaLayoutChange() {
+        currentOri = getMediaLayout();
+        renderUploadArea();
+    }
+
     function setMainMode(mode) {
         currentMode = mode;
         resetUploadState(); 
@@ -534,28 +556,18 @@
         if(mode === 'vs') document.getElementById('btnVs').classList.add('active', 'highlight');
         if(mode === 'text') document.getElementById('btnText').classList.add('active', 'highlight');
 
-        const oriToggle = document.getElementById('orientationToggle');
-        if (mode === 'single' || mode === 'vs') oriToggle.classList.add('show');
-        else oriToggle.classList.remove('show');
+        const layoutGroup = document.getElementById('mediaLayoutGroup');
+        if (layoutGroup) layoutGroup.style.display = (mode === 'text') ? 'none' : 'block';
         renderUploadArea();
     }
 
-    function setOrientation(ori) {
-        currentOri = ori;
-        resetUploadState(); 
-        document.getElementById('btnHori').classList.remove('active');
-        document.getElementById('btnVerti').classList.remove('active');
-        if(ori === 'horizontal') document.getElementById('btnHori').classList.add('active');
-        if(ori === 'vertical') document.getElementById('btnVerti').classList.add('active');
-        renderUploadArea();
-    }
-
-    // 💡 동적 UI 생성 (사진 업로드 상자 + 영상 URL 입력창 결합)
     function renderUploadArea() {
         const container = document.getElementById('uploadContainer');
         container.innerHTML = ''; 
         if (currentMode === 'text') return;
 
+        const layout = getMediaLayout();
+        currentOri = layout;
         const sizeHint = '<p class="upload-size-hint">(※ 최대 5MB 이하의 이미지 파일만 가능)</p>';
 
         // 슬롯 생성 함수
@@ -571,16 +583,18 @@
         `;
 
         if (currentMode === 'single') {
-            const ratioClass = currentOri === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
-            container.innerHTML = sizeHint + makeSlot('single', '가로/세로', ratioClass);
+            const ratioClass = layout === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
+            container.innerHTML = sizeHint + makeSlot('single', '미디어', ratioClass);
         }
 
         if (currentMode === 'vs') {
+            const layoutClass = layout === 'vertical' ? 'media-layout-vertical' : 'media-layout-horizontal';
+            const ratioClass = layout === 'vertical' ? 'ratio-9-16' : 'ratio-16-9';
             container.innerHTML = sizeHint + `
-                <div class="vs-upload-group media-container">
-                    ${makeSlot('vsA', 'A', 'ratio-vs-square', 'var(--neon-blue)')}
+                <div class="vs-upload-group ${layoutClass}">
+                    ${makeSlot('vsA', 'A', ratioClass, 'var(--neon-blue)')}
                     <div class="vs-badge-upload">VS</div>
-                    ${makeSlot('vsB', 'B', 'ratio-vs-square', 'var(--neon-pink)')}
+                    ${makeSlot('vsB', 'B', ratioClass, 'var(--neon-pink)')}
                 </div>`;
         }
     }
@@ -657,10 +671,11 @@
 
         if (currentMode === 'single') {
             const urlVal = document.getElementById('url_single')?.value.trim() || '';
+            const layout = getMediaLayout();
             if (urlVal) {
                 return {
                     media_mode: 'single',
-                    media_orientation: currentOri,
+                    media_orientation: layout,
                     media_url_1: urlVal,
                 };
             }
@@ -668,13 +683,14 @@
                 const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId);
                 return {
                     media_mode: 'single',
-                    media_orientation: currentOri,
+                    media_orientation: layout,
                     media_url_1: uploadedUrl,
                 };
             }
         }
 
         if (currentMode === 'vs') {
+            const layout = getMediaLayout();
             const urlA = document.getElementById('url_vsA')?.value.trim() || '';
             const urlB = document.getElementById('url_vsB')?.value.trim() || '';
             let mediaUrl1 = urlA || null;
@@ -689,7 +705,7 @@
 
             return {
                 media_mode: 'vs',
-                media_orientation: currentOri,
+                media_orientation: layout,
                 media_url_1: mediaUrl1,
                 media_url_2: mediaUrl2,
             };

@@ -121,6 +121,10 @@
 
   function collectFormData() {
     var selectedCategory = document.querySelector('.cat-chip.selected');
+    var layoutEl = document.querySelector('input[name="media_layout"]:checked');
+    var mediaLayout =
+      layoutEl && layoutEl.value === 'vertical' ? 'vertical' : 'horizontal';
+
     return {
       categoryLabel: selectedCategory ? selectedCategory.textContent.trim() : '',
       categorySlug: selectedCategory
@@ -131,6 +135,7 @@
       optionA: document.getElementById('inputA')?.value.trim() || '',
       optionB: document.getElementById('inputB')?.value.trim() || '',
       hashtags: document.getElementById('inputHashtag')?.value.trim() || '',
+      mediaLayout: mediaLayout,
     };
   }
 
@@ -197,6 +202,10 @@
       payload.description = formData.description;
     }
 
+    if (formData.mediaLayout) {
+      payload.media_layout = formData.mediaLayout;
+    }
+
     Object.keys(payload).forEach(function (key) {
       if (payload[key] === null || payload[key] === undefined || payload[key] === '') {
         delete payload[key];
@@ -246,11 +255,12 @@
       msg.indexOf("could not find the 'thumbnail_url'") !== -1 ||
       msg.indexOf("could not find the 'tags'") !== -1 ||
       msg.indexOf('author_nickname') !== -1 ||
-      msg.indexOf('author_avatar_html') !== -1;
+      msg.indexOf('author_avatar_html') !== -1 ||
+      msg.indexOf('media_layout') !== -1;
 
     if (missingColumn) {
       alert(
-        'SQL 마이그레이션이 필요합니다. (title, media_type, thumbnail_url, tags, author_nickname 등 컬럼 누락)\n→ supabase/13_posts_author_snapshot.sql 실행'
+        'SQL 마이그레이션이 필요합니다. (title, thumbnail_url, author_nickname, media_layout 등 컬럼 누락)\n→ supabase/ 폴더 SQL 실행'
       );
       return true;
     }

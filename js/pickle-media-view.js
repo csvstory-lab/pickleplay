@@ -130,9 +130,19 @@
     return 'text';
   }
 
+  function resolveMediaLayout(post) {
+    var layout =
+      (post && post.media_layout) ||
+      (post && post.layout_style) ||
+      (post && post.media_orientation) ||
+      'horizontal';
+    return String(layout).toLowerCase() === 'vertical' ? 'vertical' : 'horizontal';
+  }
+
   function buildDetailMediaHtml(post) {
     var mode = resolveMediaMode(post);
     var title = post.title || '불판';
+    var layout = resolveMediaLayout(post);
 
     if (mode === 'text' || (!post.media_url_1 && !post.media_url_2)) {
       return (
@@ -143,19 +153,27 @@
 
     if (mode === 'single') {
       var single = parseMedia(post.media_url_1);
+      var singleClass =
+        layout === 'vertical'
+          ? 'single-media-wrap single-media-vertical'
+          : 'single-media-wrap single-media-horizontal';
       if (single.kind === 'youtube') {
-        return renderYouTubeMedia(single, title, 'single-media-wrap');
+        return renderYouTubeMedia(single, title, singleClass);
       }
       if (single.kind === 'tiktok') {
         return (
-          '<div class="single-media-wrap">' +
+          '<div class="' +
+          singleClass +
+          '">' +
           buildEmbedFrame(single.embedUrl, title) +
           '</div>'
         );
       }
       if (single.kind === 'image') {
         return (
-          '<div class="single-media-wrap single-media-image">' +
+          '<div class="' +
+          singleClass +
+          ' single-media-image">' +
           '<img src="' +
           escapeHtml(single.src) +
           '" alt="">' +
@@ -167,10 +185,17 @@
     if (mode === 'vs') {
       var mediaA = parseMedia(post.media_url_1);
       var mediaB = parseMedia(post.media_url_2);
+      var layoutClass =
+        layout === 'vertical'
+          ? 'media-layout-vertical'
+          : 'media-layout-horizontal';
       return (
-        '<div class="media-container">' +
+        '<div class="media-container ' +
+        layoutClass +
+        '">' +
         buildSplitHalf('A', mediaA, post.option_a, title) +
         buildSplitHalf('B', mediaB, post.option_b, title) +
+        '<div class="vs-badge">VS</div>' +
         '</div>'
       );
     }
@@ -229,6 +254,7 @@
     getPostThumbUrl: getPostThumbUrl,
     buildKingThumbHtml: buildKingThumbHtml,
     buildDetailMediaHtml: buildDetailMediaHtml,
+    resolveMediaLayout: resolveMediaLayout,
     escapeHtml: escapeHtml,
   };
 })();

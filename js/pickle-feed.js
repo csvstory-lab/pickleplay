@@ -643,16 +643,17 @@
   }
 
   function renderKingThumb(post) {
-    var thumbUrl = resolveFeedThumbnailUrl(post && post.thumbnail_url);
+    var raw =
+      post && post.thumbnail_url != null ? String(post.thumbnail_url).trim() : '';
+    var thumbUrl = raw && !isVideoUrl(raw) ? raw : '';
+
     if (thumbUrl) {
       return (
-        '<div class="king-thumb king-thumb-has-image">' +
-        '<img class="king-thumb-img" src="' +
+        '<img class="king-feed-thumb" src="' +
         escapeHtml(thumbUrl) +
-        '" alt="' +
+        '" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;display:block;" alt="' +
         escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
-        '" loading="lazy" decoding="async">' +
-        '</div>'
+        '" loading="lazy" decoding="async">'
       );
     }
 
