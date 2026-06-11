@@ -331,6 +331,85 @@
     return new Date() > expireDate;
   }
 
+  function calcVotePercent(votesA, votesB) {
+    var a = Number(votesA) || 0;
+    var b = Number(votesB) || 0;
+    var total = a + b;
+    if (total <= 0) {
+      return { pctA: 0, pctB: 0, total: 0 };
+    }
+    var pctA = Math.round((a / total) * 100);
+    return { pctA: pctA, pctB: 100 - pctA, total: total };
+  }
+
+  function normalizeVotePost(row) {
+    if (!row) return null;
+    var post = row.posts;
+    if (Array.isArray(post)) post = post[0];
+    if (!post || !post.id) return null;
+    return {
+      post: post,
+      choice: row.choice,
+      votedAt: row.created_at,
+    };
+  }
+
+  function formatMyPickLabel(post, choice) {
+    var side = choice === 'B' ? 'B' : 'A';
+    var label =
+      side === 'A' ? post.option_a_name : post.option_b_name;
+    return side + '. ' + (label || side);
+  }
+
+  function formatVoteOutcome(post, stats, choice) {
+    if (!isPostTimeExpired(post.expires_at)) return '';
+    if (!stats || !stats.total) return '';
+    var pct = calcVotePercent(stats.votesA, stats.votesB);
+    var winner = pct.pctA >= pct.pctB ? 'A' : 'B';
+    var winPct = winner === 'A' ? pct.pctA : pct.pctB;
+    if (choice === winner) {
+      return '🎉 승리 (' + winPct + '%)';
+    }
+    return '💔 패배 (' + winPct + '%)';
+  }
+
+  function formatCouponExpiry(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return (
+      d.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }) + ' 까지'
+    );
+  }
+
+  async function copyPinToClipboard(pin) {
+    if (!pin) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(pin);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = pin;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      if (navigator.vibrate) navigator.vibrate(50);
+      alert('핀번호가 클립보드에 복사되었습니다!');
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] PIN 복사 실패', err);
+      alert('복사에 실패했습니다. 핀번호를 직접 선택해 주세요.');
+    }
+  }
+
   async function fetchVoteStatsMap(sb, postIds) {
     var map = new Map();
     if (!postIds.length) return map;
@@ -420,6 +499,169 @@
       '</div>' +
       '</div>'
     );
+  }
+
+  function buildVotedRecordCard(voteRow, stats) {
+    var post = voteRow.post;
+    var choice = voteRow.choice;
+    var expired = isPostTimeExpired(post.expires_at);
+    var statusClass = expired ? 'done' : 'ing';
+    var statusText = getRemainingTime(post.expires_at);
+    var total = stats && stats.total ? stats.total : 0;
+    var title = post.title || post.option_a_name || '제목 없음';
+    var outcome = formatVoteOutcome(post, stats, choice);
+    var pickSideClass = choice === 'B' ? 'pick-b' : 'pick-a';
+
+    return (
+      '<div class="record-card" data-id="' +
+      escapeHtml(post.id) +
+      '" role="button" tabindex="0" aria-label="' +
+      escapeHtml(title) +
+      '">' +
+      '<div class="card-header">' +
+      '<div class="card-header-left">' +
+      '<span class="status-badge ' +
+      statusClass +
+      '">' +
+      escapeHtml(statusText) +
+      '</span>' +
+      '</div>' +
+      '<span class="card-date">' +
+      escapeHtml(formatCardDate(voteRow.votedAt || post.created_at)) +
+      '</span>' +
+      '</div>' +
+      '<div class="card-title">' +
+      escapeHtml(title) +
+      '</div>' +
+      '<div class="vote-result-box">' +
+      '<div class="my-pick-info">내 픽: <span class="' +
+      pickSideClass +
+      '">' +
+      escapeHtml(formatMyPickLabel(post, choice)) +
+      '</span></div>' +
+      (outcome
+        ? '<div class="result-win">' + escapeHtml(outcome) + '</div>'
+        : '<div class="result-win" style="color:var(--neon-blue);font-size:0.9rem;">집계 중…</div>') +
+      '</div>' +
+      '<div class="card-footer-stats">' +
+      '<span class="stat-fire">🔥 ' +
+      total.toLocaleString() +
+      '명 참전</span>' +
+      '<span>' +
+      escapeHtml(categoryLabel(post.category)) +
+      '</span>' +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function buildCouponCard(coupon) {
+    var isUsed = !!coupon.is_used;
+    var badgeClass = isUsed ? 'badge-used' : 'badge-unused';
+    var badgeText = isUsed ? '사용 완료' : '사용 전';
+    var cardClass = isUsed ? 'coupon-card is-used' : 'coupon-card';
+    var expiry = formatCouponExpiry(coupon.expires_at);
+    var pin = coupon.pin_number || '';
+
+    return (
+      '<article class="' +
+      cardClass +
+      '" data-coupon-id="' +
+      escapeHtml(coupon.id) +
+      '" data-is-used="' +
+      (isUsed ? '1' : '0') +
+      '">' +
+      '<div class="coupon-card-header">' +
+      '<button type="button" class="coupon-status-badge ' +
+      badgeClass +
+      '" data-toggle-used="1">' +
+      escapeHtml(badgeText) +
+      '</button>' +
+      (expiry
+        ? '<span class="coupon-date">' + escapeHtml(expiry) + '</span>'
+        : '') +
+      '</div>' +
+      '<h4 class="coupon-title">' +
+      escapeHtml(coupon.title || '쿠폰') +
+      '</h4>' +
+      '<div class="coupon-pin-row">' +
+      '<span class="coupon-pin-value">' +
+      escapeHtml(pin || '—') +
+      '</span>' +
+      '<button type="button" class="btn-coupon-copy" data-pin="' +
+      escapeHtml(pin) +
+      '">복사</button>' +
+      '</div>' +
+      '</article>'
+    );
+  }
+
+  function bindCouponCards(container, userId) {
+    if (!container || !userId) return;
+
+    container.querySelectorAll('.coupon-card').forEach(function (card) {
+      var couponId = card.dataset.couponId;
+      if (!couponId) return;
+
+      var requestToggle = function () {
+        var isUsed = card.dataset.isUsed === '1';
+        var msg = isUsed
+          ? '이 쿠폰을 사용 전 상태로 되돌리시겠습니까?'
+          : '이 쿠폰을 사용 완료 처리하시겠습니까?';
+        if (!confirm(msg)) return;
+        toggleCouponUsed(userId, couponId, isUsed);
+      };
+
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('.btn-coupon-copy')) return;
+        requestToggle();
+      });
+
+      var badge = card.querySelector('[data-toggle-used]');
+      if (badge) {
+        badge.addEventListener('click', function (e) {
+          e.stopPropagation();
+          requestToggle();
+        });
+      }
+    });
+
+    container.querySelectorAll('.btn-coupon-copy').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        copyPinToClipboard(btn.dataset.pin || '');
+      });
+    });
+  }
+
+  async function toggleCouponUsed(userId, couponId, currentIsUsed) {
+    try {
+      var sb = getSupabaseClient();
+      var updateResult = await sb
+        .from('user_coupons')
+        .update({ is_used: !currentIsUsed })
+        .eq('id', couponId)
+        .eq('user_id', userId)
+        .select('id')
+        .maybeSingle();
+
+      if (updateResult.error) throw updateResult.error;
+      if (!updateResult.data) {
+        throw new Error('쿠폰을 찾을 수 없거나 권한이 없습니다.');
+      }
+
+      await loadSavedCoupons(userId);
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 쿠폰 상태 변경 실패', err);
+      var msg = String(err.message || err).toLowerCase();
+      if (msg.indexOf('user_coupons') !== -1 || msg.indexOf('does not exist') !== -1) {
+        alert(
+          'user_coupons 테이블이 없습니다. Supabase에서 18_user_coupons.sql 마이그레이션을 실행해 주세요.'
+        );
+      } else {
+        alert('쿠폰 상태 변경에 실패했습니다.');
+      }
+    }
   }
 
   function bindRecordCards(container) {
@@ -740,6 +982,113 @@
     }
   }
 
+  async function loadVotedPosts(userId) {
+    var container = document.getElementById('votedArea');
+    if (!container) return;
+
+    try {
+      var sb = getSupabaseClient();
+      var result = await sb
+        .from('votes')
+        .select(
+          'id, choice, created_at, post_id, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status )'
+        )
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (result.error) throw result.error;
+
+      var voteRows = (result.data || [])
+        .map(normalizeVotePost)
+        .filter(function (row) {
+          return row !== null;
+        });
+
+      if (!voteRows.length) {
+        container.innerHTML =
+          '<div class="empty-state" id="votedEmpty">아직 참전한 불판이 없습니다.</div>';
+        return;
+      }
+
+      var postIds = voteRows.map(function (row) {
+        return row.post.id;
+      });
+      var voteMap = await fetchVoteStatsMap(sb, postIds);
+
+      container.innerHTML = voteRows
+        .map(function (row) {
+          var stats = voteMap.get(row.post.id);
+          return buildVotedRecordCard(row, stats);
+        })
+        .join('');
+
+      bindRecordCards(container);
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 참전 기록 로드 실패', err);
+      container.innerHTML =
+        '<div class="empty-state" id="votedEmpty">참전 기록을 불러오지 못했습니다.</div>';
+    }
+  }
+
+  async function loadSavedCoupons(userId) {
+    var container = document.getElementById('savedArea');
+    if (!container) return;
+
+    try {
+      var sb = getSupabaseClient();
+      var result = await sb
+        .from('user_coupons')
+        .select('id, title, pin_number, is_used, expires_at, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (result.error) throw result.error;
+
+      var coupons = result.data || [];
+      if (!coupons.length) {
+        container.innerHTML =
+          '<div class="empty-state" id="savedEmpty">보관함이 비어 있습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = coupons
+        .map(function (coupon) {
+          return buildCouponCard(coupon);
+        })
+        .join('');
+
+      bindCouponCards(container, userId);
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 보관함 로드 실패', err);
+      var msg = String(err.message || err).toLowerCase();
+      if (msg.indexOf('user_coupons') !== -1 || msg.indexOf('does not exist') !== -1) {
+        container.innerHTML =
+          '<div class="empty-state" id="savedEmpty">보관함 테이블이 준비되지 않았습니다.<br>Supabase에서 18_user_coupons.sql을 실행해 주세요.</div>';
+      } else {
+        container.innerHTML =
+          '<div class="empty-state" id="savedEmpty">보관함을 불러오지 못했습니다.</div>';
+      }
+    }
+  }
+
+  var mypageTabLoaded = {
+    created: false,
+    voted: false,
+    saved: false,
+  };
+
+  async function onTabSwitch(tabName) {
+    if (!currentUser || !currentUser.id) return;
+
+    if (tabName === 'voted' && !mypageTabLoaded.voted) {
+      mypageTabLoaded.voted = true;
+      await loadVotedPosts(currentUser.id);
+    } else if (tabName === 'saved' && !mypageTabLoaded.saved) {
+      mypageTabLoaded.saved = true;
+      await loadSavedCoupons(currentUser.id);
+    }
+  }
+
   async function initMypage() {
     try {
       var b = window.PickleSupabaseBootstrap;
@@ -757,7 +1106,14 @@
       bindProfileEditOpen();
       bindLogout();
       bindPostEditThumbInput();
-      await loadCreatedPosts(user.id);
+      mypageTabLoaded.created = true;
+      await Promise.all([
+        loadCreatedPosts(user.id),
+        loadVotedPosts(user.id),
+        loadSavedCoupons(user.id),
+      ]);
+      mypageTabLoaded.voted = true;
+      mypageTabLoaded.saved = true;
     } catch (err) {
       console.error('[P!CKLE Mypage]', err);
       alert('로그인이 필요한 페이지입니다.');
@@ -772,6 +1128,10 @@
     fillProfileEditForm: fillProfileEditForm,
     saveProfile: saveProfile,
     loadCreatedPosts: loadCreatedPosts,
+    loadVotedPosts: loadVotedPosts,
+    loadSavedCoupons: loadSavedCoupons,
+    onTabSwitch: onTabSwitch,
+    copyPinToClipboard: copyPinToClipboard,
     openPostEditPanel: openPostEditPanel,
     closePostEditPanel: closePostEditPanel,
     updatePost: updatePost,

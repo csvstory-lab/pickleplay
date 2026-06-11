@@ -192,19 +192,126 @@
 
     .vote-result-box { background-color: #27272a; border-radius: 10px; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
     .my-pick-info { font-size: 0.85rem; font-weight: 700; color: #d4d4d8; }
+    .my-pick-info .pick-a { color: var(--neon-blue); font-weight: 900; }
+    .my-pick-info .pick-b { color: var(--neon-pink); font-weight: 900; }
     .my-pick-info span { color: var(--neon-blue); font-weight: 900; }
     .result-win { font-family: 'Black Han Sans', sans-serif; color: var(--neon-green); font-size: 1.1rem; text-shadow: 0 0 5px rgba(57, 255, 20, 0.3); }
 
-    /* 보관함 */
-    .gift-card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 5px; }
-    .gift-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .gift-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; }
-    .badge-available { background-color: rgba(57, 255, 20, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
-    .gift-date { font-size: 0.75rem; color: #52525b; font-weight: 700; }
-    .gift-title { font-size: 1.15rem; font-weight: 800; color: #fff; line-height: 1.4; word-break: keep-all; }
-    .gift-desc { font-size: 0.85rem; color: var(--text-sub); line-height: 1.4; }
-    .pin-box { background-color: #27272a; padding: 15px; border-radius: 12px; text-align: center; font-family: 'Black Han Sans', sans-serif; font-size: 1.4rem; color: #fff; letter-spacing: 3px; position: relative; cursor: pointer; border: 1px dashed #52525b; transition: 0.2s; }
-    .pin-box:active { border-color: var(--neon-green); background-color: rgba(57, 255, 20, 0.1); color: var(--neon-green); }
+    /* 보관함 — 네오브루탈리즘 쿠폰 카드 */
+    .coupon-card {
+        background: #0a0a0c;
+        border: 3px solid #fff;
+        border-radius: 4px;
+        padding: 18px 16px 16px;
+        box-shadow: 5px 5px 0 var(--neon-green), 0 0 24px rgba(57, 255, 20, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.25s ease;
+    }
+    .coupon-card:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--neon-green); }
+    .coupon-card.is-used {
+        opacity: 0.62;
+        box-shadow: 4px 4px 0 #3f3f46;
+        border-color: #52525b;
+    }
+    .coupon-card.is-used .coupon-title { color: #a1a1aa; }
+    .coupon-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+    .coupon-status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        font-weight: 900;
+        border: 2px solid;
+        font-family: 'Black Han Sans', sans-serif;
+        letter-spacing: -0.02em;
+        cursor: pointer;
+        background: transparent;
+        line-height: 1.2;
+    }
+    .coupon-status-badge.badge-unused {
+        color: #000;
+        background: var(--neon-blue);
+        border-color: #fff;
+        box-shadow: 2px 2px 0 #000;
+    }
+    .coupon-status-badge.badge-used {
+        color: #71717a;
+        background: #27272a;
+        border-color: #52525b;
+        box-shadow: 2px 2px 0 #000;
+    }
+    .coupon-date {
+        font-size: 0.72rem;
+        color: #71717a;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .coupon-title {
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: 1.12rem;
+        font-weight: 400;
+        color: #fff;
+        line-height: 1.35;
+        margin: 0;
+        word-break: keep-all;
+        text-shadow: 2px 2px 0 rgba(255, 0, 127, 0.35);
+    }
+    .coupon-pin-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #111;
+        border: 2px solid #fff;
+        border-radius: 4px;
+        padding: 12px 12px 12px 14px;
+        box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.45);
+    }
+    .coupon-card.is-used .coupon-pin-row {
+        border-color: #52525b;
+        background: #18181b;
+    }
+    .coupon-pin-value {
+        flex: 1;
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: 1.35rem;
+        color: var(--neon-green);
+        letter-spacing: 0.12em;
+        text-shadow: 0 0 12px rgba(57, 255, 20, 0.35);
+        word-break: break-all;
+        line-height: 1.2;
+    }
+    .coupon-card.is-used .coupon-pin-value {
+        color: #71717a;
+        text-shadow: none;
+    }
+    .btn-coupon-copy {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        border: 2px solid #fff;
+        border-radius: 4px;
+        background: var(--neon-pink);
+        color: #000;
+        font-size: 0.78rem;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 #000;
+        transition: transform 0.12s ease;
+        font-family: 'Pretendard', sans-serif;
+    }
+    .btn-coupon-copy:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+    .coupon-card.is-used .btn-coupon-copy {
+        background: #3f3f46;
+        color: #a1a1aa;
+        border-color: #52525b;
+    }
 
     /* === [고정] 하단 네비게이션 === */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0; border-top: 1px solid var(--border-color); z-index: 900; }
@@ -1045,6 +1152,9 @@
         targetArea.classList.remove('hidden');
         targetArea.style.opacity = '0';
         setTimeout(() => { targetArea.style.opacity = '1'; targetArea.style.transition = 'opacity 0.3s ease'; }, 50);
+        if (window.PickleMypage && typeof window.PickleMypage.onTabSwitch === 'function') {
+            window.PickleMypage.onTabSwitch(tabName);
+        }
     }
 
     // --- 바텀 시트 및 모달 팝업 제어 ---
