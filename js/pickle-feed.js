@@ -22,7 +22,24 @@
 
   var feedTimerInterval = null;
 
+  /** 작성자 스냅샷 우선 — tags/end_date/users 조인 실패 시에도 author 컬럼 유지 */
   var POSTS_SELECT_VARIANTS = [
+    [
+      'id',
+      'title',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'thumbnail_url',
+      'duration',
+      'start_at',
+      'end_at',
+      'is_sponsor',
+      'visibility_status',
+      'created_at',
+      'author_nickname',
+      'author_avatar_html',
+    ].join(', '),
     [
       'id',
       'title',
@@ -41,7 +58,6 @@
       'created_at',
       'author_nickname',
       'author_avatar_html',
-      'users:author_id ( nickname )',
     ].join(', '),
     [
       'id',
@@ -49,7 +65,6 @@
       'category',
       'option_a_name',
       'option_b_name',
-      'layout_style',
       'thumbnail_url',
       'duration',
       'start_at',
@@ -57,7 +72,8 @@
       'is_sponsor',
       'visibility_status',
       'created_at',
-      'users:author_id ( nickname )',
+      'author_nickname',
+      'author_avatar_html',
     ].join(', '),
     [
       'id',
@@ -266,10 +282,10 @@
     var avatarHtml = '';
 
     if (row) {
-      if (row.author_nickname) {
+      if (row.author_nickname != null && row.author_nickname !== '') {
         nickname = safeStr(row.author_nickname, '').trim();
       }
-      if (row.author_avatar_html) {
+      if (row.author_avatar_html != null && row.author_avatar_html !== '') {
         avatarHtml = safeStr(row.author_avatar_html, '').trim();
       }
       if (!nickname && row.users && row.users.nickname) {
@@ -284,24 +300,14 @@
     };
   }
 
-  function resolveAuthorNickname(post) {
-    var name = post && post.author_nickname ? safeStr(post.author_nickname, '').trim() : '';
-    if (!name && post && post.authorNickname) {
-      name = safeStr(post.authorNickname, '').trim();
-    }
-    return name || '픽클러';
-  }
-
-  function resolveAuthorAvatarHtml(post) {
-    var raw = post && post.author_avatar_html ? safeStr(post.author_avatar_html, '').trim() : '';
-    return raw || '🥒';
-  }
-
   function renderFeedAuthorRow(post) {
-    var name = escapeHtml(resolveAuthorNickname(post));
-    var avatarRaw = resolveAuthorAvatarHtml(post);
+    var p = post || {};
+    var nickname = p.author_nickname || p.authorNickname || '픽클러';
+    var avatarHtml = p.author_avatar_html || '🥒';
     var avatarInner =
-      avatarRaw.indexOf('<') !== -1 ? avatarRaw : escapeHtml(avatarRaw);
+      String(avatarHtml).indexOf('<') !== -1
+        ? String(avatarHtml)
+        : escapeHtml(String(avatarHtml));
 
     return (
       '<div class="feed-author-row">' +
@@ -309,7 +315,7 @@
       avatarInner +
       '</div>' +
       '<span class="feed-author-name">' +
-      name +
+      escapeHtml(String(nickname)) +
       '</span>' +
       '</div>'
     );
@@ -530,6 +536,52 @@
     );
   }
 
+  async function hydrateAuthorSnapshots(sb, posts, source) {
+    if (source !== 'posts' || !posts || !posts.length) return posts;
+
+    var needIds = [];
+    posts.forEach(function (p) {
+      if (!p || !p.id) return;
+      if (!p.author_nickname) needIds.push(p.id);
+    });
+    if (!needIds.length) return posts;
+
+    try {
+      var res = await sb
+        .from('posts')
+        .select('id, author_nickname, author_avatar_html')
+        .in('id', needIds);
+
+      if (res.error || !res.data || !res.data.length) {
+        if (res.error) {
+          console.warn('[P!CKLE Feed] 작성자 스냅샷 보강 실패', res.error);
+        }
+        return posts;
+      }
+
+      var byId = {};
+      res.data.forEach(function (row) {
+        if (row && row.id) byId[row.id] = row;
+      });
+
+      return posts.map(function (p) {
+        var extra = byId[p.id];
+        if (!extra) return p;
+        if (extra.author_nickname) {
+          p.author_nickname = safeStr(extra.author_nickname, '').trim();
+          p.authorNickname = p.author_nickname;
+        }
+        if (extra.author_avatar_html) {
+          p.author_avatar_html = safeStr(extra.author_avatar_html, '').trim();
+        }
+        return p;
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Feed] 작성자 스냅샷 보강 예외', err);
+      return posts;
+    }
+  }
+
   /**
    * Supabase posts 테이블에서 최신 불판 + 투표·댓글 집계
    * @returns {Promise<Array>}
@@ -560,7 +612,7 @@
     var voteStatsMap = await fetchVoteStatsMap(sb, postIds);
     var commentCountMap = await fetchCommentCountMap(sb, postIds);
 
-    return rows
+    var posts = rows
       .map(function (row) {
         try {
           var post = normalizePostRow(row, source);
@@ -586,6 +638,8 @@
         }
       })
       .filter(Boolean);
+
+    return hydrateAuthorSnapshots(sb, posts, source);
   }
 
   function renderKingThumb(post) {
