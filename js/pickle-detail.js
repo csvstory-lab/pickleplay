@@ -60,6 +60,7 @@
       tags: row.tags || row.hashtags || '',
       created_at: row.created_at,
       duration: row.duration,
+      expires_at: row.expires_at || row.end_at || row.end_date || null,
       start_at: row.start_at,
       end_at: row.end_at || row.end_date,
       end_date: row.end_date || row.end_at,
@@ -165,6 +166,7 @@
         tags: row.tags || row.hashtags || '',
         created_at: row.created_at,
         duration: row.duration,
+        expires_at: row.expires_at || row.end_at || row.end_date || null,
         start_at: row.start_at,
         end_at: row.end_at || row.end_date,
         end_date: row.end_date || row.end_at,
@@ -202,43 +204,34 @@
   }
 
   function computeEndsAt(post) {
-    var endRaw = post.end_at || post.end_date;
-    if (endRaw) {
-      var endDate = new Date(endRaw);
-      return Number.isNaN(endDate.getTime()) ? null : endDate;
-    }
-    if (!post.created_at) return null;
+    if (!post) return null;
 
-    var start = post.start_at
-      ? new Date(post.start_at)
-      : new Date(post.created_at);
-    if (Number.isNaN(start.getTime())) return null;
+    var raw = post.expires_at || post.end_at || post.end_date || null;
+    if (!raw) return null;
 
-    var duration = post.duration || '24h';
-
-    if (duration === '24h') {
-      return new Date(start.getTime() + 24 * 60 * 60 * 1000);
-    }
-    if (duration === '3') {
-      return new Date(start.getTime() + 3 * 24 * 60 * 60 * 1000);
-    }
-    if (duration === '7') {
-      return new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-    }
-    if (duration === 'custom' && post.end_at) {
-      return new Date(post.end_at);
-    }
-    return new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    var endDate = new Date(raw);
+    return Number.isNaN(endDate.getTime()) ? null : endDate;
   }
 
   function formatCountdown(endsAt) {
     if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
     var ms = endsAt.getTime() - Date.now();
-    if (ms <= 0) return '⏳ 마감됨';
-    if (ms < 60 * 60 * 1000) return '⏳ 마감 임박!';
+    if (ms <= 0) return '⏳ 종료된 불판';
 
-    var hours = Math.floor(ms / (60 * 60 * 1000));
-    return '⏳ ' + String(hours).padStart(2, '0') + '시간 남음';
+    var minuteMs = 60 * 1000;
+    var hourMs = 60 * minuteMs;
+    var dayMs = 24 * hourMs;
+
+    if (ms < hourMs) {
+      var minutes = Math.max(1, Math.ceil(ms / minuteMs));
+      return '⏳ ' + minutes + '분 남음';
+    }
+    if (ms < dayMs) {
+      var hours = Math.floor(ms / hourMs);
+      return '⏳ ' + hours + '시간 남음';
+    }
+    var days = Math.floor(ms / dayMs);
+    return '⏳ ' + days + '일 남음';
   }
 
   function startTimer(post) {

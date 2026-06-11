@@ -186,6 +186,35 @@
     }
   }
 
+  function resolveExpiresAtFields() {
+    var getDuration = window.getPickleCreateDuration;
+    var durationKey = getDuration ? getDuration() : '24h';
+    var now = new Date();
+    var expiresAt = null;
+
+    if (durationKey === 'custom') {
+      var endInput = document.getElementById('inputEndDate');
+      var endVal = endInput && endInput.value ? String(endInput.value).trim() : '';
+      var endDate = endVal ? new Date(endVal) : null;
+      expiresAt =
+        endDate && !Number.isNaN(endDate.getTime()) ? endDate.toISOString() : null;
+    } else {
+      var dayMs = 24 * 60 * 60 * 1000;
+      var addMs = dayMs;
+      if (durationKey === '3') {
+        addMs = 3 * dayMs;
+      } else if (durationKey === '7') {
+        addMs = 7 * dayMs;
+      }
+      expiresAt = new Date(now.getTime() + addMs).toISOString();
+    }
+
+    return {
+      duration: durationKey === 'custom' ? 'custom' : durationKey || '24h',
+      expires_at: expiresAt,
+    };
+  }
+
   function buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl) {
     var payload = {
       author_id: user.id,
@@ -212,8 +241,11 @@
       payload.media_layout = formData.mediaLayout;
     }
 
+    var scheduleFields = resolveExpiresAtFields();
+    Object.assign(payload, scheduleFields);
+
     Object.keys(payload).forEach(function (key) {
-      if (key === 'thumbnail_url') return;
+      if (key === 'thumbnail_url' || key === 'expires_at') return;
       if (payload[key] === null || payload[key] === undefined || payload[key] === '') {
         delete payload[key];
       }
@@ -222,6 +254,10 @@
     var safeThumb = normalizeThumbnailUrlForDb(thumbnailUrl);
     if (safeThumb) {
       payload.thumbnail_url = safeThumb;
+    }
+
+    if (scheduleFields.expires_at) {
+      payload.expires_at = scheduleFields.expires_at;
     }
 
     return payload;
@@ -268,7 +304,11 @@
       msg.indexOf("could not find the 'tags'") !== -1 ||
       msg.indexOf('author_nickname') !== -1 ||
       msg.indexOf('author_avatar_html') !== -1 ||
-      msg.indexOf('media_layout') !== -1;
+      msg.indexOf('media_layout') !== -1 ||
+      msg.indexOf('duration') !== -1 ||
+      msg.indexOf('start_at') !== -1 ||
+      msg.indexOf('end_at') !== -1 ||
+      msg.indexOf('expires_at') !== -1;
 
     if (missingColumn) {
       alert(

@@ -31,9 +31,8 @@
       'option_a_name',
       'option_b_name',
       'thumbnail_url',
+      'expires_at',
       'duration',
-      'start_at',
-      'end_at',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -49,6 +48,7 @@
       'layout_style',
       'thumbnail_url',
       'tags',
+      'expires_at',
       'duration',
       'start_at',
       'end_at',
@@ -89,7 +89,7 @@
   ];
 
   var PICKLE_POSTS_SELECT_VARIANTS = [
-    'id, category, title, option_a, option_b, thumbnail_url, hashtags, tags, duration, start_at, end_at, created_at',
+    'id, category, title, option_a, option_b, thumbnail_url, hashtags, tags, duration, expires_at, start_at, end_at, created_at',
     'id, category, title, option_a, option_b, hashtags, duration, end_at, created_at',
     'id, category, title, option_a, option_b, created_at',
   ];
@@ -145,60 +145,47 @@
   function computeEndsAt(post) {
     if (!post) return null;
 
-    var endRaw = post.end_at || post.end_date;
-    if (endRaw) {
-      var endDate = new Date(endRaw);
-      return Number.isNaN(endDate.getTime()) ? null : endDate;
+    var raw = post.expires_at || post.end_at || post.end_date || null;
+    if (!raw) return null;
+
+    var endDate = new Date(raw);
+    return Number.isNaN(endDate.getTime()) ? null : endDate;
+  }
+
+  function formatRemainingTimeLabel(endsAt) {
+    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
+
+    var ms = endsAt.getTime() - Date.now();
+    if (ms <= 0) return '⏳ 종료된 불판';
+
+    var minuteMs = 60 * 1000;
+    var hourMs = 60 * minuteMs;
+    var dayMs = 24 * hourMs;
+
+    if (ms < hourMs) {
+      var minutes = Math.max(1, Math.ceil(ms / minuteMs));
+      return '⏳ ' + minutes + '분 남음';
     }
 
-    if (!post.created_at) return null;
-
-    var start = post.start_at ? new Date(post.start_at) : new Date(post.created_at);
-    if (Number.isNaN(start.getTime())) return null;
-
-    var duration = post.duration || '24h';
-    var addMs = 0;
-
-    if (duration === '24h') {
-      addMs = 24 * 60 * 60 * 1000;
-    } else if (duration === '3') {
-      addMs = 3 * 24 * 60 * 60 * 1000;
-    } else if (duration === '7') {
-      addMs = 7 * 24 * 60 * 60 * 1000;
-    } else {
-      addMs = 24 * 60 * 60 * 1000;
+    if (ms < dayMs) {
+      var hours = Math.floor(ms / hourMs);
+      return '⏳ ' + hours + '시간 남음';
     }
 
-    return new Date(start.getTime() + addMs);
+    var days = Math.floor(ms / dayMs);
+    return '⏳ ' + days + '일 남음';
   }
 
   function formatListRemainingLabel(endsAt) {
-    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
-
-    var ms = endsAt.getTime() - Date.now();
-    if (ms <= 0) return '⏳ 마감됨';
-    if (ms < 60 * 60 * 1000) return '⏳ 마감 임박!';
-
-    var hours = Math.floor(ms / (60 * 60 * 1000));
-    return '⏳ ' + hours + '시간 남음';
+    return formatRemainingTimeLabel(endsAt);
   }
 
   function formatRemainingLabelForEl(endsAt, el) {
-    if (el && el.closest('.list-meta')) {
-      return formatListRemainingLabel(endsAt);
-    }
-    return formatFeedRemainingLabel(endsAt);
+    return formatRemainingTimeLabel(endsAt);
   }
 
   function formatFeedRemainingLabel(endsAt) {
-    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
-
-    var ms = endsAt.getTime() - Date.now();
-    if (ms <= 0) return '⏳ 마감됨';
-    if (ms < 60 * 60 * 1000) return '⏳ 마감 임박!';
-
-    var hours = Math.floor(ms / (60 * 60 * 1000));
-    return '⏳ ' + String(hours).padStart(2, '0') + '시간 남음';
+    return formatRemainingTimeLabel(endsAt);
   }
 
   function tickFeedTimers() {
@@ -388,6 +375,7 @@
             thumbnail_url: resolveFeedThumbnailUrl(row.thumbnail_url),
             tags: safeTags(row),
             duration: row.duration || '24h',
+            expires_at: row.expires_at || row.end_at || row.end_date || null,
             start_at: row.start_at || null,
             end_at: row.end_at || row.end_date || null,
             end_date: row.end_date || row.end_at || null,
@@ -412,6 +400,7 @@
           thumbnail_url: resolveFeedThumbnailUrl(row.thumbnail_url),
           tags: safeTags(row),
           duration: row.duration || '24h',
+          expires_at: row.expires_at || row.end_at || row.end_date || null,
           start_at: row.start_at || null,
           end_at: row.end_at || row.end_date || null,
           end_date: row.end_date || row.end_at || null,
