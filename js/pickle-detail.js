@@ -64,32 +64,48 @@
       end_at: row.end_at || row.end_date,
       end_date: row.end_date || row.end_at,
       authorNickname: null,
+      author_nickname: '',
+      author_avatar_html: '',
+    };
+  }
+
+  function resolveAuthorFieldsFromRow(row) {
+    var nickname = row.author_nickname ? String(row.author_nickname).trim() : '';
+    var avatarHtml = row.author_avatar_html ? String(row.author_avatar_html).trim() : '';
+    if (!nickname && row.users && row.users.nickname) {
+      nickname = String(row.users.nickname).trim();
+    }
+    return {
+      author_nickname: nickname,
+      author_avatar_html: avatarHtml,
+      authorNickname: nickname || null,
     };
   }
 
   function normalizePostsRow(row) {
-    return {
-      id: row.id,
-      title: row.title || '',
-      category: row.category,
-      option_a: row.option_a_name || '',
-      option_b: row.option_b_name || '',
-      description: row.description || null,
-      media_url_1: row.media_url_1 || row.option_a_image_url,
-      media_url_2: row.media_url_2 || row.option_b_image_url,
-      media_mode: mapMediaTypeToMode(row.media_type),
-      media_type: row.media_type,
-      layout_style: row.layout_style,
-      hashtags: row.hashtags || row.tags || '',
-      tags: row.tags || row.hashtags || '',
-      created_at: row.created_at,
-      duration: row.duration,
-      start_at: row.start_at,
-      end_at: row.end_at || row.end_date,
-      end_date: row.end_date || row.end_at,
-      authorNickname:
-        row.users && row.users.nickname ? row.users.nickname : null,
-    };
+    return Object.assign(
+      {
+        id: row.id,
+        title: row.title || '',
+        category: row.category,
+        option_a: row.option_a_name || '',
+        option_b: row.option_b_name || '',
+        description: row.description || null,
+        media_url_1: row.media_url_1 || row.option_a_image_url,
+        media_url_2: row.media_url_2 || row.option_b_image_url,
+        media_mode: mapMediaTypeToMode(row.media_type),
+        media_type: row.media_type,
+        layout_style: row.layout_style,
+        hashtags: row.hashtags || row.tags || '',
+        tags: row.tags || row.hashtags || '',
+        created_at: row.created_at,
+        duration: row.duration,
+        start_at: row.start_at,
+        end_at: row.end_at || row.end_date,
+        end_date: row.end_date || row.end_at,
+      },
+      resolveAuthorFieldsFromRow(row)
+    );
   }
 
   function safeTagsValue(post) {
@@ -514,9 +530,26 @@
     var badgeEl = $('detailCategoryBadge');
     var commentInput = $('detailCommentInput');
 
-    if (picEl) picEl.textContent = firstEmoji(categoryDisplay(post.category));
+    var avatarRaw =
+      post && post.author_avatar_html ? String(post.author_avatar_html).trim() : '';
+    if (picEl) {
+      if (avatarRaw) {
+        if (avatarRaw.indexOf('<') !== -1) {
+          picEl.innerHTML = avatarRaw;
+        } else {
+          picEl.textContent = avatarRaw;
+        }
+      } else {
+        picEl.textContent = '🥒';
+      }
+    }
+
     if (nameEl) {
-      nameEl.textContent = post.authorNickname || '픽클러';
+      var nickname =
+        (post && post.author_nickname && String(post.author_nickname).trim()) ||
+        (post && post.authorNickname) ||
+        '픽클러';
+      nameEl.textContent = nickname;
     }
 
     if (badgeEl && post.category) {

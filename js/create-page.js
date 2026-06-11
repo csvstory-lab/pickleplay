@@ -134,6 +134,43 @@
     };
   }
 
+  /**
+   * 로그인 유저 메타데이터 → posts.author_nickname / author_avatar_html
+   */
+  function extractAuthorSnapshot(user) {
+    var meta = (user && user.user_metadata) || {};
+    var nickname = meta.nickname ? String(meta.nickname).trim() : '';
+
+    if (!nickname && user && user.email) {
+      nickname = String(user.email).split('@')[0] || '';
+    }
+    if (!nickname) {
+      nickname = '픽클러';
+    }
+
+    var avatarHtml = '';
+    if (meta.avatar_html && String(meta.avatar_html).trim()) {
+      avatarHtml = String(meta.avatar_html).trim();
+    } else if (meta.avatar_emoji && String(meta.avatar_emoji).trim()) {
+      avatarHtml = String(meta.avatar_emoji).trim();
+    } else {
+      var avatarUrl = meta.avatar_url || meta.picture || meta.avatar || '';
+      if (avatarUrl) {
+        avatarHtml =
+          '<img src="' +
+          String(avatarUrl).replace(/"/g, '&quot;') +
+          '" alt="">';
+      } else {
+        avatarHtml = '🥒';
+      }
+    }
+
+    return {
+      author_nickname: nickname,
+      author_avatar_html: avatarHtml,
+    };
+  }
+
   function buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl) {
     var payload = {
       author_id: user.id,
@@ -145,6 +182,7 @@
       visibility_status: 'visible',
     };
 
+    Object.assign(payload, extractAuthorSnapshot(user));
     Object.assign(payload, mediaFields);
 
     if (thumbnailUrl) {
@@ -206,10 +244,14 @@
       msg.indexOf("could not find the 'title'") !== -1 ||
       msg.indexOf("could not find the 'media_type'") !== -1 ||
       msg.indexOf("could not find the 'thumbnail_url'") !== -1 ||
-      msg.indexOf("could not find the 'tags'") !== -1;
+      msg.indexOf("could not find the 'tags'") !== -1 ||
+      msg.indexOf('author_nickname') !== -1 ||
+      msg.indexOf('author_avatar_html') !== -1;
 
     if (missingColumn) {
-      alert('SQL 마이그레이션이 필요합니다. (title, media_type, thumbnail_url 또는 tags 컬럼 누락)');
+      alert(
+        'SQL 마이그레이션이 필요합니다. (title, media_type, thumbnail_url, tags, author_nickname 등 컬럼 누락)\n→ supabase/13_posts_author_snapshot.sql 실행'
+      );
       return true;
     }
 

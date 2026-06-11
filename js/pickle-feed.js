@@ -44,6 +44,8 @@
       'is_sponsor',
       'visibility_status',
       'created_at',
+      'author_nickname',
+      'author_avatar_html',
       'users:author_id ( nickname )',
     ].join(', '),
     [
@@ -286,56 +288,116 @@
     );
   }
 
+  function resolveAuthorFields(row) {
+    var nickname = '';
+    var avatarHtml = '';
+
+    if (row) {
+      if (row.author_nickname) {
+        nickname = safeStr(row.author_nickname, '').trim();
+      }
+      if (row.author_avatar_html) {
+        avatarHtml = safeStr(row.author_avatar_html, '').trim();
+      }
+      if (!nickname && row.users && row.users.nickname) {
+        nickname = safeStr(row.users.nickname, '').trim();
+      }
+    }
+
+    return {
+      author_nickname: nickname,
+      author_avatar_html: avatarHtml,
+      authorNickname: nickname || null,
+    };
+  }
+
+  function resolveAuthorNickname(post) {
+    var name = post && post.author_nickname ? safeStr(post.author_nickname, '').trim() : '';
+    if (!name && post && post.authorNickname) {
+      name = safeStr(post.authorNickname, '').trim();
+    }
+    return name || '픽클러';
+  }
+
+  function resolveAuthorAvatarHtml(post) {
+    var raw = post && post.author_avatar_html ? safeStr(post.author_avatar_html, '').trim() : '';
+    return raw || '🥒';
+  }
+
+  function renderFeedAuthorRow(post) {
+    var name = escapeHtml(resolveAuthorNickname(post));
+    var avatarRaw = resolveAuthorAvatarHtml(post);
+    var avatarInner =
+      avatarRaw.indexOf('<') !== -1 ? avatarRaw : escapeHtml(avatarRaw);
+
+    return (
+      '<div class="feed-author-row">' +
+      '<div class="feed-author-avatar">' +
+      avatarInner +
+      '</div>' +
+      '<span class="feed-author-name">' +
+      name +
+      '</span>' +
+      '</div>'
+    );
+  }
+
   function normalizePostRow(row, source) {
     if (!row || row.id == null) return null;
 
     try {
       if (source === 'pickle_posts') {
-        return {
+        return Object.assign(
+          {
+            id: row.id,
+            title: safeStr(row.title, '제목 없음'),
+            category: row.category || null,
+            categoryLabel: categoryLabel(row.category),
+            option_a: safeStr(row.option_a, ''),
+            option_b: safeStr(row.option_b, ''),
+            media_url_1: row.media_url_1 || null,
+            media_url_2: row.media_url_2 || null,
+            media_mode: row.media_mode || null,
+            media_type: row.media_mode || null,
+            thumbnail_url: safeThumbnailUrl(row),
+            tags: safeTags(row),
+            duration: row.duration || '24h',
+            start_at: row.start_at || null,
+            end_at: row.end_at || row.end_date || null,
+            end_date: row.end_date || row.end_at || null,
+            is_sponsor: false,
+            created_at: row.created_at || null,
+            author_nickname: '',
+            author_avatar_html: '',
+            authorNickname: null,
+          },
+          resolveAuthorFields(row)
+        );
+      }
+
+      return Object.assign(
+        {
           id: row.id,
           title: safeStr(row.title, '제목 없음'),
           category: row.category || null,
           categoryLabel: categoryLabel(row.category),
-          option_a: safeStr(row.option_a, ''),
-          option_b: safeStr(row.option_b, ''),
-          media_url_1: row.media_url_1 || null,
-          media_url_2: row.media_url_2 || null,
-          media_mode: row.media_mode || null,
-          media_type: row.media_mode || null,
+          option_a: safeStr(row.option_a_name, ''),
+          option_b: safeStr(row.option_b_name, ''),
+          media_url_1: row.media_url_1 || row.option_a_image_url || null,
+          media_url_2: row.media_url_2 || row.option_b_image_url || null,
+          media_mode: row.media_type || null,
+          media_type: row.media_type || null,
           thumbnail_url: safeThumbnailUrl(row),
           tags: safeTags(row),
           duration: row.duration || '24h',
           start_at: row.start_at || null,
           end_at: row.end_at || row.end_date || null,
           end_date: row.end_date || row.end_at || null,
-          is_sponsor: false,
+          is_sponsor: !!row.is_sponsor,
           created_at: row.created_at || null,
-          authorNickname: null,
-        };
-      }
-
-      return {
-        id: row.id,
-        title: safeStr(row.title, '제목 없음'),
-        category: row.category || null,
-        categoryLabel: categoryLabel(row.category),
-        option_a: safeStr(row.option_a_name, ''),
-        option_b: safeStr(row.option_b_name, ''),
-        media_url_1: row.media_url_1 || row.option_a_image_url || null,
-        media_url_2: row.media_url_2 || row.option_b_image_url || null,
-        media_mode: row.media_type || null,
-        media_type: row.media_type || null,
-        thumbnail_url: safeThumbnailUrl(row),
-        tags: safeTags(row),
-        duration: row.duration || '24h',
-        start_at: row.start_at || null,
-        end_at: row.end_at || row.end_date || null,
-        end_date: row.end_date || row.end_at || null,
-        is_sponsor: !!row.is_sponsor,
-        created_at: row.created_at || null,
-        authorNickname:
-          row.users && row.users.nickname ? safeStr(row.users.nickname, '') : null,
-      };
+        },
+        resolveAuthorFields(row)
+      );
     } catch (err) {
       console.warn('[P!CKLE Feed] normalizePostRow 실패', row && row.id, err);
       return null;
@@ -610,6 +672,7 @@
       '">' +
       renderKingThumb(post) +
       renderFeedMetaRow(post) +
+      renderFeedAuthorRow(post) +
       '<h2 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
@@ -678,6 +741,7 @@
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +
+      renderFeedAuthorRow(post) +
       renderListVsBox(post) +
       renderListMetaFooter(post) +
       '</article>'
