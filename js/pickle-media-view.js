@@ -51,42 +51,28 @@
   }
 
   function getPostThumbUrl(post) {
-    var url = post.media_url_1 || post.media_url_2;
+    if (!post || !post.thumbnail_url) return null;
+    var url = String(post.thumbnail_url).trim();
     if (!url) return null;
-    var media = parseMedia(url);
-    if (media.kind === 'youtube') return media.thumbnailUrl;
-    if (media.kind === 'image') return media.src;
-    return null;
+    if (window.PickleMedia && window.PickleMedia.isValidVideoUrl && window.PickleMedia.isValidVideoUrl(url)) {
+      return null;
+    }
+    if (/youtube|youtu\.be|tiktok|vimeo|\.mp4|\.webm/i.test(url)) return null;
+    return url;
   }
 
   function buildKingThumbHtml(post, className) {
     var thumb = getPostThumbUrl(post);
-    var url = post.media_url_1 || post.media_url_2;
-    var media = parseMedia(url);
 
     if (thumb) {
-      var badge =
-        media.kind === 'youtube'
-          ? '<span class="media-badge media-badge-yt">▶ 유튜브</span>'
-          : '';
       return (
         '<div class="' +
         className +
         '">' +
-        badge +
         '<img src="' +
         escapeHtml(thumb) +
         '" alt="" loading="lazy">' +
         '</div>'
-      );
-    }
-
-    if (media.kind === 'tiktok') {
-      return (
-        '<div class="' +
-        className +
-        ' king-thumb-placeholder king-thumb-video">' +
-        '<span>▶</span><small>틱톡 영상</small></div>'
       );
     }
 
@@ -182,9 +168,8 @@
       var mediaA = parseMedia(post.media_url_1);
       var mediaB = parseMedia(post.media_url_2);
       return (
-        '<div class="vertical-split-container">' +
+        '<div class="media-container">' +
         buildSplitHalf('A', mediaA, post.option_a, title) +
-        '<div class="vs-badge">VS</div>' +
         buildSplitHalf('B', mediaB, post.option_b, title) +
         '</div>'
       );

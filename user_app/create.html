@@ -124,12 +124,29 @@
     .upload-box.ratio-16-9 { aspect-ratio: 16 / 9; }
     .upload-box.ratio-9-16 { aspect-ratio: 9 / 16; width: 60%; margin: 0 auto; }
     
-    .vs-upload-group { display: flex; flex-direction: column; gap: 20px; position: relative; }
-    .upload-box.ratio-vs { aspect-ratio: 16 / 9; height: auto; }
-    
-    .vs-upload-group.row-layout { flex-direction: row; gap: 15px; justify-content: space-between; align-items: flex-start; }
-    .vs-upload-group.row-layout .media-input-wrap { flex: 1; }
-    .vs-upload-group.row-layout .upload-box.ratio-vs-vert { aspect-ratio: 9 / 16; width: 100%; height: auto; margin: 0; border-radius: 16px; }
+    .vs-upload-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(45%, 1fr)); gap: 10px; width: 100%; max-width: 100%; box-sizing: border-box; position: relative; justify-content: center; align-items: stretch; }
+    .vs-upload-group.media-container .media-input-wrap { min-width: 0; max-width: 100%; box-sizing: border-box; }
+    .vs-upload-group .upload-box.ratio-vs,
+    .vs-upload-group .upload-box.ratio-vs-vert,
+    .vs-upload-group .upload-box.ratio-vs-square {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    .media-container img,
+    .media-container video,
+    .media-container iframe {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 12px;
+        box-sizing: border-box;
+    }
 
     .vs-badge-upload {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -559,21 +576,12 @@
         }
 
         if (currentMode === 'vs') {
-            if (currentOri === 'horizontal') {
-                container.innerHTML = sizeHint + `
-                    <div class="vs-upload-group">
-                        ${makeSlot('vsA', 'A', 'ratio-vs', 'var(--neon-blue)')}
-                        <div class="vs-badge-upload">VS</div>
-                        ${makeSlot('vsB', 'B', 'ratio-vs', 'var(--neon-pink)')}
-                    </div>`;
-            } else {
-                container.innerHTML = sizeHint + `
-                    <div class="vs-upload-group row-layout">
-                        ${makeSlot('vsA', 'A', 'ratio-vs-vert', 'var(--neon-blue)')}
-                        <div class="vs-badge-upload">VS</div>
-                        ${makeSlot('vsB', 'B', 'ratio-vs-vert', 'var(--neon-pink)')}
-                    </div>`;
-            }
+            container.innerHTML = sizeHint + `
+                <div class="vs-upload-group media-container">
+                    ${makeSlot('vsA', 'A', 'ratio-vs-square', 'var(--neon-blue)')}
+                    <div class="vs-badge-upload">VS</div>
+                    ${makeSlot('vsB', 'B', 'ratio-vs-square', 'var(--neon-pink)')}
+                </div>`;
         }
     }
     renderUploadArea();

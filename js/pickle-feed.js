@@ -29,11 +29,6 @@
       'category',
       'option_a_name',
       'option_b_name',
-      'option_a_image_url',
-      'option_b_image_url',
-      'media_type',
-      'media_url_1',
-      'media_url_2',
       'layout_style',
       'thumbnail_url',
       'tags',
@@ -54,11 +49,6 @@
       'category',
       'option_a_name',
       'option_b_name',
-      'option_a_image_url',
-      'option_b_image_url',
-      'media_type',
-      'media_url_1',
-      'media_url_2',
       'layout_style',
       'thumbnail_url',
       'duration',
@@ -75,9 +65,6 @@
       'category',
       'option_a_name',
       'option_b_name',
-      'media_type',
-      'media_url_1',
-      'media_url_2',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -85,9 +72,9 @@
   ];
 
   var PICKLE_POSTS_SELECT_VARIANTS = [
-    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, thumbnail_url, hashtags, tags, duration, start_at, end_at, created_at',
-    'id, category, title, option_a, option_b, media_mode, media_url_1, media_url_2, hashtags, duration, end_at, created_at',
-    'id, category, title, option_a, option_b, media_mode, created_at',
+    'id, category, title, option_a, option_b, thumbnail_url, hashtags, tags, duration, start_at, end_at, created_at',
+    'id, category, title, option_a, option_b, hashtags, duration, end_at, created_at',
+    'id, category, title, option_a, option_b, created_at',
   ];
 
   function escapeHtml(str) {
@@ -121,26 +108,12 @@
     return /youtube|youtu\.be|tiktok|vimeo|\.mp4|\.webm/i.test(url);
   }
 
-  function safeThumbnailUrl(post) {
-    if (!post) return null;
-
-    var candidates = [
-      post.thumbnail_url,
-      post.media_url_1,
-      post.option_a_image_url,
-      post.media_url_2,
-      post.option_b_image_url,
-    ];
-
-    for (var i = 0; i < candidates.length; i++) {
-      var url = candidates[i];
-      if (typeof url !== 'string') continue;
-      url = url.trim();
-      if (!url || isVideoUrl(url)) continue;
-      return url;
-    }
-
-    return null;
+  /** 피드 썸네일 — posts.thumbnail_url 만 허용 (본문 미디어 스포일러 차단) */
+  function resolveFeedThumbnailUrl(thumbnailUrl) {
+    if (typeof thumbnailUrl !== 'string') return null;
+    var url = thumbnailUrl.trim();
+    if (!url || isVideoUrl(url)) return null;
+    return url;
   }
 
   function safeTotalVotes(post) {
@@ -355,11 +328,7 @@
             categoryLabel: categoryLabel(row.category),
             option_a: safeStr(row.option_a, ''),
             option_b: safeStr(row.option_b, ''),
-            media_url_1: row.media_url_1 || null,
-            media_url_2: row.media_url_2 || null,
-            media_mode: row.media_mode || null,
-            media_type: row.media_mode || null,
-            thumbnail_url: safeThumbnailUrl(row),
+            thumbnail_url: resolveFeedThumbnailUrl(row.thumbnail_url),
             tags: safeTags(row),
             duration: row.duration || '24h',
             start_at: row.start_at || null,
@@ -383,11 +352,7 @@
           categoryLabel: categoryLabel(row.category),
           option_a: safeStr(row.option_a_name, ''),
           option_b: safeStr(row.option_b_name, ''),
-          media_url_1: row.media_url_1 || row.option_a_image_url || null,
-          media_url_2: row.media_url_2 || row.option_b_image_url || null,
-          media_mode: row.media_type || null,
-          media_type: row.media_type || null,
-          thumbnail_url: safeThumbnailUrl(row),
+          thumbnail_url: resolveFeedThumbnailUrl(row.thumbnail_url),
           tags: safeTags(row),
           duration: row.duration || '24h',
           start_at: row.start_at || null,
@@ -613,7 +578,7 @@
           post.pctA = pct.a;
           post.pctB = pct.b;
           post.commentCount = commentCountMap.get(post.id) || 0;
-          post.thumbnail_url = safeThumbnailUrl(post);
+          post.thumbnail_url = resolveFeedThumbnailUrl(post.thumbnail_url);
           return post;
         } catch (err) {
           console.warn('[P!CKLE Feed] 게시물 정규화 실패', row && row.id, err);
@@ -624,7 +589,7 @@
   }
 
   function renderKingThumb(post) {
-    var thumbUrl = safeThumbnailUrl(post);
+    var thumbUrl = resolveFeedThumbnailUrl(post && post.thumbnail_url);
     if (thumbUrl) {
       return (
         '<div class="king-thumb king-thumb-has-image">' +

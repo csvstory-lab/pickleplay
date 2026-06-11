@@ -50,15 +50,48 @@ iframe {
 }
 
 .master-media-container,
-.vertical-split-container,
+.media-container,
 .single-media-wrap {
   max-width: 100%;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-.vertical-split-container .split-half {
+.media-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.media-container img,
+.media-container video,
+.media-container iframe {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.media-container .split-half {
   min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.vs-upload-group.media-container {
+  position: relative;
+}
+
+.vs-upload-group.media-container .media-input-wrap {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* A/B 선택지 — 좁은 화면·긴 텍스트 시 세로 배치 */
