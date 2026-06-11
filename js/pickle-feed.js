@@ -81,6 +81,7 @@
       'category',
       'option_a_name',
       'option_b_name',
+      'thumbnail_url',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -126,10 +127,14 @@
 
   /** 피드 썸네일 — posts.thumbnail_url 만 허용 (본문 미디어 스포일러 차단) */
   function resolveFeedThumbnailUrl(thumbnailUrl) {
-    if (typeof thumbnailUrl !== 'string') return null;
-    var url = thumbnailUrl.trim();
-    if (!url || isVideoUrl(url)) return null;
-    return url;
+    try {
+      if (thumbnailUrl == null || thumbnailUrl === '') return null;
+      var url = String(thumbnailUrl).trim();
+      if (!url || isVideoUrl(url)) return null;
+      return url;
+    } catch (_) {
+      return null;
+    }
   }
 
   function safeTotalVotes(post) {
@@ -685,32 +690,87 @@
       })
       .filter(Boolean);
 
-    return hydrateAuthorSnapshots(sb, posts, source);
+    posts = await hydrateAuthorSnapshots(sb, posts, source);
+    return hydrateThumbnailUrls(sb, posts);
   }
 
-  function renderKingThumb(post) {
-    var raw =
-      post && post.thumbnail_url != null ? String(post.thumbnail_url).trim() : '';
-    var thumbUrl = raw && !isVideoUrl(raw) ? raw : '';
+  async function hydrateThumbnailUrls(sb, posts) {
+    if (!posts || !posts.length) return posts || [];
 
-    if (thumbUrl) {
+    var needIds = [];
+    posts.forEach(function (p) {
+      if (!p || !p.id) return;
+      if (!resolveFeedThumbnailUrl(p.thumbnail_url || null)) {
+        needIds.push(p.id);
+      }
+    });
+    if (!needIds.length) return posts;
+
+    try {
+      var res = await sb.from('posts').select('id, thumbnail_url').in('id', needIds);
+      if (res.error || !res.data || !res.data.length) return posts;
+
+      var byId = {};
+      res.data.forEach(function (row) {
+        if (!row || !row.id) return;
+        var url = resolveFeedThumbnailUrl(row.thumbnail_url || null);
+        if (url) byId[row.id] = url;
+      });
+
+      return posts.map(function (p) {
+        if (!p || !p.id) return p;
+        if (resolveFeedThumbnailUrl(p.thumbnail_url || null)) return p;
+        var hydrated = byId[p.id] || null;
+        if (hydrated) p.thumbnail_url = hydrated;
+        return p;
+      });
+    } catch (_) {
+      return posts;
+    }
+  }
+
+  function renderFeedThumbImage(post) {
+    try {
+      var thumbUrl = resolveFeedThumbnailUrl((post && post.thumbnail_url) || null);
+      if (!thumbUrl) return '';
+
       return (
-        '<img class="king-feed-thumb" src="' +
+        '<img src="' +
         escapeHtml(thumbUrl) +
-        '" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;display:block;" alt="' +
+        '" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px; margin-bottom: 12px;" alt="' +
         escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
         '" loading="lazy" decoding="async">'
       );
+    } catch (_) {
+      return '';
     }
+  }
 
-    var cat = escapeHtml(safeStr(post && post.categoryLabel, '불판'));
+  function renderKingThumbFallback(post) {
+    var fallbackCat = escapeHtml(safeStr(post && post.categoryLabel, '불판'));
     return (
       '<div class="king-thumb king-thumb-fallback">' +
       '<span class="king-fallback-cat">' +
-      cat +
-      '</span>' +
-      '</div>'
+      fallbackCat +
+      '</span></div>'
     );
+  }
+
+  function renderKingThumb(post) {
+    try {
+      var img = renderFeedThumbImage(post);
+      return img || renderKingThumbFallback(post);
+    } catch (_) {
+      return renderKingThumbFallback(post);
+    }
+  }
+
+  function renderListThumb(post) {
+    try {
+      return renderFeedThumbImage(post);
+    } catch (_) {
+      return '';
+    }
   }
 
   function renderKingAbBox(post) {
@@ -798,6 +858,7 @@
       escapeHtml(post.id) +
       '" role="button" tabindex="0">' +
       renderListTopRow(post) +
+      renderListThumb(post) +
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +

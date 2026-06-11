@@ -176,6 +176,16 @@
     };
   }
 
+  function normalizeThumbnailUrlForDb(value) {
+    try {
+      if (value == null) return null;
+      var trimmed = String(value).trim();
+      return trimmed || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl) {
     var payload = {
       author_id: user.id,
@@ -203,15 +213,15 @@
     }
 
     Object.keys(payload).forEach(function (key) {
+      if (key === 'thumbnail_url') return;
       if (payload[key] === null || payload[key] === undefined || payload[key] === '') {
         delete payload[key];
       }
     });
 
-    if (thumbnailUrl && String(thumbnailUrl).trim()) {
-      payload.thumbnail_url = String(thumbnailUrl).trim();
-    } else if (thumbnailUrl === null) {
-      payload.thumbnail_url = null;
+    var safeThumb = normalizeThumbnailUrlForDb(thumbnailUrl);
+    if (safeThumb) {
+      payload.thumbnail_url = safeThumb;
     }
 
     return payload;
@@ -382,19 +392,19 @@
 
     var thumbnailUrl = null;
     if (typeof preloadedThumbnailUrl !== 'undefined') {
-      thumbnailUrl =
-        preloadedThumbnailUrl && String(preloadedThumbnailUrl).trim()
-          ? String(preloadedThumbnailUrl).trim()
-          : null;
+      thumbnailUrl = normalizeThumbnailUrlForDb(preloadedThumbnailUrl);
     } else {
       thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
+      thumbnailUrl = normalizeThumbnailUrlForDb(thumbnailUrl);
     }
 
     var rawMedia = await buildMediaPayload(user.id);
     var mediaFields = mapMediaForPosts(rawMedia);
     var payload = buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl);
 
-    console.info('[P!CKLE Create] posts.insert payload.thumbnail_url =', payload.thumbnail_url || '(없음)');
+    if (thumbnailUrl) {
+      payload.thumbnail_url = thumbnailUrl;
+    }
 
     var insertResult = await sb
       .from('posts')
@@ -403,6 +413,7 @@
       .single();
     if (insertResult.error) {
       console.error('[P!CKLE Create] posts.insert 실패', insertResult.error);
+      alert('DB 저장 에러: ' + (insertResult.error.message || String(insertResult.error)));
       if (handleInsertError(insertResult.error)) {
         return { cancelled: true };
       }
@@ -414,9 +425,7 @@
       thumbnail_url: insertResult.data && insertResult.data.thumbnail_url,
     });
 
-    alert('🔥 새로운 불판을 지폈습니다! 불타는 참전을 기대하세요.');
-    window.location.href = 'index.html';
-    return { ok: true, id: insertResult.data?.id };
+    return { ok: true, id: insertResult.data?.id, thumbnail_url: insertResult.data?.thumbnail_url };
   }
 
   window.PickleCreatePage = {

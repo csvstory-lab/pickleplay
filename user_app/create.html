@@ -306,6 +306,7 @@
 <main>
     <h1 class="page-title">🔥 새로운 불판 지피기</h1>
 
+    <form id="createPostForm" novalidate>
     <div class="form-group">
         <label class="form-label">어떤 전장으로 갈까요?</label>
         <div class="chip-scroll" id="chipSlider">
@@ -420,8 +421,9 @@
         </div>
     </div>
 
-    <button type="button" class="btn-submit" id="btnSubmitPost" onclick="validateAndSubmit()">🚀 불판 지피기 (등록)</button>
+    <button type="submit" class="btn-submit" id="btnSubmitPost">🚀 불판 지피기 (등록)</button>
 
+    </form>
 </main>
 
 <nav class="bottom-nav">
@@ -735,7 +737,15 @@
     }
 
     // 💡 등록 전 밸리데이션 + Supabase posts 저장
-    async function validateAndSubmit() {
+    let isSubmitting = false;
+
+    async function validateAndSubmit(e) {
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (isSubmitting) return false;
+
         const selectedCategory = document.querySelector('.cat-chip.selected');
         if (!selectedCategory) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
 
@@ -762,14 +772,18 @@
         if (!validateCustomEndDate()) return;
 
         const btnSubmit = document.getElementById('btnSubmitPost');
+        isSubmitting = true;
         btnSubmit.disabled = true;
         btnSubmit.textContent = '등록 중…';
+        let submitSucceeded = false;
 
         try {
             let thumbnailUrl = null;
             const thumbFile = document.getElementById('thumbnailInput')?.files?.[0] || thumbnailFile || null;
 
             if (thumbFile) {
+                alert('1. 썸네일 파일 인식 완료');
+
                 if (window.PickleAuth?.init) {
                     await window.PickleAuth.init();
                 }
@@ -780,7 +794,7 @@
                 if (!user) {
                     alert('로그인 후 불판을 지필 수 있습니다.');
                     location.href = 'login.html?redirect=create.html&from=create';
-                    return;
+                    return false;
                 }
 
                 const fileExt = thumbFile.name.split('.').pop();
@@ -788,11 +802,15 @@
 
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('post_media')
-                    .upload('thumbnails/' + fileName, thumbFile);
+                    .upload('thumbnails/' + fileName, thumbFile, {
+                        cacheControl: '3600',
+                        upsert: false,
+                        contentType: thumbFile.type || undefined,
+                    });
 
                 if (uploadError) {
-                    alert('썸네일 업로드 실패: ' + uploadError.message);
-                    return;
+                    alert('창고 업로드 에러: ' + uploadError.message);
+                    return false;
                 }
 
                 const { data: publicUrlData } = supabase.storage
@@ -802,6 +820,7 @@
                 thumbnailUrl = publicUrlData.publicUrl;
                 console.log('생성된 썸네일 URL:', thumbnailUrl);
                 console.log('[P!CKLE Create] Storage 업로드 완료', uploadData);
+                alert('2. 창고 저장 및 URL 확보 성공!');
             } else {
                 console.info('[P!CKLE Create] 썸네일 미첨부 — thumbnail_url null');
             }
@@ -811,17 +830,29 @@
                 function () {
                     return thumbFile;
                 },
-                thumbnailUrl
+                thumbnailUrl || null
             );
-            if (result?.cancelled) return;
+            if (result?.cancelled) return false;
+
+            if (result?.ok) {
+                submitSucceeded = true;
+                alert('3. 불판 완벽 생성! 메인으로 이동합니다.');
+                location.href = 'index.html';
+                return false;
+            }
         } catch (err) {
             if (!window.PickleCreatePage.handleInsertError(err)) {
-                alert('등록 실패: ' + (err.message || String(err)));
+                alert('DB 저장 에러: ' + (err.message || String(err)));
             }
         } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = '🚀 불판 지피기 (등록)';
+            isSubmitting = false;
+            if (!submitSucceeded) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = '🚀 불판 지피기 (등록)';
+            }
         }
+
+        return false;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -830,6 +861,16 @@
         const endInput = document.getElementById('inputEndDate');
         if (endInput) {
             endInput.addEventListener('focus', refreshEndDateMin);
+        }
+
+        const createForm = document.getElementById('createPostForm');
+        if (createForm) {
+            createForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                validateAndSubmit(e);
+                return false;
+            });
         }
     });
 </script>
