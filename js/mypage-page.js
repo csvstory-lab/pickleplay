@@ -304,6 +304,33 @@
     });
   }
 
+  function getRemainingTime(expiresAt) {
+    if (expiresAt == null || expiresAt === '') return '⏳ 종료된 불판';
+
+    var expireDate = new Date(expiresAt);
+    if (Number.isNaN(expireDate.getTime())) return '⏳ 종료된 불판';
+
+    var now = new Date();
+    var diffMs = expireDate.getTime() - now.getTime();
+
+    if (diffMs <= 0) return '⏳ 종료된 불판';
+
+    var diffMins = Math.floor(diffMs / (1000 * 60));
+    var diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return '⏳ ' + diffMins + '분 남음';
+    if (diffHours < 24) return '⏳ ' + diffHours + '시간 남음';
+    return '⏳ ' + diffDays + '일 남음';
+  }
+
+  function isPostTimeExpired(expiresAt) {
+    if (expiresAt == null || expiresAt === '') return true;
+    var expireDate = new Date(expiresAt);
+    if (Number.isNaN(expireDate.getTime())) return true;
+    return new Date() > expireDate;
+  }
+
   async function fetchVoteStatsMap(sb, postIds) {
     var map = new Map();
     if (!postIds.length) return map;
@@ -350,8 +377,9 @@
 
   function buildRecordCard(post, stats) {
     var visible = post.visibility_status === 'visible';
-    var statusClass = visible ? 'ing' : 'done';
-    var statusText = visible ? '진행 중' : '종료/비공개';
+    var expired = isPostTimeExpired(post.expires_at);
+    var statusClass = expired ? 'done' : 'ing';
+    var statusText = getRemainingTime(post.expires_at);
     var total = stats && stats.total ? stats.total : 0;
     var title = post.title || post.option_a_name || '제목 없음';
     var editBtn = visible
@@ -678,7 +706,7 @@
       var result = await sb
         .from('posts')
         .select(
-          'id, title, category, option_a_name, option_b_name, visibility_status, created_at'
+          'id, title, category, option_a_name, option_b_name, visibility_status, created_at, expires_at'
         )
         .eq('author_id', userId)
         .order('created_at', { ascending: false });
