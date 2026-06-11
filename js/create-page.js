@@ -210,6 +210,8 @@
 
     if (thumbnailUrl && String(thumbnailUrl).trim()) {
       payload.thumbnail_url = String(thumbnailUrl).trim();
+    } else if (thumbnailUrl === null) {
+      payload.thumbnail_url = null;
     }
 
     return payload;
@@ -378,10 +380,15 @@
       return { cancelled: true };
     }
 
-    var thumbnailUrl =
-      preloadedThumbnailUrl && String(preloadedThumbnailUrl).trim()
-        ? String(preloadedThumbnailUrl).trim()
-        : await uploadThumbnailIfAny(user.id, getThumbnailFile);
+    var thumbnailUrl = null;
+    if (typeof preloadedThumbnailUrl !== 'undefined') {
+      thumbnailUrl =
+        preloadedThumbnailUrl && String(preloadedThumbnailUrl).trim()
+          ? String(preloadedThumbnailUrl).trim()
+          : null;
+    } else {
+      thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
+    }
 
     var rawMedia = await buildMediaPayload(user.id);
     var mediaFields = mapMediaForPosts(rawMedia);

@@ -766,33 +766,44 @@
         btnSubmit.textContent = '등록 중…';
 
         try {
-            let preloadedThumbnailUrl = null;
-            const thumbInput = document.getElementById('thumbnailInput');
-            const thumbFile =
-                thumbnailFile ||
-                (thumbInput && thumbInput.files && thumbInput.files[0]) ||
-                null;
+            let thumbnailUrl = null;
+            const thumbFile = document.getElementById('thumbnailInput')?.files?.[0] || thumbnailFile || null;
 
             if (thumbFile) {
                 if (window.PickleAuth?.init) {
                     await window.PickleAuth.init();
                 }
-                const sb = window.PickleSupabase.getClient();
-                const authResult = await sb.auth.getUser();
+
+                const supabase = window.PickleSupabase.getClient();
+                const authResult = await supabase.auth.getUser();
                 const user = authResult.data?.user;
                 if (!user) {
                     alert('로그인 후 불판을 지필 수 있습니다.');
                     location.href = 'login.html?redirect=create.html&from=create';
                     return;
                 }
-                console.info('[P!CKLE Create] 폼 제출 — 썸네일 선업로드', thumbFile.name);
-                preloadedThumbnailUrl = await window.PickleMedia.uploadPostImage(
-                    thumbFile,
-                    user.id
-                );
-                console.info('[P!CKLE Create] 썸네일 URL 확보', preloadedThumbnailUrl);
+
+                const fileExt = thumbFile.name.split('.').pop();
+                const fileName = 'thumb_' + Date.now() + '.' + fileExt;
+
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('post_media')
+                    .upload('thumbnails/' + fileName, thumbFile);
+
+                if (uploadError) {
+                    alert('썸네일 업로드 실패: ' + uploadError.message);
+                    return;
+                }
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('post_media')
+                    .getPublicUrl('thumbnails/' + fileName);
+
+                thumbnailUrl = publicUrlData.publicUrl;
+                console.log('생성된 썸네일 URL:', thumbnailUrl);
+                console.log('[P!CKLE Create] Storage 업로드 완료', uploadData);
             } else {
-                console.info('[P!CKLE Create] 썸네일 미첨부');
+                console.info('[P!CKLE Create] 썸네일 미첨부 — thumbnail_url null');
             }
 
             const result = await window.PickleCreatePage.submitPost(
@@ -800,7 +811,7 @@
                 function () {
                     return thumbFile;
                 },
-                preloadedThumbnailUrl
+                thumbnailUrl
             );
             if (result?.cancelled) return;
         } catch (err) {
