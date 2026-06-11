@@ -58,7 +58,7 @@
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; }
     .noti-bell::after { content: 'N'; position: absolute; top: -5px; right: -5px; background-color: var(--neon-pink); color: white; font-size: 0.6rem; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-color); }
 
-    main { padding-bottom: 100px; }
+    main { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
 
     /* 작성자 프로필 */
     .post-author-box { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
@@ -315,6 +315,23 @@
     
     .btn-submit-report { width: 100%; padding: 14px; background: rgba(255, 51, 51, 0.1); color: var(--alert-red); border: 1px solid var(--alert-red); border-radius: 12px; font-weight: 900; font-size: 1rem; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif; }
     .btn-submit-report:active { background: var(--alert-red); color: #fff; }
+
+    /* === 하단 네비게이션 (index.html 동일) === */
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; width: 100%; max-width: 480px; margin: 0 auto;
+        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px);
+        display: flex; justify-content: space-around; align-items: center;
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+        border-top: 1px solid var(--border-color); z-index: 900;
+    }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .nav-icon { font-size: 1.4rem; }
+    .nav-btn.fire-btn .nav-icon {
+        background-color: var(--neon-green); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center;
+        border-radius: 50%; color: #000; font-size: 1.6rem; transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3);
+    }
+    .nav-btn.active { color: var(--neon-green); }
+    .nav-btn.active .nav-icon { text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
 
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -621,6 +638,14 @@
         }, 800); 
     }
 </script>
+
+<nav class="bottom-nav">
+    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    <div class="nav-btn fire-btn" onclick="location.href='index.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
+</nav>
 
 </body>
 </html>
