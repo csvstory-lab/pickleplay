@@ -417,33 +417,111 @@
         e.stopPropagation();
         var postId = btn.dataset.postId;
         if (postId) {
-          openEditPostModal(postId);
+          openPostEditPanel(postId);
         }
       });
     });
   }
 
-  var editPostState = { postId: null, thumbFile: null };
+  var editPostState = {
+    postId: null,
+    thumbFile: null,
+    existingThumbUrl: null,
+  };
+
+  var THUMB_MAX_BYTES = 5 * 1024 * 1024;
 
   // TODO: 투표 공정성을 위해 제목과 A/B 선택지는 수정 불가(Read-only) 처리
-  async function openEditPostModal(postId) {
-    editPostState = { postId: postId, thumbFile: null };
+  function renderEditThumbBox(urlOrFile) {
+    var box = document.getElementById('editPostThumbBox');
+    if (!box) return;
 
-    var overlay = document.getElementById('editPostOverlay');
+    if (!urlOrFile) {
+      box.classList.remove('uploaded');
+      box.innerHTML =
+        '<div class="icon-plus">🖼️</div>' +
+        '<div class="upload-txt">썸네일 이미지 첨부</div>';
+      return;
+    }
+
+    if (typeof urlOrFile === 'string') {
+      box.classList.add('uploaded');
+      box.innerHTML =
+        '<img src="' + escapeHtml(urlOrFile) + '" alt="썸네일 미리보기">';
+      return;
+    }
+
+    if (urlOrFile instanceof File) {
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        box.classList.add('uploaded');
+        box.innerHTML =
+          '<img src="' + ev.target.result + '" alt="새 썸네일 미리보기">';
+      };
+      reader.readAsDataURL(urlOrFile);
+    }
+  }
+
+  function bindPostEditThumbInput() {
+    var thumbInput = document.getElementById('editPostThumbInput');
+    var box = document.getElementById('editPostThumbBox');
+    if (!thumbInput || !box) return;
+
+    box.onclick = function () {
+      thumbInput.click();
+    };
+    box.onkeydown = function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        thumbInput.click();
+      }
+    };
+
+    thumbInput.onchange = function () {
+      var file = thumbInput.files && thumbInput.files[0];
+      if (!file) return;
+
+      if (file.size > THUMB_MAX_BYTES) {
+        alert('썸네일 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
+        thumbInput.value = '';
+        return;
+      }
+
+      editPostState.thumbFile = file;
+      renderEditThumbBox(file);
+    };
+  }
+
+  async function openPostEditPanel(postId) {
+    editPostState = {
+      postId: postId,
+      thumbFile: null,
+      existingThumbUrl: null,
+    };
+
     var titleEl = document.getElementById('editPostTitleReadonly');
     var optAEl = document.getElementById('editPostOptionAReadonly');
     var optBEl = document.getElementById('editPostOptionBReadonly');
     var descEl = document.getElementById('editPostDescription');
-    var thumbPreview = document.getElementById('editPostThumbPreview');
     var thumbInput = document.getElementById('editPostThumbInput');
+    var panel = document.getElementById('postEditPanel');
 
-    if (!overlay || !titleEl) return;
+    if (!panel || !titleEl) return;
 
     try {
       var sb = getSupabaseClient();
+      var authResult = await sb.auth.getUser();
+      if (authResult.error || !authResult.data?.user) {
+        alert('로그인이 필요합니다.');
+        redirectToLogin();
+        return;
+      }
+
       var result = await sb
         .from('posts')
-        .select('id, title, option_a_name, option_b_name, description, thumbnail_url')
+        .select(
+          'id, author_id, title, option_a_name, option_b_name, description, thumbnail_url'
+        )
         .eq('id', postId)
         .maybeSingle();
 
@@ -453,71 +531,130 @@
         return;
       }
 
+      if (result.data.author_id !== authResult.data.user.id) {
+        alert('본인이 작성한 불판만 수정할 수 있습니다.');
+        return;
+      }
+
       var post = result.data;
       titleEl.value = post.title || '';
       optAEl.value = post.option_a_name || '';
       optBEl.value = post.option_b_name || '';
-      descEl.value = post.description || '';
+      if (descEl) descEl.value = post.description || '';
 
-      if (post.thumbnail_url) {
-        thumbPreview.innerHTML =
-          '<img src="' + escapeHtml(post.thumbnail_url) + '" alt="썸네일 미리보기">';
-      } else {
-        thumbPreview.textContent = '썸네일 없음';
-      }
+      editPostState.existingThumbUrl = post.thumbnail_url || null;
+      if (thumbInput) thumbInput.value = '';
+      renderEditThumbBox(post.thumbnail_url || null);
+      bindPostEditThumbInput();
 
-      if (thumbInput) {
-        thumbInput.value = '';
-        thumbInput.onchange = function () {
-          var file = thumbInput.files && thumbInput.files[0];
-          if (!file) return;
-          editPostState.thumbFile = file;
-          var reader = new FileReader();
-          reader.onload = function (ev) {
-            thumbPreview.innerHTML =
-              '<img src="' + ev.target.result + '" alt="새 썸네일 미리보기">';
-          };
-          reader.readAsDataURL(file);
-        };
-      }
-
-      overlay.classList.add('open');
-      overlay.setAttribute('aria-hidden', 'false');
+      panel.classList.add('open');
+      panel.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
     } catch (err) {
-      console.error('[P!CKLE Mypage] 수정 팝업 로드 실패', err);
-      alert('불판 정보를 불러오지 못했습니다.');
+      console.error('[P!CKLE Mypage] 수정 패널 로드 실패', err);
+      alert(
+        '불판 정보를 불러오지 못했습니다. ' + (err.message || String(err))
+      );
     }
   }
 
-  function closeEditPostModal() {
-    var overlay = document.getElementById('editPostOverlay');
-    if (overlay) {
-      overlay.classList.remove('open');
-      overlay.setAttribute('aria-hidden', 'true');
+  function closePostEditPanel() {
+    var panel = document.getElementById('postEditPanel');
+    if (panel) {
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
     }
     document.body.style.overflow = '';
-    editPostState = { postId: null, thumbFile: null };
+    editPostState = { postId: null, thumbFile: null, existingThumbUrl: null };
   }
 
-  async function saveEditPost() {
-    if (!editPostState.postId) return;
+  async function uploadEditThumbnail(userId, file) {
+    if (!file) return null;
 
-    // TODO: description·thumbnail_url만 Supabase update 연동 (제목·A/B는 Read-only 유지)
+    if (!window.PickleMedia?.uploadPostImage) {
+      throw new Error('이미지 업로드 모듈을 불러오지 못했습니다.');
+    }
+
+    return window.PickleMedia.uploadPostImage(file, userId);
+  }
+
+  async function updatePost() {
+    var postId = editPostState.postId;
+    if (!postId) return;
+
     var descEl = document.getElementById('editPostDescription');
+    var saveBtn = document.getElementById('btnSavePostEdit');
     var description = descEl ? descEl.value.trim() : '';
-    console.info('[P!CKLE Mypage] 저장 예정', {
-      postId: editPostState.postId,
-      description: description,
-      hasNewThumb: !!editPostState.thumbFile,
-    });
-    alert('수정 기능은 준비 중입니다. (상세 설명·썸네일만 업데이트 예정)');
-    closeEditPostModal();
+
+    var sb = getSupabaseClient();
+    var authResult = await sb.auth.getUser();
+
+    if (authResult.error || !authResult.data?.user) {
+      alert('로그인이 필요합니다.');
+      redirectToLogin();
+      return;
+    }
+
+    var user = authResult.data.user;
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = '저장 중…';
+    }
+
+    try {
+      var payload = { description: description };
+
+      if (editPostState.thumbFile) {
+        var newThumbUrl = await uploadEditThumbnail(
+          user.id,
+          editPostState.thumbFile
+        );
+        if (newThumbUrl) {
+          payload.thumbnail_url = newThumbUrl;
+        }
+      }
+
+      var updateResult = await sb
+        .from('posts')
+        .update(payload)
+        .eq('id', postId)
+        .eq('author_id', user.id)
+        .select('id')
+        .maybeSingle();
+
+      if (updateResult.error) throw updateResult.error;
+      if (!updateResult.data) {
+        throw new Error('수정 권한이 없거나 불판을 찾을 수 없습니다.');
+      }
+
+      alert('🔥 불판 내용이 성공적으로 수정되었습니다.');
+      closePostEditPanel();
+
+      if (currentUser && currentUser.id) {
+        await loadCreatedPosts(currentUser.id);
+      }
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 불판 수정 실패', err);
+      var msg = String(err.message || err).toLowerCase();
+      if (msg.indexOf('description') !== -1 || msg.indexOf('thumbnail_url') !== -1) {
+        alert(
+          'DB 컬럼이 누락되었습니다. Supabase에서 description·thumbnail_url 마이그레이션을 실행해 주세요.'
+        );
+      } else {
+        alert('불판 수정에 실패했습니다. ' + (err.message || String(err)));
+      }
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '수정 완료';
+      }
+    }
   }
 
-  window.openEditPostModal = openEditPostModal;
-  window.closeEditPostModal = closeEditPostModal;
-  window.saveEditPost = saveEditPost;
+  window.openPostEditPanel = openPostEditPanel;
+  window.closePostEditPanel = closePostEditPanel;
+  window.updatePost = updatePost;
 
   async function loadCreatedPosts(userId) {
     var container = document.getElementById('createdArea');
@@ -578,6 +715,7 @@
       renderProfile(user);
       bindProfileEditOpen();
       bindLogout();
+      bindPostEditThumbInput();
       await loadCreatedPosts(user.id);
     } catch (err) {
       console.error('[P!CKLE Mypage]', err);
@@ -593,6 +731,9 @@
     fillProfileEditForm: fillProfileEditForm,
     saveProfile: saveProfile,
     loadCreatedPosts: loadCreatedPosts,
+    openPostEditPanel: openPostEditPanel,
+    closePostEditPanel: closePostEditPanel,
+    updatePost: updatePost,
     getCurrentUser: function () {
       return currentUser;
     },

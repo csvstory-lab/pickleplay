@@ -148,37 +148,47 @@
     .card-footer-stats { display: flex; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
     .stat-fire { color: var(--theme-gold); }
 
-    /* 불판 수정 팝업 (베이스 뼈대) */
-    .edit-post-overlay {
-        position: fixed; inset: 0; background: rgba(0, 0, 0, 0.72); z-index: 950;
-        display: none; align-items: flex-end; justify-content: center;
+    /* 불판 수정 슬라이드 패널 */
+    #postEditPanel { z-index: 9300; background-color: var(--bg-color); left: 0; right: 0; margin: 0 auto; }
+    .post-edit-content { padding: 24px 20px 40px; }
+    .post-edit-section { margin-bottom: 22px; }
+    .post-edit-section-title {
+        font-size: 0.82rem; font-weight: 800; color: var(--neon-green);
+        margin: 0 0 10px 4px; letter-spacing: -0.2px;
     }
-    .edit-post-overlay.open { display: flex; }
-    .edit-post-sheet {
-        width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
-        background: var(--card-bg); border-radius: 20px 20px 0 0;
-        border-top: 2px solid var(--neon-green); padding: 20px;
+    .post-edit-readonly {
+        width: 100%; padding: 12px 14px; border-radius: 12px;
+        border: 1px solid #3f3f46; background: #27272a; color: #a1a1aa;
+        font-size: 0.92rem; font-family: inherit; box-sizing: border-box;
     }
-    .edit-post-sheet h3 { margin: 0 0 16px; font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; }
-    .edit-field { margin-bottom: 14px; }
-    .edit-field label { display: block; font-size: 0.78rem; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; }
-    .edit-field input[readonly], .edit-field textarea[readonly] {
-        width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #3f3f46;
-        background: #27272a; color: #a1a1aa; font-size: 0.9rem; font-family: inherit;
+    .post-edit-readonly:focus { outline: none; }
+    .post-edit-field { margin-bottom: 12px; }
+    .post-edit-field label {
+        display: block; font-size: 0.78rem; font-weight: 800;
+        color: var(--text-sub); margin-bottom: 6px;
     }
-    .edit-field textarea { width: 100%; min-height: 88px; padding: 12px; border-radius: 12px; border: 1px solid #3f3f46; background: #09090b; color: #fff; font-size: 0.9rem; font-family: inherit; resize: vertical; }
-    .edit-thumb-preview {
-        width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; border: 1px dashed #52525b;
-        background: #09090b; overflow: hidden; display: flex; align-items: center; justify-content: center;
-        color: var(--text-sub); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;
+    .post-edit-textarea {
+        width: 100%; min-height: 100px; padding: 12px 14px; border-radius: 12px;
+        border: 1px solid #3f3f46; background: #09090b; color: #fff;
+        font-size: 0.92rem; font-family: inherit; resize: vertical; box-sizing: border-box;
     }
-    .edit-thumb-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .edit-post-actions { display: flex; gap: 10px; margin-top: 18px; }
-    .btn-edit-cancel, .btn-edit-save {
-        flex: 1; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; border: none;
+    .post-edit-textarea:focus { outline: none; border-color: var(--neon-green); }
+    .post-edit-hint { font-size: 0.72rem; color: #71717a; margin: 0 0 8px 4px; line-height: 1.4; }
+    .post-edit-thumb-box {
+        width: 100%; aspect-ratio: 16 / 9; border: 2px dashed #52525b; border-radius: 16px;
+        background-color: rgba(39, 39, 42, 0.35); display: flex; justify-content: center;
+        align-items: center; flex-direction: column; cursor: pointer; overflow: hidden;
+        color: var(--text-sub); transition: 0.2s; box-sizing: border-box;
     }
-    .btn-edit-cancel { background: #27272a; color: #fff; border: 1px solid #3f3f46; }
-    .btn-edit-save { background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000; }
+    .post-edit-thumb-box.uploaded { border-color: var(--neon-green); border-style: solid; background-color: rgba(57, 255, 20, 0.08); }
+    .post-edit-thumb-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .post-edit-thumb-box .icon-plus { font-size: 2rem; margin-bottom: 6px; }
+    .post-edit-thumb-box .upload-txt { font-size: 0.88rem; font-weight: 700; text-align: center; line-height: 1.35; }
+    .btn-save-post-edit {
+        background: none; border: none; color: var(--neon-green);
+        font-size: 1rem; font-weight: 800; cursor: pointer; padding: 4px 0;
+    }
+    .btn-save-post-edit:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .vote-result-box { background-color: #27272a; border-radius: 10px; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
     .my-pick-info { font-size: 0.85rem; font-weight: 700; color: #d4d4d8; }
@@ -583,35 +593,47 @@
     </div>
 </main>
 
-<!-- 불판 수정 팝업 (상세 설명·썸네일만 편집 — 베이스 뼈대) -->
-<div class="edit-post-overlay" id="editPostOverlay" aria-hidden="true">
-    <div class="edit-post-sheet" role="dialog" aria-labelledby="editPostTitle">
-        <h3 id="editPostTitle">불판 수정</h3>
-        <div class="edit-field">
-            <label>제목 (수정 불가)</label>
-            <input type="text" id="editPostTitleReadonly" readonly>
+<!-- 불판 수정 슬라이드 패널 (상세 설명·썸네일만 편집) -->
+<div id="postEditPanel" class="slide-panel" aria-hidden="true">
+    <div class="panel-header">
+        <div class="header-left">
+            <button type="button" class="btn-back" onclick="closePostEditPanel()">←</button>
+            <h2 class="panel-title">불판 수정</h2>
         </div>
-        <div class="edit-field">
-            <label>A 선택지 (수정 불가)</label>
-            <input type="text" id="editPostOptionAReadonly" readonly>
+        <button type="button" class="btn-save-post-edit" id="btnSavePostEdit" onclick="updatePost()">수정 완료</button>
+    </div>
+    <div class="edit-content post-edit-content">
+        <div class="post-edit-section">
+            <p class="post-edit-section-title">투표 정보 (수정 불가)</p>
+            <div class="post-edit-field">
+                <label for="editPostTitleReadonly">불판 제목</label>
+                <input type="text" id="editPostTitleReadonly" class="post-edit-readonly" readonly tabindex="-1">
+            </div>
+            <div class="post-edit-field">
+                <label for="editPostOptionAReadonly">A 선택지</label>
+                <input type="text" id="editPostOptionAReadonly" class="post-edit-readonly" readonly tabindex="-1">
+            </div>
+            <div class="post-edit-field">
+                <label for="editPostOptionBReadonly">B 선택지</label>
+                <input type="text" id="editPostOptionBReadonly" class="post-edit-readonly" readonly tabindex="-1">
+            </div>
         </div>
-        <div class="edit-field">
-            <label>B 선택지 (수정 불가)</label>
-            <input type="text" id="editPostOptionBReadonly" readonly>
-        </div>
-        <div class="edit-field">
-            <label for="editPostDescription">상세 설명</label>
-            <textarea id="editPostDescription" placeholder="불판에 대한 부가 설명을 수정할 수 있습니다."></textarea>
-        </div>
-        <div class="edit-field">
-            <label>리스트 썸네일</label>
-            <div class="edit-thumb-preview" id="editPostThumbPreview">썸네일 없음</div>
-            <input type="file" id="editPostThumbInput" accept="image/*" hidden>
-            <button type="button" class="btn-edit-cancel" style="width:100%;" onclick="document.getElementById('editPostThumbInput').click()">썸네일 변경</button>
-        </div>
-        <div class="edit-post-actions">
-            <button type="button" class="btn-edit-cancel" onclick="closeEditPostModal()">취소</button>
-            <button type="button" class="btn-edit-save" onclick="saveEditPost()">저장</button>
+
+        <div class="post-edit-section">
+            <p class="post-edit-section-title">수정 가능 항목</p>
+            <div class="post-edit-field">
+                <label for="editPostDescription">상세 설명 (본문)</label>
+                <textarea id="editPostDescription" class="post-edit-textarea" maxlength="500" placeholder="불판에 대한 부가 설명을 수정할 수 있습니다."></textarea>
+            </div>
+            <div class="post-edit-field">
+                <label>리스트 썸네일 (16:9)</label>
+                <p class="post-edit-hint">※ 5MB 이하, 16:9 비율 권장. 메인 피드 킹왕짱·리스트에 노출됩니다.</p>
+                <input type="file" id="editPostThumbInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                <div class="post-edit-thumb-box" id="editPostThumbBox" role="button" tabindex="0" aria-label="썸네일 이미지 첨부">
+                    <div class="icon-plus">🖼️</div>
+                    <div class="upload-txt">썸네일 이미지 첨부</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1006,8 +1028,7 @@
     }
     function closePanel(panelId) {
         document.getElementById(panelId).classList.remove('open');
-        // 만약 닫히는 패널이 최상위(Settings)라면 overflow 복구
-        if(panelId === 'settingsPanel') {
+        if (panelId === 'settingsPanel' || panelId === 'postEditPanel') {
             document.body.style.overflow = '';
         }
     }
@@ -1150,6 +1171,7 @@
 <script>window.__PICKLE_CONFIG_SCRIPT_OK = null;</script>
 <script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
 <script src="../js/supabase-bootstrap.js"></script>
+<script src="../js/media-upload.js"></script>
 <script src="../js/mypage-page.js"></script>
 
 </body>
