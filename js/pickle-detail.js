@@ -743,8 +743,22 @@
   function unlockCommentsArea() {
     var lock = $('commentLock');
     var active = $('commentActive');
+    var input = $('detailCommentInput');
+    var submitBtn = $('detailCommentSubmit');
+
     if (lock) lock.style.display = 'none';
     if (active) active.classList.add('show');
+    if (input) {
+      input.disabled = false;
+      input.readOnly = false;
+    }
+    if (submitBtn) submitBtn.disabled = false;
+  }
+
+  function ensureCommentsEnabledWhenExpired(post) {
+    if (isPostExpired(post)) {
+      unlockCommentsArea();
+    }
   }
 
   function animateResultBars(pctA, pctB) {
@@ -764,7 +778,7 @@
         if (barB) barB.style.width = pctB + '%';
         if (pctAEl) pctAEl.textContent = pctA + '%';
         if (pctBEl) pctBEl.textContent = pctB + '%';
-      }, 120);
+      }, 180);
     });
   }
 
@@ -803,35 +817,16 @@
       .then(function () {
         if (!window.confetti) return;
 
-        var duration = 2800;
-        var end = Date.now() + duration;
         var colors = ['#39ff14', '#00f0ff', '#ff007f', '#ffcc00', '#ffffff'];
 
-        (function burst() {
-          window.confetti({
-            particleCount: 4,
-            angle: 60,
-            spread: 62,
-            origin: { x: 0, y: 0.65 },
-            colors: colors,
-          });
-          window.confetti({
-            particleCount: 4,
-            angle: 120,
-            spread: 62,
-            origin: { x: 1, y: 0.65 },
-            colors: colors,
-          });
-          if (Date.now() < end) {
-            requestAnimationFrame(burst);
-          }
-        })();
-
         window.confetti({
-          particleCount: 120,
-          spread: 90,
-          startVelocity: 42,
-          origin: { y: 0.55 },
+          particleCount: 90,
+          spread: 110,
+          startVelocity: 38,
+          decay: 0.92,
+          scalar: 1.05,
+          ticks: 140,
+          origin: { x: 0.5, y: 0.5 },
           colors: colors,
         });
       })
@@ -870,8 +865,8 @@
 
     if (opts.scrollIntoView && resultView) {
       setTimeout(function () {
-        resultView.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350);
+        resultView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
     }
   }
 
@@ -1046,7 +1041,7 @@
     if (isPostExpired(post)) {
       showResultView(post, voteStats, {
         withConfetti: true,
-        scrollIntoView: true,
+        scrollIntoView: false,
       });
       unlockCommentsArea();
     } else {
@@ -1054,6 +1049,8 @@
       var blindFeedback = $('blindFeedback');
       if (blindFeedback) blindFeedback.classList.remove('show');
     }
+
+    ensureCommentsEnabledWhenExpired(post);
   }
 
   function showError(message) {
