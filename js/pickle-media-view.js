@@ -187,7 +187,7 @@
       var mediaB = parseMedia(post.media_url_2);
       var layoutClass =
         layout === 'vertical'
-          ? 'media-layout-vertical'
+          ? 'media-layout-vertical vertical'
           : 'media-layout-horizontal';
       return (
         '<div class="media-container ' +

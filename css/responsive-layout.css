@@ -71,25 +71,47 @@ iframe {
 .media-container {
   position: relative;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .media-container.media-layout-horizontal {
   flex-direction: column;
 }
 
-.media-container.media-layout-vertical {
+.media-container.media-layout-vertical,
+.media-container.vertical {
   flex-direction: row;
   align-items: stretch;
 }
 
-.media-container.media-layout-vertical .split-half {
-  width: 50%;
-  flex: 0 0 50%;
-  max-width: 50%;
+.media-container.media-layout-vertical .split-half,
+.media-container.vertical .split-half {
+  width: calc(50% - 5px);
+  flex: 0 0 calc(50% - 5px);
+  max-width: calc(50% - 5px);
   min-width: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.media-container.media-layout-vertical .split-image,
+.media-container.media-layout-vertical .split-embed iframe,
+.media-container.media-layout-vertical img,
+.media-container.media-layout-vertical video,
+.media-container.media-layout-vertical iframe,
+.media-container.vertical .split-image,
+.media-container.vertical img,
+.media-container.vertical video,
+.media-container.vertical iframe {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  flex-shrink: 0;
   box-sizing: border-box;
 }
 
@@ -99,20 +121,31 @@ iframe {
   box-sizing: border-box;
 }
 
+.vs-upload-group {
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 .vs-upload-group.media-layout-horizontal {
   flex-direction: column;
 }
 
-.vs-upload-group.media-layout-vertical {
+.vs-upload-group.media-layout-vertical,
+.vs-upload-group.vertical {
   flex-direction: row;
 }
 
-.vs-upload-group.media-layout-vertical .media-input-wrap {
-  width: 50%;
-  flex: 0 0 50%;
-  max-width: 50%;
+.vs-upload-group.media-layout-vertical .media-input-wrap,
+.vs-upload-group.vertical .media-input-wrap {
+  width: calc(50% - 5px);
+  flex: 0 0 calc(50% - 5px);
+  max-width: calc(50% - 5px);
   min-width: 0;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* A/B 선택지 — 좁은 화면·긴 텍스트 시 세로 배치 */

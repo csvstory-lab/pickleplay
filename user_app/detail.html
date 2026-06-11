@@ -83,10 +83,11 @@
     .media-container {
         position: relative;
         display: flex;
-        gap: 12px;
+        gap: 10px;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+        overflow: hidden;
     }
 
     /* 가로형 (16:9) — 위/아래 스택 */
@@ -97,6 +98,7 @@
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+        flex-shrink: 0;
     }
     .media-container.media-layout-horizontal .split-image,
     .media-container.media-layout-horizontal .split-embed,
@@ -109,24 +111,32 @@
         border-radius: 12px;
         box-sizing: border-box;
         display: block;
+        flex-shrink: 0;
     }
 
-    /* 세로형 (9:16) — 좌/우 50% */
-    .media-container.media-layout-vertical {
+    /* 세로형 (9:16) — 좌/우 (gap 10px → calc(50% - 5px)) */
+    .media-container.media-layout-vertical,
+    .media-container.vertical {
         flex-direction: row;
         align-items: stretch;
     }
-    .media-container.media-layout-vertical .split-half {
-        width: 50%;
-        flex: 0 0 50%;
-        max-width: 50%;
+    .media-container.media-layout-vertical .split-half,
+    .media-container.vertical .split-half {
+        width: calc(50% - 5px);
+        flex: 0 0 calc(50% - 5px);
+        max-width: calc(50% - 5px);
         box-sizing: border-box;
         min-width: 0;
+        flex-shrink: 0;
     }
     .media-container.media-layout-vertical .split-image,
     .media-container.media-layout-vertical .split-embed,
     .media-container.media-layout-vertical .split-embed iframe,
-    .media-container.media-layout-vertical .youtube-watch-fallback {
+    .media-container.media-layout-vertical .youtube-watch-fallback,
+    .media-container.vertical .split-image,
+    .media-container.vertical .split-embed,
+    .media-container.vertical .split-embed iframe,
+    .media-container.vertical .youtube-watch-fallback {
         width: 100%;
         max-width: 100%;
         aspect-ratio: 9 / 16;
@@ -134,6 +144,7 @@
         border-radius: 12px;
         box-sizing: border-box;
         display: block;
+        flex-shrink: 0;
     }
 
     .media-container .split-half {

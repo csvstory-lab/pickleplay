@@ -140,13 +140,30 @@
     .vs-upload-group.media-layout-vertical .upload-box.ratio-9-16 { width: 100%; margin: 0; }
     
     .vs-upload-group {
-        display: flex; gap: 12px; width: 100%; max-width: 100%;
-        box-sizing: border-box; position: relative;
+        display: flex; gap: 10px; width: 100%; max-width: 100%;
+        box-sizing: border-box; position: relative; overflow: hidden;
     }
     .vs-upload-group.media-layout-horizontal { flex-direction: column; }
-    .vs-upload-group.media-layout-vertical { flex-direction: row; align-items: stretch; }
-    .vs-upload-group.media-layout-vertical .media-input-wrap {
-        width: 50%; flex: 0 0 50%; max-width: 50%; min-width: 0; box-sizing: border-box;
+    .vs-upload-group.media-layout-vertical,
+    .vs-upload-group.vertical { flex-direction: row; align-items: stretch; }
+    .vs-upload-group.media-layout-vertical .media-input-wrap,
+    .vs-upload-group.vertical .media-input-wrap {
+        width: calc(50% - 5px);
+        flex: 0 0 calc(50% - 5px);
+        max-width: calc(50% - 5px);
+        min-width: 0;
+        box-sizing: border-box;
+        flex-shrink: 0;
+    }
+    .vs-upload-group.media-layout-vertical .upload-box.ratio-9-16,
+    .vs-upload-group.vertical .upload-box.ratio-9-16 {
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 9 / 16;
+        object-fit: cover;
+        flex-shrink: 0;
+        margin: 0;
+        box-sizing: border-box;
     }
 
     .vs-badge-upload {
@@ -588,7 +605,9 @@
         }
 
         if (currentMode === 'vs') {
-            const layoutClass = layout === 'vertical' ? 'media-layout-vertical' : 'media-layout-horizontal';
+            const layoutClass = layout === 'vertical'
+                ? 'media-layout-vertical vertical'
+                : 'media-layout-horizontal';
             const ratioClass = layout === 'vertical' ? 'ratio-9-16' : 'ratio-16-9';
             container.innerHTML = sizeHint + `
                 <div class="vs-upload-group ${layoutClass}">
@@ -748,7 +767,9 @@
         try {
             const result = await window.PickleCreatePage.submitPost(
                 buildMediaPayload,
-                window.getPickleCreateThumbnailFile
+                function () {
+                    return thumbnailFile || document.getElementById('fileThumbnail')?.files?.[0] || null;
+                }
             );
             if (result?.cancelled) return;
         } catch (err) {

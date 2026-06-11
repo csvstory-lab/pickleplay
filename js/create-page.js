@@ -190,10 +190,6 @@
     Object.assign(payload, extractAuthorSnapshot(user));
     Object.assign(payload, mediaFields);
 
-    if (thumbnailUrl) {
-      payload.thumbnail_url = thumbnailUrl;
-    }
-
     if (formData.hashtags) {
       payload.tags = formData.hashtags;
     }
@@ -211,6 +207,10 @@
         delete payload[key];
       }
     });
+
+    if (thumbnailUrl && String(thumbnailUrl).trim()) {
+      payload.thumbnail_url = String(thumbnailUrl).trim();
+    }
 
     return payload;
   }
@@ -281,8 +281,7 @@
   }
 
   async function uploadThumbnailIfAny(userId, getThumbnailFile) {
-    if (typeof getThumbnailFile !== 'function') return null;
-    var file = getThumbnailFile();
+    var file = resolveThumbnailFile(getThumbnailFile);
     if (!file) return null;
 
     var MAX_BYTES = 5 * 1024 * 1024;
@@ -294,7 +293,27 @@
       throw new Error('이미지 업로드 모듈을 불러오지 못했습니다.');
     }
 
-    return window.PickleMedia.uploadPostImage(file, userId);
+    var url = await window.PickleMedia.uploadPostImage(file, userId);
+    if (!url || !String(url).trim()) {
+      throw new Error('썸네일 업로드는 완료됐지만 URL을 받지 못했습니다.');
+    }
+    return String(url).trim();
+  }
+
+  function resolveThumbnailFile(getThumbnailFile) {
+    if (typeof getThumbnailFile === 'function') {
+      var fromCallback = getThumbnailFile();
+      if (fromCallback) return fromCallback;
+    }
+    if (typeof window.getPickleCreateThumbnailFile === 'function') {
+      var fromGlobal = window.getPickleCreateThumbnailFile();
+      if (fromGlobal) return fromGlobal;
+    }
+    var input = document.getElementById('fileThumbnail');
+    if (input && input.files && input.files[0]) {
+      return input.files[0];
+    }
+    return null;
   }
 
   /**
@@ -344,12 +363,16 @@
       return { cancelled: true };
     }
 
+    var thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
     var rawMedia = await buildMediaPayload(user.id);
     var mediaFields = mapMediaForPosts(rawMedia);
-    var thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
     var payload = buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl);
 
-    var insertResult = await sb.from('posts').insert([payload]).select('id').single();
+    var insertResult = await sb
+      .from('posts')
+      .insert([payload])
+      .select('id, thumbnail_url')
+      .single();
     if (insertResult.error) {
       if (handleInsertError(insertResult.error)) {
         return { cancelled: true };
