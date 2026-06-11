@@ -32,7 +32,6 @@
       'option_b_name',
       'thumbnail_url',
       'expires_at',
-      'duration',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -49,8 +48,6 @@
       'thumbnail_url',
       'tags',
       'expires_at',
-      'duration',
-      'start_at',
       'end_at',
       'end_date',
       'is_sponsor',
@@ -66,8 +63,7 @@
       'option_a_name',
       'option_b_name',
       'thumbnail_url',
-      'duration',
-      'start_at',
+      'expires_at',
       'end_at',
       'is_sponsor',
       'visibility_status',
@@ -82,6 +78,7 @@
       'option_a_name',
       'option_b_name',
       'thumbnail_url',
+      'expires_at',
       'is_sponsor',
       'visibility_status',
       'created_at',
@@ -89,8 +86,8 @@
   ];
 
   var PICKLE_POSTS_SELECT_VARIANTS = [
-    'id, category, title, option_a, option_b, thumbnail_url, hashtags, tags, duration, expires_at, start_at, end_at, created_at',
-    'id, category, title, option_a, option_b, hashtags, duration, end_at, created_at',
+    'id, category, title, option_a, option_b, thumbnail_url, hashtags, tags, expires_at, end_at, created_at',
+    'id, category, title, option_a, option_b, hashtags, end_at, created_at',
     'id, category, title, option_a, option_b, created_at',
   ];
 
@@ -142,50 +139,46 @@
     return Number.isFinite(n) && n >= 0 ? n : 0;
   }
 
-  function computeEndsAt(post) {
-    if (!post) return null;
+  function getRemainingTime(expiresAt) {
+    if (expiresAt == null || expiresAt === '') return '';
 
-    var raw = post.expires_at || post.end_at || post.end_date || null;
-    if (!raw) return null;
+    var expireDate = new Date(expiresAt);
+    if (Number.isNaN(expireDate.getTime())) return '';
 
-    var endDate = new Date(raw);
+    var now = new Date();
+    var diffMs = expireDate.getTime() - now.getTime();
+
+    if (diffMs <= 0) return '⏳ 종료된 불판';
+
+    var diffMins = Math.floor(diffMs / (1000 * 60));
+    var diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return '⏳ ' + diffMins + '분 남음';
+    if (diffHours < 24) return '⏳ ' + diffHours + '시간 남음';
+    return '⏳ ' + diffDays + '일 남음';
+  }
+
+  function parseExpiresAt(post) {
+    if (!post || post.expires_at == null || post.expires_at === '') return null;
+    var endDate = new Date(post.expires_at);
     return Number.isNaN(endDate.getTime()) ? null : endDate;
   }
 
-  function formatRemainingTimeLabel(endsAt) {
-    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
-
-    var ms = endsAt.getTime() - Date.now();
-    if (ms <= 0) return '⏳ 종료된 불판';
-
-    var minuteMs = 60 * 1000;
-    var hourMs = 60 * minuteMs;
-    var dayMs = 24 * hourMs;
-
-    if (ms < hourMs) {
-      var minutes = Math.max(1, Math.ceil(ms / minuteMs));
-      return '⏳ ' + minutes + '분 남음';
-    }
-
-    if (ms < dayMs) {
-      var hours = Math.floor(ms / hourMs);
-      return '⏳ ' + hours + '시간 남음';
-    }
-
-    var days = Math.floor(ms / dayMs);
-    return '⏳ ' + days + '일 남음';
+  function formatRemainingTimeLabel(expiresAt) {
+    return getRemainingTime(expiresAt);
   }
 
-  function formatListRemainingLabel(endsAt) {
-    return formatRemainingTimeLabel(endsAt);
+  function formatListRemainingLabel(expiresAt) {
+    return getRemainingTime(expiresAt);
   }
 
-  function formatRemainingLabelForEl(endsAt, el) {
-    return formatRemainingTimeLabel(endsAt);
+  function formatRemainingLabelForEl(expiresAt, el) {
+    return getRemainingTime(expiresAt);
   }
 
-  function formatFeedRemainingLabel(endsAt) {
-    return formatRemainingTimeLabel(endsAt);
+  function formatFeedRemainingLabel(expiresAt) {
+    return getRemainingTime(expiresAt);
   }
 
   function tickFeedTimers() {
@@ -193,10 +186,10 @@
       var iso = el.getAttribute('data-ends-at');
       if (!iso) return;
 
+      el.textContent = getRemainingTime(iso);
+
       var endsAt = new Date(iso);
       if (Number.isNaN(endsAt.getTime())) return;
-
-      el.textContent = formatRemainingLabelForEl(endsAt, el);
 
       if (endsAt.getTime() - Date.now() <= 0) {
         el.classList.add('is-ended');
@@ -316,14 +309,29 @@
     );
   }
 
-  function renderKingMetaRow(post) {
-    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
-    var endsAt = computeEndsAt(post);
+  function getPostTimerState(post) {
+    var expiresRaw = post && post.expires_at;
+    var endsAt = parseExpiresAt(post);
     var endsIso =
-      endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt.toISOString() : '';
-    var timerText = formatFeedRemainingLabel(endsAt);
+      expiresRaw != null && expiresRaw !== ''
+        ? String(expiresRaw)
+        : endsAt
+          ? endsAt.toISOString()
+          : '';
+    var timerText = getRemainingTime(expiresRaw);
     var endedClass =
       endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
+
+    return {
+      endsIso: endsIso,
+      timerText: timerText,
+      endedClass: endedClass,
+    };
+  }
+
+  function renderKingMetaRow(post) {
+    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
+    var timer = getPostTimerState(post);
 
     return (
       '<div class="meta-row king-meta-row">' +
@@ -332,11 +340,11 @@
       escapeHtml(categoryText) +
       ' ]</span>' +
       '<span class="pickle-meta-timer feed-meta-timer compact' +
-      endedClass +
+      timer.endedClass +
       '"' +
-      (endsIso ? ' data-ends-at="' + escapeHtml(endsIso) + '"' : '') +
+      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
       '>' +
-      escapeHtml(timerText) +
+      escapeHtml(timer.timerText) +
       '</span>' +
       '</div>'
     );
@@ -374,11 +382,7 @@
             option_b: safeStr(row.option_b, ''),
             thumbnail_url: resolveFeedThumbnailUrl(row.thumbnail_url),
             tags: safeTags(row),
-            duration: row.duration || '24h',
             expires_at: row.expires_at || row.end_at || row.end_date || null,
-            start_at: row.start_at || null,
-            end_at: row.end_at || row.end_date || null,
-            end_date: row.end_date || row.end_at || null,
             is_sponsor: false,
             created_at: row.created_at || null,
             author_nickname: '',
@@ -399,11 +403,7 @@
           option_b: safeStr(row.option_b_name, ''),
           thumbnail_url: resolveFeedThumbnailUrl(row.thumbnail_url),
           tags: safeTags(row),
-          duration: row.duration || '24h',
           expires_at: row.expires_at || row.end_at || row.end_date || null,
-          start_at: row.start_at || null,
-          end_at: row.end_at || row.end_date || null,
-          end_date: row.end_date || row.end_at || null,
           is_sponsor: !!row.is_sponsor,
           created_at: row.created_at || null,
         },
@@ -417,12 +417,7 @@
 
   function renderFeedMetaRow(post, variant) {
     var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
-    var endsAt = computeEndsAt(post);
-    var endsIso =
-      endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt.toISOString() : '';
-    var timerText = formatFeedRemainingLabel(endsAt);
-    var endedClass =
-      endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
+    var timer = getPostTimerState(post);
     var catClass =
       variant === 'list'
         ? 'pickle-meta-cat list-cat'
@@ -436,11 +431,11 @@
       escapeHtml(categoryText) +
       ' ]</span>' +
       '<span class="pickle-meta-timer feed-meta-timer' +
-      endedClass +
+      timer.endedClass +
       '"' +
-      (endsIso ? ' data-ends-at="' + escapeHtml(endsIso) + '"' : '') +
+      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
       '>' +
-      escapeHtml(timerText) +
+      escapeHtml(timer.timerText) +
       '</span>' +
       '</div>'
     );
@@ -811,12 +806,7 @@
   }
 
   function renderListMetaFooter(post) {
-    var endsAt = computeEndsAt(post);
-    var endsIso =
-      endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt.toISOString() : '';
-    var timerText = formatListRemainingLabel(endsAt);
-    var endedClass =
-      endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
+    var timer = getPostTimerState(post);
 
     return (
       '<div class="list-meta">' +
@@ -825,11 +815,11 @@
       '명 참전</span>' +
       '<span class="list-meta-sep">·</span>' +
       '<span class="list-meta-timer feed-meta-timer' +
-      endedClass +
+      timer.endedClass +
       '"' +
-      (endsIso ? ' data-ends-at="' + escapeHtml(endsIso) + '"' : '') +
+      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
       '>' +
-      escapeHtml(timerText) +
+      escapeHtml(timer.timerText) +
       '</span>' +
       '</div>'
     );

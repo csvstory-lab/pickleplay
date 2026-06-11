@@ -209,10 +209,7 @@
       expiresAt = new Date(now.getTime() + addMs).toISOString();
     }
 
-    return {
-      duration: durationKey === 'custom' ? 'custom' : durationKey || '24h',
-      expires_at: expiresAt,
-    };
+    return { expires_at: expiresAt };
   }
 
   function buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl) {
@@ -293,29 +290,6 @@
   function handleInsertError(err) {
     var msg = String(err?.message || err || '').toLowerCase();
     var code = String(err?.code || '');
-
-    var missingColumn =
-      (msg.indexOf('title') !== -1 && msg.indexOf('column') !== -1) ||
-      (msg.indexOf('media_type') !== -1 && msg.indexOf('column') !== -1) ||
-      (msg.indexOf('thumbnail_url') !== -1 && msg.indexOf('column') !== -1) ||
-      msg.indexOf("could not find the 'title'") !== -1 ||
-      msg.indexOf("could not find the 'media_type'") !== -1 ||
-      msg.indexOf("could not find the 'thumbnail_url'") !== -1 ||
-      msg.indexOf("could not find the 'tags'") !== -1 ||
-      msg.indexOf('author_nickname') !== -1 ||
-      msg.indexOf('author_avatar_html') !== -1 ||
-      msg.indexOf('media_layout') !== -1 ||
-      msg.indexOf('duration') !== -1 ||
-      msg.indexOf('start_at') !== -1 ||
-      msg.indexOf('end_at') !== -1 ||
-      msg.indexOf('expires_at') !== -1;
-
-    if (missingColumn) {
-      alert(
-        'SQL 마이그레이션이 필요합니다. (title, thumbnail_url, author_nickname, media_layout 등 컬럼 누락)\n→ supabase/ 폴더 SQL 실행'
-      );
-      return true;
-    }
 
     var fkError =
       msg.indexOf('author_id') !== -1 ||

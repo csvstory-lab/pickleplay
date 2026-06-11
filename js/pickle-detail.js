@@ -203,35 +203,34 @@
     return m ? m[1] : '🔥';
   }
 
-  function computeEndsAt(post) {
-    if (!post) return null;
+  function getRemainingTime(expiresAt) {
+    if (expiresAt == null || expiresAt === '') return '';
 
-    var raw = post.expires_at || post.end_at || post.end_date || null;
-    if (!raw) return null;
+    var expireDate = new Date(expiresAt);
+    if (Number.isNaN(expireDate.getTime())) return '';
 
-    var endDate = new Date(raw);
+    var now = new Date();
+    var diffMs = expireDate.getTime() - now.getTime();
+
+    if (diffMs <= 0) return '⏳ 종료된 불판';
+
+    var diffMins = Math.floor(diffMs / (1000 * 60));
+    var diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return '⏳ ' + diffMins + '분 남음';
+    if (diffHours < 24) return '⏳ ' + diffHours + '시간 남음';
+    return '⏳ ' + diffDays + '일 남음';
+  }
+
+  function parseExpiresAt(post) {
+    if (!post || post.expires_at == null || post.expires_at === '') return null;
+    var endDate = new Date(post.expires_at);
     return Number.isNaN(endDate.getTime()) ? null : endDate;
   }
 
-  function formatCountdown(endsAt) {
-    if (!endsAt || Number.isNaN(endsAt.getTime())) return '⏳ 진행 중';
-    var ms = endsAt.getTime() - Date.now();
-    if (ms <= 0) return '⏳ 종료된 불판';
-
-    var minuteMs = 60 * 1000;
-    var hourMs = 60 * minuteMs;
-    var dayMs = 24 * hourMs;
-
-    if (ms < hourMs) {
-      var minutes = Math.max(1, Math.ceil(ms / minuteMs));
-      return '⏳ ' + minutes + '분 남음';
-    }
-    if (ms < dayMs) {
-      var hours = Math.floor(ms / hourMs);
-      return '⏳ ' + hours + '시간 남음';
-    }
-    var days = Math.floor(ms / dayMs);
-    return '⏳ ' + days + '일 남음';
+  function formatCountdown(expiresAt) {
+    return getRemainingTime(expiresAt);
   }
 
   function startTimer(post) {
@@ -240,13 +239,13 @@
       timerInterval = null;
     }
 
-    var endsAt = computeEndsAt(post);
+    var expiresRaw = post && post.expires_at;
+    var endsAt = parseExpiresAt(post);
     var timerEl = $('detailTimer');
     if (!timerEl) return;
 
     function tick() {
-      var label = formatCountdown(endsAt);
-      timerEl.textContent = label;
+      timerEl.textContent = getRemainingTime(expiresRaw);
       if (endsAt && endsAt.getTime() - Date.now() <= 0) {
         timerEl.classList.add('is-ended');
       } else {
