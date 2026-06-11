@@ -704,6 +704,9 @@
   var cachedVoteStats = { votesA: 0, votesB: 0, total: 0 };
   var detailHasVoted = false;
   var resultConfettiFired = false;
+  var resultFakeIntervalId = null;
+  var resultRevealTimeoutId = null;
+  var resultRevealDone = false;
 
   function isPostExpired(post) {
     if (!post) return true;
@@ -761,25 +764,72 @@
     }
   }
 
-  function animateResultBars(pctA, pctB) {
+  function randomFakePct() {
+    return Math.floor(Math.random() * 81) + 10;
+  }
+
+  function setResultBarTransition(mode) {
+    var resultView = $('detailResultView');
+    if (!resultView) return;
+    resultView.classList.remove('is-fake-reveal', 'is-final-reveal');
+    if (mode === 'fake') resultView.classList.add('is-fake-reveal');
+    if (mode === 'final') resultView.classList.add('is-final-reveal');
+  }
+
+  function updateResultBars(pctA, pctB) {
     var barA = $('resultBarA');
     var barB = $('resultBarB');
     var pctAEl = $('resultPctA');
     var pctBEl = $('resultPctB');
 
-    if (barA) barA.style.width = '0%';
-    if (barB) barB.style.width = '0%';
-    if (pctAEl) pctAEl.textContent = '0%';
-    if (pctBEl) pctBEl.textContent = '0%';
+    if (barA) barA.style.width = pctA + '%';
+    if (barB) barB.style.width = pctB + '%';
+    if (pctAEl) pctAEl.textContent = pctA + '%';
+    if (pctBEl) pctBEl.textContent = pctB + '%';
+  }
 
-    requestAnimationFrame(function () {
-      setTimeout(function () {
-        if (barA) barA.style.width = pctA + '%';
-        if (barB) barB.style.width = pctB + '%';
-        if (pctAEl) pctAEl.textContent = pctA + '%';
-        if (pctBEl) pctBEl.textContent = pctB + '%';
-      }, 180);
-    });
+  function stopResultFakeAnimation() {
+    if (resultFakeIntervalId) {
+      clearInterval(resultFakeIntervalId);
+      resultFakeIntervalId = null;
+    }
+    if (resultRevealTimeoutId) {
+      clearTimeout(resultRevealTimeoutId);
+      resultRevealTimeoutId = null;
+    }
+  }
+
+  function revealResultBars(pctA, pctB, withConfetti) {
+    stopResultFakeAnimation();
+    setResultBarTransition('final');
+    updateResultBars(pctA, pctB);
+    resultRevealDone = true;
+
+    if (withConfetti) {
+      fireResultConfetti();
+    }
+  }
+
+  function startResultFakeAnimation(pctA, pctB, withConfetti) {
+    stopResultFakeAnimation();
+    resultRevealDone = false;
+    resultConfettiFired = false;
+
+    setResultBarTransition('fake');
+    updateResultBars(0, 0);
+
+    resultFakeIntervalId = setInterval(function () {
+      updateResultBars(randomFakePct(), randomFakePct());
+    }, 100);
+
+    resultRevealTimeoutId = setTimeout(function () {
+      if (resultFakeIntervalId) {
+        clearInterval(resultFakeIntervalId);
+        resultFakeIntervalId = null;
+      }
+      resultRevealTimeoutId = null;
+      revealResultBars(pctA, pctB, withConfetti);
+    }, 3000);
   }
 
   function loadConfettiScript() {
@@ -857,10 +907,12 @@
         '🔥 ' + Number(pct.total).toLocaleString() + '명 참전';
     }
 
-    animateResultBars(pct.pctA, pct.pctB);
-
-    if (opts.withConfetti) {
-      fireResultConfetti();
+    if (resultRevealDone || opts.skipFake) {
+      revealResultBars(pct.pctA, pct.pctB, !!opts.withConfetti);
+    } else if (resultFakeIntervalId || resultRevealTimeoutId) {
+      /* 페이크 애니메이션 진행 중 — 재시작하지 않음 */
+    } else {
+      startResultFakeAnimation(pct.pctA, pct.pctB, !!opts.withConfetti);
     }
 
     if (opts.scrollIntoView && resultView) {
@@ -1037,6 +1089,8 @@
 
     detailHasVoted = false;
     resultConfettiFired = false;
+    resultRevealDone = false;
+    stopResultFakeAnimation();
 
     if (isPostExpired(post)) {
       showResultView(post, voteStats, {
