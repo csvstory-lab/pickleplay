@@ -204,10 +204,10 @@
   }
 
   function getRemainingTime(expiresAt) {
-    if (expiresAt == null || expiresAt === '') return '';
+    if (expiresAt == null || expiresAt === '') return '⏳ 마감된 불판';
 
     var expireDate = new Date(expiresAt);
-    if (Number.isNaN(expireDate.getTime())) return '';
+    if (Number.isNaN(expireDate.getTime())) return '⏳ 마감된 불판';
 
     var now = new Date();
     var diffMs = expireDate.getTime() - now.getTime();
@@ -702,6 +702,300 @@
   }
 
   var cachedVoteStats = { votesA: 0, votesB: 0, total: 0 };
+  var detailHasVoted = false;
+  var resultConfettiFired = false;
+
+  function isPostExpired(post) {
+    if (!post) return true;
+    var raw = post.expires_at;
+    if (raw == null || raw === '') return true;
+    var expireDate = new Date(raw);
+    if (Number.isNaN(expireDate.getTime())) return true;
+    return new Date() > expireDate;
+  }
+
+  function calcVotePercent(votesA, votesB) {
+    var a = Number(votesA) || 0;
+    var b = Number(votesB) || 0;
+    var total = a + b;
+    if (total <= 0) {
+      return { pctA: 0, pctB: 0, total: 0 };
+    }
+    var pctA = Math.round((a / total) * 100);
+    return { pctA: pctA, pctB: 100 - pctA, total: total };
+  }
+
+  function hideVoteOptions() {
+    var box = $('optionsBox');
+    if (box) box.classList.add('is-hidden');
+  }
+
+  function showVoteOptions() {
+    var box = $('optionsBox');
+    if (box) box.classList.remove('is-hidden');
+    var resultView = $('detailResultView');
+    if (resultView) {
+      resultView.classList.remove('show');
+      resultView.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function unlockCommentsArea() {
+    var lock = $('commentLock');
+    var active = $('commentActive');
+    if (lock) lock.style.display = 'none';
+    if (active) active.classList.add('show');
+  }
+
+  function animateResultBars(pctA, pctB) {
+    var barA = $('resultBarA');
+    var barB = $('resultBarB');
+    var pctAEl = $('resultPctA');
+    var pctBEl = $('resultPctB');
+
+    if (barA) barA.style.width = '0%';
+    if (barB) barB.style.width = '0%';
+    if (pctAEl) pctAEl.textContent = '0%';
+    if (pctBEl) pctBEl.textContent = '0%';
+
+    requestAnimationFrame(function () {
+      setTimeout(function () {
+        if (barA) barA.style.width = pctA + '%';
+        if (barB) barB.style.width = pctB + '%';
+        if (pctAEl) pctAEl.textContent = pctA + '%';
+        if (pctBEl) pctBEl.textContent = pctB + '%';
+      }, 120);
+    });
+  }
+
+  function loadConfettiScript() {
+    return new Promise(function (resolve, reject) {
+      if (window.confetti) {
+        resolve();
+        return;
+      }
+      var existing = document.querySelector('script[data-pickle-confetti]');
+      if (existing) {
+        existing.addEventListener('load', function () {
+          resolve();
+        });
+        existing.addEventListener('error', reject);
+        return;
+      }
+      var script = document.createElement('script');
+      script.src =
+        'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+      script.async = true;
+      script.setAttribute('data-pickle-confetti', '1');
+      script.onload = function () {
+        resolve();
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function fireResultConfetti() {
+    if (resultConfettiFired) return;
+    resultConfettiFired = true;
+
+    loadConfettiScript()
+      .then(function () {
+        if (!window.confetti) return;
+
+        var duration = 2800;
+        var end = Date.now() + duration;
+        var colors = ['#39ff14', '#00f0ff', '#ff007f', '#ffcc00', '#ffffff'];
+
+        (function burst() {
+          window.confetti({
+            particleCount: 4,
+            angle: 60,
+            spread: 62,
+            origin: { x: 0, y: 0.65 },
+            colors: colors,
+          });
+          window.confetti({
+            particleCount: 4,
+            angle: 120,
+            spread: 62,
+            origin: { x: 1, y: 0.65 },
+            colors: colors,
+          });
+          if (Date.now() < end) {
+            requestAnimationFrame(burst);
+          }
+        })();
+
+        window.confetti({
+          particleCount: 120,
+          spread: 90,
+          startVelocity: 42,
+          origin: { y: 0.55 },
+          colors: colors,
+        });
+      })
+      .catch(function (err) {
+        console.warn('[P!CKLE Detail] confetti 로드 실패', err);
+      });
+  }
+
+  function showResultView(post, voteStats, options) {
+    var opts = options || {};
+    var pct = calcVotePercent(voteStats.votesA, voteStats.votesB);
+
+    hideVoteOptions();
+
+    var resultView = $('detailResultView');
+    if (resultView) {
+      resultView.classList.add('show');
+      resultView.setAttribute('aria-hidden', 'false');
+    }
+
+    var labelA = $('resultLabelA');
+    var labelB = $('resultLabelB');
+    var totalEl = $('resultTotalVotes');
+    if (labelA) labelA.textContent = post.option_a || '';
+    if (labelB) labelB.textContent = post.option_b || '';
+    if (totalEl) {
+      totalEl.textContent =
+        '🔥 ' + Number(pct.total).toLocaleString() + '명 참전';
+    }
+
+    animateResultBars(pct.pctA, pct.pctB);
+
+    if (opts.withConfetti) {
+      fireResultConfetti();
+    }
+
+    if (opts.scrollIntoView && resultView) {
+      setTimeout(function () {
+        resultView.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
+    }
+  }
+
+  async function submitVoteToSupabase(postId, choice) {
+    var sb = window.PickleSupabase.getClient();
+    var authResult = await sb.auth.getUser();
+    if (authResult.error || !authResult.data?.user) {
+      throw new Error('LOGIN_REQUIRED');
+    }
+
+    var insertResult = await sb.from('votes').insert({
+      user_id: authResult.data.user.id,
+      post_id: postId,
+      choice: choice,
+    });
+
+    if (insertResult.error) {
+      throw insertResult.error;
+    }
+  }
+
+  function playVotePickEffects(choice, event, element) {
+    if (!element) return;
+
+    element.classList.add(choice === 'A' ? 'selected-a' : 'selected-b');
+    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+    var box = $('optionsBox');
+    if (box) {
+      box.classList.remove('shake-animation');
+      void box.offsetWidth;
+      box.classList.add('shake-animation');
+    }
+
+    if (event && element) {
+      var rect = element.getBoundingClientRect();
+      var x = event.clientX ? event.clientX - rect.left : rect.width / 2;
+      var y = event.clientY ? event.clientY - rect.top : rect.height / 2;
+
+      var effectGroup = document.createElement('div');
+      effectGroup.style.position = 'absolute';
+      effectGroup.style.left = x + 'px';
+      effectGroup.style.top = y + 'px';
+      effectGroup.style.zIndex = '300';
+
+      var fireball = document.createElement('div');
+      fireball.className = 'fireball';
+      var stamp = document.createElement('div');
+      stamp.className = 'stamp';
+      stamp.innerText = choice === 'A' ? 'A P!CK' : 'B P!CK';
+
+      effectGroup.appendChild(fireball);
+      effectGroup.appendChild(stamp);
+      element.appendChild(effectGroup);
+    }
+  }
+
+  function revealBlindVoteFeedback() {
+    var blindFeedback = $('blindFeedback');
+    if (blindFeedback) blindFeedback.classList.add('show');
+
+    unlockCommentsArea();
+    if (currentPostId) {
+      loadComments(currentPostId);
+    }
+
+    if (blindFeedback) {
+      setTimeout(function () {
+        blindFeedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }
+
+  async function castVote(choice, event, element) {
+    if (detailHasVoted) return;
+
+    if (isPostExpired(currentPost)) {
+      alert('⏳ 이 불판은 이미 뜨겁게 타오르고 마감된 불판입니다!');
+      showResultView(currentPost, cachedVoteStats, { withConfetti: false });
+      unlockCommentsArea();
+      return;
+    }
+
+    if (!currentPost || !currentPostId) {
+      alert('불판 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    detailHasVoted = true;
+    playVotePickEffects(choice, event, element);
+
+    try {
+      await submitVoteToSupabase(currentPostId, choice);
+      cachedVoteStats = await fetchVoteStats(
+        window.PickleSupabase.getClient(),
+        currentPostId
+      );
+      renderStats(cachedVoteStats, null);
+    } catch (err) {
+      detailHasVoted = false;
+      element.classList.remove('selected-a', 'selected-b');
+
+      var msg = String(err.message || err || '');
+      if (msg === 'LOGIN_REQUIRED') {
+        alert('투표하려면 로그인이 필요합니다.');
+        window.location.href =
+          'login.html?redirect=' +
+          encodeURIComponent('detail.html?id=' + encodeURIComponent(currentPostId));
+        return;
+      }
+      if (
+        msg.toLowerCase().indexOf('duplicate') !== -1 ||
+        msg.toLowerCase().indexOf('unique') !== -1
+      ) {
+        alert('이미 이 불판에 투표하셨습니다.');
+        revealBlindVoteFeedback();
+        return;
+      }
+      alert('투표 저장 실패: ' + msg);
+      return;
+    }
+
+    setTimeout(revealBlindVoteFeedback, 800);
+  }
 
   function renderDetail(post, voteStats, commentCount) {
     currentPost = post;
@@ -745,6 +1039,21 @@
     updateCommentHeader(commentCount);
     loadComments(post.id);
     bindCommentForm();
+
+    detailHasVoted = false;
+    resultConfettiFired = false;
+
+    if (isPostExpired(post)) {
+      showResultView(post, voteStats, {
+        withConfetti: true,
+        scrollIntoView: true,
+      });
+      unlockCommentsArea();
+    } else {
+      showVoteOptions();
+      var blindFeedback = $('blindFeedback');
+      if (blindFeedback) blindFeedback.classList.remove('show');
+    }
   }
 
   function showError(message) {
@@ -791,6 +1100,8 @@
     getCurrentPost: function () {
       return currentPost;
     },
+    isPostExpired: isPostExpired,
+    castVote: castVote,
     submitComment: submitComment,
     loadComments: loadComments,
   };

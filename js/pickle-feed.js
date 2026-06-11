@@ -140,10 +140,10 @@
   }
 
   function getRemainingTime(expiresAt) {
-    if (expiresAt == null || expiresAt === '') return '';
+    if (expiresAt == null || expiresAt === '') return '⏳ 마감된 불판';
 
     var expireDate = new Date(expiresAt);
-    if (Number.isNaN(expireDate.getTime())) return '';
+    if (Number.isNaN(expireDate.getTime())) return '⏳ 마감된 불판';
 
     var now = new Date();
     var diffMs = expireDate.getTime() - now.getTime();
