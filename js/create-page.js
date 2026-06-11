@@ -282,7 +282,16 @@
 
   async function uploadThumbnailIfAny(userId, getThumbnailFile) {
     var file = resolveThumbnailFile(getThumbnailFile);
-    if (!file) return null;
+    if (!file) {
+      console.info('[P!CKLE Create] 썸네일 파일 없음 — thumbnail_url 생략');
+      return null;
+    }
+
+    console.info('[P!CKLE Create] 썸네일 업로드 시작', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
 
     var MAX_BYTES = 5 * 1024 * 1024;
     if (file.size > MAX_BYTES) {
@@ -297,7 +306,10 @@
     if (!url || !String(url).trim()) {
       throw new Error('썸네일 업로드는 완료됐지만 URL을 받지 못했습니다.');
     }
-    return String(url).trim();
+
+    var trimmed = String(url).trim();
+    console.info('[P!CKLE Create] 썸네일 Storage 업로드 완료 →', trimmed);
+    return trimmed;
   }
 
   function resolveThumbnailFile(getThumbnailFile) {
@@ -309,7 +321,9 @@
       var fromGlobal = window.getPickleCreateThumbnailFile();
       if (fromGlobal) return fromGlobal;
     }
-    var input = document.getElementById('fileThumbnail');
+    var input =
+      document.getElementById('thumbnailInput') ||
+      document.getElementById('fileThumbnail');
     if (input && input.files && input.files[0]) {
       return input.files[0];
     }
@@ -319,8 +333,9 @@
   /**
    * @param {function(string): Promise<object>} buildMediaPayload — create.html 미디어 업로드
    * @param {function(): File|null} [getThumbnailFile] — 리스트 썸네일 (선택)
+   * @param {string|null} [preloadedThumbnailUrl] — create.html에서 선업로드한 URL
    */
-  async function submitPost(buildMediaPayload, getThumbnailFile) {
+  async function submitPost(buildMediaPayload, getThumbnailFile, preloadedThumbnailUrl) {
     if (window.PickleAuth?.init) {
       await window.PickleAuth.init();
     }
@@ -363,10 +378,16 @@
       return { cancelled: true };
     }
 
-    var thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
+    var thumbnailUrl =
+      preloadedThumbnailUrl && String(preloadedThumbnailUrl).trim()
+        ? String(preloadedThumbnailUrl).trim()
+        : await uploadThumbnailIfAny(user.id, getThumbnailFile);
+
     var rawMedia = await buildMediaPayload(user.id);
     var mediaFields = mapMediaForPosts(rawMedia);
     var payload = buildPostsInsertPayload(user, formData, mediaFields, thumbnailUrl);
+
+    console.info('[P!CKLE Create] posts.insert payload.thumbnail_url =', payload.thumbnail_url || '(없음)');
 
     var insertResult = await sb
       .from('posts')
@@ -374,11 +395,17 @@
       .select('id, thumbnail_url')
       .single();
     if (insertResult.error) {
+      console.error('[P!CKLE Create] posts.insert 실패', insertResult.error);
       if (handleInsertError(insertResult.error)) {
         return { cancelled: true };
       }
       throw insertResult.error;
     }
+
+    console.info('[P!CKLE Create] DB 저장 완료', {
+      id: insertResult.data && insertResult.data.id,
+      thumbnail_url: insertResult.data && insertResult.data.thumbnail_url,
+    });
 
     alert('🔥 새로운 불판을 지폈습니다! 불타는 참전을 기대하세요.');
     window.location.href = 'index.html';

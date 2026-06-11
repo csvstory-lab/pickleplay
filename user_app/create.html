@@ -339,8 +339,8 @@
     <div class="form-group form-group-thumbnail">
         <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint">(선택)</span></label>
         <p class="upload-size-hint">(※ 5MB 이하, 16:9 비율 권장. 리스트에만 노출됩니다)</p>
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="fileThumbnail" onchange="onThumbnailSelected(this)">
-        <div class="upload-box ratio-16-9" id="boxThumbnail" onclick="document.getElementById('fileThumbnail').click()">
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="thumbnailInput" onchange="onThumbnailSelected(this)">
+        <div class="upload-box ratio-16-9" id="boxThumbnail" onclick="document.getElementById('thumbnailInput').click()">
             <div class="icon-plus">🖼️</div>
             <div class="upload-txt">썸네일 이미지 첨부</div>
         </div>
@@ -518,7 +518,8 @@
     let thumbnailFile = null;
 
     window.getPickleCreateThumbnailFile = function () {
-        return thumbnailFile;
+        const input = document.getElementById('thumbnailInput');
+        return thumbnailFile || (input && input.files && input.files[0]) || null;
     };
 
     function onThumbnailSelected(input) {
@@ -765,11 +766,41 @@
         btnSubmit.textContent = '등록 중…';
 
         try {
+            let preloadedThumbnailUrl = null;
+            const thumbInput = document.getElementById('thumbnailInput');
+            const thumbFile =
+                thumbnailFile ||
+                (thumbInput && thumbInput.files && thumbInput.files[0]) ||
+                null;
+
+            if (thumbFile) {
+                if (window.PickleAuth?.init) {
+                    await window.PickleAuth.init();
+                }
+                const sb = window.PickleSupabase.getClient();
+                const authResult = await sb.auth.getUser();
+                const user = authResult.data?.user;
+                if (!user) {
+                    alert('로그인 후 불판을 지필 수 있습니다.');
+                    location.href = 'login.html?redirect=create.html&from=create';
+                    return;
+                }
+                console.info('[P!CKLE Create] 폼 제출 — 썸네일 선업로드', thumbFile.name);
+                preloadedThumbnailUrl = await window.PickleMedia.uploadPostImage(
+                    thumbFile,
+                    user.id
+                );
+                console.info('[P!CKLE Create] 썸네일 URL 확보', preloadedThumbnailUrl);
+            } else {
+                console.info('[P!CKLE Create] 썸네일 미첨부');
+            }
+
             const result = await window.PickleCreatePage.submitPost(
                 buildMediaPayload,
                 function () {
-                    return thumbnailFile || document.getElementById('fileThumbnail')?.files?.[0] || null;
-                }
+                    return thumbFile;
+                },
+                preloadedThumbnailUrl
             );
             if (result?.cancelled) return;
         } catch (err) {

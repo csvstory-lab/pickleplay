@@ -300,7 +300,7 @@
     };
   }
 
-  function renderFeedAuthorRow(post) {
+  function renderFeedAuthorRow(post, compact) {
     var p = post || {};
     var nickname = p.author_nickname || p.authorNickname || '픽클러';
     var avatarHtml = p.author_avatar_html || '🥒';
@@ -308,14 +308,60 @@
       String(avatarHtml).indexOf('<') !== -1
         ? String(avatarHtml)
         : escapeHtml(String(avatarHtml));
+    var compactClass = compact ? ' feed-author-row--compact' : '';
 
     return (
-      '<div class="feed-author-row">' +
+      '<div class="feed-author-row' +
+      compactClass +
+      '">' +
       '<div class="feed-author-avatar">' +
       avatarInner +
       '</div>' +
       '<span class="feed-author-name">' +
       escapeHtml(String(nickname)) +
+      '</span>' +
+      '</div>'
+    );
+  }
+
+  function renderKingMetaRow(post) {
+    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
+    var endsAt = computeEndsAt(post);
+    var endsIso =
+      endsAt && !Number.isNaN(endsAt.getTime()) ? endsAt.toISOString() : '';
+    var timerText = formatFeedRemainingLabel(endsAt);
+    var endedClass =
+      endsAt && endsAt.getTime() - Date.now() <= 0 ? ' is-ended' : '';
+
+    return (
+      '<div class="meta-row king-meta-row">' +
+      renderFeedAuthorRow(post, true) +
+      '<span class="pickle-meta-cat king-cat compact">[ ' +
+      escapeHtml(categoryText) +
+      ' ]</span>' +
+      '<span class="pickle-meta-timer feed-meta-timer compact' +
+      endedClass +
+      '"' +
+      (endsIso ? ' data-ends-at="' + escapeHtml(endsIso) + '"' : '') +
+      '>' +
+      escapeHtml(timerText) +
+      '</span>' +
+      '</div>'
+    );
+  }
+
+  function renderListTopRow(post) {
+    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
+    var catClass = post && post.is_sponsor ? 'list-cat sponsor-badge' : 'list-cat';
+
+    return (
+      '<div class="meta-row list-top-row">' +
+      renderFeedAuthorRow(post, true) +
+      '<span class="list-cat-sep">|</span>' +
+      '<span class="' +
+      catClass +
+      '">' +
+      escapeHtml(categoryText) +
       '</span>' +
       '</div>'
     );
@@ -691,8 +737,7 @@
       escapeHtml(safeStr(post.title, '불판')) +
       '">' +
       renderKingThumb(post) +
-      renderFeedMetaRow(post) +
-      renderFeedAuthorRow(post) +
+      renderKingMetaRow(post) +
       '<h2 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
@@ -745,7 +790,6 @@
     if (!post || post.id == null) return '';
 
     var sponsorClass = post.is_sponsor ? ' sponsor-card' : '';
-    var catClass = post.is_sponsor ? ' list-cat sponsor-badge' : ' list-cat';
 
     return (
       '<article class="list-card' +
@@ -753,15 +797,10 @@
       '" data-id="' +
       escapeHtml(post.id) +
       '" role="button" tabindex="0">' +
-      '<span class="' +
-      catClass.trim() +
-      '">' +
-      escapeHtml(safeStr(post.categoryLabel, '🔥 불판')) +
-      '</span>' +
+      renderListTopRow(post) +
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +
-      renderFeedAuthorRow(post) +
       renderListVsBox(post) +
       renderListMetaFooter(post) +
       '</article>'
