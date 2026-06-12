@@ -148,6 +148,12 @@
     return function (q) {
       q = q.eq('visibility_status', 'visible');
 
+      if (window.PickleFeed && window.PickleFeed.applyActivePostsFilter) {
+        q = window.PickleFeed.applyActivePostsFilter(q, nowIso);
+      } else {
+        q = q.gt('expires_at', nowIso);
+      }
+
       if (dbCategory) {
         q = q.eq('category', dbCategory);
       }
@@ -160,10 +166,7 @@
             .limit(80);
           break;
         case 'deadline':
-          q = q
-            .gt('expires_at', nowIso)
-            .order('expires_at', { ascending: true })
-            .limit(80);
+          q = q.order('expires_at', { ascending: true }).limit(80);
           break;
         case 'participants':
           q = q.order('created_at', { ascending: false }).limit(120);

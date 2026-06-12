@@ -529,22 +529,36 @@
     return { data: null, error: lastError };
   }
 
+  function getActivePostsNowIso() {
+    return new Date().toISOString();
+  }
+
+  /** 진행 중인 불판만 — expires_at > now (메인·카테고리 피드 전용) */
+  function applyActivePostsFilter(q, nowIso) {
+    return q.gt('expires_at', nowIso || getActivePostsNowIso());
+  }
+
   async function fetchFromPostsTable(sb, applyFilters) {
+    var nowIso = getActivePostsNowIso();
     var filterFn =
       applyFilters ||
       function (q) {
-        return q
-          .eq('visibility_status', 'visible')
-          .order('created_at', { ascending: false });
+        return applyActivePostsFilter(
+          q.eq('visibility_status', 'visible'),
+          nowIso
+        ).order('created_at', { ascending: false });
       };
     return queryWithColumnFallback(sb, 'posts', POSTS_SELECT_VARIANTS, filterFn);
   }
 
   async function fetchFromPicklePostsTable(sb, applyFilters) {
+    var nowIso = getActivePostsNowIso();
     var filterFn =
       applyFilters ||
       function (q) {
-        return q.order('created_at', { ascending: false });
+        return applyActivePostsFilter(q, nowIso).order('created_at', {
+          ascending: false,
+        });
       };
     return queryWithColumnFallback(
       sb,
@@ -965,6 +979,8 @@
   window.PickleFeed = {
     load: loadPickleFeed,
     fetchPicklePosts: fetchPicklePosts,
+    applyActivePostsFilter: applyActivePostsFilter,
+    getActivePostsNowIso: getActivePostsNowIso,
     fetchPostRows: fetchPostRows,
     enrichRowsToPosts: enrichRowsToPosts,
     renderListToContainer: renderListToContainer,

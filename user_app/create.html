@@ -483,9 +483,26 @@
         return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
 
+    function getMaxEndDate() {
+        return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+
     function refreshEndDateMin() {
         const el = document.getElementById('inputEndDate');
-        if (el) el.min = toDatetimeLocalValue(new Date());
+        if (!el) return;
+        el.min = toDatetimeLocalValue(new Date());
+        el.max = toDatetimeLocalValue(getMaxEndDate());
+    }
+
+    function resetCustomEndDateIfInvalid() {
+        const endInput = document.getElementById('inputEndDate');
+        if (!endInput || !endInput.value) return;
+        const end = new Date(endInput.value);
+        const maxMs = getMaxEndDate().getTime();
+        if (!Number.isNaN(end.getTime()) && end.getTime() > maxMs) {
+            alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.');
+            endInput.value = '';
+        }
     }
 
     function setDuration(btn, val) {
@@ -515,8 +532,23 @@
             alert('마감 일시는 현재 시간 이후로만 설정할 수 있습니다.');
             return false;
         }
+        const maxMs = getMaxEndDate().getTime();
+        if (end.getTime() > maxMs) {
+            alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.');
+            if (endInput) endInput.value = '';
+            return false;
+        }
         return true;
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshEndDateMin();
+        const endInput = document.getElementById('inputEndDate');
+        if (endInput) {
+            endInput.addEventListener('change', resetCustomEndDateIfInvalid);
+            endInput.addEventListener('input', resetCustomEndDateIfInvalid);
+        }
+    });
 
     // 💡 미디어 업로드 관리 변수
     let currentMode = 'single';

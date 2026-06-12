@@ -264,6 +264,10 @@
     window.location.href = 'login.html?redirect=create.html&from=create';
   }
 
+  function getMaxCustomEndDate() {
+    return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  }
+
   function validateCustomEndDate() {
     var getDuration = window.getPickleCreateDuration;
     if (!getDuration || getDuration() !== 'custom') {
@@ -280,6 +284,12 @@
     var end = new Date(endVal);
     if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
       alert('마감 일시는 현재 시간 이후로만 설정할 수 있습니다.');
+      return false;
+    }
+
+    if (end.getTime() > getMaxCustomEndDate().getTime()) {
+      alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.');
+      if (endInput) endInput.value = '';
       return false;
     }
 
