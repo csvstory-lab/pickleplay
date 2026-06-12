@@ -88,6 +88,12 @@
     }
     a.category-nav-tab.active { color: #000; }
 
+    /* 메인 피드 — 킹왕짱 아래 카테고리 칩 바 */
+    main .category-nav-scroll {
+        margin: 0 0 4px;
+        padding: 0 20px 18px;
+    }
+
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
     .noti-bell:active { transform: scale(0.9); }
@@ -474,7 +480,6 @@
             <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
     </div>
-    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </header>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
@@ -549,6 +554,8 @@
             </div>
         </div>
     </section>
+
+    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 
     <section class="list-section">
         <div class="section-title" style="margin-bottom: 15px;">🔥 실시간 타오르는 불판</div>

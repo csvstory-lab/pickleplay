@@ -439,11 +439,27 @@
     });
   }
 
+  function placeIndexCategoryNav(nav) {
+    if (!nav || document.getElementById('categoryFeedList')) return;
+
+    var kingContainer = document.getElementById('aiCurationContainer');
+    if (!kingContainer) return;
+
+    var kingSection = kingContainer.closest('section');
+    var main = document.querySelector('main');
+    if (!kingSection || !main || kingSection.parentElement !== main) return;
+
+    if (nav.parentElement === main && nav.previousElementSibling === kingSection) return;
+
+    kingSection.insertAdjacentElement('afterend', nav);
+  }
+
   function initStandaloneCategoryNav() {
     var nav = document.getElementById('categoryNav');
     if (!nav || document.getElementById('categoryFeedList')) return;
 
     removeLegacyAppNav(document);
+    placeIndexCategoryNav(nav);
 
     var isHallPage = document.body.getAttribute('data-nav-page') === 'hall';
     renderCategoryNavBar(nav, {
