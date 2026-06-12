@@ -38,11 +38,11 @@
 
     /* === 상단 헤더 === */
     header {
-        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.85); backdrop-filter: blur(12px);
-        z-index: 900; padding: 15px 0; border-bottom: 1px solid var(--border-color);
+        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
+        z-index: 900; border-bottom: 1px solid var(--border-color);
         transition: top 0.3s ease-in-out;
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
         background: linear-gradient(90deg, var(--neon-green), #aaff00);
@@ -87,6 +87,14 @@
         display: inline-flex; align-items: center;
     }
     a.category-nav-tab.active { color: #000; }
+
+    /* 레거시 대메뉴(🔥 메인 / ≡ 카테고리 / 🏅 전당) — 사용 금지 */
+    #appTopNav,
+    .app-nav-scroll,
+    nav.app-nav-scroll,
+    .app-nav-tab {
+        display: none !important;
+    }
 
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}

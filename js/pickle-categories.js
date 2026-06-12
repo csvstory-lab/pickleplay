@@ -443,6 +443,8 @@
     var nav = document.getElementById('categoryNav');
     if (!nav || document.getElementById('categoryFeedList')) return;
 
+    removeLegacyAppNav(document);
+
     var isHallPage = document.body.getAttribute('data-nav-page') === 'hall';
     renderCategoryNavBar(nav, {
       page: isHallPage ? 'hall' : 'other',
@@ -451,8 +453,16 @@
     scrollCategoryNavIntoView(document);
   }
 
+  function removeLegacyAppNav(root) {
+    var scope = root || document;
+    scope.querySelectorAll('#appTopNav, .app-nav-scroll, nav.app-nav-scroll').forEach(function (el) {
+      el.remove();
+    });
+  }
+
   function mountAllCategoryUi(root) {
     var scope = root || document;
+    removeLegacyAppNav(scope);
     renderCategoryGrids(scope);
     bindAllBoardButtons(scope);
 
