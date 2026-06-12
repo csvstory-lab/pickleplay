@@ -149,7 +149,6 @@
         background: linear-gradient(145deg, #1f1f22, #121214);
         border: 2px solid var(--neon-pink);
         border-radius: 24px;
-        padding: 16px 14px;
         box-shadow: 0 10px 30px rgba(255, 0, 127, 0.15);
         flex: 0 0 auto;
         width: min(calc(100vw - 40px), 440px);
@@ -158,56 +157,91 @@
         scroll-snap-align: center;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        overflow: hidden;
         cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s;
     }
     .king-card:active { transform: scale(0.98); }
 
-    .king-card .pickle-meta-row {
-        margin-bottom: 0;
+    .king-card .card-body,
+    .list-card .card-body {
+        display: flex;
+        flex-direction: column;
         gap: 10px;
+        padding: 14px 16px 16px;
     }
 
-    .meta-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    .king-meta-row {
-        margin: 6px 0 2px;
-        gap: 8px;
-    }
-    .list-top-row {
-        gap: 8px;
-        margin: 0 0 2px;
-    }
-    .list-cat-sep {
-        color: #52525b;
-        font-size: 0.75rem;
-        font-weight: 700;
+    .card-thumb-top {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #0f0f11;
         flex-shrink: 0;
     }
+    .card-thumb-top .card-thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .card-thumb-top--fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0a0a0c 0%, #18181b 50%, #1a1020 100%);
+        border-bottom: 1px dashed #52525b;
+    }
+    .card-thumb-fallback-label {
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: clamp(1.4rem, 6vw, 2rem);
+        line-height: 1.15;
+        text-align: center;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, var(--neon-green), var(--neon-pink));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 12px rgba(57, 255, 20, 0.25));
+        word-break: keep-all;
+    }
 
-    .feed-author-row--compact {
-        margin: 0;
-        gap: 5px;
-    }
-    .feed-author-row--compact .feed-author-avatar {
-        width: 22px;
-        height: 22px;
+    .feed-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        margin-top: 2px;
         font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-sub);
     }
-    .feed-author-row--compact .feed-author-name {
-        font-size: 0.72rem;
-    }
-    .king-meta-row .pickle-meta-cat.compact,
-    .king-meta-row .pickle-meta-timer.compact {
+    .feed-cat-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
         font-size: 0.68rem;
-        padding: 3px 8px;
+        font-weight: 800;
         line-height: 1.2;
+        color: #e4e4e7;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        flex-shrink: 0;
     }
+    .feed-cat-badge--sponsor {
+        color: var(--theme-gold);
+        background: rgba(255, 204, 0, 0.12);
+        border-color: rgba(255, 204, 0, 0.28);
+    }
+    .feed-meta-participants {
+        color: var(--theme-gold);
+        white-space: nowrap;
+    }
+    .feed-meta-timer {
+        color: var(--text-sub);
+        white-space: nowrap;
+    }
+    .feed-meta-timer.is-ended { color: #71717a; }
 
     .king-card .title {
         font-size: 1.2rem;
@@ -216,48 +250,6 @@
         margin: 0;
         word-break: keep-all;
     }
-
-    .feed-author-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .feed-author-avatar {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: #27272a;
-        border: 1px solid #3f3f46;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.95rem;
-        overflow: hidden;
-        flex-shrink: 0;
-        line-height: 1;
-    }
-    .feed-author-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-    .feed-author-name {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--text-sub);
-        display: inline-flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 4px;
-    }
-    .feed-author-level .grade-badge {
-        font-size: 0.58rem;
-        padding: 2px 6px;
-        border-radius: 6px;
-    }
-    .king-card .feed-author-row { margin: -2px 0 0; }
-    .list-card .feed-author-row { margin: 0; }
 
     .king-feed-thumb {
         width: 100%;
@@ -356,12 +348,13 @@
     /* 🔥 실시간 리스트 */
     .list-section { padding: 0 20px 12px; }
     .list-card {
-        display: flex; flex-direction: column; gap: 10px;
+        display: flex;
+        flex-direction: column;
         background-color: #27272a;
         border: 1px solid #3f3f46;
         border-radius: 16px;
-        padding: 14px 16px;
         margin-bottom: 14px;
+        overflow: hidden;
         cursor: pointer;
         transition: 0.2s;
         box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
@@ -375,23 +368,6 @@
     .list-card.sponsor-card {
         border-color: rgba(255, 204, 0, 0.4);
         background: linear-gradient(180deg, rgba(255, 204, 0, 0.06) 0%, #27272a 100%);
-    }
-
-    .list-cat {
-        display: inline-block;
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #a1a1aa;
-        background: #27272a;
-        padding: 3px 8px;
-        border-radius: 6px;
-        line-height: 1.2;
-        flex-shrink: 0;
-    }
-    .list-cat.sponsor-badge {
-        color: var(--theme-gold);
-        background: rgba(255, 204, 0, 0.12);
-        border: 1px solid rgba(255, 204, 0, 0.25);
     }
 
     .list-card .title {
@@ -436,19 +412,7 @@
         letter-spacing: 0.04em;
     }
 
-    .list-meta {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--text-sub);
-        margin: 0;
-    }
-    .list-meta-sep { color: #52525b; }
-    .list-meta-timer { color: var(--text-sub); }
-    .list-meta-timer.is-ended { color: #71717a; }
+    /* 하단 메타는 .feed-card-meta 공통 사용 */
 
     /* === 하단 네비게이션 === */
     .bottom-nav {
@@ -595,7 +559,6 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
-<script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-feed.js"></script>
 <script>
     // 헤더 스크롤 제어

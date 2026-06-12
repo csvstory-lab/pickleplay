@@ -289,42 +289,62 @@
     };
   }
 
-  function renderFeedAuthorLevelBadge(post) {
-    if (!window.PickleProfile || !window.PickleProfile.buildLevelBadgeFromPoints) {
-      return '';
-    }
-    if (post == null || post.author_ranking_points == null) {
-      return '';
+  function renderFeedCategoryBadge(post) {
+    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
+    var badgeClass = 'feed-cat-badge';
+    if (post && post.is_sponsor) {
+      badgeClass += ' feed-cat-badge--sponsor';
     }
     return (
-      ' <span class="feed-author-level">' +
-      window.PickleProfile.buildLevelBadgeFromPoints(post.author_ranking_points) +
+      '<span class="' +
+      badgeClass +
+      '">' +
+      escapeHtml(categoryText) +
       '</span>'
     );
   }
 
-  function renderFeedAuthorRow(post, compact) {
-    var p = post || {};
-    var nickname = p.author_nickname || p.authorNickname || '픽클러';
-    var avatarHtml = p.author_avatar_html || '🥒';
-    var avatarInner =
-      String(avatarHtml).indexOf('<') !== -1
-        ? String(avatarHtml)
-        : escapeHtml(String(avatarHtml));
-    var compactClass = compact ? ' feed-author-row--compact' : '';
+  function renderFeedCardMetaFooter(post) {
+    var timer = getPostTimerState(post);
 
     return (
-      '<div class="feed-author-row' +
-      compactClass +
-      '">' +
-      '<div class="feed-author-avatar">' +
-      avatarInner +
-      '</div>' +
-      '<span class="feed-author-name">' +
-      escapeHtml(String(nickname)) +
-      renderFeedAuthorLevelBadge(p) +
+      '<div class="feed-card-meta">' +
+      renderFeedCategoryBadge(post) +
+      '<span class="feed-meta-participants">🔥 ' +
+      safeTotalVotes(post).toLocaleString() +
+      '명 참전</span>' +
+      '<span class="feed-meta-timer' +
+      timer.endedClass +
+      '"' +
+      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
+      '>' +
+      escapeHtml(timer.timerText) +
       '</span>' +
       '</div>'
+    );
+  }
+
+  function renderCardThumbTop(post) {
+    var thumbUrl = resolveFeedThumbnailUrl((post && post.thumbnail_url) || null);
+
+    if (thumbUrl) {
+      return (
+        '<div class="card-thumb-top">' +
+        '<img class="card-thumb-img" src="' +
+        escapeHtml(thumbUrl) +
+        '" alt="' +
+        escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
+        '" loading="lazy" decoding="async">' +
+        '</div>'
+      );
+    }
+
+    var fallbackCat = escapeHtml(safeStr(post && post.categoryLabel, '불판'));
+    return (
+      '<div class="card-thumb-top card-thumb-top--fallback">' +
+      '<span class="card-thumb-fallback-label">' +
+      fallbackCat +
+      '</span></div>'
     );
   }
 
@@ -346,44 +366,6 @@
       timerText: timerText,
       endedClass: endedClass,
     };
-  }
-
-  function renderKingMetaRow(post) {
-    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
-    var timer = getPostTimerState(post);
-
-    return (
-      '<div class="meta-row king-meta-row">' +
-      renderFeedAuthorRow(post, true) +
-      '<span class="pickle-meta-cat king-cat compact">[ ' +
-      escapeHtml(categoryText) +
-      ' ]</span>' +
-      '<span class="pickle-meta-timer feed-meta-timer compact' +
-      timer.endedClass +
-      '"' +
-      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
-      '>' +
-      escapeHtml(timer.timerText) +
-      '</span>' +
-      '</div>'
-    );
-  }
-
-  function renderListTopRow(post) {
-    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
-    var catClass = post && post.is_sponsor ? 'list-cat sponsor-badge' : 'list-cat';
-
-    return (
-      '<div class="meta-row list-top-row">' +
-      renderFeedAuthorRow(post, true) +
-      '<span class="list-cat-sep">|</span>' +
-      '<span class="' +
-      catClass +
-      '">' +
-      escapeHtml(categoryText) +
-      '</span>' +
-      '</div>'
-    );
   }
 
   function normalizePostRow(row, source) {
@@ -434,32 +416,6 @@
       console.warn('[P!CKLE Feed] normalizePostRow 실패', row && row.id, err);
       return null;
     }
-  }
-
-  function renderFeedMetaRow(post, variant) {
-    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
-    var timer = getPostTimerState(post);
-    var catClass =
-      variant === 'list'
-        ? 'pickle-meta-cat list-cat'
-        : 'pickle-meta-cat king-cat';
-
-    return (
-      '<div class="pickle-meta-row">' +
-      '<span class="' +
-      catClass +
-      '">[ ' +
-      escapeHtml(categoryText) +
-      ' ]</span>' +
-      '<span class="pickle-meta-timer feed-meta-timer' +
-      timer.endedClass +
-      '"' +
-      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
-      '>' +
-      escapeHtml(timer.timerText) +
-      '</span>' +
-      '</div>'
-    );
   }
 
   async function fetchVoteStatsMap(sb, postIds) {
@@ -592,35 +548,6 @@
     );
   }
 
-  async function hydrateAuthorRankingPoints(sb, posts) {
-    if (!posts || !posts.length) return posts;
-    if (!window.PickleProfile || !window.PickleProfile.fetchRankingPointsMap) {
-      return posts;
-    }
-
-    var authorIds = [];
-    posts.forEach(function (p) {
-      if (!p || !p.author_id) return;
-      var id = String(p.author_id);
-      if (authorIds.indexOf(id) === -1) authorIds.push(id);
-    });
-
-    if (!authorIds.length) return posts;
-
-    try {
-      var pointsMap = await window.PickleProfile.fetchRankingPointsMap(sb, authorIds);
-      return posts.map(function (p) {
-        if (p && p.author_id && pointsMap.has(String(p.author_id))) {
-          p.author_ranking_points = pointsMap.get(String(p.author_id));
-        }
-        return p;
-      });
-    } catch (err) {
-      console.warn('[P!CKLE Feed] 작성자 레벨 포인트 보강 실패', err);
-      return posts;
-    }
-  }
-
   async function hydrateAuthorSnapshots(sb, posts, source) {
     if (source !== 'posts' || !posts || !posts.length) return posts;
 
@@ -725,9 +652,6 @@
       .filter(Boolean);
 
     posts = await hydrateAuthorSnapshots(sb, posts, source);
-    if (source === 'posts') {
-      posts = await hydrateAuthorRankingPoints(sb, posts);
-    }
     return hydrateThumbnailUrls(sb, posts);
   }
 
@@ -766,50 +690,6 @@
     }
   }
 
-  function renderFeedThumbImage(post) {
-    try {
-      var thumbUrl = resolveFeedThumbnailUrl((post && post.thumbnail_url) || null);
-      if (!thumbUrl) return '';
-
-      return (
-        '<img src="' +
-        escapeHtml(thumbUrl) +
-        '" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px; margin-bottom: 12px;" alt="' +
-        escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
-        '" loading="lazy" decoding="async">'
-      );
-    } catch (_) {
-      return '';
-    }
-  }
-
-  function renderKingThumbFallback(post) {
-    var fallbackCat = escapeHtml(safeStr(post && post.categoryLabel, '불판'));
-    return (
-      '<div class="king-thumb king-thumb-fallback">' +
-      '<span class="king-fallback-cat">' +
-      fallbackCat +
-      '</span></div>'
-    );
-  }
-
-  function renderKingThumb(post) {
-    try {
-      var img = renderFeedThumbImage(post);
-      return img || renderKingThumbFallback(post);
-    } catch (_) {
-      return renderKingThumbFallback(post);
-    }
-  }
-
-  function renderListThumb(post) {
-    try {
-      return renderFeedThumbImage(post);
-    } catch (_) {
-      return '';
-    }
-  }
-
   function renderKingAbBox(post) {
     return (
       '<div class="king-ab-box">' +
@@ -833,13 +713,15 @@
       '" role="button" tabindex="0" aria-label="' +
       escapeHtml(safeStr(post.title, '불판')) +
       '">' +
-      renderKingThumb(post) +
-      renderKingMetaRow(post) +
+      renderCardThumbTop(post) +
+      '<div class="card-body">' +
       '<h2 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
       renderKingAbBox(post) +
       '<button type="button" class="btn-pick">결과가 궁금하다면? 참전하기 🔥</button>' +
+      renderFeedCardMetaFooter(post) +
+      '</div>' +
       '</article>'
     );
   }
@@ -858,26 +740,6 @@
     );
   }
 
-  function renderListMetaFooter(post) {
-    var timer = getPostTimerState(post);
-
-    return (
-      '<div class="list-meta">' +
-      '<span class="list-meta-participants">🔥 ' +
-      safeTotalVotes(post).toLocaleString() +
-      '명 참전</span>' +
-      '<span class="list-meta-sep">·</span>' +
-      '<span class="list-meta-timer feed-meta-timer' +
-      timer.endedClass +
-      '"' +
-      (timer.endsIso ? ' data-ends-at="' + escapeHtml(timer.endsIso) + '"' : '') +
-      '>' +
-      escapeHtml(timer.timerText) +
-      '</span>' +
-      '</div>'
-    );
-  }
-
   function buildListCardHtml(post) {
     if (!post || post.id == null) return '';
 
@@ -889,13 +751,14 @@
       '" data-id="' +
       escapeHtml(post.id) +
       '" role="button" tabindex="0">' +
-      renderListTopRow(post) +
-      renderListThumb(post) +
+      renderCardThumbTop(post) +
+      '<div class="card-body">' +
       '<h3 class="title">' +
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h3>' +
       renderListVsBox(post) +
-      renderListMetaFooter(post) +
+      renderFeedCardMetaFooter(post) +
+      '</div>' +
       '</article>'
     );
   }
