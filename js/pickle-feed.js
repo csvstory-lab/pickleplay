@@ -529,23 +529,47 @@
     return { data: null, error: lastError };
   }
 
-  async function fetchFromPostsTable(sb) {
-    return queryWithColumnFallback(sb, 'posts', POSTS_SELECT_VARIANTS, function (q) {
-      return q
-        .eq('visibility_status', 'visible')
-        .order('created_at', { ascending: false });
-    });
+  async function fetchFromPostsTable(sb, applyFilters) {
+    var filterFn =
+      applyFilters ||
+      function (q) {
+        return q
+          .eq('visibility_status', 'visible')
+          .order('created_at', { ascending: false });
+      };
+    return queryWithColumnFallback(sb, 'posts', POSTS_SELECT_VARIANTS, filterFn);
   }
 
-  async function fetchFromPicklePostsTable(sb) {
+  async function fetchFromPicklePostsTable(sb, applyFilters) {
+    var filterFn =
+      applyFilters ||
+      function (q) {
+        return q.order('created_at', { ascending: false });
+      };
     return queryWithColumnFallback(
       sb,
       'pickle_posts',
       PICKLE_POSTS_SELECT_VARIANTS,
-      function (q) {
-        return q.order('created_at', { ascending: false });
-      }
+      filterFn
     );
+  }
+
+  async function fetchPostRows(applyFilters) {
+    var sb = getClient();
+    var source = 'posts';
+    var result = await fetchFromPostsTable(sb, applyFilters);
+
+    if (result.error) {
+      console.warn('[P!CKLE Feed] posts 조회 실패, pickle_posts 폴백', result.error);
+      source = 'pickle_posts';
+      result = await fetchFromPicklePostsTable(sb, applyFilters);
+    }
+
+    return {
+      rows: (result && result.data) || [],
+      source: source,
+      error: result && result.error,
+    };
   }
 
   async function hydrateAuthorSnapshots(sb, posts, source) {
@@ -594,28 +618,12 @@
     }
   }
 
-  /**
-   * Supabase posts 테이블에서 최신 불판 + 투표·댓글 집계
-   * @returns {Promise<Array>}
-   */
-  async function fetchPicklePosts() {
+  async function enrichRowsToPosts(rows, source) {
     var sb = getClient();
-    var source = 'posts';
-    var result = await fetchFromPostsTable(sb);
+    var safeRows = rows || [];
+    if (!safeRows.length) return [];
 
-    if (result.error) {
-      console.warn('[P!CKLE Feed] posts 조회 실패, pickle_posts 폴백', result.error);
-      source = 'pickle_posts';
-      result = await fetchFromPicklePostsTable(sb);
-      if (result.error) {
-        throw new Error(result.error.message || String(result.error));
-      }
-    }
-
-    var rows = result.data || [];
-    if (!rows.length) return [];
-
-    var postIds = rows
+    var postIds = safeRows
       .map(function (r) {
         return r && r.id;
       })
@@ -624,7 +632,7 @@
     var voteStatsMap = await fetchVoteStatsMap(sb, postIds);
     var commentCountMap = await fetchCommentCountMap(sb, postIds);
 
-    var posts = rows
+    var posts = safeRows
       .map(function (row) {
         try {
           var post = normalizePostRow(row, source);
@@ -642,6 +650,7 @@
           post.pctA = pct.a;
           post.pctB = pct.b;
           post.commentCount = commentCountMap.get(post.id) || 0;
+          post.participationScore = post.totalVotes + post.commentCount;
           post.thumbnail_url = resolveFeedThumbnailUrl(post.thumbnail_url);
           return post;
         } catch (err) {
@@ -653,6 +662,18 @@
 
     posts = await hydrateAuthorSnapshots(sb, posts, source);
     return hydrateThumbnailUrls(sb, posts);
+  }
+
+  /**
+   * Supabase posts 테이블에서 최신 불판 + 투표·댓글 집계
+   * @returns {Promise<Array>}
+   */
+  async function fetchPicklePosts() {
+    var result = await fetchPostRows();
+    if (result.error) {
+      throw new Error(result.error.message || String(result.error));
+    }
+    return enrichRowsToPosts(result.rows, result.source);
   }
 
   async function hydrateThumbnailUrls(sb, posts) {
@@ -823,10 +844,22 @@
     var container = document.getElementById('hotFeedList');
     if (!container) return;
 
+    renderListToContainer(container, posts, {
+      emptyHtml:
+        '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">더 많은 불판이 곧 올라옵니다 🔥</p></div>',
+    });
+  }
+
+  function renderListToContainer(container, posts, options) {
+    if (!container) return;
+
+    options = options || {};
     var safePosts = (posts || []).filter(Boolean);
+
     if (!safePosts.length) {
       container.innerHTML =
-        '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">더 많은 불판이 곧 올라옵니다 🔥</p></div>';
+        options.emptyHtml ||
+        '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">표시할 불판이 없습니다.</p></div>';
       return;
     }
 
@@ -842,7 +875,8 @@
 
     container.innerHTML = htmlParts.length
       ? htmlParts.join('')
-      : '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">표시할 불판이 없습니다.</p></div>';
+      : options.emptyHtml ||
+        '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">표시할 불판이 없습니다.</p></div>';
 
     bindCardNavigation(container, '.list-card');
     startFeedTimerRefresh();
@@ -931,8 +965,21 @@
   window.PickleFeed = {
     load: loadPickleFeed,
     fetchPicklePosts: fetchPicklePosts,
+    fetchPostRows: fetchPostRows,
+    enrichRowsToPosts: enrichRowsToPosts,
+    renderListToContainer: renderListToContainer,
+    showLoading: showLoading,
     goDetail: goDetail,
+    categoryLabel: categoryLabel,
+    LOADING_HTML: LOADING_HTML,
   };
 
-  document.addEventListener('DOMContentLoaded', loadPickleFeed);
+  document.addEventListener('DOMContentLoaded', function () {
+    if (
+      document.getElementById('hotFeedList') ||
+      document.getElementById('aiCurationContainer')
+    ) {
+      loadPickleFeed();
+    }
+  });
 })();

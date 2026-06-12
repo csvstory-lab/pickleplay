@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VDZBSH2YBT');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>P!CKLE - 카테고리 불판</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #09090b;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    body {
+        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
+        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+    }
+
+    header {
+        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
+        z-index: 900; border-bottom: 1px solid var(--border-color); transition: top 0.3s ease-in-out;
+    }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
+    .logo {
+        font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        cursor: pointer; margin: 0; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.4));
+    }
+    .header-actions { display: flex; align-items: center; gap: 15px; }
+    .btn-category {
+        background-color: #27272a; color: #fff; border: 1px solid #3f3f46;
+        padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+    }
+    a.btn-category { text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-category.active,
+    .btn-category:active { background-color: var(--neon-green); color: #000; transform: scale(0.97); }
+    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
+    .noti-bell:active { transform: scale(0.9); }
+
+    .category-nav-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .category-nav-scroll::-webkit-scrollbar { display: none; }
+    .category-nav-tab {
+        flex-shrink: 0; border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
+        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap;
+    }
+    .category-nav-tab.active {
+        border-color: var(--neon-green); color: #000; background: var(--neon-green);
+        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
+    }
+    .category-nav-tab:active { transform: scale(0.96); }
+
+    main { padding: 18px 0 100px; }
+
+    .page-header { padding: 0 20px 14px; }
+    .page-title {
+        font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 1.35rem;
+        letter-spacing: -0.5px; margin: 0 0 14px; color: #fff;
+    }
+
+    .sort-filter-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 16px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .sort-filter-scroll::-webkit-scrollbar { display: none; }
+    .sort-filter-btn {
+        flex-shrink: 0; border: 1px solid #3f3f46; background: #18181b;
+        color: #d4d4d8; padding: 10px 14px; border-radius: 14px;
+        font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap;
+    }
+    .sort-filter-btn.active {
+        border-color: var(--neon-pink); color: #fff;
+        background: linear-gradient(135deg, rgba(255, 0, 127, 0.18), rgba(255, 85, 0, 0.12));
+        box-shadow: 0 4px 16px rgba(255, 0, 127, 0.18);
+    }
+    .sort-filter-btn:active { transform: scale(0.97); }
+
+    .list-section { padding: 0 20px 12px; }
+
+    .list-card {
+        display: flex; flex-direction: column; background-color: #27272a;
+        border: 1px solid #3f3f46; border-radius: 16px; margin-bottom: 14px;
+        overflow: hidden; cursor: pointer; transition: 0.2s;
+        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
+    }
+    .list-card:active { transform: translate(1px, 1px); border-color: #52525b; }
+    .list-card.sponsor-card {
+        border-color: rgba(255, 204, 0, 0.4);
+        background: linear-gradient(180deg, rgba(255, 204, 0, 0.06) 0%, #27272a 100%);
+    }
+    .list-card .card-body {
+        display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px;
+    }
+    .list-card .title {
+        font-size: 1.05rem; font-weight: 800; line-height: 1.35; color: #fff;
+        margin: 0; word-break: keep-all;
+    }
+
+    .card-thumb-top {
+        width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
+        background: #0f0f11; flex-shrink: 0;
+    }
+    .card-thumb-top .card-thumb-img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .card-thumb-top--fallback {
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #0a0a0c 0%, #18181b 50%, #1a1020 100%);
+        border-bottom: 1px dashed #52525b;
+    }
+    .card-thumb-fallback-label {
+        font-family: 'Black Han Sans', sans-serif; font-size: clamp(1.4rem, 6vw, 2rem);
+        line-height: 1.15; text-align: center; padding: 12px 16px;
+        background: linear-gradient(135deg, var(--neon-green), var(--neon-pink));
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        word-break: keep-all;
+    }
+
+    .feed-card-meta {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+        margin-top: 2px; font-size: 0.78rem; font-weight: 700; color: var(--text-sub);
+    }
+    .feed-cat-badge {
+        display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px;
+        font-size: 0.68rem; font-weight: 800; line-height: 1.2; color: #e4e4e7;
+        background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
+        flex-shrink: 0;
+    }
+    .feed-cat-badge--sponsor {
+        color: var(--theme-gold); background: rgba(255, 204, 0, 0.12);
+        border-color: rgba(255, 204, 0, 0.28);
+    }
+    .feed-meta-participants { color: var(--theme-gold); white-space: nowrap; }
+    .feed-meta-timer { color: var(--text-sub); white-space: nowrap; }
+    .feed-meta-timer.is-ended { color: #71717a; }
+
+    .list-card .text-vs-box {
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+        gap: 8px 10px; background: #0f0f11; border: 1px solid #27272a;
+        border-radius: 12px; padding: 10px; margin: 0;
+    }
+    .list-card .text-vs-box .vs-a,
+    .list-card .text-vs-box .vs-b {
+        flex: 1 1 auto; min-width: 0; font-size: 0.95rem; font-weight: 800;
+        text-align: center; line-height: 1.35; word-break: keep-all;
+    }
+    .list-card .text-vs-box .vs-a { color: var(--neon-blue); }
+    .list-card .text-vs-box .vs-b { color: var(--neon-pink); }
+    .list-card .text-vs-box .vs-label {
+        font-family: 'Black Han Sans', sans-serif; font-size: 0.72rem;
+        font-weight: 700; color: #71717a; letter-spacing: 0.04em;
+    }
+
+    .feed-loading, .feed-empty {
+        padding: 36px 20px; text-align: center; color: var(--text-sub);
+        font-size: 0.9rem; font-weight: 700; line-height: 1.55;
+    }
+    .feed-loading p { margin: 14px 0 0; color: #d4d4d8; }
+    .feed-spinner {
+        width: 36px; height: 36px; margin: 0 auto;
+        border: 3px solid #27272a; border-top-color: var(--neon-green);
+        border-radius: 50%; animation: feedSpin 0.75s linear infinite;
+    }
+    @keyframes feedSpin { to { transform: rotate(360deg); } }
+    .feed-empty-title { color: #fff; font-size: 0.95rem; margin: 0 0 16px; word-break: keep-all; }
+    .btn-create-feed {
+        display: inline-block; padding: 14px 22px; border: none; border-radius: 14px;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000;
+        font-family: 'Black Han Sans', sans-serif; font-size: 1rem; font-weight: 900;
+        cursor: pointer; box-shadow: 4px 4px 0 #000;
+    }
+    .feed-error { color: var(--neon-pink); }
+
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0;
+        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px);
+        display: flex; justify-content: space-around; align-items: center;
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+        border-top: 1px solid var(--border-color); z-index: 800;
+    }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .nav-icon { font-size: 1.4rem; }
+    .nav-btn.fire-btn .nav-icon {
+        background-color: var(--neon-green); width: 45px; height: 45px;
+        display: flex; justify-content: center; align-items: center;
+        border-radius: 50%; color: #000; font-size: 1.6rem;
+        transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3);
+    }
+    .nav-btn.active { color: var(--neon-green); }
+</style>
+<link rel="stylesheet" href="../css/responsive-layout.css">
+</head>
+<body>
+
+<header id="mainHeader">
+    <div class="top-row">
+        <h1 class="logo" onclick="location.href='index.html'">P!CKLE</h1>
+        <div class="header-actions">
+            <a href="category.html" class="btn-category active"><span>≡</span> 전체 불판</a>
+            <div class="noti-bell" onclick="alert('알림함 준비 중입니다!')">🔔</div>
+        </div>
+    </div>
+    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리">
+        <button type="button" class="category-nav-tab active" data-category="all">📋 전체</button>
+        <button type="button" class="category-nav-tab" data-category="hot">🔥 HOT</button>
+        <button type="button" class="category-nav-tab" data-category="love">💖 연애</button>
+        <button type="button" class="category-nav-tab" data-category="balance">⚖️ 밸런스</button>
+        <button type="button" class="category-nav-tab" data-category="brand">🤝 브랜드</button>
+        <button type="button" class="category-nav-tab" data-category="daily">✨ 일상</button>
+        <button type="button" class="category-nav-tab" data-category="sports">🏟️ 스포츠</button>
+        <button type="button" class="category-nav-tab" data-category="food">🍕 푸드</button>
+        <button type="button" class="category-nav-tab" data-category="other">📌 기타</button>
+    </nav>
+</header>
+
+<main>
+    <div class="page-header">
+        <h1 class="page-title" id="categoryPageTitle">🔥 모든 불판</h1>
+    </div>
+
+    <div class="sort-filter-scroll" id="sortFilters" aria-label="정렬">
+        <button type="button" class="sort-filter-btn active" data-sort="today_popular">🔥 오늘 인기순</button>
+        <button type="button" class="sort-filter-btn" data-sort="deadline">⏰ 마감 임박순</button>
+        <button type="button" class="sort-filter-btn" data-sort="participants">👥 참여자순</button>
+        <button type="button" class="sort-filter-btn" data-sort="latest">🆕 최신순</button>
+    </div>
+
+    <section class="list-section">
+        <div id="categoryFeedList">
+            <div class="feed-loading">
+                <div class="feed-spinner" aria-hidden="true"></div>
+                <p>🔥 불판을 뜨겁게 달구는 중입니다...</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<nav class="bottom-nav">
+    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    <div class="nav-btn fire-btn" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-upload.js"></script>
+<script src="../js/pickle-media-view.js"></script>
+<script src="../js/pickle-categories.js"></script>
+<script src="../js/pickle-feed.js"></script>
+<script src="../js/pickle-category.js"></script>
+<script>
+    var lastScrollTop = 0;
+    window.addEventListener('scroll', function () {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var header = document.getElementById('mainHeader');
+        if (!header) return;
+        if (scrollTop > lastScrollTop && scrollTop > 60) {
+            header.style.top = '-120px';
+        } else {
+            header.style.top = '0';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+</script>
+</body>
+</html>

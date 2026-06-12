@@ -7,10 +7,11 @@
   const CATEGORIES = [
     { id: 'all', label: '📋 전체 불판' },
     { id: 'hot', label: '🔥 실시간 핫' },
-    { id: 'ugc', label: '✨ UGC 일반' },
+    { id: 'daily', label: '✨ 일상' },
     { id: 'love', label: '💔 연애/썸' },
-    { id: 'brain', label: '🤯 뇌정지 밸런스' },
+    { id: 'balance', label: '🤯 뇌정지 밸런스' },
     { id: 'brand', label: '🤝 브랜드 픽' },
+    { id: 'sports', label: '🏟️ 스포츠' },
   ];
 
   let sheetMounted = false;
@@ -98,8 +99,10 @@
     }
 
     if (getCurrentPage() !== 'home') {
-      window.location.href =
-        'index.html?cat=' + encodeURIComponent(currentCategory);
+      const url = window.PickleCategories
+        ? window.PickleCategories.buildCategoryUrl(currentCategory)
+        : 'category.html?category=' + encodeURIComponent(currentCategory);
+      window.location.href = url;
       return;
     }
 

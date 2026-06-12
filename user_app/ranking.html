@@ -49,6 +49,7 @@
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
     .btn-category { background-color: rgba(39, 39, 42, 0.8); color: #fff; border: 1px solid #3f3f46; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    a.btn-category { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; transition: 0.2s; }
     .noti-bell:active { transform: scale(0.9); }
     .noti-bell::after { content: 'N'; position: absolute; top: -5px; right: -5px; background-color: var(--neon-pink); color: white; font-size: 0.6rem; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-color); }
@@ -150,6 +151,10 @@
     /* 카테고리 시트 */
     .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: #121214; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px 20px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
     .bottom-sheet.open { transform: translateY(0); }
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding-bottom: 20px; }
+    .grid-item { background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
+    .grid-item:active { background-color: var(--neon-green); color: #000; transform: scale(0.95); }
+    .grid-item.highlight { border: 1px solid var(--neon-pink); color: var(--neon-pink); }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 </head>
@@ -159,7 +164,7 @@
     <div class="top-row">
         <h1 class="logo" style="cursor:pointer;" onclick="location.href='index.html'">P!CKLE</h1>
         <div class="header-actions">
-            <button class="btn-category" onclick="toggleCategorySheet()"><span>≡</span> 전체 불판</button>
+            <a href="category.html" class="btn-category"><span>≡</span> 전체 불판</a>
             <div class="noti-bell" onclick="toggleNotiDrawer()">🔔</div>
         </div>
     </div>
@@ -181,9 +186,23 @@
         <h2 class="noti-title" style="color:var(--neon-green);">모든 불판 탐험 🚀</h2>
         <button class="btn-close-drawer" onclick="closeAllDrawers()">✕</button>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-        <div style="background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8;">🚗 블박/과실</div>
-        <div style="background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8;">🍕 먹잘알/푸파</div>
+    <div class="category-grid" id="categoryGrid">
+        <div class="grid-item highlight" data-cat-label="🔥 HOT 랭킹">🔥 HOT 랭킹</div>
+        <div class="grid-item highlight" data-cat-label="🎁 꿀템 드랍">🎁 꿀템 드랍</div>
+        <div class="grid-item" data-cat-label="💖 연애/과몰입">💖 연애/과몰입</div>
+        <div class="grid-item" data-cat-label="⚖️ 뇌정지 밸런스">⚖️ 뇌정지 밸런스</div>
+        <div class="grid-item" data-cat-label="🤬 빌런/썰">🤬 빌런/썰</div>
+        <div class="grid-item" data-cat-label="🍕 먹잘알/푸파">🍕 먹잘알/푸파</div>
+        <div class="grid-item" data-cat-label="👗 OOTD/스타일">👗 OOTD/스타일</div>
+        <div class="grid-item" data-cat-label="🍿 덕질/서브컬처">🍿 덕질/서브컬처</div>
+        <div class="grid-item" data-cat-label="🎮 겜심/이스포츠">🎮 겜심/이스포츠</div>
+        <div class="grid-item" data-cat-label="🐾 힐링/동물">🐾 힐링/동물</div>
+        <div class="grid-item" data-cat-label="🏟️ 스포츠/매치업">🏟️ 스포츠/매치업</div>
+        <div class="grid-item" data-cat-label="💸 텅장/소비">💸 텅장/소비</div>
+        <div class="grid-item" data-cat-label="🚗 블박/과실">🚗 블박/과실</div>
+        <div class="grid-item" data-cat-label="🧠 MBTI/심리">🧠 MBTI/심리</div>
+        <div class="grid-item" data-cat-label="🎤 돌판/K-POP">🎤 돌판/K-POP</div>
+        <div class="grid-item" data-cat-label="👻 미스터리">👻 미스터리</div>
     </div>
 </div>
 
@@ -384,6 +403,7 @@
         });
     }
 </script>
+<script src="../js/pickle-categories.js"></script>
 
 </body>
 </html>

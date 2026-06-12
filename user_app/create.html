@@ -50,6 +50,7 @@
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
     .btn-category { background-color: rgba(39, 39, 42, 0.8); color: #fff; border: 1px solid #3f3f46; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    a.btn-category { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; }
     .noti-bell::after { content: 'N'; position: absolute; top: -5px; right: -5px; background-color: var(--neon-pink); color: white; font-size: 0.6rem; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-color); }
 
@@ -271,7 +272,7 @@
     <div class="top-row">
         <h1 class="logo" style="cursor:pointer;" onclick="location.href='index.html'">P!CKLE</h1>
         <div class="header-actions">
-            <button class="btn-category" onclick="toggleCategorySheet()"><span>≡</span> 전체 불판</button>
+            <a href="category.html" class="btn-category"><span>≡</span> 전체 불판</a>
             <div class="noti-bell" onclick="alert('알림함으로 이동합니다!')">🔔</div>
         </div>
     </div>
@@ -283,23 +284,23 @@
         <div class="sheet-title">모든 불판 탐험 🚀</div>
         <button class="btn-close" onclick="toggleCategorySheet()">✕</button>
     </div>
-    <div class="category-grid">
-        <div class="grid-item highlight">🔥 HOT 랭킹</div>
-        <div class="grid-item highlight">🎁 꿀템 드랍</div>
-        <div class="grid-item">💖 연애/과몰입</div>
-        <div class="grid-item">⚖️ 뇌정지 밸런스</div>
-        <div class="grid-item">🤬 빌런/썰</div>
-        <div class="grid-item">🍕 먹잘알/푸파</div>
-        <div class="grid-item">👗 OOTD/스타일</div>
-        <div class="grid-item">🍿 덕질/서브컬처</div>
-        <div class="grid-item">🎮 겜심/이스포츠</div>
-        <div class="grid-item">🐾 힐링/동물</div>
-        <div class="grid-item">🏟️ 스포츠/매치업</div>
-        <div class="grid-item">💸 텅장/소비</div>
-        <div class="grid-item">🚗 블박/과실</div>
-        <div class="grid-item">🧠 MBTI/심리</div>
-        <div class="grid-item">🎤 돌판/K-POP</div>
-        <div class="grid-item">👻 미스터리</div>
+    <div class="category-grid" id="categoryGrid">
+        <div class="grid-item highlight" data-cat-label="🔥 HOT 랭킹">🔥 HOT 랭킹</div>
+        <div class="grid-item highlight" data-cat-label="🎁 꿀템 드랍">🎁 꿀템 드랍</div>
+        <div class="grid-item" data-cat-label="💖 연애/과몰입">💖 연애/과몰입</div>
+        <div class="grid-item" data-cat-label="⚖️ 뇌정지 밸런스">⚖️ 뇌정지 밸런스</div>
+        <div class="grid-item" data-cat-label="🤬 빌런/썰">🤬 빌런/썰</div>
+        <div class="grid-item" data-cat-label="🍕 먹잘알/푸파">🍕 먹잘알/푸파</div>
+        <div class="grid-item" data-cat-label="👗 OOTD/스타일">👗 OOTD/스타일</div>
+        <div class="grid-item" data-cat-label="🍿 덕질/서브컬처">🍿 덕질/서브컬처</div>
+        <div class="grid-item" data-cat-label="🎮 겜심/이스포츠">🎮 겜심/이스포츠</div>
+        <div class="grid-item" data-cat-label="🐾 힐링/동물">🐾 힐링/동물</div>
+        <div class="grid-item" data-cat-label="🏟️ 스포츠/매치업">🏟️ 스포츠/매치업</div>
+        <div class="grid-item" data-cat-label="💸 텅장/소비">💸 텅장/소비</div>
+        <div class="grid-item" data-cat-label="🚗 블박/과실">🚗 블박/과실</div>
+        <div class="grid-item" data-cat-label="🧠 MBTI/심리">🧠 MBTI/심리</div>
+        <div class="grid-item" data-cat-label="🎤 돌판/K-POP">🎤 돌판/K-POP</div>
+        <div class="grid-item" data-cat-label="👻 미스터리">👻 미스터리</div>
     </div>
 </div>
 
@@ -440,6 +441,7 @@
 <script src="../js/auth.js"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/create-page.js"></script>
+<script src="../js/pickle-categories.js"></script>
 <script>
     // 마우스 드래그 스크롤
     const slider = document.getElementById('chipSlider');
