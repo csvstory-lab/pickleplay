@@ -1,27 +1,37 @@
 /**
  * P!CKLE — 카테고리 네비 공통 설정 (create.html 칩 14개 기준)
- * URL ?category= 슬러그 ↔ Supabase posts.category(DB)
+ * posts.category = 영문 슬러그 (driving, food, drama …) ↔ 화면 라벨 1:1
  */
 (function () {
   'use strict';
 
-  /** create.html #chipSlider 와 1:1 동기화 */
+  /** create.html #chipSlider 와 1:1 동기화 — slug가 DB 저장값 */
   var PICKLE_CATEGORIES = [
-    { slug: 'driving', label: '🚗 블박/과실', db: 'ugc' },
-    { slug: 'food', label: '🍕 먹잘알/푸파', db: 'ugc' },
-    { slug: 'love', label: '💖 연애/과몰입', db: 'love' },
-    { slug: 'balance', label: '⚖️ 뇌정지 밸런스', db: 'brain' },
-    { slug: 'fashion', label: '👗 OOTD/스타일', db: 'ugc' },
-    { slug: 'drama', label: '🤬 빌런/썰', db: 'ugc' },
-    { slug: 'fandom', label: '🍿 덕질/서브컬처', db: 'ugc' },
-    { slug: 'games', label: '🎮 겜심/이스포츠', db: 'ugc' },
-    { slug: 'pets', label: '🐾 힐링/동물', db: 'ugc' },
-    { slug: 'sports', label: '🏟️ 스포츠/매치업', db: 'ugc' },
-    { slug: 'spending', label: '💸 텅장/소비', db: 'ugc' },
-    { slug: 'mind', label: '🧠 MBTI/심리', db: 'brain' },
-    { slug: 'kpop', label: '🎤 돌판/K-POP', db: 'ugc' },
-    { slug: 'mystery', label: '👻 미스터리', db: 'ugc' },
+    { slug: 'driving', label: '🚗 블박/과실' },
+    { slug: 'food', label: '🍕 먹잘알/푸파' },
+    { slug: 'love', label: '💖 연애/과몰입' },
+    { slug: 'balance', label: '⚖️ 뇌정지 밸런스' },
+    { slug: 'fashion', label: '👗 OOTD/스타일' },
+    { slug: 'drama', label: '🤬 빌런/썰' },
+    { slug: 'fandom', label: '🍿 덕질/서브컬처' },
+    { slug: 'games', label: '🎮 겜심/이스포츠' },
+    { slug: 'pets', label: '🐾 힐링/동물' },
+    { slug: 'sports', label: '🏟️ 스포츠/매치업' },
+    { slug: 'spending', label: '💸 텅장/소비' },
+    { slug: 'mind', label: '🧠 MBTI/심리' },
+    { slug: 'kpop', label: '🎤 돌판/K-POP' },
+    { slug: 'mystery', label: '👻 미스터리' },
   ];
+
+  var LABEL_BY_SLUG = Object.create(null);
+  var SLUG_BY_LABEL = Object.create(null);
+  var VALID_SLUG_SET = Object.create(null);
+
+  PICKLE_CATEGORIES.forEach(function (c) {
+    LABEL_BY_SLUG[c.slug] = c.label;
+    SLUG_BY_LABEL[c.label] = c.slug;
+    VALID_SLUG_SET[c.slug] = true;
+  });
 
   var HALL_NAV_ITEM = {
     slug: 'hall',
@@ -35,26 +45,12 @@
     })
   );
 
-  var SLUG_META = { all: { label: '🔥 모든 불판', db: null } };
+  var SLUG_META = { all: { label: '🔥 모든 불판' } };
   PICKLE_CATEGORIES.forEach(function (c) {
-    SLUG_META[c.slug] = { label: c.label, db: c.db };
+    SLUG_META[c.slug] = { label: c.label };
   });
 
-  var GRID_LABEL_TO_SLUG = {};
-  PICKLE_CATEGORIES.forEach(function (c) {
-    GRID_LABEL_TO_SLUG[c.label] = c.slug;
-  });
-
-  /** 구 URL 슬러그 → create 기준 슬러그 */
-  var LEGACY_TO_SLUG = {
-    brain: 'balance',
-    ugc: 'food',
-    daily: 'drama',
-    hot: 'sports',
-    brand: 'spending',
-    other: 'mystery',
-    romance: 'love',
-  };
+  var GRID_LABEL_TO_SLUG = SLUG_BY_LABEL;
 
   var VALID_URL_SLUGS = PICKLE_CATEGORIES.map(function (c) {
     return c.slug;
@@ -64,32 +60,53 @@
     return c.label;
   });
 
+  function normalizeCategorySlug(raw) {
+    if (raw == null || raw === '') return '';
+    var slug = String(raw).trim().toLowerCase();
+    return VALID_SLUG_SET[slug] ? slug : '';
+  }
+
+  function isValidCategorySlug(raw) {
+    return !!normalizeCategorySlug(raw);
+  }
+
+  /** DB posts.category → 화면 라벨 (없으면 null → 뱃지 미표시) */
+  function resolveCategoryLabel(raw) {
+    var slug = normalizeCategorySlug(raw);
+    if (!slug) return null;
+    return LABEL_BY_SLUG[slug] || null;
+  }
+
+  /** create.html 칩 라벨 → DB 슬러그 (없으면 null) */
+  function resolveCategorySlugFromLabel(label) {
+    var text = String(label || '').trim();
+    return SLUG_BY_LABEL[text] || null;
+  }
+
   function normalizeSlug(raw) {
     if (raw == null || raw === '') return 'all';
     var slug = String(raw).trim().toLowerCase();
     if (slug === 'all') return 'all';
-    if (LEGACY_TO_SLUG[slug]) return LEGACY_TO_SLUG[slug];
-    if (SLUG_META[slug]) return slug;
+    if (VALID_SLUG_SET[slug]) return slug;
     return 'all';
   }
 
+  /** URL/필터 슬러그 → posts.category (전체는 null) */
   function slugToDbCategory(urlSlug) {
     var slug = normalizeSlug(urlSlug);
     if (slug === 'all') return null;
-    var meta = SLUG_META[slug];
-    return meta && meta.db != null ? meta.db : null;
+    return slug;
   }
 
   function labelFromSlug(slug) {
     var key = normalizeSlug(slug);
     if (key === 'all') return SLUG_META.all.label;
-    return (SLUG_META[key] && SLUG_META[key].label) || key;
+    return LABEL_BY_SLUG[key] || null;
   }
 
   function slugFromGridLabel(label) {
     var text = String(label || '').trim();
-    if (GRID_LABEL_TO_SLUG[text]) return GRID_LABEL_TO_SLUG[text];
-    return 'food';
+    return GRID_LABEL_TO_SLUG[text] || null;
   }
 
   function buildCategoryUrl(slug, sort) {
@@ -125,7 +142,12 @@
         if (typeof window.closeAllDrawers === 'function') window.closeAllDrawers();
         if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
         if (typeof window.closeAllModals === 'function') window.closeAllModals();
-        goCategory(slugAttr || slugFromGridLabel(label));
+        var slug = slugAttr ? normalizeSlug(slugAttr) : slugFromGridLabel(label);
+        if (slug && slug !== 'all') {
+          goCategory(slug);
+        } else if (slugFromGridLabel(label)) {
+          goCategory(slugFromGridLabel(label));
+        }
       });
     });
   }
@@ -265,12 +287,17 @@
 
   window.PickleCategories = {
     PICKLE_CATEGORIES: PICKLE_CATEGORIES,
+    LABEL_BY_SLUG: LABEL_BY_SLUG,
     NAV_ITEMS: NAV_ITEMS,
     HALL_NAV_ITEM: HALL_NAV_ITEM,
     SLUG_META: SLUG_META,
     GRID_LABELS: GRID_LABELS,
     VALID_URL_SLUGS: VALID_URL_SLUGS,
     normalizeSlug: normalizeSlug,
+    normalizeCategorySlug: normalizeCategorySlug,
+    isValidCategorySlug: isValidCategorySlug,
+    resolveCategoryLabel: resolveCategoryLabel,
+    resolveCategorySlugFromLabel: resolveCategorySlugFromLabel,
     slugToDbCategory: slugToDbCategory,
     labelFromSlug: labelFromSlug,
     slugFromGridLabel: slugFromGridLabel,

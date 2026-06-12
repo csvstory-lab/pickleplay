@@ -5,15 +5,6 @@
 (function () {
   'use strict';
 
-  var CATEGORY_LABELS = {
-    hot: '🔥 HOT',
-    brand: '🤝 브랜드',
-    love: '💖 연애',
-    brain: '⚖️ 밸런스',
-    ugc: '✨ UGC',
-    other: '📌 기타',
-  };
-
   var LOADING_HTML =
     '<div class="feed-loading">' +
     '<div class="feed-spinner" aria-hidden="true"></div>' +
@@ -249,9 +240,15 @@
     return { a: pctA, b: 100 - pctA, total: total };
   }
 
+  function resolvePostCategoryLabel(category) {
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
+      return window.PickleCategories.resolveCategoryLabel(category);
+    }
+    return null;
+  }
+
   function categoryLabel(category) {
-    if (!category) return '🔥 불판';
-    return CATEGORY_LABELS[category] || safeStr(category, '🔥 불판');
+    return resolvePostCategoryLabel(category);
   }
 
   function isSchemaColumnError(error) {
@@ -290,7 +287,9 @@
   }
 
   function renderFeedCategoryBadge(post) {
-    var categoryText = safeStr(post && post.categoryLabel, '🔥 불판');
+    var categoryText = post && post.categoryLabel;
+    if (!categoryText) return '';
+
     var badgeClass = 'feed-cat-badge';
     if (post && post.is_sponsor) {
       badgeClass += ' feed-cat-badge--sponsor';
@@ -339,7 +338,9 @@
       );
     }
 
-    var fallbackCat = escapeHtml(safeStr(post && post.categoryLabel, '불판'));
+    var fallbackCat = post && post.categoryLabel
+      ? escapeHtml(post.categoryLabel)
+      : '🔥 불판';
     return (
       '<div class="card-thumb-top card-thumb-top--fallback">' +
       '<span class="card-thumb-fallback-label">' +
@@ -987,6 +988,7 @@
     showLoading: showLoading,
     goDetail: goDetail,
     categoryLabel: categoryLabel,
+    resolvePostCategoryLabel: resolvePostCategoryLabel,
     renderCardThumbTop: renderCardThumbTop,
     LOADING_HTML: LOADING_HTML,
   };

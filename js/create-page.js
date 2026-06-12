@@ -8,25 +8,19 @@
 (function () {
   'use strict';
 
-  /** UI 칩 라벨 → posts.category (CHECK: hot|brand|love|brain|ugc|other) */
-  var CATEGORY_MAP = {
-    '💖 연애/과몰입': 'love',
-    '⚖️ 뇌정지 밸런스': 'brain',
-    '🧠 MBTI/심리': 'brain',
-    '🤝 브랜드': 'brand',
-    '🔥 HOT': 'hot',
-  };
+  function resolveCategorySlug(chipLabel) {
+    var label = String(chipLabel || '').trim();
+    if (window.PickleCategories && window.PickleCategories.resolveCategorySlugFromLabel) {
+      return window.PickleCategories.resolveCategorySlugFromLabel(label) || '';
+    }
+    return '';
+  }
 
   function getClient() {
     if (!window.PickleSupabase?.getClient) {
       throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
     }
     return window.PickleSupabase.getClient();
-  }
-
-  function resolveCategorySlug(chipLabel) {
-    var label = String(chipLabel || '').trim();
-    return CATEGORY_MAP[label] || 'ugc';
   }
 
   function emptyMedia() {
@@ -390,7 +384,7 @@
     }
 
     var formData = collectFormData();
-    if (!formData.categoryLabel) {
+    if (!formData.categoryLabel || !formData.categorySlug) {
       alert('"어느 전장으로 갈까요?"를 선택해주세요.');
       return { cancelled: true };
     }

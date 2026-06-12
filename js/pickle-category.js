@@ -133,7 +133,8 @@
   function updatePageTitle() {
     var titleEl = document.getElementById('categoryPageTitle');
     if (!titleEl) return;
-    titleEl.textContent = getCategoriesApi().labelFromSlug(state.category);
+    titleEl.textContent =
+      getCategoriesApi().labelFromSlug(state.category) || '🔥 모든 불판';
   }
 
   function buildQueryFilters(sort, urlCategorySlug) {
