@@ -448,5 +448,9 @@
     fetchCategoryPosts: fetchCategoryPosts,
   };
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', function () {
+    getCategoriesApi()
+      .load()
+      .then(init);
+  });
 })();

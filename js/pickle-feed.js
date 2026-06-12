@@ -927,6 +927,10 @@
   }
 
   async function loadPickleFeed() {
+    if (window.PickleCategories && window.PickleCategories.load) {
+      await window.PickleCategories.load();
+    }
+
     var king = document.getElementById('aiCurationContainer');
     var list = document.getElementById('hotFeedList');
 

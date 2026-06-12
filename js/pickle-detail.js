@@ -1157,6 +1157,10 @@
     }
 
     try {
+      if (window.PickleCategories && window.PickleCategories.load) {
+        await window.PickleCategories.load();
+      }
+
       var sb = window.PickleSupabase.getClient();
       var post = await fetchPostById(postId);
 

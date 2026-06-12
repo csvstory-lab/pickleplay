@@ -1,38 +1,9 @@
 /**
- * P!CKLE — 카테고리 네비 공통 설정 (create.html 칩 15개 기준)
- * posts.category = 영문 슬러그 (driving, food, drama …) ↔ 화면 라벨 1:1
+ * P!CKLE — 카테고리 (Supabase categories 테이블 연동)
+ * posts.category = slug ↔ 화면 라벨(icon + name)
  */
 (function () {
   'use strict';
-
-  /** create.html #chipSlider 와 1:1 동기화 — slug가 DB 저장값 */
-  var PICKLE_CATEGORIES = [
-    { slug: 'driving', label: '🚗 블박/과실' },
-    { slug: 'food', label: '🍕 먹잘알/푸파' },
-    { slug: 'love', label: '💖 연애/과몰입' },
-    { slug: 'balance', label: '⚖️ 뇌정지 밸런스' },
-    { slug: 'fashion', label: '👗 OOTD/스타일' },
-    { slug: 'drama', label: '🤬 빌런/썰' },
-    { slug: 'fandom', label: '🍿 덕질/서브컬처' },
-    { slug: 'games', label: '🎮 겜심/이스포츠' },
-    { slug: 'pets', label: '🐾 힐링/동물' },
-    { slug: 'sports', label: '🏟️ 스포츠/매치업' },
-    { slug: 'worldcup', label: '⚽ 북중미 월드컵', seasonal: true },
-    { slug: 'spending', label: '💸 텅장/소비' },
-    { slug: 'mind', label: '🧠 MBTI/심리' },
-    { slug: 'kpop', label: '🎤 돌판/K-POP' },
-    { slug: 'mystery', label: '👻 미스터리' },
-  ];
-
-  var LABEL_BY_SLUG = Object.create(null);
-  var SLUG_BY_LABEL = Object.create(null);
-  var VALID_SLUG_SET = Object.create(null);
-
-  PICKLE_CATEGORIES.forEach(function (c) {
-    LABEL_BY_SLUG[c.slug] = c.label;
-    SLUG_BY_LABEL[c.label] = c.slug;
-    VALID_SLUG_SET[c.slug] = true;
-  });
 
   var HALL_NAV_ITEM = {
     slug: 'hall',
@@ -40,26 +11,166 @@
     href: 'hall_of_fame.html',
   };
 
-  var NAV_ITEMS = [{ slug: 'all', label: '📋 전체' }, HALL_NAV_ITEM].concat(
-    PICKLE_CATEGORIES.map(function (c) {
-      return { slug: c.slug, label: c.label };
-    })
-  );
-
   var SLUG_META = { all: { label: '🔥 모든 불판' } };
-  PICKLE_CATEGORIES.forEach(function (c) {
-    SLUG_META[c.slug] = { label: c.label };
-  });
 
-  var GRID_LABEL_TO_SLUG = SLUG_BY_LABEL;
+  /** DB 장애 시 폴백 (오프라인·RLS 미적용) */
+  var FALLBACK_ROWS = [
+    { slug: 'worldcup', name: '북중미 월드컵', icon: '⚽', sort_order: 10 },
+    { slug: 'food', name: '먹잘알/푸파', icon: '🍕', sort_order: 20 },
+    { slug: 'love', name: '연애/과몰입', icon: '💖', sort_order: 30 },
+    { slug: 'balance', name: '뇌정지 밸런스', icon: '⚖️', sort_order: 40 },
+    { slug: 'fashion', name: 'OOTD/스타일', icon: '👗', sort_order: 50 },
+    { slug: 'drama', name: '빌런/썰', icon: '🤬', sort_order: 60 },
+    { slug: 'fandom', name: '덕질/서브컬처', icon: '🍿', sort_order: 70 },
+    { slug: 'games', name: '겜심/이스포츠', icon: '🎮', sort_order: 80 },
+    { slug: 'pets', name: '힐링/동물', icon: '🐾', sort_order: 90 },
+    { slug: 'sports', name: '스포츠/매치업', icon: '🏟️', sort_order: 100 },
+    { slug: 'spending', name: '텅장/소비', icon: '💸', sort_order: 110 },
+    { slug: 'mind', name: 'MBTI/심리', icon: '🧠', sort_order: 120 },
+    { slug: 'kpop', name: '돌판/K-POP', icon: '🎤', sort_order: 130 },
+    { slug: 'mystery', name: '미스터리', icon: '👻', sort_order: 140 },
+    { slug: 'driving', name: '블박/과실', icon: '🚗', sort_order: 150 },
+  ];
 
-  var VALID_URL_SLUGS = PICKLE_CATEGORIES.map(function (c) {
-    return c.slug;
-  });
+  var cache = {
+    list: [],
+    loaded: false,
+    loadPromise: null,
+  };
 
-  var GRID_LABELS = PICKLE_CATEGORIES.map(function (c) {
-    return c.label;
-  });
+  var LABEL_BY_SLUG = Object.create(null);
+  var SLUG_BY_LABEL = Object.create(null);
+  var VALID_SLUG_SET = Object.create(null);
+
+  function getClient() {
+    if (!window.PickleSupabase || !window.PickleSupabase.getClient) {
+      return null;
+    }
+    return window.PickleSupabase.getClient();
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeAttr(str) {
+    return escapeHtml(str);
+  }
+
+  function buildLabel(icon, name) {
+    var ic = String(icon || '').trim();
+    var nm = String(name || '').trim();
+    if (ic && nm) return ic + ' ' + nm;
+    return ic || nm || '';
+  }
+
+  function normalizeCategoryRow(row) {
+    if (!row || !row.slug) return null;
+    var slug = String(row.slug).trim().toLowerCase();
+    var icon = String(row.icon || '').trim();
+    var name = String(row.name || '').trim();
+    return {
+      slug: slug,
+      name: name,
+      icon: icon,
+      label: buildLabel(icon, name),
+      sort_order: Number(row.sort_order) || 0,
+      is_active: row.is_active !== false,
+      seasonal: slug === 'worldcup',
+    };
+  }
+
+  function rebuildIndexes(list) {
+    LABEL_BY_SLUG = Object.create(null);
+    SLUG_BY_LABEL = Object.create(null);
+    VALID_SLUG_SET = Object.create(null);
+
+    (list || []).forEach(function (c) {
+      if (!c || !c.slug) return;
+      LABEL_BY_SLUG[c.slug] = c.label;
+      if (c.label) SLUG_BY_LABEL[c.label] = c.slug;
+      VALID_SLUG_SET[c.slug] = true;
+      SLUG_META[c.slug] = { label: c.label, name: c.name, icon: c.icon };
+    });
+  }
+
+  function applyCategoryList(list) {
+    cache.list = list || [];
+    rebuildIndexes(cache.list);
+    cache.loaded = true;
+    return cache.list;
+  }
+
+  async function fetchCategoriesFromDb() {
+    var sb = getClient();
+    if (!sb) {
+      throw new Error('Supabase 클라이언트 없음');
+    }
+
+    var res = await sb
+      .from('categories')
+      .select('slug, name, icon, sort_order, is_active')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+
+    if (res.error) {
+      throw res.error;
+    }
+
+    var list = (res.data || [])
+      .map(normalizeCategoryRow)
+      .filter(Boolean);
+
+    if (!list.length) {
+      throw new Error('categories 테이블에 활성 카테고리가 없습니다.');
+    }
+
+    return list;
+  }
+
+  function loadCategories(forceRefresh) {
+    if (cache.loadPromise && !forceRefresh) {
+      return cache.loadPromise;
+    }
+
+    cache.loadPromise = fetchCategoriesFromDb()
+      .then(function (rows) {
+        return applyCategoryList(rows);
+      })
+      .catch(function (err) {
+        console.warn('[P!CKLE Categories] DB 조회 실패 — 폴백 사용', err);
+        var fallback = FALLBACK_ROWS.map(function (r) {
+          return normalizeCategoryRow(
+            Object.assign({}, r, { is_active: true })
+          );
+        }).filter(Boolean);
+        return applyCategoryList(fallback);
+      });
+
+    return cache.loadPromise;
+  }
+
+  function getCategories() {
+    return cache.list.slice();
+  }
+
+  function getNavItems() {
+    return [{ slug: 'all', label: '📋 전체' }, HALL_NAV_ITEM].concat(
+      cache.list.map(function (c) {
+        return {
+          slug: c.slug,
+          label: c.label,
+          name: c.name,
+          icon: c.icon,
+          seasonal: c.seasonal,
+        };
+      })
+    );
+  }
 
   function normalizeCategorySlug(raw) {
     if (raw == null || raw === '') return '';
@@ -71,14 +182,12 @@
     return !!normalizeCategorySlug(raw);
   }
 
-  /** DB posts.category → 화면 라벨 (없으면 null → 뱃지 미표시) */
   function resolveCategoryLabel(raw) {
     var slug = normalizeCategorySlug(raw);
     if (!slug) return null;
     return LABEL_BY_SLUG[slug] || null;
   }
 
-  /** create.html 칩 라벨 → DB 슬러그 (없으면 null) */
   function resolveCategorySlugFromLabel(label) {
     var text = String(label || '').trim();
     return SLUG_BY_LABEL[text] || null;
@@ -92,7 +201,6 @@
     return 'all';
   }
 
-  /** URL/필터 슬러그 → posts.category (전체는 null) */
   function slugToDbCategory(urlSlug) {
     var slug = normalizeSlug(urlSlug);
     if (slug === 'all') return null;
@@ -106,8 +214,7 @@
   }
 
   function slugFromGridLabel(label) {
-    var text = String(label || '').trim();
-    return GRID_LABEL_TO_SLUG[text] || null;
+    return resolveCategorySlugFromLabel(label);
   }
 
   function buildCategoryUrl(slug, sort) {
@@ -125,6 +232,132 @@
 
   function goCategory(slug, sort) {
     window.location.href = buildCategoryUrl(slug, sort);
+  }
+
+  function isHallNavItem(item) {
+    return item && item.slug === 'hall';
+  }
+
+  function renderCategoryNavBar(navEl, options) {
+    if (!navEl) return;
+
+    options = options || {};
+    var isHallPage =
+      options.page === 'hall' ||
+      document.body.getAttribute('data-nav-page') === 'hall';
+    var activeCategory =
+      options.activeCategory != null ? normalizeSlug(options.activeCategory) : 'all';
+    var useButtons =
+      options.useButtons === true ||
+      (options.useButtons !== false &&
+        !!document.getElementById('categoryFeedList'));
+
+    navEl.innerHTML = getNavItems()
+      .map(function (item) {
+        var isHall = isHallNavItem(item);
+        var isActive = isHall
+          ? isHallPage
+          : !isHallPage && normalizeSlug(item.slug) === activeCategory;
+        var activeClass = isActive ? ' active' : '';
+        var seasonalClass = item.seasonal ? ' category-nav-tab--seasonal' : '';
+
+        if (isHall) {
+          return (
+            '<a href="hall_of_fame.html" class="category-nav-tab' +
+            activeClass +
+            '" data-nav="hall">' +
+            escapeHtml(item.label) +
+            '</a>'
+          );
+        }
+
+        if (useButtons) {
+          return (
+            '<button type="button" class="category-nav-tab' +
+            activeClass +
+            seasonalClass +
+            '" data-category="' +
+            escapeAttr(item.slug) +
+            '">' +
+            escapeHtml(item.label) +
+            '</button>'
+          );
+        }
+
+        var href = buildCategoryUrl(item.slug);
+        return (
+          '<a href="' +
+          href +
+          '" class="category-nav-tab' +
+          activeClass +
+          seasonalClass +
+          '" data-category="' +
+          escapeAttr(item.slug) +
+          '">' +
+          escapeHtml(item.label) +
+          '</a>'
+        );
+      })
+      .join('');
+  }
+
+  function renderCategoryGrids(root) {
+    var scope = root || document;
+    scope.querySelectorAll('#categoryGrid').forEach(function (grid) {
+      grid.innerHTML = cache.list
+        .map(function (c) {
+          var hl = c.seasonal ? ' highlight' : '';
+          return (
+            '<div class="grid-item' +
+            hl +
+            '" data-cat-slug="' +
+            escapeAttr(c.slug) +
+            '" data-cat-label="' +
+            escapeAttr(c.label) +
+            '">' +
+            escapeHtml(c.label) +
+            '</div>'
+          );
+        })
+        .join('');
+    });
+    bindCategoryGridItems(scope);
+  }
+
+  function renderCreateChips(container, options) {
+    var el = container || document.getElementById('chipSlider');
+    if (!el) return;
+
+    options = options || {};
+    var onSelect = options.onSelect;
+
+    el.innerHTML = cache.list
+      .map(function (c) {
+        var seasonalClass = c.seasonal ? ' cat-chip--seasonal' : '';
+        return (
+          '<button type="button" class="cat-chip' +
+          seasonalClass +
+          '" data-category-slug="' +
+          escapeAttr(c.slug) +
+          '" data-category-label="' +
+          escapeAttr(c.label) +
+          '">' +
+          escapeHtml(c.label) +
+          '</button>'
+        );
+      })
+      .join('');
+
+    el.querySelectorAll('.cat-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        if (options.isDragged && options.isDragged()) return;
+        el.querySelectorAll('.cat-chip').forEach(function (node) {
+          node.classList.remove('selected');
+        });
+        chip.classList.add('selected');
+        if (typeof onSelect === 'function') onSelect(chip);
+      });
+    });
   }
 
   function bindCategoryGridItems(root) {
@@ -177,71 +410,6 @@
     });
   }
 
-  function isHallNavItem(item) {
-    return item && item.slug === 'hall';
-  }
-
-  function renderCategoryNavBar(navEl, options) {
-    if (!navEl) return;
-
-    options = options || {};
-    var isHallPage =
-      options.page === 'hall' ||
-      document.body.getAttribute('data-nav-page') === 'hall';
-    var activeCategory =
-      options.activeCategory != null ? normalizeSlug(options.activeCategory) : 'all';
-    var useButtons =
-      options.useButtons === true ||
-      (options.useButtons !== false &&
-        !!document.getElementById('categoryFeedList'));
-
-    navEl.innerHTML = NAV_ITEMS.map(function (item) {
-      var isHall = isHallNavItem(item);
-      var isActive = isHall
-        ? isHallPage
-        : !isHallPage && normalizeSlug(item.slug) === activeCategory;
-      var activeClass = isActive ? ' active' : '';
-      var seasonalClass = item.seasonal ? ' category-nav-tab--seasonal' : '';
-
-      if (isHall) {
-        return (
-          '<a href="hall_of_fame.html" class="category-nav-tab' +
-          activeClass +
-          '" data-nav="hall">' +
-          item.label +
-          '</a>'
-        );
-      }
-
-      if (useButtons) {
-        return (
-          '<button type="button" class="category-nav-tab' +
-          activeClass +
-          seasonalClass +
-          '" data-category="' +
-          item.slug +
-          '">' +
-          item.label +
-          '</button>'
-        );
-      }
-
-      var href = buildCategoryUrl(item.slug);
-      return (
-        '<a href="' +
-        href +
-        '" class="category-nav-tab' +
-        activeClass +
-        seasonalClass +
-        '" data-category="' +
-        item.slug +
-        '">' +
-        item.label +
-        '</a>'
-      );
-    }).join('');
-  }
-
   function scrollCategoryNavIntoView(root) {
     var scope = root || document;
     var nav = scope.getElementById
@@ -283,20 +451,50 @@
     scrollCategoryNavIntoView(document);
   }
 
+  function mountAllCategoryUi(root) {
+    var scope = root || document;
+    renderCategoryGrids(scope);
+    bindAllBoardButtons(scope);
+
+    if (document.getElementById('chipSlider')) {
+      renderCreateChips(document.getElementById('chipSlider'), {
+        isDragged: function () {
+          return window.__pickleChipDragged === true;
+        },
+      });
+    }
+
+    if (document.getElementById('categoryNav') && !document.getElementById('categoryFeedList')) {
+      initStandaloneCategoryNav();
+    }
+
+    bindCategoryNavTabs(scope);
+  }
+
   function bindAppCategoryNav(root) {
     bindAllBoardButtons(root);
-    bindCategoryGridItems(root);
-    bindCategoryNavTabs(root);
+  }
+
+  function notifyReady() {
+    document.dispatchEvent(
+      new CustomEvent('pickle:categories-ready', {
+        detail: { categories: getCategories() },
+      })
+    );
   }
 
   window.PickleCategories = {
-    PICKLE_CATEGORIES: PICKLE_CATEGORIES,
-    LABEL_BY_SLUG: LABEL_BY_SLUG,
-    NAV_ITEMS: NAV_ITEMS,
+    load: loadCategories,
+    ready: function () {
+      return loadCategories();
+    },
+    isLoaded: function () {
+      return cache.loaded;
+    },
+    getCategories: getCategories,
+    getNavItems: getNavItems,
     HALL_NAV_ITEM: HALL_NAV_ITEM,
     SLUG_META: SLUG_META,
-    GRID_LABELS: GRID_LABELS,
-    VALID_URL_SLUGS: VALID_URL_SLUGS,
     normalizeSlug: normalizeSlug,
     normalizeCategorySlug: normalizeCategorySlug,
     isValidCategorySlug: isValidCategorySlug,
@@ -308,12 +506,52 @@
     buildCategoryUrl: buildCategoryUrl,
     goCategory: goCategory,
     renderCategoryNavBar: renderCategoryNavBar,
+    renderCategoryGrids: renderCategoryGrids,
+    renderCreateChips: renderCreateChips,
     scrollCategoryNavIntoView: scrollCategoryNavIntoView,
+    mountAllCategoryUi: mountAllCategoryUi,
     bindAppCategoryNav: bindAppCategoryNav,
+    buildLabel: buildLabel,
   };
 
+  Object.defineProperty(window.PickleCategories, 'PICKLE_CATEGORIES', {
+    get: function () {
+      return cache.list.slice();
+    },
+  });
+
+  Object.defineProperty(window.PickleCategories, 'NAV_ITEMS', {
+    get: function () {
+      return getNavItems();
+    },
+  });
+
+  Object.defineProperty(window.PickleCategories, 'GRID_LABELS', {
+    get: function () {
+      return cache.list.map(function (c) {
+        return c.label;
+      });
+    },
+  });
+
+  Object.defineProperty(window.PickleCategories, 'VALID_URL_SLUGS', {
+    get: function () {
+      return cache.list.map(function (c) {
+        return c.slug;
+      });
+    },
+  });
+
+  Object.defineProperty(window.PickleCategories, 'LABEL_BY_SLUG', {
+    get: function () {
+      return Object.assign({}, LABEL_BY_SLUG);
+    },
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
-    bindAppCategoryNav();
-    initStandaloneCategoryNav();
+    loadCategories().then(function () {
+      mountAllCategoryUi(document);
+      notifyReady();
+    });
   });
 })();

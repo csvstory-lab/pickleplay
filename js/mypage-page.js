@@ -1324,6 +1324,10 @@
 
   async function initMypage() {
     try {
+      if (window.PickleCategories && window.PickleCategories.load) {
+        await window.PickleCategories.load();
+      }
+
       var b = window.PickleSupabaseBootstrap;
       if (!b || !b.isReady()) {
         console.warn('[P!CKLE Mypage]', b ? b.getErrorMessage() : 'bootstrap missing');

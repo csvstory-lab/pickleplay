@@ -4,16 +4,6 @@
 (function () {
   'use strict';
 
-  const CATEGORIES = [
-    { id: 'all', label: '📋 전체 불판' },
-    { id: 'food', label: '🍕 먹잘알/푸파' },
-    { id: 'love', label: '💖 연애/과몰입' },
-    { id: 'balance', label: '⚖️ 뇌정지 밸런스' },
-    { id: 'sports', label: '🏟️ 스포츠/매치업' },
-    { id: 'games', label: '🎮 겜심/이스포츠' },
-    { id: 'mystery', label: '👻 미스터리' },
-  ];
-
   let sheetMounted = false;
   let currentCategory = 'all';
 
@@ -21,8 +11,42 @@
     return document.body.dataset.page || 'home';
   }
 
+  function getSheetCategories() {
+    if (!window.PickleCategories) {
+      return [{ id: 'all', label: '📋 전체 불판' }];
+    }
+
+    return [{ id: 'all', label: '📋 전체 불판' }].concat(
+      window.PickleCategories.getCategories().map(function (c) {
+        return { id: c.slug, label: c.label };
+      })
+    );
+  }
+
+  function renderSheetCategories() {
+    const container = document.getElementById('sheetCategories');
+    if (!container) return;
+
+    container.innerHTML = '';
+    getSheetCategories().forEach((cat) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sheet-cat-btn' + (cat.id === currentCategory ? ' active' : '');
+      btn.dataset.category = cat.id;
+      btn.textContent = cat.label;
+      btn.addEventListener('click', () => {
+        selectCategory(btn.dataset.category);
+        closeCategorySheet();
+      });
+      container.appendChild(btn);
+    });
+  }
+
   function ensureCategorySheet() {
-    if (document.getElementById('categorySheet')) return;
+    if (document.getElementById('categorySheet')) {
+      renderSheetCategories();
+      return;
+    }
 
     const sheet = document.createElement('div');
     sheet.id = 'categorySheet';
@@ -38,26 +62,11 @@
       </div>
     `;
 
-    const container = document.getElementById('sheetCategories');
-    CATEGORIES.forEach((cat) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'sheet-cat-btn' + (cat.id === currentCategory ? ' active' : '');
-      btn.dataset.category = cat.id;
-      btn.textContent = cat.label;
-      container.appendChild(btn);
-    });
-
     document.body.appendChild(sheet);
     sheetMounted = true;
 
     sheet.querySelector('[data-sheet-close]').addEventListener('click', closeCategorySheet);
-    sheet.querySelectorAll('.sheet-cat-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        selectCategory(btn.dataset.category);
-        closeCategorySheet();
-      });
-    });
+    renderSheetCategories();
   }
 
   function openCategorySheet() {
@@ -87,14 +96,22 @@
     });
   }
 
+  function resolveCategoryLabel(categoryId) {
+    if (categoryId === 'all') return '전체';
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
+      var label = window.PickleCategories.resolveCategoryLabel(categoryId);
+      if (label) return label.replace(/^[^\s]+\s/, '');
+    }
+    return '전체';
+  }
+
   function selectCategory(categoryId) {
     currentCategory = categoryId || 'all';
     syncSheetActiveButtons();
 
     if (window.PickleFeed?.setCategory) {
       window.PickleFeed.setCategory(currentCategory);
-      const label = CATEGORIES.find((c) => c.id === currentCategory)?.label || '전체';
-      showToast(`카테고리: ${label.replace(/^[^\s]+\s/, '')}`);
+      showToast('카테고리: ' + resolveCategoryLabel(currentCategory));
       return;
     }
 
@@ -193,7 +210,18 @@
     setActiveNav();
     bindTopbar();
     bindBottomNav();
-    ensureCategorySheet();
+
+    var boot = function () {
+      ensureCategorySheet();
+    };
+
+    if (window.PickleCategories && window.PickleCategories.load) {
+      window.PickleCategories.load().then(boot);
+    } else {
+      boot();
+    }
+
+    document.addEventListener('pickle:categories-ready', boot);
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeCategorySheet();

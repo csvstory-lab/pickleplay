@@ -59,6 +59,35 @@
     .btn-category:active { transform: scale(0.95); background-color: var(--neon-green); color: #000; }
     a.btn-category { text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; }
 
+    .category-nav-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .category-nav-scroll::-webkit-scrollbar { display: none; }
+    .category-nav-tab {
+        flex-shrink: 0; border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
+        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap;
+    }
+    .category-nav-tab.active {
+        border-color: var(--neon-green); color: #000; background: var(--neon-green);
+        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
+    }
+    .category-nav-tab:active { transform: scale(0.96); }
+    .category-nav-tab--seasonal {
+        border-color: rgba(57, 255, 20, 0.55);
+        box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
+    }
+    .category-nav-tab--seasonal.active {
+        box-shadow: 0 0 16px rgba(57, 255, 20, 0.45);
+    }
+    a.category-nav-tab {
+        text-decoration: none; color: var(--text-sub);
+        display: inline-flex; align-items: center;
+    }
+    a.category-nav-tab.active { color: #000; }
+
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
     .noti-bell:active { transform: scale(0.9); }
@@ -445,6 +474,7 @@
             <div class="noti-bell" data-count="4" onclick="toggleNotiDrawer()">🔔</div>
         </div>
     </div>
+    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </header>
 
 <div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
@@ -454,23 +484,7 @@
         <div class="sheet-title">모든 불판 탐험 🚀</div>
         <button class="btn-close" onclick="closeAllDrawers()">✕</button>
     </div>
-    <div class="category-grid" id="categoryGrid">
-        <div class="grid-item" data-cat-slug="driving" data-cat-label="🚗 블박/과실">🚗 블박/과실</div>
-        <div class="grid-item" data-cat-slug="food" data-cat-label="🍕 먹잘알/푸파">🍕 먹잘알/푸파</div>
-        <div class="grid-item" data-cat-slug="love" data-cat-label="💖 연애/과몰입">💖 연애/과몰입</div>
-        <div class="grid-item" data-cat-slug="balance" data-cat-label="⚖️ 뇌정지 밸런스">⚖️ 뇌정지 밸런스</div>
-        <div class="grid-item" data-cat-slug="fashion" data-cat-label="👗 OOTD/스타일">👗 OOTD/스타일</div>
-        <div class="grid-item" data-cat-slug="drama" data-cat-label="🤬 빌런/썰">🤬 빌런/썰</div>
-        <div class="grid-item" data-cat-slug="fandom" data-cat-label="🍿 덕질/서브컬처">🍿 덕질/서브컬처</div>
-        <div class="grid-item" data-cat-slug="games" data-cat-label="🎮 겜심/이스포츠">🎮 겜심/이스포츠</div>
-        <div class="grid-item" data-cat-slug="pets" data-cat-label="🐾 힐링/동물">🐾 힐링/동물</div>
-        <div class="grid-item" data-cat-slug="sports" data-cat-label="🏟️ 스포츠/매치업">🏟️ 스포츠/매치업</div>
-        <div class="grid-item highlight" data-cat-slug="worldcup" data-cat-label="⚽ 북중미 월드컵">⚽ 북중미 월드컵</div>
-        <div class="grid-item" data-cat-slug="spending" data-cat-label="💸 텅장/소비">💸 텅장/소비</div>
-        <div class="grid-item" data-cat-slug="mind" data-cat-label="🧠 MBTI/심리">🧠 MBTI/심리</div>
-        <div class="grid-item" data-cat-slug="kpop" data-cat-label="🎤 돌판/K-POP">🎤 돌판/K-POP</div>
-        <div class="grid-item" data-cat-slug="mystery" data-cat-label="👻 미스터리">👻 미스터리</div>
-    </div>
+    <div class="category-grid" id="categoryGrid"></div>
 </div>
 
 <div class="noti-drawer" id="notiDrawer">

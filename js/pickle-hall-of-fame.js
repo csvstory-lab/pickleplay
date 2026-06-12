@@ -288,6 +288,10 @@
     feed.showLoading(container);
 
     try {
+      if (window.PickleCategories && window.PickleCategories.load) {
+        await window.PickleCategories.load();
+      }
+
       var sb = getClient();
       var activeUsers = await fetchActiveUserCount(sb);
       var hurdle = computeVoteHurdle(activeUsers);
