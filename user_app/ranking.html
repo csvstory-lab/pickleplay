@@ -52,7 +52,6 @@
     a.btn-category { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; transition: 0.2s; }
     .noti-bell:active { transform: scale(0.9); }
-    .noti-bell::after { content: 'N'; position: absolute; top: -5px; right: -5px; background-color: var(--neon-pink); color: white; font-size: 0.6rem; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-color); }
 
     /* === 메인 컨텐츠 === */
     main { padding: 20px 20px 120px 20px; transition: all 0.3s ease; }
@@ -165,7 +164,7 @@
         <h1 class="logo" style="cursor:pointer;" onclick="location.href='index.html'">P!CKLE</h1>
         <div class="header-actions">
             <a href="category.html" class="btn-category"><span>≡</span> 전체 불판</a>
-            <div class="noti-bell" onclick="toggleNotiDrawer()">🔔</div>
+            <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
     </div>
 </header>
@@ -386,8 +385,11 @@
         });
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 
 </body>

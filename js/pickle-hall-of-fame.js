@@ -1,5 +1,6 @@
 /**
  * P!CKLE — 🏅 전당 후보작 (hall_of_fame.html)
+ * 알고리즘(허들·4대 천왕)은 supabase/24_notification_triggers.sql honor 알림과 동기화됨
  */
 (function () {
   'use strict';
