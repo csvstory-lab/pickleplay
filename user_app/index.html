@@ -59,6 +59,24 @@
     .btn-category:active { transform: scale(0.95); background-color: var(--neon-green); color: #000; }
     a.btn-category { text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; }
 
+    .app-nav-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .app-nav-scroll::-webkit-scrollbar { display: none; }
+    .app-nav-tab {
+        flex-shrink: 0; border: 2px solid #3f3f46; background: #18181b;
+        color: var(--text-sub); padding: 8px 14px; border-radius: 12px;
+        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap; text-decoration: none;
+        box-shadow: 3px 3px 0 #000;
+    }
+    .app-nav-tab.active {
+        border-color: var(--theme-gold); color: #000; background: var(--theme-gold);
+        box-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 204, 0, 0.35);
+    }
+    .app-nav-tab:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
+
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
     .noti-bell:active { transform: scale(0.9); }
@@ -433,7 +451,7 @@
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 </head>
-<body>
+<body data-app-page="home">
 
 <header id="mainHeader">
     <div class="top-row">
@@ -445,6 +463,7 @@
             <div class="noti-bell" data-count="4" onclick="toggleNotiDrawer()">🔔</div>
         </div>
     </div>
+    <nav class="app-nav-scroll" id="appTopNav" aria-label="메인 탭"></nav>
 </header>
 
 <div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
@@ -559,6 +578,7 @@
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-categories.js"></script>
+<script src="../js/pickle-app-nav.js"></script>
 <script src="../js/pickle-feed.js"></script>
 <script>
     // 헤더 스크롤 제어

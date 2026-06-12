@@ -987,6 +987,7 @@
     showLoading: showLoading,
     goDetail: goDetail,
     categoryLabel: categoryLabel,
+    renderCardThumbTop: renderCardThumbTop,
     LOADING_HTML: LOADING_HTML,
   };
 

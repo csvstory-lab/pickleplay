@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VDZBSH2YBT');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>P!CKLE - 🏅 전당 후보작</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #09090b;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    body {
+        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
+        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+    }
+
+    header {
+        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
+        z-index: 900; border-bottom: 1px solid var(--border-color); transition: top 0.3s ease-in-out;
+    }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 8px; }
+    .logo {
+        font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        cursor: pointer; margin: 0; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.4));
+    }
+    .header-actions { display: flex; align-items: center; gap: 15px; }
+    .btn-category {
+        background-color: #27272a; color: #fff; border: 1px solid #3f3f46;
+        padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+    }
+    a.btn-category { text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-category:active { background-color: var(--neon-green); color: #000; transform: scale(0.97); }
+    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
+    .noti-bell:active { transform: scale(0.9); }
+
+    .app-nav-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 10px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .app-nav-scroll::-webkit-scrollbar { display: none; }
+    .app-nav-tab {
+        flex-shrink: 0; border: 2px solid #3f3f46; background: #18181b;
+        color: var(--text-sub); padding: 8px 14px; border-radius: 12px;
+        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap; text-decoration: none;
+        box-shadow: 3px 3px 0 #000;
+    }
+    .app-nav-tab.active {
+        border-color: var(--theme-gold); color: #000; background: var(--theme-gold);
+        box-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 204, 0, 0.35);
+    }
+    .app-nav-tab:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
+
+    main { padding: 18px 0 100px; }
+
+    .page-header { padding: 0 20px 14px; }
+    .page-title {
+        font-family: 'Black Han Sans', sans-serif; font-size: 1.35rem;
+        letter-spacing: -0.5px; margin: 0 0 6px; color: var(--theme-gold);
+        text-shadow: 0 0 20px rgba(255, 204, 0, 0.25);
+    }
+    .hof-hurdle-meta {
+        font-size: 0.68rem; font-weight: 800; color: var(--text-sub); margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .hof-guide-box {
+        margin: 0 20px 18px; padding: 18px 16px;
+        background: #121214;
+        border: 3px solid var(--theme-gold);
+        border-radius: 16px;
+        box-shadow: 5px 5px 0 #000, 0 0 24px rgba(255, 204, 0, 0.12);
+        position: relative;
+    }
+    .hof-guide-box::before {
+        content: 'ALGORITHM PASS';
+        position: absolute; top: -10px; left: 14px;
+        background: var(--theme-gold); color: #000;
+        font-size: 0.55rem; font-weight: 900; letter-spacing: 0.08em;
+        padding: 2px 8px; border: 2px solid #000; border-radius: 6px;
+    }
+    .hof-guide-text {
+        margin: 6px 0 0; font-size: 0.82rem; font-weight: 700;
+        line-height: 1.65; color: #e4e4e7; word-break: keep-all;
+    }
+    .hof-guide-text .hof-highlight {
+        color: var(--theme-gold);
+        font-weight: 900;
+    }
+
+    .list-section { padding: 0 20px 12px; }
+    #hofFeedList { transition: opacity 0.25s ease; }
+
+    .hof-card.list-card {
+        border: 2px solid #3f3f46;
+        box-shadow: 4px 4px 0 #000;
+    }
+    .hof-card.list-card:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0 #000;
+    }
+
+    .hof-badge-row {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        padding: 10px 12px 0;
+    }
+    .hof-badge {
+        display: inline-flex; align-items: center;
+        padding: 5px 10px; border-radius: 999px;
+        font-size: 0.65rem; font-weight: 900; letter-spacing: -0.02em;
+        border: 2px solid #000; white-space: nowrap;
+        text-shadow: 0 0 8px currentColor;
+        box-shadow: 0 0 12px currentColor;
+    }
+    .hof-badge--scale {
+        color: #00f0ff; background: rgba(0, 240, 255, 0.15);
+        border-color: #00f0ff;
+    }
+    .hof-badge--landslide {
+        color: #ff007f; background: rgba(255, 0, 127, 0.15);
+        border-color: #ff007f;
+    }
+    .hof-badge--debate {
+        color: #bf5fff; background: rgba(191, 95, 255, 0.15);
+        border-color: #bf5fff;
+    }
+    .hof-badge--dopamine {
+        color: #39ff14; background: rgba(57, 255, 20, 0.12);
+        border-color: #39ff14;
+    }
+
+    .list-card {
+        display: flex; flex-direction: column; background-color: #27272a;
+        border-radius: 16px; margin-bottom: 14px;
+        overflow: hidden; cursor: pointer; transition: 0.2s;
+    }
+    .list-card .card-body {
+        display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px;
+    }
+    .list-card .title {
+        font-size: 1.05rem; font-weight: 800; line-height: 1.35; color: #fff;
+        margin: 0; word-break: keep-all;
+    }
+
+    .card-thumb-top {
+        width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
+        background: #0f0f11; flex-shrink: 0;
+    }
+    .card-thumb-top .card-thumb-img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .card-thumb-top--fallback {
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #0a0a0c 0%, #18181b 50%, #1a1020 100%);
+        border-bottom: 1px dashed #52525b;
+    }
+    .card-thumb-fallback-label {
+        font-family: 'Black Han Sans', sans-serif; font-size: clamp(1.4rem, 6vw, 2rem);
+        line-height: 1.15; text-align: center; padding: 12px 16px;
+        background: linear-gradient(135deg, var(--theme-gold), var(--neon-pink));
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        word-break: keep-all;
+    }
+
+    .hof-result-meta {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+        background: #0f0f11; border: 1px solid #27272a; border-radius: 12px;
+        padding: 10px 12px; font-size: 0.78rem; font-weight: 800;
+    }
+    .hof-result-pct--a { color: var(--neon-blue); }
+    .hof-result-pct--b { color: var(--neon-pink); }
+    .hof-result-vs { color: #52525b; font-size: 0.65rem; font-weight: 900; }
+    .hof-result-votes {
+        width: 100%; font-size: 0.72rem; font-weight: 700; color: var(--text-sub);
+        margin-top: 2px;
+    }
+
+    .feed-loading, .feed-empty {
+        padding: 36px 20px; text-align: center; color: var(--text-sub);
+        font-size: 0.9rem; font-weight: 700; line-height: 1.55;
+    }
+    .feed-spinner {
+        width: 36px; height: 36px; margin: 0 auto;
+        border: 3px solid #27272a; border-top-color: var(--theme-gold);
+        border-radius: 50%; animation: feedSpin 0.75s linear infinite;
+    }
+    @keyframes feedSpin { to { transform: rotate(360deg); } }
+    .feed-empty-title { color: #fff; font-size: 0.95rem; margin: 0 0 16px; word-break: keep-all; }
+    .feed-error { color: var(--neon-pink); }
+
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0;
+        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px);
+        display: flex; justify-content: space-around; align-items: center;
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+        border-top: 1px solid var(--border-color); z-index: 800;
+    }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .nav-icon { font-size: 1.4rem; }
+    .nav-btn.fire-btn .nav-icon {
+        background-color: var(--neon-green); width: 45px; height: 45px;
+        display: flex; justify-content: center; align-items: center;
+        border-radius: 50%; color: #000; font-size: 1.6rem;
+        transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3);
+    }
+    .nav-btn.active { color: var(--neon-green); }
+</style>
+<link rel="stylesheet" href="../css/responsive-layout.css">
+</head>
+<body data-app-page="hall">
+
+<header id="mainHeader">
+    <div class="top-row">
+        <h1 class="logo" onclick="location.href='index.html'">P!CKLE</h1>
+        <div class="header-actions">
+            <a href="category.html" class="btn-category"><span>≡</span> 전체 불판</a>
+            <div class="noti-bell" onclick="alert('알림함 준비 중입니다!')">🔔</div>
+        </div>
+    </div>
+    <nav class="app-nav-scroll" id="appTopNav" aria-label="메인 탭"></nav>
+</header>
+
+<main>
+    <div class="page-header">
+        <h1 class="page-title">🏅 전당 후보작</h1>
+        <p class="hof-hurdle-meta" id="hofHurdleMeta">허들 계산 중…</p>
+    </div>
+
+    <aside class="hof-guide-box" aria-label="전당 후보작 안내">
+        <p class="hof-guide-text">
+            🏅 이곳은 엄격한 알고리즘을 통과한 올해의 전당 후보작 숙성실입니다. 연말에 선출될 '100인의 불판 심사단'에게 80% 이상의 찬성을 얻은 레전드 불판만이 진짜 <span class="hof-highlight">[🏆 명예의 전당]</span> 왕좌에 오르며, 창작자에게는 한정판 명예 증서가 수여됩니다.
+        </p>
+    </aside>
+
+    <section class="list-section">
+        <div id="hofFeedList">
+            <div class="feed-loading">
+                <div class="feed-spinner" aria-hidden="true"></div>
+                <p>🏅 레전드 후보를 선별하는 중…</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<nav class="bottom-nav">
+    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    <div class="nav-btn fire-btn" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-upload.js"></script>
+<script src="../js/pickle-media-view.js"></script>
+<script src="../js/pickle-feed.js"></script>
+<script src="../js/pickle-app-nav.js"></script>
+<script src="../js/pickle-hall-of-fame.js"></script>
+<script>
+    var lastScrollTop = 0;
+    window.addEventListener('scroll', function () {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var header = document.getElementById('mainHeader');
+        if (!header) return;
+        if (scrollTop > lastScrollTop && scrollTop > 60) {
+            header.style.top = '-120px';
+        } else {
+            header.style.top = '0';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+</script>
+</body>
+</html>
