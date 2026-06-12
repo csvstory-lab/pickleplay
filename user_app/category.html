@@ -120,27 +120,67 @@
         transform: translateX(16px); background: var(--neon-green);
     }
 
-    .sort-select-wrap { position: relative; flex-shrink: 0; }
-    .sort-select {
-        appearance: none; -webkit-appearance: none;
+    .sort-dropdown {
+        position: relative; flex-shrink: 0; z-index: 950;
+    }
+    .sort-dropdown-trigger {
+        display: inline-flex; align-items: center; justify-content: space-between;
+        gap: 6px; min-width: 96px; max-width: 112px;
         background: #18181b; color: #fff;
-        border: 2px solid #3f3f46; border-radius: 10px;
-        padding: 7px 28px 7px 10px;
+        border: 2px solid var(--neon-pink); border-radius: 10px;
+        padding: 7px 10px;
         font-family: inherit; font-size: 0.72rem; font-weight: 800;
         cursor: pointer; box-shadow: 3px 3px 0 #000;
-        transition: border-color 0.2s, transform 0.15s;
-        max-width: 108px;
+        transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
     }
-    .sort-select:focus {
-        outline: none; border-color: var(--neon-pink);
-        box-shadow: 3px 3px 0 #000, 0 0 10px rgba(255, 0, 127, 0.2);
+    .sort-dropdown-trigger:active {
+        transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000;
     }
-    .sort-select:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
-    .sort-select-wrap::after {
-        content: '▾'; position: absolute; right: 10px; top: 50%;
-        transform: translateY(-50%); pointer-events: none;
+    .sort-dropdown.is-open .sort-dropdown-trigger {
+        border-color: var(--neon-green);
+        box-shadow: 3px 3px 0 #000, 0 0 12px rgba(57, 255, 20, 0.22);
+    }
+    .sort-dropdown-chevron {
         font-size: 0.65rem; color: var(--neon-green); font-weight: 900;
+        transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1);
+        flex-shrink: 0;
     }
+    .sort-dropdown.is-open .sort-dropdown-chevron {
+        transform: rotate(180deg); color: var(--neon-pink);
+    }
+    .dropdown-list {
+        position: absolute; top: calc(100% + 6px); right: 0;
+        min-width: 132px; margin: 0; padding: 6px;
+        list-style: none;
+        background: #121214;
+        border: 2px solid var(--neon-pink);
+        border-radius: 12px;
+        box-shadow: 4px 4px 0 #000, 0 12px 32px rgba(255, 0, 127, 0.18);
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transform: translateY(-8px) scale(0.97);
+        transform-origin: top right;
+        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.22s;
+    }
+    .sort-dropdown.is-open .dropdown-list {
+        opacity: 1; visibility: visible; pointer-events: auto;
+        transform: translateY(0) scale(1);
+    }
+    .dropdown-item {
+        padding: 10px 12px; border-radius: 8px;
+        font-size: 0.74rem; font-weight: 800; color: #d4d4d8;
+        cursor: pointer; transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background: rgba(255, 0, 127, 0.12); color: #fff; outline: none;
+    }
+    .dropdown-item.active {
+        color: var(--neon-green);
+        background: rgba(57, 255, 20, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(57, 255, 20, 0.25);
+    }
+    .dropdown-item:active { transform: scale(0.98); }
 
     .list-section { padding: 0 20px 12px; }
     #categoryFeedList { transition: opacity 0.25s ease; }
@@ -281,8 +321,12 @@
                     <input type="checkbox" id="unseenToggle" class="unseen-toggle-input">
                     <span class="unseen-toggle-track" aria-hidden="true"></span>
                 </label>
-                <div class="sort-select-wrap">
-                    <select id="sortSelect" class="sort-select" aria-label="정렬"></select>
+                <div class="sort-dropdown" id="sortDropdown">
+                    <button type="button" class="sort-dropdown-trigger" id="sortDropdownTrigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="sortDropdownList">
+                        <span id="sortDropdownLabel">오늘인기순</span>
+                        <span class="sort-dropdown-chevron" aria-hidden="true">▾</span>
+                    </button>
+                    <ul class="dropdown-list" id="sortDropdownList" role="listbox" aria-label="정렬"></ul>
                 </div>
             </div>
         </div>

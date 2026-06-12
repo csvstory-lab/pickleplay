@@ -87,9 +87,46 @@
     });
   }
 
-  function syncSortSelect() {
-    var select = document.getElementById('sortSelect');
-    if (select) select.value = state.sort;
+  function getSortLabel(sortId) {
+    var label = '오늘인기순';
+    SORT_OPTIONS.forEach(function (opt) {
+      if (opt.id === sortId) label = opt.label;
+    });
+    return label;
+  }
+
+  function syncSortDropdown() {
+    var labelEl = document.getElementById('sortDropdownLabel');
+    if (labelEl) labelEl.textContent = getSortLabel(state.sort);
+
+    document.querySelectorAll('.dropdown-item[data-sort]').forEach(function (item) {
+      var isActive = item.getAttribute('data-sort') === state.sort;
+      item.classList.toggle('active', isActive);
+      item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+  }
+
+  function closeSortDropdown() {
+    var root = document.getElementById('sortDropdown');
+    var trigger = document.getElementById('sortDropdownTrigger');
+    if (!root) return;
+    root.classList.remove('is-open');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function openSortDropdown() {
+    var root = document.getElementById('sortDropdown');
+    var trigger = document.getElementById('sortDropdownTrigger');
+    if (!root) return;
+    root.classList.add('is-open');
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  function toggleSortDropdown() {
+    var root = document.getElementById('sortDropdown');
+    if (!root) return;
+    if (root.classList.contains('is-open')) closeSortDropdown();
+    else openSortDropdown();
   }
 
   function syncUnseenToggle() {
@@ -318,7 +355,8 @@
     }
     state.sort = sortId;
     updateUrl();
-    syncSortSelect();
+    syncSortDropdown();
+    closeSortDropdown();
     renderList();
   }
 
@@ -336,18 +374,40 @@
     });
   }
 
-  function bindSortSelect() {
-    var select = document.getElementById('sortSelect');
-    if (!select) return;
+  function bindSortDropdown() {
+    var root = document.getElementById('sortDropdown');
+    var trigger = document.getElementById('sortDropdownTrigger');
+    var list = document.getElementById('sortDropdownList');
+    if (!root || !trigger || !list) return;
 
-    select.innerHTML = SORT_OPTIONS.map(function (opt) {
+    list.innerHTML = SORT_OPTIONS.map(function (opt) {
       return (
-        '<option value="' + opt.id + '">' + opt.label + '</option>'
+        '<li class="dropdown-item" role="option" data-sort="' +
+        opt.id +
+        '" tabindex="-1" aria-selected="false">' +
+        opt.label +
+        '</li>'
       );
     }).join('');
 
-    select.addEventListener('change', function () {
-      setSort(select.value);
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleSortDropdown();
+    });
+
+    list.querySelectorAll('.dropdown-item[data-sort]').forEach(function (item) {
+      item.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setSort(item.getAttribute('data-sort'));
+      });
+    });
+
+    window.addEventListener('click', function () {
+      closeSortDropdown();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeSortDropdown();
     });
   }
 
@@ -365,10 +425,10 @@
     parseUrlState();
     updateUrl();
     bindCategoryNav();
-    bindSortSelect();
+    bindSortDropdown();
     bindUnseenToggle();
     syncNavActive();
-    syncSortSelect();
+    syncSortDropdown();
     syncUnseenToggle();
     updatePageTitle();
     scrollActiveNavIntoView();
@@ -377,7 +437,7 @@
     window.addEventListener('popstate', function () {
       parseUrlState();
       syncNavActive();
-      syncSortSelect();
+      syncSortDropdown();
       updatePageTitle();
       renderList();
     });
