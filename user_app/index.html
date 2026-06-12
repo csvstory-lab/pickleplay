@@ -88,14 +88,6 @@
     }
     a.category-nav-tab.active { color: #000; }
 
-    /* 레거시 대메뉴(🔥 메인 / ≡ 카테고리 / 🏅 전당) — 사용 금지 */
-    #appTopNav,
-    .app-nav-scroll,
-    nav.app-nav-scroll,
-    .app-nav-tab {
-        display: none !important;
-    }
-
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
     .noti-bell:active { transform: scale(0.9); }
@@ -484,6 +476,7 @@
     </div>
     <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </header>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
 

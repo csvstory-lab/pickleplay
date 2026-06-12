@@ -454,9 +454,13 @@
   }
 
   function removeLegacyAppNav(root) {
+    if (window.PickleHeaderLegacyCleanup && window.PickleHeaderLegacyCleanup.remove) {
+      window.PickleHeaderLegacyCleanup.remove(root || document);
+      return;
+    }
     var scope = root || document;
     scope.querySelectorAll('#appTopNav, .app-nav-scroll, nav.app-nav-scroll').forEach(function (el) {
-      el.remove();
+      if (el.id !== 'categoryNav') el.remove();
     });
   }
 
