@@ -6,12 +6,12 @@
 
   const CATEGORIES = [
     { id: 'all', label: '📋 전체 불판' },
-    { id: 'hot', label: '🔥 실시간 핫' },
-    { id: 'daily', label: '✨ 일상' },
-    { id: 'love', label: '💔 연애/썸' },
-    { id: 'balance', label: '🤯 뇌정지 밸런스' },
-    { id: 'brand', label: '🤝 브랜드 픽' },
-    { id: 'sports', label: '🏟️ 스포츠' },
+    { id: 'food', label: '🍕 먹잘알/푸파' },
+    { id: 'love', label: '💖 연애/과몰입' },
+    { id: 'balance', label: '⚖️ 뇌정지 밸런스' },
+    { id: 'sports', label: '🏟️ 스포츠/매치업' },
+    { id: 'games', label: '🎮 겜심/이스포츠' },
+    { id: 'mystery', label: '👻 미스터리' },
   ];
 
   let sheetMounted = false;

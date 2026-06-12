@@ -5,16 +5,18 @@
   'use strict';
 
   var SORT_OPTIONS = [
-    { id: 'today_popular', label: '🔥 오늘 인기순' },
-    { id: 'deadline', label: '⏰ 마감 임박순' },
-    { id: 'participants', label: '👥 참여자순' },
-    { id: 'latest', label: '🆕 최신순' },
+    { id: 'today_popular', label: '오늘인기순' },
+    { id: 'deadline', label: '마감임박순' },
+    { id: 'participants', label: '참여자순' },
+    { id: 'latest', label: '최신순' },
   ];
 
   var state = {
     category: 'all',
     sort: 'today_popular',
+    unseenOnly: false,
     loading: false,
+    votedPostIds: new Set(),
   };
 
   function getFeedApi() {
@@ -29,6 +31,13 @@
       throw new Error('PickleCategories 모듈을 불러오지 못했습니다.');
     }
     return window.PickleCategories;
+  }
+
+  function getClient() {
+    if (!window.PickleSupabase || !window.PickleSupabase.getClient) {
+      throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
+    }
+    return window.PickleSupabase.getClient();
   }
 
   function parseUrlState() {
@@ -53,6 +62,24 @@
     );
   }
 
+  function renderCategoryNav() {
+    var nav = document.getElementById('categoryNav');
+    if (!nav) return;
+
+    var items = getCategoriesApi().NAV_ITEMS || [];
+    nav.innerHTML = items
+      .map(function (item) {
+        return (
+          '<button type="button" class="category-nav-tab" data-category="' +
+          item.slug +
+          '">' +
+          item.label +
+          '</button>'
+        );
+      })
+      .join('');
+  }
+
   function syncNavActive() {
     document.querySelectorAll('.category-nav-tab[data-category]').forEach(function (btn) {
       var slug = getCategoriesApi().normalizeSlug(btn.dataset.category || 'all');
@@ -60,19 +87,20 @@
     });
   }
 
-  function syncSortActive() {
-    document.querySelectorAll('.sort-filter-btn[data-sort]').forEach(function (btn) {
-      btn.classList.toggle('active', btn.dataset.sort === state.sort);
-    });
+  function syncSortSelect() {
+    var select = document.getElementById('sortSelect');
+    if (select) select.value = state.sort;
+  }
+
+  function syncUnseenToggle() {
+    var toggle = document.getElementById('unseenToggle');
+    if (toggle) toggle.checked = state.unseenOnly;
   }
 
   function updatePageTitle() {
     var titleEl = document.getElementById('categoryPageTitle');
     if (!titleEl) return;
-
-    var label = getCategoriesApi().labelFromSlug(state.category);
-    titleEl.textContent =
-      state.category === 'all' ? '🔥 모든 불판' : label + ' 불판';
+    titleEl.textContent = getCategoriesApi().labelFromSlug(state.category);
   }
 
   function buildQueryFilters(sort, urlCategorySlug) {
@@ -147,6 +175,47 @@
     return list;
   }
 
+  async function ensureAuthReady() {
+    if (window.PickleAuth && window.PickleAuth.init) {
+      await window.PickleAuth.init();
+    }
+  }
+
+  async function refreshUserVotedPostIds() {
+    state.votedPostIds = new Set();
+
+    await ensureAuthReady();
+    var user = window.PickleAuth && window.PickleAuth.getUser();
+    if (!user || !user.id) return state.votedPostIds;
+
+    try {
+      var sb = getClient();
+      var res = await sb.from('votes').select('post_id').eq('user_id', user.id);
+
+      if (res.error) {
+        console.warn('[P!CKLE Category] 투표 이력 조회 실패', res.error);
+        return state.votedPostIds;
+      }
+
+      (res.data || []).forEach(function (row) {
+        if (row && row.post_id) state.votedPostIds.add(row.post_id);
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Category] 투표 이력 조회 예외', err);
+    }
+
+    return state.votedPostIds;
+  }
+
+  function filterUnseenPosts(posts) {
+    if (!state.unseenOnly) return posts || [];
+
+    var voted = state.votedPostIds;
+    return (posts || []).filter(function (post) {
+      return post && post.id && !voted.has(post.id);
+    });
+  }
+
   async function fetchCategoryPosts(category, sort) {
     var feed = getFeedApi();
     var result = await feed.fetchPostRows(buildQueryFilters(sort, category));
@@ -161,17 +230,30 @@
 
   function emptyMessageHtml() {
     var catLabel = getCategoriesApi().labelFromSlug(state.category);
-    var msg =
-      state.category === 'all'
-        ? '아직 지펴진 불판이 없습니다.'
-        : catLabel + ' 카테고리에 불판이 없습니다.';
+    var msg;
+
+    if (state.unseenOnly) {
+      msg =
+        state.category === 'all'
+          ? '아직 참여하지 않은 불판이 없습니다.<br>모든 불판에 참전하셨네요! 🔥'
+          : catLabel + '에서 참여하지 않은 불판이 없습니다.';
+    } else if (state.category === 'all') {
+      msg = '아직 지펴진 불판이 없습니다.';
+    } else {
+      msg = catLabel + ' 카테고리에 불판이 없습니다.';
+    }
 
     return (
       '<div class="feed-empty">' +
       '<p class="feed-empty-title">' +
       msg +
-      '<br>첫 불판의 주인이 되어보세요! 🔥</p>' +
-      '<button type="button" class="btn-create-feed" onclick="location.href=\'create.html\'">불판 생성하기</button>' +
+      (state.unseenOnly
+        ? ''
+        : '<br>첫 불판의 주인이 되어보세요! 🔥') +
+      '</p>' +
+      (state.unseenOnly
+        ? ''
+        : '<button type="button" class="btn-create-feed" onclick="location.href=\'create.html\'">불판 생성하기</button>') +
       '</div>'
     );
   }
@@ -189,12 +271,18 @@
 
     state.loading = true;
     var feed = getFeedApi();
-    container.style.transition = 'opacity 0.2s ease';
-    container.style.opacity = '0.45';
+    container.style.transition = 'opacity 0.25s ease';
+    container.style.opacity = '0.35';
     feed.showLoading(container);
 
     try {
+      if (state.unseenOnly) {
+        await refreshUserVotedPostIds();
+      }
+
       var posts = await fetchCategoryPosts(state.category, state.sort);
+      posts = filterUnseenPosts(posts);
+
       feed.renderListToContainer(container, posts, {
         emptyHtml: emptyMessageHtml(),
       });
@@ -205,6 +293,7 @@
         '<div class="feed-empty feed-error">불판을 불러오지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;word-break:break-all;">' +
         String(err && err.message ? err.message : err) +
         '</p></div>';
+      container.style.opacity = '1';
     } finally {
       state.loading = false;
     }
@@ -229,7 +318,13 @@
     }
     state.sort = sortId;
     updateUrl();
-    syncSortActive();
+    syncSortSelect();
+    renderList();
+  }
+
+  function setUnseenOnly(enabled) {
+    state.unseenOnly = !!enabled;
+    syncUnseenToggle();
     renderList();
   }
 
@@ -241,29 +336,48 @@
     });
   }
 
-  function bindSortFilters() {
-    document.querySelectorAll('.sort-filter-btn[data-sort]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        setSort(btn.dataset.sort);
-      });
+  function bindSortSelect() {
+    var select = document.getElementById('sortSelect');
+    if (!select) return;
+
+    select.innerHTML = SORT_OPTIONS.map(function (opt) {
+      return (
+        '<option value="' + opt.id + '">' + opt.label + '</option>'
+      );
+    }).join('');
+
+    select.addEventListener('change', function () {
+      setSort(select.value);
+    });
+  }
+
+  function bindUnseenToggle() {
+    var toggle = document.getElementById('unseenToggle');
+    if (!toggle) return;
+
+    toggle.addEventListener('change', function () {
+      setUnseenOnly(toggle.checked);
     });
   }
 
   function init() {
+    renderCategoryNav();
     parseUrlState();
     updateUrl();
-    syncNavActive();
-    syncSortActive();
-    updatePageTitle();
     bindCategoryNav();
-    bindSortFilters();
+    bindSortSelect();
+    bindUnseenToggle();
+    syncNavActive();
+    syncSortSelect();
+    syncUnseenToggle();
+    updatePageTitle();
     scrollActiveNavIntoView();
     renderList();
 
     window.addEventListener('popstate', function () {
       parseUrlState();
       syncNavActive();
-      syncSortActive();
+      syncSortSelect();
       updatePageTitle();
       renderList();
     });
@@ -273,6 +387,7 @@
     init: init,
     setCategory: setCategory,
     setSort: setSort,
+    setUnseenOnly: setUnseenOnly,
     fetchCategoryPosts: fetchCategoryPosts,
   };
 

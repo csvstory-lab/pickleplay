@@ -76,31 +76,74 @@
 
     main { padding: 18px 0 100px; }
 
-    .page-header { padding: 0 20px 14px; }
+    .page-header { padding: 0 20px 16px; }
+    .page-header-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; flex-wrap: nowrap;
+    }
     .page-title {
-        font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 1.35rem;
-        letter-spacing: -0.5px; margin: 0 0 14px; color: #fff;
+        font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 1.15rem;
+        letter-spacing: -0.5px; margin: 0; color: #fff;
+        flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .page-header-controls {
+        display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
 
-    .sort-filter-scroll {
-        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 16px;
-        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    .unseen-toggle {
+        display: inline-flex; align-items: center; gap: 6px;
+        cursor: pointer; user-select: none; margin: 0;
     }
-    .sort-filter-scroll::-webkit-scrollbar { display: none; }
-    .sort-filter-btn {
-        flex-shrink: 0; border: 1px solid #3f3f46; background: #18181b;
-        color: #d4d4d8; padding: 10px 14px; border-radius: 14px;
-        font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: 0.2s;
-        font-family: inherit; white-space: nowrap;
+    .unseen-toggle-label {
+        font-size: 0.62rem; font-weight: 800; color: var(--text-sub);
+        white-space: nowrap; letter-spacing: -0.02em;
     }
-    .sort-filter-btn.active {
-        border-color: var(--neon-pink); color: #fff;
-        background: linear-gradient(135deg, rgba(255, 0, 127, 0.18), rgba(255, 85, 0, 0.12));
-        box-shadow: 0 4px 16px rgba(255, 0, 127, 0.18);
+    .unseen-toggle-input {
+        position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
     }
-    .sort-filter-btn:active { transform: scale(0.97); }
+    .unseen-toggle-track {
+        position: relative; width: 36px; height: 20px; flex-shrink: 0;
+        background: #27272a; border: 2px solid #3f3f46; border-radius: 999px;
+        box-shadow: 2px 2px 0 #000; transition: background 0.2s, border-color 0.2s;
+    }
+    .unseen-toggle-track::after {
+        content: ''; position: absolute; top: 2px; left: 2px;
+        width: 12px; height: 12px; border-radius: 50%;
+        background: #71717a; border: 1px solid #000;
+        transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), background 0.2s;
+    }
+    .unseen-toggle-input:checked + .unseen-toggle-track {
+        background: rgba(57, 255, 20, 0.2); border-color: var(--neon-green);
+        box-shadow: 2px 2px 0 #000, 0 0 12px rgba(57, 255, 20, 0.25);
+    }
+    .unseen-toggle-input:checked + .unseen-toggle-track::after {
+        transform: translateX(16px); background: var(--neon-green);
+    }
+
+    .sort-select-wrap { position: relative; flex-shrink: 0; }
+    .sort-select {
+        appearance: none; -webkit-appearance: none;
+        background: #18181b; color: #fff;
+        border: 2px solid #3f3f46; border-radius: 10px;
+        padding: 7px 28px 7px 10px;
+        font-family: inherit; font-size: 0.72rem; font-weight: 800;
+        cursor: pointer; box-shadow: 3px 3px 0 #000;
+        transition: border-color 0.2s, transform 0.15s;
+        max-width: 108px;
+    }
+    .sort-select:focus {
+        outline: none; border-color: var(--neon-pink);
+        box-shadow: 3px 3px 0 #000, 0 0 10px rgba(255, 0, 127, 0.2);
+    }
+    .sort-select:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
+    .sort-select-wrap::after {
+        content: '▾'; position: absolute; right: 10px; top: 50%;
+        transform: translateY(-50%); pointer-events: none;
+        font-size: 0.65rem; color: var(--neon-green); font-weight: 900;
+    }
 
     .list-section { padding: 0 20px 12px; }
+    #categoryFeedList { transition: opacity 0.25s ease; }
 
     .list-card {
         display: flex; flex-direction: column; background-color: #27272a;
@@ -225,29 +268,24 @@
             <div class="noti-bell" onclick="alert('알림함 준비 중입니다!')">🔔</div>
         </div>
     </div>
-    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리">
-        <button type="button" class="category-nav-tab active" data-category="all">📋 전체</button>
-        <button type="button" class="category-nav-tab" data-category="hot">🔥 HOT</button>
-        <button type="button" class="category-nav-tab" data-category="love">💖 연애</button>
-        <button type="button" class="category-nav-tab" data-category="balance">⚖️ 밸런스</button>
-        <button type="button" class="category-nav-tab" data-category="brand">🤝 브랜드</button>
-        <button type="button" class="category-nav-tab" data-category="daily">✨ 일상</button>
-        <button type="button" class="category-nav-tab" data-category="sports">🏟️ 스포츠</button>
-        <button type="button" class="category-nav-tab" data-category="food">🍕 푸드</button>
-        <button type="button" class="category-nav-tab" data-category="other">📌 기타</button>
-    </nav>
+    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </header>
 
 <main>
     <div class="page-header">
-        <h1 class="page-title" id="categoryPageTitle">🔥 모든 불판</h1>
-    </div>
-
-    <div class="sort-filter-scroll" id="sortFilters" aria-label="정렬">
-        <button type="button" class="sort-filter-btn active" data-sort="today_popular">🔥 오늘 인기순</button>
-        <button type="button" class="sort-filter-btn" data-sort="deadline">⏰ 마감 임박순</button>
-        <button type="button" class="sort-filter-btn" data-sort="participants">👥 참여자순</button>
-        <button type="button" class="sort-filter-btn" data-sort="latest">🆕 최신순</button>
+        <div class="page-header-row">
+            <h1 class="page-title" id="categoryPageTitle">🔥 모든 불판</h1>
+            <div class="page-header-controls">
+                <label class="unseen-toggle" for="unseenToggle">
+                    <span class="unseen-toggle-label">👀 안 한 불판만</span>
+                    <input type="checkbox" id="unseenToggle" class="unseen-toggle-input">
+                    <span class="unseen-toggle-track" aria-hidden="true"></span>
+                </label>
+                <div class="sort-select-wrap">
+                    <select id="sortSelect" class="sort-select" aria-label="정렬"></select>
+                </div>
+            </div>
+        </div>
     </div>
 
     <section class="list-section">
@@ -273,6 +311,7 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-feed.js"></script>
 <script src="../js/pickle-category.js"></script>

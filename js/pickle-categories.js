@@ -1,81 +1,61 @@
 /**
- * P!CKLE — 카테고리 네비 공통 설정
- * URL ?category= 슬러그(직관적 영단어) ↔ Supabase posts.category(DB) 분리
+ * P!CKLE — 카테고리 네비 공통 설정 (create.html 칩 14개 기준)
+ * URL ?category= 슬러그 ↔ Supabase posts.category(DB)
  */
 (function () {
   'use strict';
 
-  /**
-   * URL 슬러그 메타 — label: UI 표시, db: Supabase posts.category (null = 필터 없음)
-   */
-  var SLUG_META = {
-    all: { label: '📋 전체 불판', db: null },
-    hot: { label: '🔥 HOT', db: 'hot' },
-    brand: { label: '🤝 브랜드', db: 'brand' },
-    love: { label: '💖 연애', db: 'love' },
-    balance: { label: '⚖️ 밸런스', db: 'brain' },
-    mind: { label: '🧠 MBTI·심리', db: 'brain' },
-    daily: { label: '✨ 일상', db: 'ugc' },
-    food: { label: '🍕 푸드', db: 'ugc' },
-    fashion: { label: '👗 패션', db: 'ugc' },
-    fandom: { label: '🍿 덕질', db: 'ugc' },
-    games: { label: '🎮 게임', db: 'ugc' },
-    pets: { label: '🐾 힐링·동물', db: 'ugc' },
-    sports: { label: '🏟️ 스포츠', db: 'ugc' },
-    spending: { label: '💸 소비', db: 'ugc' },
-    driving: { label: '🚗 블박·운전', db: 'ugc' },
-    kpop: { label: '🎤 K-POP', db: 'ugc' },
-    mystery: { label: '👻 미스터리', db: 'ugc' },
-    drama: { label: '🤬 빌런·썰', db: 'ugc' },
-    other: { label: '📌 기타', db: 'other' },
-  };
-
-  /** category.html 상단 가로 탭 */
-  var NAV_ITEMS = [
-    { slug: 'all', label: '📋 전체' },
-    { slug: 'hot', label: '🔥 HOT' },
-    { slug: 'love', label: '💖 연애' },
-    { slug: 'balance', label: '⚖️ 밸런스' },
-    { slug: 'brand', label: '🤝 브랜드' },
-    { slug: 'daily', label: '✨ 일상' },
-    { slug: 'sports', label: '🏟️ 스포츠' },
-    { slug: 'food', label: '🍕 푸드' },
-    { slug: 'other', label: '📌 기타' },
+  /** create.html #chipSlider 와 1:1 동기화 */
+  var PICKLE_CATEGORIES = [
+    { slug: 'driving', label: '🚗 블박/과실', db: 'ugc' },
+    { slug: 'food', label: '🍕 먹잘알/푸파', db: 'ugc' },
+    { slug: 'love', label: '💖 연애/과몰입', db: 'love' },
+    { slug: 'balance', label: '⚖️ 뇌정지 밸런스', db: 'brain' },
+    { slug: 'fashion', label: '👗 OOTD/스타일', db: 'ugc' },
+    { slug: 'drama', label: '🤬 빌런/썰', db: 'ugc' },
+    { slug: 'fandom', label: '🍿 덕질/서브컬처', db: 'ugc' },
+    { slug: 'games', label: '🎮 겜심/이스포츠', db: 'ugc' },
+    { slug: 'pets', label: '🐾 힐링/동물', db: 'ugc' },
+    { slug: 'sports', label: '🏟️ 스포츠/매치업', db: 'ugc' },
+    { slug: 'spending', label: '💸 텅장/소비', db: 'ugc' },
+    { slug: 'mind', label: '🧠 MBTI/심리', db: 'brain' },
+    { slug: 'kpop', label: '🎤 돌판/K-POP', db: 'ugc' },
+    { slug: 'mystery', label: '👻 미스터리', db: 'ugc' },
   ];
 
-  /** 바텀시트 그리드 라벨 → URL 슬러그 */
-  var GRID_LABEL_TO_SLUG = {
-    '🔥 HOT 랭킹': 'hot',
-    '🎁 꿀템 드랍': 'brand',
-    '💖 연애/과몰입': 'love',
-    '⚖️ 뇌정지 밸런스': 'balance',
-    '🤬 빌런/썰': 'drama',
-    '🍕 먹잘알/푸파': 'food',
-    '👗 OOTD/스타일': 'fashion',
-    '🍿 덕질/서브컬처': 'fandom',
-    '🎮 겜심/이스포츠': 'games',
-    '🐾 힐링/동물': 'pets',
-    '🏟️ 스포츠/매치업': 'sports',
-    '💸 텅장/소비': 'spending',
-    '🚗 블박/과실': 'driving',
-    '🧠 MBTI/심리': 'mind',
-    '🎤 돌판/K-POP': 'kpop',
-    '👻 미스터리': 'mystery',
-    '🤝 브랜드': 'brand',
-    '🔥 HOT': 'hot',
-    '💖 연애': 'love',
-    '⚖️ 밸런스': 'balance',
-  };
+  var NAV_ITEMS = [{ slug: 'all', label: '📋 전체' }].concat(
+    PICKLE_CATEGORIES.map(function (c) {
+      return { slug: c.slug, label: c.label };
+    })
+  );
 
-  /** 구 DB/URL 슬러그 → 직관적 URL 슬러그 */
+  var SLUG_META = { all: { label: '🔥 모든 불판', db: null } };
+  PICKLE_CATEGORIES.forEach(function (c) {
+    SLUG_META[c.slug] = { label: c.label, db: c.db };
+  });
+
+  var GRID_LABEL_TO_SLUG = {};
+  PICKLE_CATEGORIES.forEach(function (c) {
+    GRID_LABEL_TO_SLUG[c.label] = c.slug;
+  });
+
+  /** 구 URL 슬러그 → create 기준 슬러그 */
   var LEGACY_TO_SLUG = {
     brain: 'balance',
-    ugc: 'daily',
+    ugc: 'food',
+    daily: 'drama',
+    hot: 'sports',
+    brand: 'spending',
+    other: 'mystery',
     romance: 'love',
   };
 
-  var VALID_URL_SLUGS = Object.keys(SLUG_META).filter(function (key) {
-    return key !== 'all';
+  var VALID_URL_SLUGS = PICKLE_CATEGORIES.map(function (c) {
+    return c.slug;
+  });
+
+  var GRID_LABELS = PICKLE_CATEGORIES.map(function (c) {
+    return c.label;
   });
 
   function normalizeSlug(raw) {
@@ -103,7 +83,7 @@
   function slugFromGridLabel(label) {
     var text = String(label || '').trim();
     if (GRID_LABEL_TO_SLUG[text]) return GRID_LABEL_TO_SLUG[text];
-    return 'daily';
+    return 'food';
   }
 
   function buildCategoryUrl(slug, sort) {
@@ -122,25 +102,6 @@
   function goCategory(slug, sort) {
     window.location.href = buildCategoryUrl(slug, sort);
   }
-
-  var GRID_LABELS = [
-    '🔥 HOT 랭킹',
-    '🎁 꿀템 드랍',
-    '💖 연애/과몰입',
-    '⚖️ 뇌정지 밸런스',
-    '🤬 빌런/썰',
-    '🍕 먹잘알/푸파',
-    '👗 OOTD/스타일',
-    '🍿 덕질/서브컬처',
-    '🎮 겜심/이스포츠',
-    '🐾 힐링/동물',
-    '🏟️ 스포츠/매치업',
-    '💸 텅장/소비',
-    '🚗 블박/과실',
-    '🧠 MBTI/심리',
-    '🎤 돌판/K-POP',
-    '👻 미스터리',
-  ];
 
   function bindCategoryGridItems(root) {
     var scope = root || document;
@@ -208,6 +169,7 @@
   }
 
   window.PickleCategories = {
+    PICKLE_CATEGORIES: PICKLE_CATEGORIES,
     NAV_ITEMS: NAV_ITEMS,
     SLUG_META: SLUG_META,
     GRID_LABELS: GRID_LABELS,
