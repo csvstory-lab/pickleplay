@@ -77,7 +77,14 @@
     if (!nickname && row.users && row.users.nickname) {
       nickname = String(row.users.nickname).trim();
     }
+    var authorPoints = null;
+    if (row.users && window.PickleProfile && window.PickleProfile.extractRankingPointsFromRow) {
+      var userRow = Array.isArray(row.users) ? row.users[0] : row.users;
+      authorPoints = window.PickleProfile.extractRankingPointsFromRow(userRow);
+    }
     return {
+      author_id: row.author_id || null,
+      author_ranking_points: authorPoints,
       author_nickname: nickname,
       author_avatar_html: avatarHtml,
       authorNickname: nickname || null,
@@ -173,6 +180,25 @@
       },
       resolveAuthorFieldsFromRow(row)
     );
+  }
+
+  async function ensurePostAuthorRankingPoints(post) {
+    if (!post) return post;
+    if (post.author_ranking_points != null) return post;
+    if (!post.author_id || !window.PickleProfile || !window.PickleProfile.fetchRankingPoints) {
+      return post;
+    }
+    try {
+      var sb = window.PickleSupabase.getClient();
+      post.author_ranking_points = await window.PickleProfile.fetchRankingPoints(
+        sb,
+        post.author_id
+      );
+    } catch (err) {
+      console.warn('[P!CKLE Detail] 작성자 레벨 포인트 조회 실패', err);
+      post.author_ranking_points = 0;
+    }
+    return post;
   }
 
   function safeTagsValue(post) {
@@ -584,7 +610,7 @@
 
     var postsResult = await sb
       .from('posts')
-      .select('*, users:author_id ( nickname )')
+      .select('*, users:author_id ( nickname, points )')
       .eq('id', postId)
       .maybeSingle();
 
@@ -640,7 +666,7 @@
   function renderAuthor(post) {
     var picEl = $('detailAuthorPic');
     var nameEl = $('detailAuthorName');
-    var badgeEl = $('detailCategoryBadge');
+    var levelEl = $('detailAuthorLevelBadge');
     var commentInput = $('detailCommentInput');
 
     var avatarRaw =
@@ -665,13 +691,21 @@
       nameEl.textContent = nickname;
     }
 
-    if (badgeEl && post.category) {
-      badgeEl.textContent = categoryDisplay(post.category)
-        .replace(/^(\p{Extended_Pictographic}\s*)/u, '')
-        .trim() || catLabelFallback(post.category);
-      badgeEl.hidden = false;
-    } else if (badgeEl) {
-      badgeEl.hidden = true;
+    if (levelEl) {
+      if (
+        post &&
+        post.author_ranking_points != null &&
+        window.PickleProfile &&
+        window.PickleProfile.buildLevelBadgeFromPoints
+      ) {
+        levelEl.innerHTML = window.PickleProfile.buildLevelBadgeFromPoints(
+          post.author_ranking_points
+        );
+        levelEl.hidden = false;
+      } else {
+        levelEl.innerHTML = '';
+        levelEl.hidden = true;
+      }
     }
 
     if (commentInput) {
@@ -1139,6 +1173,7 @@
       var voteStats = await fetchVoteStats(sb, postId);
       var commentCount = await fetchCommentCount(sb, postId);
 
+      post = await ensurePostAuthorRankingPoints(post);
       renderDetail(post, voteStats, commentCount);
     } catch (err) {
       console.error('[P!CKLE Detail]', err);

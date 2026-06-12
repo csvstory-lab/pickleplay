@@ -8,22 +8,26 @@
   var DEFAULT_BIO_TEXT = '소개글이 없습니다.';
   var DEFAULT_AVATAR = '🥒';
   var currentUser = null;
+  var currentUserRankingPoints = 0;
 
-  function getUserLevel(user) {
-    if (window.PickleProfile && window.PickleProfile.getUserLevel) {
-      return window.PickleProfile.getUserLevel(user);
+  function buildGradeBadgeHtmlFromPoints(points) {
+    if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
+      return window.PickleProfile.buildLevelBadgeFromPoints(points);
     }
-    var meta = (user && user.user_metadata) || {};
-    var level = Number(meta.level);
-    if (!Number.isFinite(level) || level < 1) return 1;
-    return Math.floor(level);
+    return '<span class="grade-badge">Lv.1</span>';
   }
 
-  function buildGradeBadgeHtml(user) {
-    if (window.PickleProfile && window.PickleProfile.buildGradeBadgeHtml) {
-      return window.PickleProfile.buildGradeBadgeHtml(user);
+  async function fetchCurrentUserRankingPoints(user) {
+    if (!user || !user.id) return 0;
+    try {
+      var sb = getSupabaseClient();
+      if (window.PickleProfile && window.PickleProfile.fetchRankingPoints) {
+        return await window.PickleProfile.fetchRankingPoints(sb, user.id);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] ranking points load failed', err);
     }
-    return '<span class="grade-badge">Lv.' + getUserLevel(user) + '</span>';
+    return 0;
   }
 
   function extractAuthorSnapshotForCascade(user, nickname, avatarHtml) {
@@ -201,13 +205,15 @@
     }
   }
 
-  function renderProfile(user) {
+  async function renderProfile(user) {
     currentUser = user;
     var name = getDisplayName(user);
+    currentUserRankingPoints = await fetchCurrentUserRankingPoints(user);
 
     var nickEl = document.getElementById('mainNickname');
     if (nickEl) {
-      nickEl.innerHTML = escapeHtml(name) + ' ' + buildGradeBadgeHtml(user);
+      nickEl.innerHTML =
+        escapeHtml(name) + ' ' + buildGradeBadgeHtmlFromPoints(currentUserRankingPoints);
     }
 
     var bioEl = document.getElementById('mainBio');
@@ -1334,7 +1340,7 @@
       var user = await requireAuth();
       if (!user) return;
 
-      renderProfile(user);
+      await renderProfile(user);
       bindProfileEditOpen();
       bindLogout();
       bindPostEditThumbInput();

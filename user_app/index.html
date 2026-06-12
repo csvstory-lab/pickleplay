@@ -246,6 +246,15 @@
         font-size: 0.8rem;
         font-weight: 700;
         color: var(--text-sub);
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .feed-author-level .grade-badge {
+        font-size: 0.58rem;
+        padding: 2px 6px;
+        border-radius: 6px;
     }
     .king-card .feed-author-row { margin: -2px 0 0; }
     .list-card .feed-author-row { margin: 0; }
@@ -586,6 +595,7 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
+<script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-feed.js"></script>
 <script>
     // 헤더 스크롤 제어

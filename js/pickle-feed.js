@@ -35,6 +35,7 @@
       'is_sponsor',
       'visibility_status',
       'created_at',
+      'author_id',
       'author_nickname',
       'author_avatar_html',
     ].join(', '),
@@ -53,6 +54,7 @@
       'is_sponsor',
       'visibility_status',
       'created_at',
+      'author_id',
       'author_nickname',
       'author_avatar_html',
     ].join(', '),
@@ -68,6 +70,7 @@
       'is_sponsor',
       'visibility_status',
       'created_at',
+      'author_id',
       'author_nickname',
       'author_avatar_html',
     ].join(', '),
@@ -82,6 +85,7 @@
       'is_sponsor',
       'visibility_status',
       'created_at',
+      'author_id',
     ].join(', '),
   ];
 
@@ -285,6 +289,20 @@
     };
   }
 
+  function renderFeedAuthorLevelBadge(post) {
+    if (!window.PickleProfile || !window.PickleProfile.buildLevelBadgeFromPoints) {
+      return '';
+    }
+    if (post == null || post.author_ranking_points == null) {
+      return '';
+    }
+    return (
+      ' <span class="feed-author-level">' +
+      window.PickleProfile.buildLevelBadgeFromPoints(post.author_ranking_points) +
+      '</span>'
+    );
+  }
+
   function renderFeedAuthorRow(post, compact) {
     var p = post || {};
     var nickname = p.author_nickname || p.authorNickname || '픽클러';
@@ -304,6 +322,7 @@
       '</div>' +
       '<span class="feed-author-name">' +
       escapeHtml(String(nickname)) +
+      renderFeedAuthorLevelBadge(p) +
       '</span>' +
       '</div>'
     );
@@ -385,6 +404,7 @@
             expires_at: row.expires_at || row.end_at || row.end_date || null,
             is_sponsor: false,
             created_at: row.created_at || null,
+            author_id: row.author_id || null,
             author_nickname: '',
             author_avatar_html: '',
             authorNickname: null,
@@ -406,6 +426,7 @@
           expires_at: row.expires_at || row.end_at || row.end_date || null,
           is_sponsor: !!row.is_sponsor,
           created_at: row.created_at || null,
+          author_id: row.author_id || null,
         },
         resolveAuthorFields(row)
       );
@@ -571,6 +592,35 @@
     );
   }
 
+  async function hydrateAuthorRankingPoints(sb, posts) {
+    if (!posts || !posts.length) return posts;
+    if (!window.PickleProfile || !window.PickleProfile.fetchRankingPointsMap) {
+      return posts;
+    }
+
+    var authorIds = [];
+    posts.forEach(function (p) {
+      if (!p || !p.author_id) return;
+      var id = String(p.author_id);
+      if (authorIds.indexOf(id) === -1) authorIds.push(id);
+    });
+
+    if (!authorIds.length) return posts;
+
+    try {
+      var pointsMap = await window.PickleProfile.fetchRankingPointsMap(sb, authorIds);
+      return posts.map(function (p) {
+        if (p && p.author_id && pointsMap.has(String(p.author_id))) {
+          p.author_ranking_points = pointsMap.get(String(p.author_id));
+        }
+        return p;
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Feed] 작성자 레벨 포인트 보강 실패', err);
+      return posts;
+    }
+  }
+
   async function hydrateAuthorSnapshots(sb, posts, source) {
     if (source !== 'posts' || !posts || !posts.length) return posts;
 
@@ -675,6 +725,9 @@
       .filter(Boolean);
 
     posts = await hydrateAuthorSnapshots(sb, posts, source);
+    if (source === 'posts') {
+      posts = await hydrateAuthorRankingPoints(sb, posts);
+    }
     return hydrateThumbnailUrls(sb, posts);
   }
 
