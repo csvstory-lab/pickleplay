@@ -5,10 +5,61 @@
 (function () {
   'use strict';
 
-  var GRADE_BADGE_HTML = '<span class="grade-badge">Lv.5</span>';
   var DEFAULT_BIO_TEXT = '소개글이 없습니다.';
   var DEFAULT_AVATAR = '🥒';
   var currentUser = null;
+
+  function getUserLevel(user) {
+    if (window.PickleProfile && window.PickleProfile.getUserLevel) {
+      return window.PickleProfile.getUserLevel(user);
+    }
+    var meta = (user && user.user_metadata) || {};
+    var level = Number(meta.level);
+    if (!Number.isFinite(level) || level < 1) return 1;
+    return Math.floor(level);
+  }
+
+  function buildGradeBadgeHtml(user) {
+    if (window.PickleProfile && window.PickleProfile.buildGradeBadgeHtml) {
+      return window.PickleProfile.buildGradeBadgeHtml(user);
+    }
+    return '<span class="grade-badge">Lv.' + getUserLevel(user) + '</span>';
+  }
+
+  function extractAuthorSnapshotForCascade(user, nickname, avatarHtml) {
+    if (window.PickleProfile && window.PickleProfile.extractAuthorSnapshot) {
+      return window.PickleProfile.extractAuthorSnapshot(user, {
+        nickname: nickname,
+        avatar_html: avatarHtml,
+      });
+    }
+    return {
+      author_nickname: nickname || '픽클러',
+      author_avatar_html: avatarHtml || '🥒',
+    };
+  }
+
+  async function cascadeProfileSnapshots(sb, userId, snapshot) {
+    var postsResult = await sb
+      .from('posts')
+      .update({
+        author_nickname: snapshot.author_nickname,
+        author_avatar_html: snapshot.author_avatar_html,
+      })
+      .eq('author_id', userId);
+
+    if (postsResult.error) throw postsResult.error;
+
+    var commentsResult = await sb
+      .from('comments')
+      .update({
+        author_nickname: snapshot.author_nickname,
+        author_avatar_html: snapshot.author_avatar_html,
+      })
+      .eq('user_id', userId);
+
+    if (commentsResult.error) throw commentsResult.error;
+  }
 
   function getSupabaseClient() {
     var b = window.PickleSupabaseBootstrap;
@@ -156,7 +207,7 @@
 
     var nickEl = document.getElementById('mainNickname');
     if (nickEl) {
-      nickEl.innerHTML = escapeHtml(name) + ' ' + GRADE_BADGE_HTML;
+      nickEl.innerHTML = escapeHtml(name) + ' ' + buildGradeBadgeHtml(user);
     }
 
     var bioEl = document.getElementById('mainBio');
@@ -248,28 +299,22 @@
 
       if (result.error) throw result.error;
 
-      if (result.data && result.data.user) {
-        renderProfile(result.data.user);
-      } else {
-        document.getElementById('mainNickname').innerHTML =
-          escapeHtml(newNick) + ' ' + GRADE_BADGE_HTML;
-        if (bioInput) {
-          document.getElementById('mainBio').innerText =
-            newBio.trim() || DEFAULT_BIO_TEXT;
-        }
-        if (avatarPreview) {
-          document.getElementById('mainAvatar').innerHTML = avatarHtml;
-        }
+      var updatedUser =
+        (result.data && result.data.user) || currentUser || null;
+      if (!updatedUser || !updatedUser.id) {
+        throw new Error('프로필 저장 후 사용자 정보를 확인할 수 없습니다.');
       }
 
-      alert('프로필이 성공적으로 저장되었습니다! ✨');
+      var snapshot = extractAuthorSnapshotForCascade(
+        updatedUser,
+        newNick,
+        avatarHtml
+      );
 
-      if (typeof closePanel === 'function') {
-        closePanel('profileEditPanel');
-        setTimeout(function () {
-          closePanel('settingsPanel');
-        }, 100);
-      }
+      await cascadeProfileSnapshots(sb, updatedUser.id, snapshot);
+
+      alert('프로필이 성공적으로 변경되었습니다.');
+      window.location.reload();
     } catch (error) {
       console.error('프로필 저장 실패:', error.message);
       alert('프로필 저장에 실패했습니다: ' + error.message);
@@ -384,6 +429,163 @@
         day: '2-digit',
       }) + ' 까지'
     );
+  }
+
+  var COUPON_SELECT_COLUMNS =
+    'id, user_id, title, pin_number, is_used, expires_at, created_at';
+
+  var savedCouponsLoadSeq = 0;
+  var savedCouponsInflight = null;
+
+  function getSupabaseErrorMessage(err) {
+    if (!err) return '';
+    if (typeof err === 'string') return err;
+    return String(err.message || err.details || err.hint || err);
+  }
+
+  function getSupabaseErrorCode(err) {
+    if (!err) return '';
+    return String(err.code || '').toUpperCase();
+  }
+
+  function isCouponsTableMissingError(err) {
+    var code = getSupabaseErrorCode(err);
+    var msg = getSupabaseErrorMessage(err).toLowerCase();
+    if (code === 'PGRST205' || code === '42P01') return true;
+    if (msg.indexOf('could not find the table') !== -1) return true;
+    if (
+      msg.indexOf('relation') !== -1 &&
+      msg.indexOf('does not exist') !== -1
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  function isCouponsPermissionError(err) {
+    var code = getSupabaseErrorCode(err);
+    var msg = getSupabaseErrorMessage(err).toLowerCase();
+    return code === '42501' || msg.indexOf('permission denied') !== -1;
+  }
+
+  function isCouponsColumnError(err) {
+    var code = getSupabaseErrorCode(err);
+    var msg = getSupabaseErrorMessage(err).toLowerCase();
+    return code === '42703' || code === 'PGRST204' || msg.indexOf('column') !== -1;
+  }
+
+  function normalizeCouponRow(row) {
+    if (!row || row.id == null) return null;
+    var pin =
+      row.pin_number != null
+        ? row.pin_number
+        : row.pin_code != null
+          ? row.pin_code
+          : row.pin != null
+            ? row.pin
+            : '';
+    var used = row.is_used;
+    if (used == null && row.used != null) used = row.used;
+
+    return {
+      id: row.id,
+      title: row.title || row.coupon_title || '쿠폰',
+      pin_number: String(pin || ''),
+      is_used: used === true || used === 'true' || used === 1,
+      expires_at: row.expires_at || row.expiry_at || null,
+      created_at: row.created_at || null,
+    };
+  }
+
+  async function waitForSupabaseSession(sb, maxAttempts) {
+    var attempts = maxAttempts || 10;
+    for (var i = 0; i < attempts; i++) {
+      var sessionResult = await sb.auth.getSession();
+      if (sessionResult.error) throw sessionResult.error;
+      var session = sessionResult.data && sessionResult.data.session;
+      if (session && session.access_token && session.user) {
+        return session;
+      }
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 100);
+      });
+    }
+    throw new Error('LOGIN_REQUIRED');
+  }
+
+  async function ensureAuthenticatedSession(sb) {
+    var session = await waitForSupabaseSession(sb);
+    var userResult = await sb.auth.getUser();
+    if (userResult.error) throw userResult.error;
+    if (!userResult.data || !userResult.data.user) {
+      throw new Error('LOGIN_REQUIRED');
+    }
+    return userResult.data.user;
+  }
+
+  async function fetchUserCoupons(sb, userId) {
+    var attempts = [
+      function () {
+        return sb
+          .from('user_coupons')
+          .select(COUPON_SELECT_COLUMNS)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+      },
+      function () {
+        return sb
+          .from('user_coupons')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+      },
+      function () {
+        return sb
+          .from('user_coupons')
+          .select('*')
+          .eq('user_id', userId);
+      },
+    ];
+
+    var lastError = null;
+    for (var i = 0; i < attempts.length; i++) {
+      var result = await attempts[i]();
+      if (!result.error) {
+        return { rows: result.data || [], error: null };
+      }
+      lastError = result.error;
+      console.warn(
+        '[P!CKLE Mypage] user_coupons query attempt ' + (i + 1) + ' failed',
+        result.error
+      );
+    }
+
+    return { rows: [], error: lastError };
+  }
+
+  function renderSavedCouponsError(container, err) {
+    if (isCouponsTableMissingError(err)) {
+      container.innerHTML =
+        '<div class="empty-state" id="savedEmpty">보관함 테이블이 API에 아직 노출되지 않았습니다.<br>Supabase SQL Editor에서 <strong>18b_user_coupons_grants_fix.sql</strong> 실행 후 새로고침해 주세요.</div>';
+      return;
+    }
+    if (isCouponsPermissionError(err)) {
+      container.innerHTML =
+        '<div class="empty-state" id="savedEmpty">보관함 접근 권한이 없습니다.<br>Supabase에서 <strong>18b_user_coupons_grants_fix.sql</strong> (GRANT)을 실행해 주세요.</div>';
+      return;
+    }
+    if (isCouponsColumnError(err)) {
+      container.innerHTML =
+        '<div class="empty-state" id="savedEmpty">보관함 컬럼 구조가 맞지 않습니다.<br>필수: <strong>title, pin_number, is_used, expires_at</strong></div>';
+      return;
+    }
+    container.innerHTML =
+      '<div class="empty-state" id="savedEmpty">보관함을 불러오지 못했습니다.<br><span style="font-size:0.78rem;color:#71717a;">' +
+      escapeHtml(
+        (getSupabaseErrorCode(err) ? '[' + getSupabaseErrorCode(err) + '] ' : '') +
+          getSupabaseErrorMessage(err)
+      ) +
+      '</span></div>';
   }
 
   async function copyPinToClipboard(pin) {
@@ -637,12 +839,14 @@
   async function toggleCouponUsed(userId, couponId, currentIsUsed) {
     try {
       var sb = getSupabaseClient();
+      await ensureAuthenticatedSession(sb);
+
       var updateResult = await sb
         .from('user_coupons')
         .update({ is_used: !currentIsUsed })
         .eq('id', couponId)
         .eq('user_id', userId)
-        .select('id')
+        .select('id, title, pin_number, is_used, expires_at, created_at')
         .maybeSingle();
 
       if (updateResult.error) throw updateResult.error;
@@ -653,14 +857,18 @@
       await loadSavedCoupons(userId);
     } catch (err) {
       console.error('[P!CKLE Mypage] 쿠폰 상태 변경 실패', err);
-      var msg = String(err.message || err).toLowerCase();
-      if (msg.indexOf('user_coupons') !== -1 || msg.indexOf('does not exist') !== -1) {
-        alert(
-          'user_coupons 테이블이 없습니다. Supabase에서 18_user_coupons.sql 마이그레이션을 실행해 주세요.'
-        );
-      } else {
-        alert('쿠폰 상태 변경에 실패했습니다.');
+      if (String(err.message || err) === 'LOGIN_REQUIRED') {
+        alert('로그인이 필요합니다.');
+        redirectToLogin();
+        return;
       }
+      if (isCouponsPermissionError(err)) {
+        alert(
+          '쿠폰 수정 권한이 없습니다. Supabase에서 18b_user_coupons_grants_fix.sql 을 실행해 주세요.'
+        );
+        return;
+      }
+      alert('쿠폰 상태 변경에 실패했습니다. ' + getSupabaseErrorMessage(err));
     }
   }
 
@@ -1031,23 +1239,46 @@
   }
 
   async function loadSavedCoupons(userId) {
+    if (savedCouponsInflight) {
+      return savedCouponsInflight;
+    }
+
+    savedCouponsInflight = loadSavedCouponsInner(userId).finally(function () {
+      savedCouponsInflight = null;
+    });
+    return savedCouponsInflight;
+  }
+
+  async function loadSavedCouponsInner(userId) {
     var container = document.getElementById('savedArea');
-    if (!container) return;
+    if (!container || !userId) return;
+
+    var loadSeq = ++savedCouponsLoadSeq;
+    container.innerHTML =
+      '<div class="empty-state" id="savedLoading">보관함 불러오는 중…</div>';
 
     try {
       var sb = getSupabaseClient();
-      var result = await sb
-        .from('user_coupons')
-        .select('id, title, pin_number, is_used, expires_at, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      var user = await ensureAuthenticatedSession(sb);
+      userId = user.id;
 
-      if (result.error) throw result.error;
+      var fetched = await fetchUserCoupons(sb, userId);
+      if (loadSeq !== savedCouponsLoadSeq) return;
 
-      var coupons = result.data || [];
+      if (fetched.error) throw fetched.error;
+
+      var coupons = (fetched.rows || [])
+        .map(normalizeCouponRow)
+        .filter(function (row) {
+          return row !== null;
+        });
+
+      if (loadSeq !== savedCouponsLoadSeq) return;
+
       if (!coupons.length) {
         container.innerHTML =
           '<div class="empty-state" id="savedEmpty">보관함이 비어 있습니다.</div>';
+        container.dataset.loadState = 'empty';
         return;
       }
 
@@ -1057,17 +1288,18 @@
         })
         .join('');
 
+      container.dataset.loadState = 'ready';
       bindCouponCards(container, userId);
     } catch (err) {
+      if (loadSeq !== savedCouponsLoadSeq) return;
       console.error('[P!CKLE Mypage] 보관함 로드 실패', err);
-      var msg = String(err.message || err).toLowerCase();
-      if (msg.indexOf('user_coupons') !== -1 || msg.indexOf('does not exist') !== -1) {
+      container.dataset.loadState = 'error';
+      if (String(err.message || err) === 'LOGIN_REQUIRED') {
         container.innerHTML =
-          '<div class="empty-state" id="savedEmpty">보관함 테이블이 준비되지 않았습니다.<br>Supabase에서 18_user_coupons.sql을 실행해 주세요.</div>';
-      } else {
-        container.innerHTML =
-          '<div class="empty-state" id="savedEmpty">보관함을 불러오지 못했습니다.</div>';
+          '<div class="empty-state" id="savedEmpty">로그인이 필요합니다.</div>';
+        return;
       }
+      renderSavedCouponsError(container, err);
     }
   }
 
@@ -1083,9 +1315,9 @@
     if (tabName === 'voted' && !mypageTabLoaded.voted) {
       mypageTabLoaded.voted = true;
       await loadVotedPosts(currentUser.id);
-    } else if (tabName === 'saved' && !mypageTabLoaded.saved) {
-      mypageTabLoaded.saved = true;
+    } else if (tabName === 'saved') {
       await loadSavedCoupons(currentUser.id);
+      mypageTabLoaded.saved = true;
     }
   }
 
@@ -1110,10 +1342,8 @@
       await Promise.all([
         loadCreatedPosts(user.id),
         loadVotedPosts(user.id),
-        loadSavedCoupons(user.id),
       ]);
       mypageTabLoaded.voted = true;
-      mypageTabLoaded.saved = true;
     } catch (err) {
       console.error('[P!CKLE Mypage]', err);
       alert('로그인이 필요한 페이지입니다.');

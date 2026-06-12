@@ -39,3 +39,11 @@ CREATE POLICY user_coupons_update_own
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- PostgREST(anon/authenticated) API 접근 권한 — 누락 시 permission denied 발생
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT, UPDATE ON public.user_coupons TO authenticated;
+GRANT SELECT, UPDATE ON public.user_coupons TO service_role;
+
+-- 스키마 캐시 갱신 (테이블 생성 직후 API 미노출 방지)
+NOTIFY pgrst, 'reload schema';
