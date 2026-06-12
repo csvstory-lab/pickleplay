@@ -1,5 +1,5 @@
 /**
- * P!CKLE — 카테고리 네비 공통 설정 (create.html 칩 14개 기준)
+ * P!CKLE — 카테고리 네비 공통 설정 (create.html 칩 15개 기준)
  * posts.category = 영문 슬러그 (driving, food, drama …) ↔ 화면 라벨 1:1
  */
 (function () {
@@ -17,6 +17,7 @@
     { slug: 'games', label: '🎮 겜심/이스포츠' },
     { slug: 'pets', label: '🐾 힐링/동물' },
     { slug: 'sports', label: '🏟️ 스포츠/매치업' },
+    { slug: 'worldcup', label: '⚽ 북중미 월드컵', seasonal: true },
     { slug: 'spending', label: '💸 텅장/소비' },
     { slug: 'mind', label: '🧠 MBTI/심리' },
     { slug: 'kpop', label: '🎤 돌판/K-POP' },
@@ -200,6 +201,7 @@
         ? isHallPage
         : !isHallPage && normalizeSlug(item.slug) === activeCategory;
       var activeClass = isActive ? ' active' : '';
+      var seasonalClass = item.seasonal ? ' category-nav-tab--seasonal' : '';
 
       if (isHall) {
         return (
@@ -215,6 +217,7 @@
         return (
           '<button type="button" class="category-nav-tab' +
           activeClass +
+          seasonalClass +
           '" data-category="' +
           item.slug +
           '">' +
@@ -229,6 +232,7 @@
         href +
         '" class="category-nav-tab' +
         activeClass +
+        seasonalClass +
         '" data-category="' +
         item.slug +
         '">' +

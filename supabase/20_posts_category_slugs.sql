@@ -1,5 +1,5 @@
--- posts.category: create.html 14개 슬러그로 CHECK 제약 갱신
--- (driving, food, love, balance, fashion, drama, fandom, games, pets, sports, spending, mind, kpop, mystery)
+-- posts.category: create.html 15개 슬러그로 CHECK 제약 갱신
+-- (driving … mystery, worldcup)
 
 DO $$
 DECLARE
@@ -10,7 +10,8 @@ BEGIN
   WHERE category IS NULL
      OR category NOT IN (
        'driving', 'food', 'love', 'balance', 'fashion', 'drama',
-       'fandom', 'games', 'pets', 'sports', 'spending', 'mind', 'kpop', 'mystery'
+       'fandom', 'games', 'pets', 'sports', 'worldcup', 'spending',
+       'mind', 'kpop', 'mystery'
      );
 
   IF legacy_count > 0 THEN
@@ -35,6 +36,7 @@ ALTER TABLE public.posts
       'games',
       'pets',
       'sports',
+      'worldcup',
       'spending',
       'mind',
       'kpop',
@@ -42,4 +44,4 @@ ALTER TABLE public.posts
     )
   );
 
-COMMENT ON COLUMN public.posts.category IS '카테고리 슬러그: driving/food/love/balance/fashion/drama/fandom/games/pets/sports/spending/mind/kpop/mystery';
+COMMENT ON COLUMN public.posts.category IS '카테고리 슬러그: driving/food/love/balance/fashion/drama/fandom/games/pets/sports/worldcup/spending/mind/kpop/mystery';

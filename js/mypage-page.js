@@ -332,18 +332,13 @@
     }
   }
 
-  var CATEGORY_LABELS = {
-    hot: '🔥 HOT',
-    brand: '🤝 브랜드',
-    love: '💖 연애',
-    brain: '⚖️ 밸런스',
-    ugc: '✨ UGC',
-    other: '📌 기타',
-  };
-
   function categoryLabel(category) {
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
+      var label = window.PickleCategories.resolveCategoryLabel(category);
+      if (label) return label;
+    }
     if (!category) return '🔥 불판';
-    return CATEGORY_LABELS[category] || category;
+    return category;
   }
 
   function formatCardDate(iso) {

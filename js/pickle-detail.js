@@ -8,14 +8,14 @@
   var timerInterval = null;
   var currentPostId = null;
 
-  var CATEGORY_LABELS = {
-    hot: '🔥 HOT',
-    brand: '🤝 브랜드',
-    love: '💖 연애',
-    brain: '⚖️ 밸런스',
-    ugc: '✨ UGC',
-    other: '📌 기타',
-  };
+  function categoryDisplay(category) {
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
+      var label = window.PickleCategories.resolveCategoryLabel(category);
+      if (label) return label;
+    }
+    if (!category) return '🔥 불판';
+    return category;
+  }
 
   function $(id) {
     return document.getElementById(id);
@@ -29,11 +29,6 @@
 
   function getPostIdFromUrl() {
     return new URLSearchParams(window.location.search).get('id');
-  }
-
-  function categoryDisplay(category) {
-    if (!category) return '🔥 불판';
-    return CATEGORY_LABELS[category] || category;
   }
 
   function mapMediaTypeToMode(mediaType) {

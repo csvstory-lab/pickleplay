@@ -72,6 +72,8 @@
     .cat-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; user-select: none;}
     button.cat-chip { font-family: inherit; color: inherit; appearance: none; -webkit-appearance: none; margin: 0; line-height: inherit; }
     .cat-chip.selected { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
+    .cat-chip--seasonal { border-color: rgba(57, 255, 20, 0.5); box-shadow: 0 0 12px rgba(57, 255, 20, 0.18); }
+    .cat-chip--seasonal.selected { box-shadow: 0 0 14px rgba(57, 255, 20, 0.35); }
 
     /* 공통 입력 박스 */
     .input-box {
@@ -296,6 +298,7 @@
         <div class="grid-item" data-cat-slug="games" data-cat-label="🎮 겜심/이스포츠">🎮 겜심/이스포츠</div>
         <div class="grid-item" data-cat-slug="pets" data-cat-label="🐾 힐링/동물">🐾 힐링/동물</div>
         <div class="grid-item" data-cat-slug="sports" data-cat-label="🏟️ 스포츠/매치업">🏟️ 스포츠/매치업</div>
+        <div class="grid-item highlight" data-cat-slug="worldcup" data-cat-label="⚽ 북중미 월드컵">⚽ 북중미 월드컵</div>
         <div class="grid-item" data-cat-slug="spending" data-cat-label="💸 텅장/소비">💸 텅장/소비</div>
         <div class="grid-item" data-cat-slug="mind" data-cat-label="🧠 MBTI/심리">🧠 MBTI/심리</div>
         <div class="grid-item" data-cat-slug="kpop" data-cat-label="🎤 돌판/K-POP">🎤 돌판/K-POP</div>
@@ -427,7 +430,7 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
-    // 마우스 드래그 스크롤 + 카테고리 칩 (DB 슬러그 14개)
+    // 마우스 드래그 스크롤 + 카테고리 칩 (DB 슬러그 15개)
     const slider = document.getElementById('chipSlider');
     let isDown = false; let startX; let scrollLeft; let isDragged = false;
 
@@ -438,8 +441,9 @@
     function initCategoryChips() {
         if (!slider || !window.PickleCategories || !PickleCategories.PICKLE_CATEGORIES) return;
         slider.innerHTML = PickleCategories.PICKLE_CATEGORIES.map(function (c) {
+            var seasonalClass = c.seasonal ? ' cat-chip--seasonal' : '';
             return (
-                '<button type="button" class="cat-chip" data-category-slug="' +
+                '<button type="button" class="cat-chip' + seasonalClass + '" data-category-slug="' +
                 escapeChipAttr(c.slug) +
                 '" data-category-label="' +
                 escapeChipAttr(c.label) +
