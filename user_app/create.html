@@ -70,6 +70,7 @@
     .chip-scroll:active { cursor: grabbing; } 
     .chip-scroll::-webkit-scrollbar { display: none; }
     .cat-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; user-select: none;}
+    button.cat-chip { font-family: inherit; color: inherit; appearance: none; -webkit-appearance: none; margin: 0; line-height: inherit; }
     .cat-chip.selected { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
 
     /* 공통 입력 박스 */
@@ -308,22 +309,7 @@
     <form id="createPostForm" novalidate>
     <div class="form-group">
         <label class="form-label">어떤 전장으로 갈까요?</label>
-        <div class="chip-scroll" id="chipSlider">
-            <div class="cat-chip" onclick="selectChip(this)">🚗 블박/과실</div>
-            <div class="cat-chip" onclick="selectChip(this)">🍕 먹잘알/푸파</div>
-            <div class="cat-chip" onclick="selectChip(this)">💖 연애/과몰입</div>
-            <div class="cat-chip" onclick="selectChip(this)">⚖️ 뇌정지 밸런스</div>
-            <div class="cat-chip" onclick="selectChip(this)">👗 OOTD/스타일</div>
-            <div class="cat-chip" onclick="selectChip(this)">🤬 빌런/썰</div>
-            <div class="cat-chip" onclick="selectChip(this)">🍿 덕질/서브컬처</div>
-            <div class="cat-chip" onclick="selectChip(this)">🎮 겜심/이스포츠</div>
-            <div class="cat-chip" onclick="selectChip(this)">🐾 힐링/동물</div>
-            <div class="cat-chip" onclick="selectChip(this)">🏟️ 스포츠/매치업</div>
-            <div class="cat-chip" onclick="selectChip(this)">💸 텅장/소비</div>
-            <div class="cat-chip" onclick="selectChip(this)">🧠 MBTI/심리</div>
-            <div class="cat-chip" onclick="selectChip(this)">🎤 돌판/K-POP</div>
-            <div class="cat-chip" onclick="selectChip(this)">👻 미스터리</div>
-        </div>
+        <div class="chip-scroll" id="chipSlider" aria-label="카테고리 선택"></div>
     </div>
 
     <div class="form-group">
@@ -351,10 +337,10 @@
     <div class="form-group">
         <label class="form-label">불판 진행 기간</label>
         <div class="duration-grid">
-            <button class="duration-btn active" onclick="setDuration(this, '24h')">24시간</button>
-            <button class="duration-btn" onclick="setDuration(this, '3')">3일</button>
-            <button class="duration-btn" onclick="setDuration(this, '7')">7일</button>
-            <button class="duration-btn" onclick="setDuration(this, 'custom')">직접 선택</button>
+            <button type="button" class="duration-btn active" onclick="setDuration(this, '24h')">24시간</button>
+            <button type="button" class="duration-btn" onclick="setDuration(this, '3')">3일</button>
+            <button type="button" class="duration-btn" onclick="setDuration(this, '7')">7일</button>
+            <button type="button" class="duration-btn" onclick="setDuration(this, 'custom')">직접 선택</button>
         </div>
         
         <div id="customDateWrap" style="display: none;">
@@ -371,9 +357,9 @@
         <label class="form-label">불판에 올릴 미디어 형태</label>
         
         <div class="toggle-wrapper">
-            <button class="toggle-btn active highlight" id="btnSingle" onclick="setMainMode('single')">미디어 1개</button>
-            <button class="toggle-btn" id="btnVs" onclick="setMainMode('vs')">미디어 2개 (VS)</button>
-            <button class="toggle-btn" id="btnText" onclick="setMainMode('text')">영상/이미지 없음</button>
+            <button type="button" class="toggle-btn active highlight" id="btnSingle" onclick="setMainMode('single')">미디어 1개</button>
+            <button type="button" class="toggle-btn" id="btnVs" onclick="setMainMode('vs')">미디어 2개 (VS)</button>
+            <button type="button" class="toggle-btn" id="btnText" onclick="setMainMode('text')">영상/이미지 없음</button>
         </div>
 
         <div class="media-layout-group" id="mediaLayoutGroup">
@@ -441,9 +427,42 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
-    // 마우스 드래그 스크롤
+    // 마우스 드래그 스크롤 + 카테고리 칩 (DB 슬러그 14개)
     const slider = document.getElementById('chipSlider');
     let isDown = false; let startX; let scrollLeft; let isDragged = false;
+
+    function escapeChipAttr(str) {
+        return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function initCategoryChips() {
+        if (!slider || !window.PickleCategories || !PickleCategories.PICKLE_CATEGORIES) return;
+        slider.innerHTML = PickleCategories.PICKLE_CATEGORIES.map(function (c) {
+            return (
+                '<button type="button" class="cat-chip" data-category-slug="' +
+                escapeChipAttr(c.slug) +
+                '" data-category-label="' +
+                escapeChipAttr(c.label) +
+                '">' +
+                c.label +
+                '</button>'
+            );
+        }).join('');
+
+        slider.querySelectorAll('.cat-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                if (isDragged) return;
+                slider.querySelectorAll('.cat-chip').forEach(function (el) {
+                    el.classList.remove('selected');
+                });
+                chip.classList.add('selected');
+            });
+        });
+    }
+
+    initCategoryChips();
+
+    if (slider) {
     slider.addEventListener('mousedown', (e) => { isDown = true; isDragged = false; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
     slider.addEventListener('mouseleave', () => { isDown = false; });
     slider.addEventListener('mouseup', () => { isDown = false; });
@@ -452,11 +471,12 @@
         e.preventDefault(); isDragged = true;
         const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk;
     });
+    }
 
-    function selectChip(element) {
-        if (isDragged) return;
-        document.querySelectorAll('.cat-chip').forEach(el => el.classList.remove('selected'));
-        element.classList.add('selected');
+    function getSelectedCategorySlug() {
+        const chip = document.querySelector('.cat-chip.selected');
+        if (!chip) return '';
+        return (chip.getAttribute('data-category-slug') || '').trim();
     }
 
     let lastScrollTop = 0;
@@ -804,7 +824,15 @@
         if (isSubmitting) return false;
 
         const selectedCategory = document.querySelector('.cat-chip.selected');
-        if (!selectedCategory) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
+        const categorySlug = getSelectedCategorySlug();
+        if (!selectedCategory || !categorySlug) {
+            alert('"어느 전장으로 갈까요?"를 선택해주세요.');
+            return;
+        }
+        if (window.PickleCategories && !PickleCategories.isValidCategorySlug(categorySlug)) {
+            alert('유효한 카테고리를 선택해 주세요.');
+            return;
+        }
 
         const titleVal = document.getElementById('inputTitle').value.trim();
         if (titleVal === '') { alert('불판 제목을 입력해주세요!'); return; }

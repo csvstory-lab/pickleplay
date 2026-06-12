@@ -119,11 +119,23 @@
     var mediaLayout =
       layoutEl && layoutEl.value === 'vertical' ? 'vertical' : 'horizontal';
 
+    var categorySlug = '';
+    var categoryLabel = '';
+    if (selectedCategory) {
+      categorySlug = (selectedCategory.getAttribute('data-category-slug') || '').trim();
+      categoryLabel = (
+        selectedCategory.getAttribute('data-category-label') ||
+        selectedCategory.textContent ||
+        ''
+      ).trim();
+      if (!categorySlug && categoryLabel) {
+        categorySlug = resolveCategorySlug(categoryLabel);
+      }
+    }
+
     return {
-      categoryLabel: selectedCategory ? selectedCategory.textContent.trim() : '',
-      categorySlug: selectedCategory
-        ? resolveCategorySlug(selectedCategory.textContent.trim())
-        : '',
+      categoryLabel: categoryLabel,
+      categorySlug: categorySlug,
       title: document.getElementById('inputTitle')?.value.trim() || '',
       description: document.getElementById('inputDesc')?.value.trim() || '',
       optionA: document.getElementById('inputA')?.value.trim() || '',
@@ -386,6 +398,13 @@
     var formData = collectFormData();
     if (!formData.categoryLabel || !formData.categorySlug) {
       alert('"어느 전장으로 갈까요?"를 선택해주세요.');
+      return { cancelled: true };
+    }
+    if (
+      window.PickleCategories &&
+      !window.PickleCategories.isValidCategorySlug(formData.categorySlug)
+    ) {
+      alert('유효한 카테고리를 선택해 주세요.');
       return { cancelled: true };
     }
     if (!formData.title) {
