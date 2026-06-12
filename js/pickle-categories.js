@@ -23,7 +23,13 @@
     { slug: 'mystery', label: '👻 미스터리', db: 'ugc' },
   ];
 
-  var NAV_ITEMS = [{ slug: 'all', label: '📋 전체' }].concat(
+  var HALL_NAV_ITEM = {
+    slug: 'hall',
+    label: '🏅 전당 후보작',
+    href: 'hall_of_fame.html',
+  };
+
+  var NAV_ITEMS = [{ slug: 'all', label: '📋 전체' }, HALL_NAV_ITEM].concat(
     PICKLE_CATEGORIES.map(function (c) {
       return { slug: c.slug, label: c.label };
     })
@@ -148,11 +154,88 @@
     });
   }
 
+  function isHallNavItem(item) {
+    return item && item.slug === 'hall';
+  }
+
+  function renderCategoryNavBar(navEl, options) {
+    if (!navEl) return;
+
+    options = options || {};
+    var isHallPage =
+      options.page === 'hall' ||
+      document.body.getAttribute('data-nav-page') === 'hall';
+    var activeCategory =
+      options.activeCategory != null ? normalizeSlug(options.activeCategory) : 'all';
+    var useButtons =
+      options.useButtons === true ||
+      (options.useButtons !== false &&
+        !!document.getElementById('categoryFeedList'));
+
+    navEl.innerHTML = NAV_ITEMS.map(function (item) {
+      var isHall = isHallNavItem(item);
+      var isActive = isHall
+        ? isHallPage
+        : !isHallPage && normalizeSlug(item.slug) === activeCategory;
+      var activeClass = isActive ? ' active' : '';
+
+      if (isHall) {
+        return (
+          '<a href="hall_of_fame.html" class="category-nav-tab' +
+          activeClass +
+          '" data-nav="hall">' +
+          item.label +
+          '</a>'
+        );
+      }
+
+      if (useButtons) {
+        return (
+          '<button type="button" class="category-nav-tab' +
+          activeClass +
+          '" data-category="' +
+          item.slug +
+          '">' +
+          item.label +
+          '</button>'
+        );
+      }
+
+      var href = buildCategoryUrl(item.slug);
+      return (
+        '<a href="' +
+        href +
+        '" class="category-nav-tab' +
+        activeClass +
+        '" data-category="' +
+        item.slug +
+        '">' +
+        item.label +
+        '</a>'
+      );
+    }).join('');
+  }
+
+  function scrollCategoryNavIntoView(root) {
+    var scope = root || document;
+    var nav = scope.getElementById
+      ? scope.getElementById('categoryNav')
+      : null;
+    if (!nav) nav = scope.querySelector ? scope.querySelector('#categoryNav') : null;
+    if (!nav) return;
+
+    var active = nav.querySelector('.category-nav-tab.active');
+    if (active && active.scrollIntoView) {
+      active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
   function bindCategoryNavTabs(root) {
     if (document.getElementById('categoryFeedList')) return;
 
     var scope = root || document;
     scope.querySelectorAll('.category-nav-tab[data-category]').forEach(function (tab) {
+      if (tab.tagName === 'A') return;
       if (tab.dataset.catNavBound === '1') return;
       tab.dataset.catNavBound = '1';
 
@@ -160,6 +243,18 @@
         goCategory(tab.getAttribute('data-category') || 'all');
       });
     });
+  }
+
+  function initStandaloneCategoryNav() {
+    var nav = document.getElementById('categoryNav');
+    if (!nav || document.getElementById('categoryFeedList')) return;
+
+    var isHallPage = document.body.getAttribute('data-nav-page') === 'hall';
+    renderCategoryNavBar(nav, {
+      page: isHallPage ? 'hall' : 'other',
+      useButtons: false,
+    });
+    scrollCategoryNavIntoView(document);
   }
 
   function bindAppCategoryNav(root) {
@@ -171,6 +266,7 @@
   window.PickleCategories = {
     PICKLE_CATEGORIES: PICKLE_CATEGORIES,
     NAV_ITEMS: NAV_ITEMS,
+    HALL_NAV_ITEM: HALL_NAV_ITEM,
     SLUG_META: SLUG_META,
     GRID_LABELS: GRID_LABELS,
     VALID_URL_SLUGS: VALID_URL_SLUGS,
@@ -180,10 +276,13 @@
     slugFromGridLabel: slugFromGridLabel,
     buildCategoryUrl: buildCategoryUrl,
     goCategory: goCategory,
+    renderCategoryNavBar: renderCategoryNavBar,
+    scrollCategoryNavIntoView: scrollCategoryNavIntoView,
     bindAppCategoryNav: bindAppCategoryNav,
   };
 
   document.addEventListener('DOMContentLoaded', function () {
     bindAppCategoryNav();
+    initStandaloneCategoryNav();
   });
 })();

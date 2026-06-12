@@ -66,24 +66,20 @@
     var nav = document.getElementById('categoryNav');
     if (!nav) return;
 
-    var items = getCategoriesApi().NAV_ITEMS || [];
-    nav.innerHTML = items
-      .map(function (item) {
-        return (
-          '<button type="button" class="category-nav-tab" data-category="' +
-          item.slug +
-          '">' +
-          item.label +
-          '</button>'
-        );
-      })
-      .join('');
+    getCategoriesApi().renderCategoryNavBar(nav, {
+      activeCategory: state.category,
+      useButtons: true,
+      page: 'category',
+    });
   }
 
   function syncNavActive() {
     document.querySelectorAll('.category-nav-tab[data-category]').forEach(function (btn) {
       var slug = getCategoriesApi().normalizeSlug(btn.dataset.category || 'all');
       btn.classList.toggle('active', slug === state.category);
+    });
+    document.querySelectorAll('.category-nav-tab[data-nav="hall"]').forEach(function (link) {
+      link.classList.remove('active');
     });
   }
 
@@ -299,10 +295,7 @@
   }
 
   function scrollActiveNavIntoView() {
-    var active = document.querySelector('.category-nav-tab.active');
-    if (active && active.scrollIntoView) {
-      active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-    }
+    getCategoriesApi().scrollCategoryNavIntoView(document);
   }
 
   async function renderList() {
