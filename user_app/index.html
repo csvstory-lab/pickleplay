@@ -28,6 +28,7 @@
         --text-main: #ffffff;
         --text-sub: #a1a1aa;
         --border-color: #27272a;
+        --header-top-h: 56px;
     }
 
     body {
@@ -38,11 +39,11 @@
 
     /* === 상단 헤더 === */
     header {
-        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
-        z-index: 900; border-bottom: 1px solid var(--border-color);
-        transition: top 0.3s ease-in-out;
+        position: sticky; top: 0;
+        background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
+        z-index: 100; border-bottom: 1px solid var(--border-color);
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 12px; }
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
         background: linear-gradient(90deg, var(--neon-green), #aaff00);
@@ -51,13 +52,14 @@
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
 
-    .btn-category {
-        background-color: #27272a; color: #fff; border: 1px solid #3f3f46;
-        padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
-        cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+    /* 메인 — 스티키 카테고리 칩 바 (로고 바로 아래) */
+    .category-nav-sticky-wrap {
+        position: sticky;
+        top: var(--header-top-h, 56px);
+        z-index: 50;
+        background-color: var(--bg-color);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
     }
-    .btn-category:active { transform: scale(0.95); background-color: var(--neon-green); color: #000; }
-    a.btn-category { text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; }
 
     .category-nav-scroll {
         display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
@@ -87,12 +89,6 @@
         display: inline-flex; align-items: center;
     }
     a.category-nav-tab.active { color: #000; }
-
-    /* 메인 피드 — 킹왕짱 아래 카테고리 칩 바 */
-    main .category-nav-scroll {
-        margin: 0 0 4px;
-        padding: 0 20px 18px;
-    }
 
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
@@ -471,16 +467,16 @@
 <body>
 
 <header id="mainHeader">
-    <div class="top-row">
+    <div class="top-row" id="headerTopRow">
         <h1 class="logo" style="cursor:pointer;" onclick="location.href='index.html'">P!CKLE</h1>
         <div class="header-actions">
-            <a href="category.html" class="btn-category">
-                <span>≡</span> 전체 불판
-            </a>
             <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
     </div>
 </header>
+<div class="category-nav-sticky-wrap" id="categoryNavSticky">
+    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
+</div>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
@@ -555,8 +551,6 @@
         </div>
     </section>
 
-    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
-
     <section class="list-section">
         <div class="section-title" style="margin-bottom: 15px;">🔥 실시간 타오르는 불판</div>
         <div id="hotFeedList">
@@ -586,18 +580,13 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-feed.js"></script>
 <script>
-    // 헤더 스크롤 제어
-    let lastScrollTop = 0;
-    window.addEventListener('scroll', function() {
-        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const header = document.getElementById('mainHeader');
-        if (scrollTop > lastScrollTop && scrollTop > 60) {
-            header.style.top = '-80px'; 
-        } else {
-            header.style.top = '0';
-        }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-    });
+    function syncIndexHeaderTopHeight() {
+        var row = document.getElementById('headerTopRow');
+        if (!row) return;
+        document.documentElement.style.setProperty('--header-top-h', row.offsetHeight + 'px');
+    }
+    syncIndexHeaderTopHeight();
+    window.addEventListener('resize', syncIndexHeaderTopHeight);
 
     // 모든 드로어/시트 닫기 (통합 제어)
     function closeAllDrawers() {

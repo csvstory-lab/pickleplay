@@ -46,13 +46,6 @@
         cursor: pointer; margin: 0; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.4));
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
-    .btn-category {
-        background-color: #27272a; color: #fff; border: 1px solid #3f3f46;
-        padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
-        cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
-    }
-    a.btn-category { text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; }
-    .btn-category:active { background-color: var(--neon-green); color: #000; transform: scale(0.97); }
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
     .noti-bell:active { transform: scale(0.9); }
 
@@ -247,7 +240,6 @@
     <div class="top-row">
         <h1 class="logo" onclick="location.href='index.html'">P!CKLE</h1>
         <div class="header-actions">
-            <a href="category.html" class="btn-category"><span>≡</span> 전체 불판</a>
             <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
     </div>

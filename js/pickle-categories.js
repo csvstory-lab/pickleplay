@@ -389,23 +389,12 @@
   function bindAllBoardButtons(root) {
     var scope = root || document;
 
-    scope.querySelectorAll('.btn-category, a.btn-category').forEach(function (btn) {
+    scope.querySelectorAll('[data-category][data-board-nav]').forEach(function (btn) {
       if (btn.dataset.catNavBound === '1') return;
-
-      var href = btn.getAttribute('href');
-      if (href && href.indexOf('category.html') !== -1) {
-        btn.dataset.catNavBound = '1';
-        return;
-      }
-
       btn.dataset.catNavBound = '1';
-      btn.removeAttribute('onclick');
-
       btn.addEventListener('click', function (e) {
-        if (btn.tagName === 'A' && btn.getAttribute('href')) return;
         e.preventDefault();
-        var slug = btn.getAttribute('data-category') || 'all';
-        goCategory(slug);
+        goCategory(btn.getAttribute('data-category') || 'all');
       });
     });
   }
@@ -439,19 +428,27 @@
     });
   }
 
+  function syncIndexHeaderTopHeight() {
+    var row = document.getElementById('headerTopRow');
+    if (!row) return;
+    document.documentElement.style.setProperty('--header-top-h', row.offsetHeight + 'px');
+  }
+
   function placeIndexCategoryNav(nav) {
     if (!nav || document.getElementById('categoryFeedList')) return;
 
-    var kingContainer = document.getElementById('aiCurationContainer');
-    if (!kingContainer) return;
+    var wrap = document.getElementById('categoryNavSticky');
+    if (!wrap) return;
 
-    var kingSection = kingContainer.closest('section');
-    var main = document.querySelector('main');
-    if (!kingSection || !main || kingSection.parentElement !== main) return;
+    if (nav.parentElement !== wrap) {
+      wrap.appendChild(nav);
+    }
 
-    if (nav.parentElement === main && nav.previousElementSibling === kingSection) return;
-
-    kingSection.insertAdjacentElement('afterend', nav);
+    syncIndexHeaderTopHeight();
+    if (!window.__pickleHeaderTopResizeBound) {
+      window.__pickleHeaderTopResizeBound = true;
+      window.addEventListener('resize', syncIndexHeaderTopHeight);
+    }
   }
 
   function initStandaloneCategoryNav() {
@@ -467,6 +464,7 @@
       useButtons: false,
     });
     scrollCategoryNavIntoView(document);
+    syncIndexHeaderTopHeight();
   }
 
   function removeLegacyAppNav(root) {
