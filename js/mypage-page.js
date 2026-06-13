@@ -323,6 +323,18 @@
 
       await cascadeProfileSnapshots(sb, updatedUser.id, snapshot);
 
+      var usersUpdate = { nickname: newNick };
+      if (avatarHtml) {
+        usersUpdate.avatar_html = avatarHtml;
+      }
+      var usersResult = await sb
+        .from('users')
+        .update(usersUpdate)
+        .eq('id', updatedUser.id);
+      if (usersResult.error) {
+        console.warn('[P!CKLE Mypage] users avatar sync failed', usersResult.error);
+      }
+
       alert('프로필이 성공적으로 변경되었습니다.');
       window.location.reload();
     } catch (error) {

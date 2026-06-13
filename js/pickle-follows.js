@@ -160,27 +160,81 @@
     }
   }
 
-  async function fetchUserMap(userIds) {
-    var map = new Map();
-    if (!userIds.length) return map;
+  var FANDOM_USER_FIELDS_FULL = 'id, nickname, points, star_score, avatar_html';
+  var FANDOM_USER_FIELDS_BASE = 'id, nickname, points';
 
+  function getFandomProfileFromRow(row, listType) {
+    if (!row) return null;
+    var profile =
+      listType === 'follower'
+        ? row.follower || row.profile
+        : row.following || row.profile;
+    if (profile && typeof profile === 'object' && !Array.isArray(profile)) {
+      return profile;
+    }
+    return null;
+  }
+
+  function getFandomTargetUserId(row, listType) {
+    if (!row) return null;
+    return listType === 'follower' ? row.follower_id : row.following_id;
+  }
+
+  async function fetchFandomListRows(listType, userId) {
     var sb = getSupabaseClient();
-    if (!sb) return map;
+    if (!sb || !userId) return { rows: [], error: null };
 
-    var result = await sb
-      .from('users')
-      .select('id, nickname, star_score, points')
-      .in('id', userIds);
+    var embedKey = listType === 'follower' ? 'follower' : 'following';
+    var fkName =
+      listType === 'follower'
+        ? 'user_follows_follower_id_fkey'
+        : 'user_follows_following_id_fkey';
+    var idCol = listType === 'follower' ? 'follower_id' : 'following_id';
+    var filterCol = listType === 'follower' ? 'following_id' : 'follower_id';
 
-    if (result.error) {
-      console.warn('[P!CKLE Follows] users fetch failed', result.error);
-      return map;
+    var selectVariants = [
+      idCol +
+        ', created_at, ' +
+        embedKey +
+        ':users!' +
+        fkName +
+        '(' +
+        FANDOM_USER_FIELDS_FULL +
+        ')',
+      idCol +
+        ', created_at, ' +
+        embedKey +
+        ':users!' +
+        fkName +
+        '(' +
+        FANDOM_USER_FIELDS_BASE +
+        ', star_score)',
+      idCol +
+        ', created_at, ' +
+        embedKey +
+        ':users!' +
+        fkName +
+        '(' +
+        FANDOM_USER_FIELDS_BASE +
+        ')',
+    ];
+
+    var lastError = null;
+    for (var i = 0; i < selectVariants.length; i += 1) {
+      var result = await sb
+        .from('user_follows')
+        .select(selectVariants[i])
+        .eq(filterCol, userId)
+        .order('created_at', { ascending: false });
+
+      if (!result.error) {
+        return { rows: result.data || [], error: null };
+      }
+      lastError = result.error;
     }
 
-    (result.data || []).forEach(function (row) {
-      if (row && row.id) map.set(String(row.id), row);
-    });
-    return map;
+    console.warn('[P!CKLE Follows] fandom list join failed', lastError);
+    return { rows: [], error: lastError };
   }
 
   async function fetchAvatarHtmlMap(userIds) {
@@ -230,10 +284,12 @@
   function buildLevelBadge(userRow) {
     var pts = 0;
     if (userRow) {
-      if (window.PickleProfile && window.PickleProfile.extractRankingPointsFromRow) {
+      if (userRow.star_score != null && userRow.star_score !== '') {
+        pts = Number(userRow.star_score) || 0;
+      } else if (window.PickleProfile && window.PickleProfile.extractRankingPointsFromRow) {
         pts = window.PickleProfile.extractRankingPointsFromRow(userRow);
       } else {
-        pts = Number(userRow.star_score ?? userRow.points) || 0;
+        pts = Number(userRow.points) || 0;
       }
     }
     if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
@@ -244,6 +300,15 @@
   }
 
   function renderAvatarHtml(userRow, targetUserId, avatarMap) {
+    var fromUser =
+      userRow && userRow.avatar_html ? String(userRow.avatar_html).trim() : '';
+    if (fromUser) {
+      if (fromUser.indexOf('<') !== -1) {
+        return fromUser;
+      }
+      return escapeHtml(fromUser);
+    }
+
     var stored = avatarMap.get(String(targetUserId));
     if (stored) {
       if (stored.indexOf('<') !== -1) {
@@ -251,12 +316,15 @@
       }
       return escapeHtml(stored);
     }
-    var nickname = userRow && userRow.nickname ? userRow.nickname : '픽';
-    return escapeHtml(String(nickname).trim().charAt(0) || '🥒');
+
+    var nickname = userRow && userRow.nickname ? String(userRow.nickname).trim() : '';
+    return escapeHtml(nickname.charAt(0) || '🥒');
   }
 
   function renderFandomItem(userRow, targetUserId, listType, myId, avatarMap) {
-    var nickname = userRow && userRow.nickname ? userRow.nickname : '픽클러';
+    var nickname =
+      userRow && userRow.nickname ? String(userRow.nickname).trim() : '';
+    if (!nickname) nickname = '닉네임 없음';
     var isMine = myId && String(targetUserId) === String(myId);
     var iFollow = myFollowingSet.has(String(targetUserId));
     var avatarInner = renderAvatarHtml(userRow, targetUserId, avatarMap);
@@ -315,46 +383,23 @@
     var myId = await getCurrentUserId();
     await refreshMyFollowingSet(myId);
 
-    var rows = [];
-    var userIds = [];
+    var listResult = await fetchFandomListRows(type, userId);
+    if (listResult.error) throw listResult.error;
 
-    if (type === 'follower') {
-      var followerRes = await sb
-        .from('user_follows')
-        .select('follower_id, created_at')
-        .eq('following_id', userId)
-        .order('created_at', { ascending: false });
-      if (followerRes.error) throw followerRes.error;
-      rows = followerRes.data || [];
-      userIds = rows.map(function (r) {
-        return r.follower_id;
-      });
-    } else {
-      var followingRes = await sb
-        .from('user_follows')
-        .select('following_id, created_at')
-        .eq('follower_id', userId)
-        .order('created_at', { ascending: false });
-      if (followingRes.error) throw followingRes.error;
-      rows = followingRes.data || [];
-      userIds = rows.map(function (r) {
-        return r.following_id;
-      });
-    }
+    var rows = listResult.rows || [];
+    var userIds = rows
+      .map(function (r) {
+        return getFandomTargetUserId(r, type);
+      })
+      .filter(Boolean);
 
-    var userMap = await fetchUserMap(userIds);
     var avatarMap = await fetchAvatarHtmlMap(userIds);
 
     return rows
       .map(function (r) {
-        var targetId = type === 'follower' ? r.follower_id : r.following_id;
-        return renderFandomItem(
-          userMap.get(String(targetId)),
-          targetId,
-          type,
-          myId,
-          avatarMap
-        );
+        var targetId = getFandomTargetUserId(r, type);
+        var profile = getFandomProfileFromRow(r, type);
+        return renderFandomItem(profile, targetId, type, myId, avatarMap);
       })
       .join('');
   }
