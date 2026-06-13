@@ -11,330 +11,169 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 랭킹</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
-
 <style>
     :root {
-        --bg-color: #fef9c3;
-        --card-bg: #ffffff;
+        --bg-color: #09090b;
+        --card-bg: #18181b;
         --neon-green: #39ff14;
         --neon-pink: #ff007f;
         --neon-blue: #00f0ff;
-        --text-main: #0a0a0a;
-        --text-sub: #52525b;
-        --border-color: #0a0a0a;
-        --brutal-border: 3px solid #0a0a0a;
-        --brutal-shadow: 4px 4px 0 #0a0a0a;
-        --brutal-shadow-lg: 6px 6px 0 #0a0a0a;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
     }
 
-    * { box-sizing: border-box; }
-
     body {
-        margin: 0; padding: 0;
-        background-color: var(--bg-color);
-        background-image: radial-gradient(circle at 20% 20%, rgba(57,255,20,0.15) 0%, transparent 45%),
-                          radial-gradient(circle at 80% 0%, rgba(255,0,127,0.12) 0%, transparent 40%);
-        color: var(--text-main);
-        font-family: 'Pretendard', sans-serif;
-        max-width: 480px; margin: 0 auto;
-        -webkit-tap-highlight-color: transparent;
-        overflow-x: hidden;
+        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
+        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
     header {
-        position: sticky; top: 0; width: 100%;
-        background-color: var(--card-bg);
-        border-bottom: var(--brutal-border);
-        z-index: 900;
-        transition: top 0.3s ease-in-out;
-        box-shadow: 0 4px 0 #0a0a0a;
+        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
+        z-index: 900; border-bottom: 1px solid var(--border-color); transition: top 0.3s ease-in-out;
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 8px; }
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
-        color: #0a0a0a; margin: 0; cursor: pointer;
-        text-shadow: 3px 3px 0 var(--neon-green);
+        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        cursor: pointer; margin: 0; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.4));
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
-    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; transition: 0.2s; }
-    .noti-bell:active { transform: translate(2px, 2px); }
+    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
+    .noti-bell:active { transform: scale(0.9); }
 
-    main { padding: 20px 16px 180px; transition: all 0.3s ease; }
+    .category-nav-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .category-nav-scroll::-webkit-scrollbar { display: none; }
+    .category-nav-tab {
+        flex-shrink: 0; border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
+        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap;
+    }
+    .category-nav-tab.active {
+        border-color: var(--neon-green); color: #000; background: var(--neon-green);
+        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
+    }
+    .category-nav-tab:active { transform: scale(0.96); }
+    .category-nav-tab--seasonal {
+        border-color: rgba(57, 255, 20, 0.55);
+        box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
+    }
+    .category-nav-tab--seasonal.active {
+        box-shadow: 0 0 16px rgba(57, 255, 20, 0.45);
+    }
+    a.category-nav-tab {
+        text-decoration: none; color: var(--text-sub);
+        display: inline-flex; align-items: center;
+    }
+    a.category-nav-tab.active { color: #000; }
+
+    /* === 메인 컨텐츠 (랭킹 UI) === */
+    main { padding: 20px 20px 120px 20px; transition: all 0.3s ease; }
 
     .page-title {
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.75rem; margin: 0 0 20px 0;
+        font-family: 'Pretendard', sans-serif; font-weight: 900;
+        font-size: 1.6rem; margin: 0 0 20px 0; color: #fff;
         text-align: center; letter-spacing: -0.5px;
-        background: #0a0a0a; color: #fff;
-        padding: 12px 16px;
-        border: var(--brutal-border);
-        box-shadow: var(--brutal-shadow);
-        transform: rotate(-1deg);
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
-    /* 메인 탭 — 네오브루탈 */
-    .main-tab-wrapper {
-        display: flex; gap: 8px; margin-bottom: 24px;
-    }
-    .main-tab {
-        flex: 1; text-align: center; padding: 14px 8px;
-        font-weight: 900; font-size: 0.92rem;
-        cursor: pointer; font-family: inherit;
-        background: var(--card-bg);
-        border: var(--brutal-border);
-        box-shadow: var(--brutal-shadow);
-        transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .main-tab:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0a0a0a; }
-    .main-tab.active { transform: translate(-2px, -2px); }
+    /* 1. 메인 탭 */
+    .main-tab-wrapper { display: flex; background: rgba(39, 39, 42, 0.5); border-radius: 16px; padding: 5px; margin-bottom: 15px; }
+    .main-tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 1rem; color: var(--text-sub); cursor: pointer; border: 1px solid transparent; background: transparent; transition: all 0.3s; }
 
-    main.theme-grill .main-tab#tabGrill.active {
-        background: var(--neon-pink); color: #fff;
-        box-shadow: var(--brutal-shadow-lg);
-    }
-    main.theme-pickler .main-tab#tabPickler.active {
-        background: var(--neon-blue); color: #0a0a0a;
-        box-shadow: var(--brutal-shadow-lg);
-    }
-
-    main.theme-grill .podium-score,
+    /* 💡 테마 1: 🔥 핫 불판 (네온 핑크 테마) */
+    .main-tab#tabGrill.active { background: rgba(255, 0, 127, 0.1); color: #fff; border-color: var(--neon-pink); box-shadow: 0 4px 15px rgba(255, 0, 127, 0.2); }
+    main.theme-grill .sub-tab.active { background-color: var(--neon-pink); color: #000; border-color: var(--neon-pink); box-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
+    main.theme-grill .podium-score { color: var(--neon-pink); }
     main.theme-grill .rank-score { color: var(--neon-pink); }
-    main.theme-pickler .podium-score,
-    main.theme-pickler .rank-score { color: #0077aa; }
 
-    /* Top 3 시상대 */
-    .podium-container {
-        display: flex; justify-content: center; align-items: flex-end;
-        gap: 8px; margin-bottom: 28px; min-height: 200px; margin-top: 20px;
-    }
+    /* 💡 테마 2: 😎 픽클러 (네온 블루 테마) */
+    .main-tab#tabPickler.active { background: rgba(0, 240, 255, 0.1); color: #fff; border-color: var(--neon-blue); box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2); }
+    main.theme-pickler .sub-tab.active { background-color: var(--neon-blue); color: #000; border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
+    main.theme-pickler .podium-score { color: var(--neon-blue); }
+    main.theme-pickler .rank-score { color: var(--neon-blue); }
+
+    /* 1위 단상은 황금색이므로 글씨 흰색 고정 */
+    .podium-1 .podium-score { color: #fff !important; }
+
+    /* 2. 서브 탭 (일/주/월/연) 기본 설정 */
+    .sub-tab-wrapper { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+    .sub-tab { padding: 8px 16px; border-radius: 20px; background-color: transparent; border: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+    .sub-tab.active { font-weight: 900; }
+
+    /* 3. 명예의 전당 (Top 3 시상대) */
+    .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin-bottom: 40px; height: 180px; margin-top: 30px; }
 
     .podium-item {
-        display: flex; flex-direction: column; align-items: center;
-        width: 30%; position: relative; cursor: pointer;
-        transition: transform 0.15s;
+        display: flex; flex-direction: column; align-items: center; width: 30%; position: relative;
+        cursor: pointer; transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
-    .podium-item:active { transform: translate(2px, 2px); }
+    .podium-item:active { transform: scale(0.93); }
 
-    .neo-top {
-        border: var(--brutal-border) !important;
-        box-shadow: var(--brutal-shadow-lg) !important;
-    }
+    .podium-avatar { width: 56px; height: 56px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: absolute; top: -35px; z-index: 10; transition: transform 0.2s; }
+    .podium-rank { font-family: 'Black Han Sans', sans-serif; font-size: 1.5rem; color: #000; margin-bottom: 5px; }
+    .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 30px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+    .podium-score { font-size: 0.75rem; font-weight: 700; margin-top: 3px; transition: color 0.3s; }
 
-    .podium-crown {
-        position: absolute; top: -52px; font-size: 1.6rem;
-        filter: drop-shadow(2px 2px 0 #0a0a0a);
-        z-index: 20;
-        animation: crown-bob 2s ease-in-out infinite;
-    }
-    @keyframes crown-bob {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-4px); }
-    }
+    .podium-1 { height: 130px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; }
+    .podium-1 .podium-avatar { width: 70px; height: 70px; font-size: 2.2rem; top: -45px; border-color: #ffcc00; }
+    .podium-1 .podium-name { font-size: 1rem; margin-top: 40px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-    .podium-avatar {
-        width: 56px; height: 56px; border-radius: 50%;
-        background-color: #fff; display: flex;
-        justify-content: center; align-items: center;
-        font-size: 1.6rem; font-weight: 900;
-        border: var(--brutal-border);
-        box-shadow: 3px 3px 0 #0a0a0a;
-        position: absolute; top: -38px; z-index: 10;
-        overflow: hidden;
-    }
-    .podium-avatar--post { border-radius: 10px; }
+    .podium-2 { height: 100px; background: linear-gradient(180deg, #a1a1aa 0%, #52525b 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d4d4d8; border-bottom: none; }
+    .podium-2 .podium-avatar { border-color: #a1a1aa; }
 
-    .podium-rank {
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.4rem; color: #0a0a0a; margin-top: auto;
-        margin-bottom: 8px;
-    }
-    .podium-name {
-        font-weight: 900; font-size: 0.78rem; text-align: center;
-        margin-top: 32px; color: #0a0a0a;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        width: 100%; padding: 0 4px;
-    }
-    .podium-score {
-        font-size: 0.72rem; font-weight: 900; margin-top: 4px;
-        margin-bottom: 6px;
-    }
+    .podium-3 { height: 80px; background: linear-gradient(180deg, #b87333 0%, #7a4b22 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d89355; border-bottom: none; }
+    .podium-3 .podium-avatar { border-color: #b87333; }
 
-    .podium-1 {
-        height: 140px; width: 36%; z-index: 5;
-        background: #ffcc00;
-        border-top-left-radius: 4px; border-top-right-radius: 4px;
-        border-bottom: none;
-    }
-    .podium-1 .podium-avatar { width: 68px; height: 68px; font-size: 2rem; top: -48px; }
-    .podium-1 .podium-name { font-size: 0.85rem; margin-top: 38px; }
-    .podium-1 .podium-score { color: #0a0a0a !important; }
-
-    .podium-2 {
-        height: 110px; background: #e4e4e7;
-        border-top-left-radius: 4px; border-top-right-radius: 4px;
-        border-bottom: none;
-    }
-    .podium-3 {
-        height: 88px; background: #fdba74;
-        border-top-left-radius: 4px; border-top-right-radius: 4px;
-        border-bottom: none;
-    }
-
-    /* 리스트 */
+    /* 4. 랭킹 리스트 (4위 ~ 10위) */
     .ranking-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .neo-card {
-        background: var(--card-bg);
-        border: var(--brutal-border);
-        box-shadow: var(--brutal-shadow);
-        border-radius: 0;
-        transition: transform 0.15s;
-    }
-    .neo-card:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0a0a0a; }
-
     .rank-item {
-        display: flex; align-items: center;
-        padding: 14px; gap: 12px; cursor: pointer;
+        display: flex; align-items: center; background-color: var(--card-bg);
+        padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); gap: 15px;
     }
-    .rank-num {
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.1rem; color: var(--text-sub);
-        width: 28px; text-align: center; flex-shrink: 0;
-    }
-    .rank-pic {
-        width: 44px; height: 44px; border-radius: 50%;
-        background-color: #fef08a;
-        border: 2px solid #0a0a0a;
-        display: flex; justify-content: center; align-items: center;
-        font-size: 1.2rem; font-weight: 900; flex-shrink: 0;
-        overflow: hidden;
-    }
-    .rank-item.grill .rank-pic { border-radius: 8px; }
+    .rank-num { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--text-sub); width: 25px; text-align: center; }
+    .rank-pic { width: 44px; height: 44px; border-radius: 50%; background-color: #27272a; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; flex-shrink: 0; }
 
-    .rank-info { flex: 1; overflow: hidden; min-width: 0; }
-    .rank-title {
-        font-weight: 900; font-size: 0.9rem;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        margin-bottom: 4px;
-    }
-    .rank-sub { font-size: 0.72rem; color: var(--text-sub); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .rank-score {
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 0.95rem; flex-shrink: 0;
-        display: flex; align-items: center; gap: 4px;
-    }
+    .rank-item.grill .rank-pic { border-radius: 10px; background: linear-gradient(135deg, #2e1a2a, #0a192f); }
 
-    .grade-badge {
-        display: inline-block; font-size: 0.65rem; font-weight: 900;
-        background: #0a0a0a; color: var(--neon-green);
-        padding: 2px 6px; border: 2px solid #0a0a0a;
-        margin-left: 4px; vertical-align: middle;
-    }
+    .rank-info { flex: 1; overflow: hidden; }
+    .rank-title { font-weight: 800; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .rank-sub { font-size: 0.75rem; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
+    .rank-score { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; display: flex; align-items: center; gap: 5px; transition: color 0.3s; }
 
-    .rank-empty, .rank-loading {
-        text-align: center; padding: 32px 16px;
-        font-weight: 800; color: var(--text-sub);
-        background: var(--card-bg);
-        border: var(--brutal-border);
-        box-shadow: var(--brutal-shadow);
-    }
-    .rank-empty--list { padding: 16px; font-size: 0.85rem; margin-top: 8px; }
-
+    /* 숨김 처리 유틸 */
     .hidden { display: none !important; }
 
-    /* 내 순위 Sticky 바 */
-    .self-rank-bar {
-        position: fixed;
-        left: 0; right: 0; bottom: calc(72px + env(safe-area-inset-bottom));
-        max-width: 480px; margin: 0 auto;
-        padding: 0 12px 10px;
-        z-index: 850;
-        pointer-events: none;
-    }
-    .self-rank-inner {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 14px 16px; gap: 12px;
-        pointer-events: auto;
-    }
-    .self-rank-inner.theme-grill { border-left: 6px solid var(--neon-pink); }
-    .self-rank-inner.theme-pickler { border-left: 6px solid var(--neon-blue); }
-
-    .self-rank-left { display: flex; flex-direction: column; gap: 2px; }
-    .self-rank-label { font-size: 0.7rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
-    .self-rank-num { font-family: 'Black Han Sans', sans-serif; font-size: 1.4rem; }
-    .self-rank-right { text-align: right; flex: 1; min-width: 0; }
-    .self-rank-name {
-        display: block; font-weight: 900; font-size: 0.85rem;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .self-rank-score { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; }
-    .self-rank-msg { font-size: 0.82rem; font-weight: 800; color: var(--text-sub); }
-    .self-rank-msg a { color: #0a0a0a; font-weight: 900; }
-
-    /* 하단 네비 */
     .bottom-nav {
-        position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px;
-        margin: 0 auto; right: 0;
-        background-color: #fff;
-        border-top: var(--brutal-border);
+        position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0;
+        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px);
         display: flex; justify-content: space-around; align-items: center;
-        padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
-        z-index: 900;
-        box-shadow: 0 -4px 0 #0a0a0a;
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+        border-top: 1px solid var(--border-color); z-index: 800;
     }
-    .nav-btn {
-        display: flex; flex-direction: column; align-items: center; gap: 4px;
-        color: #71717a; font-size: 0.72rem; font-weight: 900; cursor: pointer;
-    }
-    .nav-icon { font-size: 1.35rem; }
-    .nav-btn.active { color: #0a0a0a; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .nav-icon { font-size: 1.4rem; }
     .nav-btn.fire-btn .nav-icon {
-        background-color: var(--neon-green);
-        width: 44px; height: 44px;
+        background-color: var(--neon-green); width: 45px; height: 45px;
         display: flex; justify-content: center; align-items: center;
-        border-radius: 50%; color: #0a0a0a;
-        font-size: 1.5rem; transform: translateY(-8px);
-        border: 3px solid #0a0a0a;
-        box-shadow: 3px 3px 0 #0a0a0a;
+        border-radius: 50%; color: #000; font-size: 1.6rem;
+        transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3);
     }
-
-    /* 알림 드로어 */
-    .noti-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-    .noti-overlay.open { opacity: 1; pointer-events: auto; }
-    .noti-drawer {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 85%; max-width: 400px;
-        background: #fff; z-index: 9999;
-        transform: translateX(100%); transition: transform 0.3s;
-        border-left: var(--brutal-border);
-        box-shadow: -6px 0 0 #0a0a0a;
-    }
-    .noti-drawer.open { transform: translateX(0); }
-    .noti-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: var(--brutal-border); }
-    .noti-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; margin: 0; }
-    .btn-close-drawer { background: none; border: none; font-size: 1.4rem; cursor: pointer; font-weight: 900; }
-
-    .bottom-sheet {
-        position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
-        background: #fff; padding: 25px 20px 40px; z-index: 9999;
-        transform: translateY(100%); transition: transform 0.3s;
-        border-top: var(--brutal-border);
-        box-shadow: 0 -6px 0 #0a0a0a;
-    }
-    .bottom-sheet.open { transform: translateY(0); }
-    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; }
-    .grid-item {
-        background: #fef08a; padding: 12px; text-align: center;
-        font-size: 0.88rem; font-weight: 900; cursor: pointer;
-        border: 2px solid #0a0a0a; box-shadow: 3px 3px 0 #0a0a0a;
-    }
-    .grid-item:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0a0a0a; }
+    .nav-btn.active { color: var(--neon-green); }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 </head>
-<body>
+<body data-nav-page="ranking">
 
 <header id="mainHeader">
     <div class="top-row">
@@ -343,49 +182,127 @@
             <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
     </div>
+    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </header>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 
-<div class="noti-overlay" id="notiOverlay" onclick="closeAllDrawers()"></div>
-<div class="noti-drawer" id="notiDrawer">
-    <div class="noti-header">
-        <h2 class="noti-title">알림</h2>
-        <button class="btn-close-drawer" onclick="closeAllDrawers()">✕</button>
-    </div>
-    <div style="padding: 20px; color: var(--text-sub); text-align: center;">새로운 알림이 없습니다.</div>
-</div>
-
-<div class="bottom-sheet" id="categorySheet">
-    <div class="noti-header" style="padding: 0 0 20px 0; border:none;">
-        <h2 class="noti-title">모든 불판 탐험 🚀</h2>
-        <button class="btn-close-drawer" onclick="closeAllDrawers()">✕</button>
-    </div>
-    <div class="category-grid" id="categoryGrid"></div>
-</div>
-
+<!-- 💡 초기 테마는 핫 불판(theme-grill)으로 세팅 -->
 <main class="theme-grill">
     <h1 class="page-title">🏆 P!CKLE 랭킹</h1>
 
     <div class="main-tab-wrapper">
-        <button type="button" class="main-tab active" id="tabGrill" onclick="switchMainTab('grill')">🔥 가장 핫한 불판</button>
-        <button type="button" class="main-tab" id="tabPickler" onclick="switchMainTab('pickler')">😎 최고의 픽클러</button>
+        <button class="main-tab active" id="tabGrill" onclick="switchMainTab('grill')"><span class="emoji">🔥</span> 가장 핫한 불판</button>
+        <button class="main-tab" id="tabPickler" onclick="switchMainTab('pickler')"><span class="emoji">😎</span> 최고의 픽클러</button>
     </div>
 
+    <div class="sub-tab-wrapper" id="subTabs">
+        <button class="sub-tab active" onclick="switchSubTab(this)">일간</button>
+        <button class="sub-tab" onclick="switchSubTab(this)">주간</button>
+        <button class="sub-tab" onclick="switchSubTab(this)">월간</button>
+        <button class="sub-tab" onclick="switchSubTab(this)">연간</button>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 1. 🔥 핫한 불판 랭킹 (핑크 테마) -->
+    <!-- ============================================== -->
     <div id="grillRankingArea">
-        <div class="podium-container" id="grillPodium">
-            <p class="rank-loading">🏆 랭킹 집계 중...</p>
+        <div class="podium-container">
+            <!-- 2위 (OOTD) -->
+            <div class="podium-item podium-2" onclick="location.href='detail.html'">
+                <div class="podium-avatar" style="border-radius:10px;">👗</div>
+                <div class="podium-name">첫 데이트룩 골라주세요!</div>
+                <div class="podium-score">🔥 45.2K</div>
+                <div class="podium-rank" style="margin-top:auto;">2</div>
+            </div>
+            <!-- 1위 (먹잘알) -->
+            <div class="podium-item podium-1" onclick="location.href='detail.html'">
+                <div class="podium-avatar" style="border-radius:10px;">🍜</div>
+                <div class="podium-name">평생 라면 vs 평생 치킨</div>
+                <div class="podium-score">🔥 89.1K</div>
+                <div class="podium-rank" style="margin-top:auto;">1</div>
+            </div>
+            <!-- 3위 (블박) -->
+            <div class="podium-item podium-3" onclick="location.href='detail.html'">
+                <div class="podium-avatar" style="border-radius:10px;">🚗</div>
+                <div class="podium-name">킥보드 vs 오토바이 과실</div>
+                <div class="podium-score">🔥 32.8K</div>
+                <div class="podium-rank" style="margin-top:auto;">3</div>
+            </div>
         </div>
-        <div class="ranking-list" id="grillList"></div>
+
+        <div class="ranking-list">
+            <div class="rank-item grill">
+                <div class="rank-num">4</div>
+                <div class="rank-pic">🍻</div>
+                <div class="rank-info">
+                    <div class="rank-title">금요일 퇴근 후 치맥 vs 삼쏘</div>
+                    <div class="rank-sub"><span>작성자: 쩝쩝박사</span> <span>|</span> <span style="color:var(--neon-sub);">마감 완료</span></div>
+                </div>
+                <div class="rank-score">28.4K <span style="font-size:0.8rem;">🔥</span></div>
+            </div>
+            <div class="rank-item grill">
+                <div class="rank-num">5</div>
+                <div class="rank-pic">💖</div>
+                <div class="rank-info">
+                    <div class="rank-title">남사친/여사친 깻잎 떼어주기 논쟁</div>
+                    <div class="rank-sub"><span>작성자: 과몰입러</span> <span>|</span> <span>진행 중</span></div>
+                </div>
+                <div class="rank-score">21.0K <span style="font-size:0.8rem;">🔥</span></div>
+            </div>
+        </div>
     </div>
 
+    <!-- ============================================== -->
+    <!-- 2. 😎 최고의 픽클러 랭킹 (블루 테마) -->
+    <!-- ============================================== -->
     <div id="picklerRankingArea" class="hidden">
-        <div class="podium-container" id="picklerPodium">
-            <p class="rank-loading">🏆 랭킹 집계 중...</p>
+        <div class="podium-container">
+            <!-- 2위 -->
+            <div class="podium-item podium-2" onclick="alert('🥈 [질주본능블박러] 프로필로 이동합니다.')">
+                <div class="podium-avatar">😎</div>
+                <div class="podium-name">질주본능블박러</div>
+                <div class="podium-score">⭐ 12.4K</div>
+                <div class="podium-rank" style="margin-top:auto;">2</div>
+            </div>
+            <!-- 1위 -->
+            <div class="podium-item podium-1" onclick="alert('🥇 [쩝쩝박사] 프로필로 이동합니다!')">
+                <div class="podium-avatar">🤤</div>
+                <div class="podium-name">쩝쩝박사</div>
+                <div class="podium-score">⭐ 25.8K</div>
+                <div class="podium-rank" style="margin-top:auto;">1</div>
+            </div>
+            <!-- 3위 -->
+            <div class="podium-item podium-3" onclick="alert('🥉 [밸런스파괴자] 프로필로 이동합니다.')">
+                <div class="podium-avatar">🤯</div>
+                <div class="podium-name">밸런스파괴자</div>
+                <div class="podium-score">⭐ 9.2K</div>
+                <div class="podium-rank" style="margin-top:auto;">3</div>
+            </div>
         </div>
-        <div class="ranking-list" id="picklerList"></div>
-    </div>
-</main>
 
-<div class="self-rank-bar hidden" id="selfRankBar" aria-live="polite"></div>
+        <div class="ranking-list">
+            <div class="rank-item">
+                <div class="rank-num">4</div>
+                <div class="rank-pic">👗</div>
+                <div class="rank-info">
+                    <div class="rank-title">패션피플 <span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.3</span></div>
+                    <div class="rank-sub"><span>나의 픽: 4,102명</span></div>
+                </div>
+                <div class="rank-score">8.5K <span style="font-size:0.8rem;">⭐</span></div>
+            </div>
+            <div class="rank-item">
+                <div class="rank-num">5</div>
+                <div class="rank-pic">🤬</div>
+                <div class="rank-info">
+                    <div class="rank-title">프로불편러 <span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.1</span></div>
+                    <div class="rank-sub"><span>나의 픽: 3,890명</span></div>
+                </div>
+                <div class="rank-score">7.1K <span style="font-size:0.8rem;">⭐</span></div>
+            </div>
+        </div>
+    </div>
+
+</main>
 
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
@@ -396,11 +313,53 @@
 </nav>
 
 <script>
-    function closeAllDrawers() {
-        document.getElementById('notiDrawer').classList.remove('open');
-        document.getElementById('categorySheet').classList.remove('open');
-        document.getElementById('notiOverlay').classList.remove('open');
-        document.body.style.overflow = '';
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', function() {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > lastScrollTop && scrollTop > 60) document.getElementById('mainHeader').style.top = '-80px';
+        else document.getElementById('mainHeader').style.top = '0';
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+
+    // 💡 테마(Theme) 컬러가 바뀌는 마법의 탭 스위칭 함수
+    function switchMainTab(tabName) {
+        document.getElementById('tabGrill').classList.remove('active');
+        document.getElementById('tabPickler').classList.remove('active');
+
+        document.getElementById('grillRankingArea').classList.add('hidden');
+        document.getElementById('picklerRankingArea').classList.add('hidden');
+
+        const mainEl = document.querySelector('main');
+        mainEl.classList.remove('theme-grill', 'theme-pickler');
+
+        if(tabName === 'grill') {
+            document.getElementById('tabGrill').classList.add('active');
+            document.getElementById('grillRankingArea').classList.remove('hidden');
+            mainEl.classList.add('theme-grill'); // 핑크 테마 적용
+        } else {
+            document.getElementById('tabPickler').classList.add('active');
+            document.getElementById('picklerRankingArea').classList.remove('hidden');
+            mainEl.classList.add('theme-pickler'); // 블루 테마 적용
+        }
+    }
+
+    function switchSubTab(element) {
+        const tabs = document.getElementById('subTabs').children;
+        for(let i=0; i<tabs.length; i++) {
+            tabs[i].classList.remove('active');
+        }
+        element.classList.add('active');
+
+        const podiums = document.querySelectorAll('.podium-container');
+        const lists = document.querySelectorAll('.ranking-list');
+
+        [...podiums, ...lists].forEach(el => {
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.style.opacity = '1';
+                el.style.transition = 'opacity 0.3s ease';
+            }, 100);
+        });
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -409,10 +368,7 @@
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/pickle-notifications.js"></script>
-<script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<script src="../js/pickle-ranking-events.js"></script>
-<script src="../js/pickle-ranking.js"></script>
 
 </body>
 </html>
