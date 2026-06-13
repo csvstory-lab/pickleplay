@@ -43,7 +43,7 @@
         background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
         z-index: 100;
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 14px; }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
         background: linear-gradient(90deg, var(--neon-green), #aaff00);
@@ -63,18 +63,16 @@
         top: var(--header-top-h, 56px);
         z-index: 50;
         background-color: var(--bg-color);
-        padding: 14px 0 16px;
+        padding: 0;
         box-shadow: none;
-        border-bottom: 2px solid transparent;
-        transition: box-shadow 0.22s ease, border-bottom-color 0.22s ease;
+        transition: box-shadow 0.22s ease;
     }
     .category-nav-sticky-wrap.is-stuck {
         box-shadow: 0 4px 0 0 #000;
-        border-bottom-color: #000;
     }
 
     .category-nav-scroll {
-        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px;
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
         scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     .category-nav-scroll::-webkit-scrollbar { display: none; }
