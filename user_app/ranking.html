@@ -189,6 +189,16 @@
         font-size: 1.1rem;
     }
 
+    /* 핫 불판 시상대 — 화력 점수 30%+ 확대 */
+    #grillRankingArea .podium-score {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+    #grillRankingArea .podium-1 .podium-score {
+        font-size: 1.1rem;
+    }
+
     .podium-1 { min-height: 190px; height: 190px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; overflow: visible; }
     .podium-1 .podium-avatar { width: 70px; height: 70px; font-size: 2.2rem; top: -45px; border-color: #ffcc00; }
     .podium-1 .podium-name { font-size: 1rem; margin-top: 42px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
@@ -204,18 +214,27 @@
         padding-top: 52px;
         overflow: visible;
     }
-    #picklerRankingArea .podium-1 { min-height: 248px; height: 248px; overflow: visible; z-index: 6; }
+    #picklerRankingArea .podium-1 { min-height: 248px; height: 248px; overflow: visible; z-index: 8; isolation: isolate; }
     #picklerRankingArea .podium-2 { min-height: 222px; height: 222px; overflow: visible; }
     #picklerRankingArea .podium-3 { min-height: 200px; height: 200px; overflow: visible; }
     #picklerRankingArea .podium-pick-wrap {
-        margin: 4px 0 26px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 36px;
+        margin: 0;
         display: flex;
         justify-content: center;
         width: 100%;
-        position: relative;
-        z-index: 20;
+        z-index: 30;
         flex-shrink: 0;
         overflow: visible;
+        pointer-events: auto;
+        visibility: visible;
+    }
+    #picklerRankingArea .podium-1 .podium-pick-wrap {
+        bottom: 36px;
+        z-index: 35;
     }
 
     /* 4. 랭킹 리스트 (4위 ~ 10위) */
@@ -448,7 +467,7 @@
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-profile.js?v=20260608_ranking1"></script>
-<script src="../js/pickle-ranking.js?v=20260608_ranking6"></script>
+<script src="../js/pickle-ranking.js?v=20260608_ranking7"></script>
 
 </body>
 </html>

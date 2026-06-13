@@ -1,6 +1,6 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking6
+ * @build 20260608_ranking7
  * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
@@ -157,13 +157,20 @@
       'background: var(--neon-blue); color: #000; border-color: var(--neon-blue);' +
       '}' +
       '#picklerRankingArea .rank-pick-btn:disabled { opacity: 0.5; cursor: not-allowed; }' +
+      '#picklerRankingArea .podium-pick-wrap {' +
+      'position: absolute; left: 0; right: 0; bottom: 36px;' +
+      'margin: 0; display: flex; justify-content: center; width: 100%;' +
+      'z-index: 30; pointer-events: auto; overflow: visible;' +
+      '}' +
+      '#picklerRankingArea .podium-1 .podium-pick-wrap { bottom: 36px; z-index: 35; }' +
       '#picklerRankingArea .podium-pick-btn {' +
-      'margin-left: 0; flex-shrink: 0; position: relative; z-index: 22;' +
+      'margin-left: 0; flex-shrink: 0; position: relative; z-index: 36;' +
       '}' +
-      '#picklerRankingArea .podium-1 .podium-pick-wrap {' +
-      'z-index: 25;' +
+      '#picklerRankingArea .podium-pick-btn.podium-pick-self {' +
+      'opacity: 0.85; cursor: default; min-width: 52px;' +
       '}' +
-      '#picklerRankingArea .podium-item { cursor: default; overflow: visible; }';
+      '#picklerRankingArea .podium-item { cursor: default; overflow: visible; }' +
+      '#picklerRankingArea .podium-1 { isolation: isolate; }';
     document.head.appendChild(style);
   }
 
@@ -235,6 +242,31 @@
         updatePickBtnState(btn, isFollowingUser);
       }
     });
+  }
+
+  function buildPodiumPickBtnHtml(targetUserId) {
+    if (!targetUserId) return '';
+    if (myUserId && String(targetUserId) === String(myUserId)) {
+      return (
+        '<button type="button" class="rank-pick-btn btn-mypick podium-pick-btn podium-pick-self following active" disabled aria-disabled="true">나</button>'
+      );
+    }
+    return buildPickBtnHtml(targetUserId, 'podium');
+  }
+
+  function ensurePodiumPickWrap(slotEl) {
+    var pickWrap = slotEl.querySelector('.podium-pick-wrap');
+    var rankEl = slotEl.querySelector('.podium-rank');
+    if (pickWrap) return pickWrap;
+
+    pickWrap = document.createElement('div');
+    pickWrap.className = 'podium-pick-wrap';
+    if (rankEl) {
+      slotEl.insertBefore(pickWrap, rankEl);
+    } else {
+      slotEl.appendChild(pickWrap);
+    }
+    return pickWrap;
   }
 
   function buildPickBtnHtml(targetUserId, variant) {
@@ -310,6 +342,7 @@
     area.addEventListener('click', function (e) {
       var btn = e.target.closest('.rank-pick-btn');
       if (!btn || !area.contains(btn)) return;
+      if (btn.disabled || btn.classList.contains('podium-pick-self')) return;
       e.preventDefault();
       e.stopPropagation();
       handlePickBtnClick(btn);
@@ -499,7 +532,6 @@
     var avatarEl = slotEl.querySelector('.podium-avatar');
     var nameEl = slotEl.querySelector('.podium-name');
     var scoreEl = slotEl.querySelector('.podium-score');
-    var pickWrap = slotEl.querySelector('.podium-pick-wrap');
     var rankEl = slotEl.querySelector('.podium-rank');
 
     if (avatarEl) {
@@ -516,18 +548,10 @@
     }
     if (rankEl) rankEl.textContent = String(rank);
 
-    if (!pickWrap) {
-      pickWrap = document.createElement('div');
-      pickWrap.className = 'podium-pick-wrap';
-      if (scoreEl && scoreEl.nextSibling) {
-        slotEl.insertBefore(pickWrap, scoreEl.nextSibling);
-      } else if (rankEl) {
-        slotEl.insertBefore(pickWrap, rankEl);
-      } else {
-        slotEl.appendChild(pickWrap);
-      }
-    }
-    pickWrap.innerHTML = buildPickBtnHtml(data.user_id, 'podium');
+    var pickWrap = ensurePodiumPickWrap(slotEl);
+    pickWrap.innerHTML = buildPodiumPickBtnHtml(data.user_id);
+    pickWrap.style.display = '';
+    pickWrap.style.visibility = 'visible';
   }
 
   function buildPicklerListItemHtml(row, rank) {
