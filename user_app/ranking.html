@@ -179,7 +179,17 @@
     .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 32px; margin-bottom: 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; padding: 0 4px; box-sizing: border-box; }
     .podium-score { font-size: 0.75rem; font-weight: 700; margin: 0; transition: color 0.3s; line-height: 1.3; }
 
-    .podium-1 { min-height: 190px; height: 190px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; }
+    /* 픽클러 시상대 — 별점 30%+ 확대 (리스트 가독성 맞춤) */
+    #picklerRankingArea .podium-score {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+    #picklerRankingArea .podium-1 .podium-score {
+        font-size: 1.1rem;
+    }
+
+    .podium-1 { min-height: 190px; height: 190px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; overflow: visible; }
     .podium-1 .podium-avatar { width: 70px; height: 70px; font-size: 2.2rem; top: -45px; border-color: #ffcc00; }
     .podium-1 .podium-name { font-size: 1rem; margin-top: 42px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
@@ -192,17 +202,20 @@
     /* 픽클러 시상대 — [+나의 픽] 버튼 포함 높이·여백 */
     #picklerRankingArea .podium-container {
         padding-top: 52px;
+        overflow: visible;
     }
-    #picklerRankingArea .podium-1 { min-height: 248px; height: 248px; }
-    #picklerRankingArea .podium-2 { min-height: 222px; height: 222px; }
-    #picklerRankingArea .podium-3 { min-height: 200px; height: 200px; }
+    #picklerRankingArea .podium-1 { min-height: 248px; height: 248px; overflow: visible; z-index: 6; }
+    #picklerRankingArea .podium-2 { min-height: 222px; height: 222px; overflow: visible; }
+    #picklerRankingArea .podium-3 { min-height: 200px; height: 200px; overflow: visible; }
     #picklerRankingArea .podium-pick-wrap {
-        margin: 2px 0 0;
+        margin: 4px 0 26px;
         display: flex;
         justify-content: center;
         width: 100%;
         position: relative;
-        z-index: 12;
+        z-index: 20;
+        flex-shrink: 0;
+        overflow: visible;
     }
 
     /* 4. 랭킹 리스트 (4위 ~ 10위) */
@@ -329,25 +342,25 @@
         <div class="podium-container">
             <!-- 2위 -->
             <div class="podium-item podium-2" data-user-id="">
-                <div class="podium-avatar">😎</div>
-                <div class="podium-name">질주본능블박러</div>
-                <div class="podium-score">⭐ 12.4K</div>
+                <div class="podium-avatar"></div>
+                <div class="podium-name">…</div>
+                <div class="podium-score">⭐ …</div>
                 <div class="podium-pick-wrap"></div>
                 <div class="podium-rank">2</div>
             </div>
             <!-- 1위 -->
             <div class="podium-item podium-1" data-user-id="">
-                <div class="podium-avatar">🤤</div>
-                <div class="podium-name">쩝쩝박사</div>
-                <div class="podium-score">⭐ 25.8K</div>
+                <div class="podium-avatar"></div>
+                <div class="podium-name">…</div>
+                <div class="podium-score">⭐ …</div>
                 <div class="podium-pick-wrap"></div>
                 <div class="podium-rank">1</div>
             </div>
             <!-- 3위 -->
             <div class="podium-item podium-3" data-user-id="">
-                <div class="podium-avatar">🤯</div>
-                <div class="podium-name">밸런스파괴자</div>
-                <div class="podium-score">⭐ 9.2K</div>
+                <div class="podium-avatar"></div>
+                <div class="podium-name">…</div>
+                <div class="podium-score">⭐ …</div>
                 <div class="podium-pick-wrap"></div>
                 <div class="podium-rank">3</div>
             </div>
@@ -435,7 +448,7 @@
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-profile.js?v=20260608_ranking1"></script>
-<script src="../js/pickle-ranking.js?v=20260608_ranking5"></script>
+<script src="../js/pickle-ranking.js?v=20260608_ranking6"></script>
 
 </body>
 </html>

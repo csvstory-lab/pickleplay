@@ -1,6 +1,6 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking5
+ * @build 20260608_ranking6
  * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
@@ -35,11 +35,30 @@
 
   function formatScore(value) {
     var n = Number(value);
-    if (!Number.isFinite(n) || n < 0) n = 0;
+    if (!Number.isFinite(n)) n = 0;
+    if (n <= 0) return '0';
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     if (Number.isInteger(n)) return n.toLocaleString('ko-KR');
     return n.toFixed(1);
+  }
+
+  function normalizePicklerRow(row) {
+    if (!row || !row.user_id) return null;
+    var meta = userAvatarMap.get(String(row.user_id)) || {};
+    var scoreRaw = row.star_score_total;
+    if (scoreRaw == null && row.star_score != null) scoreRaw = row.star_score;
+    var scoreNum = Number(scoreRaw);
+    if (!Number.isFinite(scoreNum) || scoreNum < 0) scoreNum = 0;
+
+    return {
+      user_id: row.user_id,
+      nickname:
+        String(row.nickname || meta.nickname || '이름없음').trim() || '이름없음',
+      star_score_total: scoreNum,
+      follower_count: Number(row.follower_count) || 0,
+      points: row.points,
+    };
   }
 
   function postTitle(row, meta) {
@@ -139,9 +158,12 @@
       '}' +
       '#picklerRankingArea .rank-pick-btn:disabled { opacity: 0.5; cursor: not-allowed; }' +
       '#picklerRankingArea .podium-pick-btn {' +
-      'margin-left: 0; flex-shrink: 0;' +
+      'margin-left: 0; flex-shrink: 0; position: relative; z-index: 22;' +
       '}' +
-      '#picklerRankingArea .podium-item { cursor: default; }';
+      '#picklerRankingArea .podium-1 .podium-pick-wrap {' +
+      'z-index: 25;' +
+      '}' +
+      '#picklerRankingArea .podium-item { cursor: default; overflow: visible; }';
     document.head.appendChild(style);
   }
 
@@ -462,7 +484,8 @@
 
   function bindPodiumPickler(slotEl, row, rank) {
     if (!slotEl) return;
-    if (!row) {
+    var data = normalizePicklerRow(row);
+    if (!data) {
       slotEl.style.display = 'none';
       slotEl.removeAttribute('data-user-id');
       var emptyWrap = slotEl.querySelector('.podium-pick-wrap');
@@ -471,9 +494,7 @@
     }
 
     slotEl.style.display = '';
-    slotEl.setAttribute('data-user-id', String(row.user_id));
-    var nickname = String(row.nickname || '이름없음').trim() || '이름없음';
-    var score = formatScore(row.star_score_total);
+    slotEl.setAttribute('data-user-id', String(data.user_id));
 
     var avatarEl = slotEl.querySelector('.podium-avatar');
     var nameEl = slotEl.querySelector('.podium-name');
@@ -483,34 +504,43 @@
 
     if (avatarEl) {
       avatarEl.style.borderRadius = '';
-      avatarEl.innerHTML = renderUserAvatarInner(row.user_id, nickname, '😎');
+      avatarEl.innerHTML = renderUserAvatarInner(
+        data.user_id,
+        data.nickname,
+        '😎'
+      );
     }
-    if (nameEl) nameEl.textContent = nickname;
-    if (scoreEl) scoreEl.textContent = '⭐ ' + score;
+    if (nameEl) nameEl.textContent = data.nickname;
+    if (scoreEl) {
+      scoreEl.textContent = '⭐ ' + formatScore(data.star_score_total);
+    }
     if (rankEl) rankEl.textContent = String(rank);
 
     if (!pickWrap) {
       pickWrap = document.createElement('div');
       pickWrap.className = 'podium-pick-wrap';
-      if (rankEl) {
+      if (scoreEl && scoreEl.nextSibling) {
+        slotEl.insertBefore(pickWrap, scoreEl.nextSibling);
+      } else if (rankEl) {
         slotEl.insertBefore(pickWrap, rankEl);
       } else {
         slotEl.appendChild(pickWrap);
       }
     }
-    pickWrap.innerHTML = buildPickBtnHtml(row.user_id, 'podium');
+    pickWrap.innerHTML = buildPickBtnHtml(data.user_id, 'podium');
   }
 
   function buildPicklerListItemHtml(row, rank) {
-    var nickname = String(row.nickname || '이름없음').trim() || '이름없음';
-    var score = formatScore(row.star_score_total);
-    var followers = Number(row.follower_count) || 0;
-    var picInner = renderUserAvatarInner(row.user_id, nickname, '😎');
-    var levelBadge = buildLevelBadgeHtml(row.points);
+    var data = normalizePicklerRow(row);
+    if (!data) return '';
+    var score = formatScore(data.star_score_total);
+    var followers = data.follower_count;
+    var picInner = renderUserAvatarInner(data.user_id, data.nickname, '😎');
+    var levelBadge = buildLevelBadgeHtml(data.points);
 
     return (
       '<div class="rank-item" data-user-id="' +
-      escapeHtml(row.user_id) +
+      escapeHtml(data.user_id) +
       '">' +
       '<div class="rank-num">' +
       rank +
@@ -520,7 +550,7 @@
       '</div>' +
       '<div class="rank-info">' +
       '<div class="rank-title">' +
-      escapeHtml(nickname) +
+      escapeHtml(data.nickname) +
       ' ' +
       levelBadge +
       '</div>' +
@@ -531,7 +561,7 @@
       '<div class="rank-score">' +
       escapeHtml(score) +
       ' <span style="font-size:0.8rem;">⭐</span></div>' +
-      buildPickBtnHtml(row.user_id) +
+      buildPickBtnHtml(data.user_id) +
       '</div>'
     );
   }
@@ -617,6 +647,18 @@
       .join('');
   }
 
+  function setPicklerPodiumLoading(area) {
+    if (!area) return;
+    area.querySelectorAll('.podium-item').forEach(function (slot) {
+      var nameEl = slot.querySelector('.podium-name');
+      var scoreEl = slot.querySelector('.podium-score');
+      var pickWrap = slot.querySelector('.podium-pick-wrap');
+      if (nameEl) nameEl.textContent = '…';
+      if (scoreEl) scoreEl.textContent = '⭐ …';
+      if (pickWrap) pickWrap.innerHTML = '';
+    });
+  }
+
   function setLoadingState() {
     ['grillRankingArea', 'picklerRankingArea'].forEach(function (id) {
       var area = document.getElementById(id);
@@ -624,6 +666,7 @@
       var podium = area.querySelector('.podium-container');
       var list = area.querySelector('.ranking-list');
       if (podium) podium.style.display = 'none';
+      if (id === 'picklerRankingArea') setPicklerPodiumLoading(area);
       setListLoading(list);
     });
   }
@@ -664,6 +707,20 @@
     }
   }
 
+  function hookMainTabRender() {
+    var orig = window.switchMainTab;
+    if (typeof orig !== 'function') return;
+
+    window.switchMainTab = function (tabName) {
+      orig(tabName);
+      if (tabName === 'pickler') {
+        renderPicklerArea();
+      } else if (tabName === 'grill') {
+        renderGrillArea();
+      }
+    };
+  }
+
   function hookSubTabFade() {
     var orig = window.switchSubTab;
     if (typeof orig !== 'function') return;
@@ -678,6 +735,7 @@
   function init() {
     ensurePickBtnStyles();
     bindPicklerFollowDelegation();
+    hookMainTabRender();
     hookSubTabFade();
     loadAll();
   }
