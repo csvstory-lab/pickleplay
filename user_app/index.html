@@ -41,9 +41,9 @@
     header {
         position: sticky; top: 0;
         background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
-        z-index: 100; border-bottom: 1px solid var(--border-color);
+        z-index: 100;
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 12px; }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 14px; }
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
         background: linear-gradient(90deg, var(--neon-green), #aaff00);
@@ -53,16 +53,28 @@
     .header-actions { display: flex; align-items: center; gap: 15px; }
 
     /* 메인 — 스티키 카테고리 칩 바 (로고 바로 아래) */
+    .category-nav-sticky-sentinel {
+        height: 0;
+        margin: 0;
+        pointer-events: none;
+    }
     .category-nav-sticky-wrap {
         position: sticky;
         top: var(--header-top-h, 56px);
         z-index: 50;
         background-color: var(--bg-color);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+        padding: 14px 0 16px;
+        box-shadow: none;
+        border-bottom: 2px solid transparent;
+        transition: box-shadow 0.22s ease, border-bottom-color 0.22s ease;
+    }
+    .category-nav-sticky-wrap.is-stuck {
+        box-shadow: 0 4px 0 0 #000;
+        border-bottom-color: #000;
     }
 
     .category-nav-scroll {
-        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px;
         scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     .category-nav-scroll::-webkit-scrollbar { display: none; }
@@ -474,6 +486,7 @@
         </div>
     </div>
 </header>
+<div class="category-nav-sticky-sentinel" id="categoryNavStickySentinel" aria-hidden="true"></div>
 <div class="category-nav-sticky-wrap" id="categoryNavSticky">
     <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </div>
@@ -584,9 +597,22 @@
         var row = document.getElementById('headerTopRow');
         if (!row) return;
         document.documentElement.style.setProperty('--header-top-h', row.offsetHeight + 'px');
+        updateCategoryNavStuckState();
     }
     syncIndexHeaderTopHeight();
     window.addEventListener('resize', syncIndexHeaderTopHeight);
+
+    function updateCategoryNavStuckState() {
+        var wrap = document.getElementById('categoryNavSticky');
+        var sentinel = document.getElementById('categoryNavStickySentinel');
+        if (!wrap || !sentinel) return;
+        var stickyTop = parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue('--header-top-h')
+        ) || 56;
+        wrap.classList.toggle('is-stuck', sentinel.getBoundingClientRect().top < stickyTop - 1);
+    }
+    window.addEventListener('scroll', updateCategoryNavStuckState, { passive: true });
+    updateCategoryNavStuckState();
 
     // 모든 드로어/시트 닫기 (통합 제어)
     function closeAllDrawers() {
