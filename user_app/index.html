@@ -41,7 +41,7 @@
     header {
         position: sticky; top: 0;
         background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
-        z-index: 100;
+        z-index: 120;
     }
     .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
     .logo {
@@ -61,7 +61,7 @@
     .category-nav-sticky-wrap {
         position: sticky;
         top: var(--header-top-h, 56px);
-        z-index: 50;
+        z-index: 110;
         background-color: var(--bg-color);
         padding: 0;
         box-shadow: none;
@@ -171,9 +171,9 @@
     .noti-time { font-size: 0.75rem; color: var(--text-sub); font-weight: 600; }
 
     /* === 메인 콘텐츠 (불판 리스트) === */
-    main { padding: 25px 0 100px 0; }
+    main { padding: 25px 0 100px 0; position: relative; z-index: 1; }
     
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 20px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 20px; position: relative; z-index: 1; }
     
     /* 💡 타이틀 폰트 깔끔하게(Pretendard) 수정 완료! */
     .section-title { font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 1.35rem; letter-spacing: -0.5px; margin: 0; color: #fff; }
@@ -388,7 +388,7 @@
     .king-empty { min-width: 85%; scroll-snap-align: center; }
 
     /* 🔥 실시간 리스트 */
-    .list-section { padding: 0 20px 12px; }
+    .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
     .list-card {
         display: flex;
         flex-direction: column;

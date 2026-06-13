@@ -52,6 +52,7 @@
     .category-nav-scroll {
         display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
         scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        position: relative; z-index: 1;
     }
     .category-nav-scroll::-webkit-scrollbar { display: none; }
     .category-nav-tab {
@@ -78,9 +79,9 @@
     }
     a.category-nav-tab.active { color: #000; }
 
-    main { padding: 18px 0 100px; }
+    main { padding: 18px 0 100px; position: relative; z-index: 1; }
 
-    .page-header { padding: 0 20px 16px; }
+    .page-header { padding: 0 20px 16px; position: relative; z-index: 1; }
     .page-header-row {
         display: flex; align-items: center; justify-content: space-between;
         gap: 10px; flex-wrap: nowrap;
@@ -92,6 +93,7 @@
     }
     .page-header-controls {
         display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        position: relative; z-index: 1;
     }
 
     .unseen-toggle {
@@ -125,7 +127,7 @@
     }
 
     .sort-dropdown {
-        position: relative; flex-shrink: 0; z-index: 950;
+        position: relative; flex-shrink: 0; z-index: 8;
     }
     .sort-dropdown-trigger {
         display: inline-flex; align-items: center; justify-content: space-between;
@@ -186,7 +188,7 @@
     }
     .dropdown-item:active { transform: scale(0.98); }
 
-    .list-section { padding: 0 20px 12px; }
+    .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
     #categoryFeedList { transition: opacity 0.25s ease; }
 
     .list-card {
