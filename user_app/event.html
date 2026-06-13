@@ -286,44 +286,10 @@
 
 <main>
     <!-- [진행 중] 이벤트 리스트 -->
-    <div class="event-list" id="listOngoing">
-        <div class="event-card" onclick="openDetail('ongoing1')">
-            <div class="event-card-header">
-                <span class="type-badge">☕ 참여 추첨</span>
-                <span class="dday-text">D-3</span>
-            </div>
-            <div class="event-thumb" style="background: linear-gradient(135deg, #1c2e28 0%, #051410 100%);">
-                <div class="event-thumb-text">☕ 스타벅스 아메리카노<br><span style="color:var(--neon-green);">1,000잔 쏜다!</span></div>
-            </div>
-            <div class="event-info">
-                <h3 class="event-title">주간 베스트 불판 참전 인증하고 스벅 마시자!</h3>
-                <div class="event-period">
-                    <span>2026.05.20 ~ 2026.05.31</span>
-                    <span class="point-tag">응모 시 +100P</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="event-list" id="listOngoing"></div>
 
     <!-- [종료/당첨자] 이벤트 리스트 -->
-    <div class="event-list hidden" id="listEnded">
-        <div class="event-card ended-card" onclick="openDetail('ended1')">
-            <div class="event-card-header">
-                <span class="type-badge">☕ 참여 추첨</span>
-                <span class="status-text">종료됨</span>
-            </div>
-            <div class="event-thumb" style="background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);">
-                <div class="event-thumb-text ended">🍌 빙그레 바나나맛 우유<br>투표 인증 이벤트</div>
-            </div>
-            <div class="event-info">
-                <h3 class="event-title" style="color:#d4d4d8;">[당첨자 발표] 빙그레 스폰서 밸런스 투표 인증 이벤트</h3>
-                <div class="event-period" style="margin-top: 15px;">
-                    <span>2026.04.15 ~ 2026.04.30</span>
-                    <span class="winner-tag">🎉 당첨자 확인 ❯</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="event-list hidden" id="listEnded"></div>
 </main>
 
 <nav class="bottom-nav">
@@ -390,163 +356,6 @@
         document.getElementById('shareSheet').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
-
-    function sendKakaoEventMessage() {
-        Kakao.Share.sendDefault({
-            objectType: 'feed',
-            content: {
-                title: '☕ 스타벅스 아메리카노 1,000잔 쏜다!',
-                description: '지금 바로 P!CKLE 핫 불판에 참전하고 스벅 마시자!',
-                imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
-                link: {
-                    mobileWebUrl: window.location.href,
-                    webUrl: window.location.href,
-                },
-            },
-            buttons: [
-                {
-                    title: '🎁 이벤트 응모하러 가기',
-                    link: {
-                        mobileWebUrl: window.location.href,
-                        webUrl: window.location.href,
-                    },
-                },
-            ],
-        });
-        closeAllSheets();
-    }
-
-    function copyEventLink() {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            alert("이벤트 링크가 복사되었습니다! 친구들에게 소문내주세요.");
-            closeAllSheets();
-        });
-    }
-
-    // 💡 새롭게 추가된 기기 기본(OS) 공유 기능
-    function nativeShare() {
-        if (navigator.share) {
-            navigator.share({
-                title: '☕ 스타벅스 아메리카노 1,000잔 쏜다!',
-                text: '지금 바로 P!CKLE 핫 불판에 참전하고 스벅 마시자!',
-                url: window.location.href,
-            })
-            .then(() => {
-                closeAllSheets();
-            })
-            .catch((error) => console.log('공유 취소 또는 실패', error));
-        } else {
-            // 브라우저가 지원하지 않을 경우의 예외 처리
-            alert('현재 브라우저에서는 기본 공유 기능을 지원하지 않습니다. 링크 복사를 이용해주세요.');
-        }
-    }
-
-    function switchTab(tab) {
-        document.getElementById('tabOngoing').classList.remove('active');
-        document.getElementById('tabEnded').classList.remove('active');
-        document.getElementById('listOngoing').classList.add('hidden');
-        document.getElementById('listEnded').classList.add('hidden');
-
-        if(tab === 'ongoing') {
-            document.getElementById('tabOngoing').classList.add('active');
-            document.getElementById('listOngoing').classList.remove('hidden');
-        } else {
-            document.getElementById('tabEnded').classList.add('active');
-            document.getElementById('listEnded').classList.remove('hidden');
-        }
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function openDetail(eventId) {
-        const view = document.getElementById('eventDetailView');
-        const content = document.getElementById('detailContent');
-        const bottomBar = document.getElementById('detailBottomBar');
-
-        if(eventId === 'ongoing1') {
-            content.innerHTML = `
-                <div class="detail-title-section">
-                    <div class="d-badge-wrap">
-                        <span class="d-badge-dday">D-3 마감 임박</span>
-                        <span class="point-tag">응모 시 +100P 지급</span>
-                    </div>
-                    <h2 class="d-title">스타벅스 아메리카노 1,000잔 쏜다! ☕ 주간 베스트 불판 참전 인증</h2>
-                    <div class="d-period">⏱️ 진행 기간: 2026.05.20 ~ 2026.05.31</div>
-                </div>
-
-                <div class="detail-banner-section">
-                    <div class="long-banner-placeholder">
-                        <div style="font-size:3.5rem; margin-bottom:10px;">☕</div>
-                        <div class="banner-text">스타벅스 아이스 아메리카노<br>이벤트 상세 프로모션 배너</div>
-                        <div class="banner-sub">(세로로 길게 디자인된 통이미지 영역)</div>
-                    </div>
-                </div>
-
-                <div class="detail-info-section">
-                    <p class="d-desc">
-                        픽클러 여러분! 카페인 수혈이 시급한 분들을 위해 준비했습니다.<br><br>
-                        이번 주 가장 핫한 불판에 참전하고, 댓글로 인증을 남겨주시면 추첨을 통해 무려 <strong>1,000분께 스타벅스 아메리카노 기프티콘</strong>을 쏩니다!<br><br>
-                        지금 바로 하단 버튼을 눌러 이벤트에 응모하세요!
-                    </p>
-                    
-                    <div class="d-notice-box">
-                        <div class="notice-title">📌 꼭 확인해주세요</div>
-                        <ul class="notice-list">
-                            <li>당첨자는 이벤트 마감 후 3일 이내에 앱 내 푸시 알림으로 안내됩니다.</li>
-                            <li>지급된 기프티콘은 마이페이지 > [내 보관함]에서 확인 및 사용이 가능합니다.</li>
-                            <li>부정한 방법으로 이벤트 참여 시 당첨이 취소될 수 있습니다.</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-            
-            bottomBar.innerHTML = `
-                <button class="btn-share-huge" onclick="openShareSheet()">
-                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                    <span class="share-text">소문내기</span>
-                </button>
-                <button class="btn-participate-huge" onclick="alert('스타벅스 이벤트 응모가 완료되었습니다! 🎉')">스타벅스 응모하기</button>
-            `;
-        } 
-        else if(eventId === 'ended1') {
-            content.innerHTML = `
-                <div class="detail-title-section" style="padding-bottom:0;">
-                    <div class="d-badge-wrap"><span class="d-badge-dday" style="background:#27272a; color:#a1a1aa; border-color:#3f3f46;">종료됨</span></div>
-                    <h2 class="d-title">[당첨자 발표] 빙그레 스폰서 밸런스 투표 이벤트</h2>
-                    <div class="d-period">이벤트 기간: 2026.04.15 ~ 2026.04.30</div>
-                </div>
-                <div class="detail-info-section" style="padding-top:20px;">
-                    <div class="d-desc">
-                        빙그레 스폰서 불판에 참여해주신 모든 픽클러 분들께 감사드립니다!<br><br>
-                        뜨거웠던 투표 열기 속에 당첨되신 행운의 주인공 50분을 아래와 같이 발표합니다. 당첨되신 분들의 보관함(마이페이지)으로 기프티콘이 일괄 지급되었습니다.
-                        
-                        <div class="winner-box">
-                            <h3 class="winner-title">🎉 바나나맛 우유 당첨자 (50명)</h3>
-                            <div class="winner-list-wrap">
-                                <div class="winner-item"><span>도파민중독</span><span style="color:var(--text-sub);">UID: 84***</span></div>
-                                <div class="winner-item"><span>쩝쩝박사</span><span style="color:var(--text-sub);">UID: 10***</span></div>
-                                <div class="winner-item"><span>결정장애</span><span style="color:var(--text-sub);">UID: 33***</span></div>
-                                <div class="winner-item"><span>바나나러버</span><span style="color:var(--text-sub);">UID: 92***</span></div>
-                                <div class="winner-item"><span>픽클만세</span><span style="color:var(--text-sub);">UID: 11***</span></div>
-                            </div>
-                            <div style="text-align:center; font-size:0.85rem; color:var(--text-sub); margin-top:20px; font-weight:700;">외 45명 (개별 알림 발송 완료)</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            bottomBar.innerHTML = `
-                <button class="btn-disabled-huge" disabled>종료된 이벤트입니다</button>
-            `;
-        }
-
-        view.classList.add('open');
-        document.body.style.overflow = 'hidden'; 
-    }
-
-    function closeDetail() {
-        const view = document.getElementById('eventDetailView');
-        view.classList.remove('open');
-        document.body.style.overflow = '';
-    }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
@@ -555,6 +364,7 @@
 <script src="../js/auth.js"></script>
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
+<script src="../js/pickle-events.js?v=20260613_events1"></script>
 
 </body>
 </html>
