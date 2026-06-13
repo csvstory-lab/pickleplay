@@ -1,6 +1,6 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking8
+ * @build 20260608_ranking9
  * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
@@ -135,6 +135,71 @@
   function goDetail(postId) {
     if (!postId) return;
     window.location.href = 'detail.html?id=' + encodeURIComponent(String(postId));
+  }
+
+  function bindRankingGuideModal() {
+    var overlay = document.getElementById('rankingGuideOverlay');
+    var openBtn = document.getElementById('rankingGuideBtn');
+    if (!overlay || !openBtn || overlay.dataset.guideBound === '1') return;
+    overlay.dataset.guideBound = '1';
+
+    var closeBtn = overlay.querySelector('.ranking-guide-close');
+    var dim = overlay.querySelector('.ranking-guide-dim');
+    var sheet = overlay.querySelector('.ranking-guide-sheet');
+    var closeTimer = null;
+
+    function openGuide() {
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+      overlay.classList.add('is-visible');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('ranking-guide-open');
+      requestAnimationFrame(function () {
+        overlay.classList.add('is-open');
+      });
+    }
+
+    function closeGuide() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('ranking-guide-open');
+      closeTimer = setTimeout(function () {
+        overlay.classList.remove('is-visible');
+        closeTimer = null;
+      }, 320);
+    }
+
+    openBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openGuide();
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeGuide();
+      });
+    }
+
+    if (dim) {
+      dim.addEventListener('click', function () {
+        closeGuide();
+      });
+    }
+
+    if (sheet) {
+      sheet.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
+        closeGuide();
+      }
+    });
   }
 
   async function fetchPostMetaMap(postIds) {
@@ -541,6 +606,7 @@
   }
 
   function init() {
+    bindRankingGuideModal();
     hookMainTabRender();
     hookSubTabFade();
     loadAll();

@@ -244,6 +244,171 @@
         transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3);
     }
     .nav-btn.active { color: var(--neon-green); }
+
+    /* === 랭킹 가이드 (바텀 시트) — 시상대 CSS와 분리 === */
+    .ranking-title-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .ranking-title-row .page-title { margin-bottom: 0; }
+    .ranking-guide-btn {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--border-color);
+        background: rgba(39, 39, 42, 0.85);
+        color: var(--text-sub);
+        font-size: 0.95rem;
+        font-weight: 800;
+        font-family: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        padding: 0;
+        line-height: 1;
+    }
+    .ranking-guide-btn:active { transform: translateY(-50%) scale(0.92); }
+    main.theme-grill .ranking-guide-btn:active,
+    main.theme-grill .ranking-guide-btn:focus-visible {
+        border-color: var(--neon-pink);
+        color: var(--neon-pink);
+        box-shadow: 0 0 10px rgba(255, 0, 127, 0.25);
+    }
+    main.theme-pickler .ranking-guide-btn:active,
+    main.theme-pickler .ranking-guide-btn:focus-visible {
+        border-color: var(--neon-blue);
+        color: var(--neon-blue);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+    }
+
+    .ranking-guide-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        display: none;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+    .ranking-guide-overlay.is-visible { display: block; }
+    .ranking-guide-dim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.68);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .ranking-guide-overlay.is-open .ranking-guide-dim { opacity: 1; }
+    .ranking-guide-sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #18181b;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        border: 1px solid var(--border-color);
+        border-bottom: none;
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55);
+        transform: translateY(100%);
+        transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+        max-height: 82vh;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+    .ranking-guide-overlay.is-open .ranking-guide-sheet { transform: translateY(0); }
+    .ranking-guide-handle {
+        width: 40px;
+        height: 4px;
+        border-radius: 999px;
+        background: #3f3f46;
+        margin: 10px auto 6px;
+        flex-shrink: 0;
+    }
+    .ranking-guide-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 20px 12px;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+    .ranking-guide-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+    .ranking-guide-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--border-color);
+        background: rgba(39, 39, 42, 0.9);
+        color: var(--text-sub);
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+    .ranking-guide-close:active { transform: scale(0.92); color: #fff; }
+    .ranking-guide-body {
+        overflow-y: auto;
+        padding: 16px 20px 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .ranking-guide-section + .ranking-guide-section { margin-top: 20px; }
+    .ranking-guide-section h3 {
+        margin: 0 0 8px;
+        font-size: 0.95rem;
+        font-weight: 900;
+        color: #fff;
+    }
+    .ranking-guide-section p {
+        margin: 0 0 10px;
+        font-size: 0.85rem;
+        line-height: 1.55;
+        color: var(--text-sub);
+    }
+    .ranking-guide-section ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .ranking-guide-section li {
+        position: relative;
+        padding-left: 14px;
+        margin-bottom: 8px;
+        font-size: 0.84rem;
+        line-height: 1.5;
+        color: #e4e4e7;
+    }
+    .ranking-guide-section li::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: var(--neon-green);
+        font-weight: 900;
+    }
+    .ranking-guide-section--grill h3 { color: var(--neon-pink); }
+    .ranking-guide-section--grill li::before { color: var(--neon-pink); }
+    .ranking-guide-section--pickler h3 { color: var(--neon-blue); }
+    .ranking-guide-section--pickler li::before { color: var(--neon-blue); }
+    body.ranking-guide-open { overflow: hidden; }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 </head>
@@ -262,7 +427,10 @@
 
 <!-- 💡 초기 테마는 핫 불판(theme-grill)으로 세팅 -->
 <main class="theme-grill">
-    <h1 class="page-title">🏆 P!CKLE 랭킹</h1>
+    <div class="ranking-title-row">
+        <h1 class="page-title">🏆 P!CKLE 랭킹</h1>
+        <button type="button" id="rankingGuideBtn" class="ranking-guide-btn" aria-label="랭킹 안내">ⓘ</button>
+    </div>
 
     <div class="main-tab-wrapper">
         <button class="main-tab active" id="tabGrill" onclick="switchMainTab('grill')"><span class="emoji">🔥</span> 가장 핫한 불판</button>
@@ -378,6 +546,36 @@
 
 </main>
 
+<!-- 랭킹 가이드 바텀 시트 -->
+<div id="rankingGuideOverlay" class="ranking-guide-overlay" aria-hidden="true">
+    <div class="ranking-guide-dim" aria-hidden="true"></div>
+    <div class="ranking-guide-sheet" role="dialog" aria-modal="true" aria-labelledby="rankingGuideTitle">
+        <div class="ranking-guide-handle" aria-hidden="true"></div>
+        <div class="ranking-guide-header">
+            <h2 id="rankingGuideTitle">랭킹 가이드</h2>
+            <button type="button" class="ranking-guide-close" aria-label="닫기">✕</button>
+        </div>
+        <div class="ranking-guide-body">
+            <section class="ranking-guide-section ranking-guide-section--grill">
+                <h3>🔥 가장 핫한 불판</h3>
+                <p>어떤 불판이 가장 뜨겁게 불타오르고 있는지 보여주는 '화력' 랭킹입니다!</p>
+                <ul>
+                    <li><strong>점수 방식:</strong> 투표(1점), 조회(0.1점), 댓글(3점), 공유(5점)</li>
+                    <li><strong>특징:</strong> 단기간에 참여가 폭발하면 가산점이 붙고, 시간이 지날수록 점수가 깎이는 다이내믹 순환 구조!</li>
+                </ul>
+            </section>
+            <section class="ranking-guide-section ranking-guide-section--pickler">
+                <h3>😎 최고의 픽클러</h3>
+                <p>PICKLE 생태계를 이끌어가는 '영향력' 랭킹입니다!</p>
+                <ul>
+                    <li><strong>점수 방식:</strong> 나를 픽한 유저 1명당 10점, 내 불판 참여자당 0.1점</li>
+                    <li><strong>보너스:</strong> 내 불판이 'HOT 불판 명예의 전당(Top 10)'에 오르면 500점 추가 획득!</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
     <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
@@ -436,7 +634,7 @@
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-profile.js?v=20260608_ranking1"></script>
-<script src="../js/pickle-ranking.js?v=20260608_ranking8"></script>
+<script src="../js/pickle-ranking.js?v=20260608_ranking9"></script>
 
 </body>
 </html>
