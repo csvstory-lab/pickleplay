@@ -1,8 +1,12 @@
 /**
  * P!CKLE — 맞픽(팔로우) user_follows 연동
+ * @build 20260608_fandom3
  */
 (function () {
   'use strict';
+
+  var PICKLE_FOLLOWS_BUILD = '20260608_fandom3';
+  var FANDOM_NICKNAME_FALLBACK = '이름없음';
 
   var myFollowingSet = new Set();
   var currentFandomSheetType = null;
@@ -382,63 +386,71 @@
     return escapeHtml(nickname.charAt(0) || '🥒');
   }
 
-  function resolveFandomNickname(userRow) {
-    if (!userRow) return '';
-    return String(userRow.nickname || '').trim();
+  function extractFandomNickname(item, listType, userRow) {
+    var fromItem = item || {};
+    var usersEmbed = unwrapEmbeddedProfile(fromItem.users || fromItem.user);
+    if (usersEmbed && usersEmbed.nickname) {
+      return String(usersEmbed.nickname).trim();
+    }
+
+    var embedKey = listType === 'follower' ? 'follower' : 'following';
+    var embedProfile = unwrapEmbeddedProfile(fromItem[embedKey]);
+    if (embedProfile && embedProfile.nickname) {
+      return String(embedProfile.nickname).trim();
+    }
+
+    if (userRow && userRow.nickname) {
+      return String(userRow.nickname).trim();
+    }
+
+    return '';
   }
 
-  function renderFandomItem(userRow, targetUserId, listType, myId, avatarMap) {
-    var nickname = resolveFandomNickname(userRow);
-    if (!nickname) nickname = '닉네임 없음';
+  function resolveFandomNickname(item, listType, userRow) {
+    var nickname = extractFandomNickname(item, listType, userRow);
+    return nickname || FANDOM_NICKNAME_FALLBACK;
+  }
+
+  function renderFandomItem(item, userRow, targetUserId, listType, myId, avatarMap) {
+    var nickname = resolveFandomNickname(item, listType, userRow);
     var isMine = myId && String(targetUserId) === String(myId);
     var iFollow = myFollowingSet.has(String(targetUserId));
     var avatarInner = renderAvatarHtml(userRow, targetUserId, avatarMap);
+    var levelBadge = buildLevelBadge(userRow);
 
     var btnHtml = '';
     if (!isMine) {
       if (listType === 'following') {
         btnHtml =
-          '<button type="button" class="btn-follow following" data-user-id="' +
-          escapeHtml(targetUserId) +
-          '" data-list-type="following" data-action="unfollow">픽 취소</button>';
+          `<button type="button" class="btn-follow following" data-user-id="${escapeHtml(targetUserId)}" data-list-type="following" data-action="unfollow">픽 취소</button>`;
       } else if (listType === 'follower') {
         if (iFollow) {
           btnHtml =
-            '<button type="button" class="btn-follow following" data-user-id="' +
-            escapeHtml(targetUserId) +
-            '" data-list-type="follower" data-action="unfollow">픽 취소</button>';
+            `<button type="button" class="btn-follow following" data-user-id="${escapeHtml(targetUserId)}" data-list-type="follower" data-action="unfollow">픽 취소</button>`;
         } else {
           btnHtml =
-            '<button type="button" class="btn-follow match-pick follow" data-user-id="' +
-            escapeHtml(targetUserId) +
-            '" data-list-type="follower" data-action="match-pick">+맞픽</button>';
+            `<button type="button" class="btn-follow match-pick follow" data-user-id="${escapeHtml(targetUserId)}" data-list-type="follower" data-action="match-pick">+맞픽</button>`;
         }
       }
     }
 
-    return (
-      '<div class="fandom-item" data-user-id="' +
-      escapeHtml(targetUserId) +
-      '">' +
-      '<div class="fandom-profile">' +
-      '<div class="fandom-avatar">' +
-      avatarInner +
-      '</div>' +
-      '<div class="fandom-name-wrap">' +
-      '<div class="fandom-name">' +
-      escapeHtml(nickname) +
-      '</div>' +
-      buildLevelBadge(userRow) +
-      '</div></div>' +
-      btnHtml +
-      '</div>'
-    );
+    return `
+      <div class="fandom-item" data-user-id="${escapeHtml(targetUserId)}">
+        <div class="fandom-profile">
+          <div class="fandom-avatar">${avatarInner}</div>
+          <div class="fandom-name-wrap">
+            <div class="fandom-name">${escapeHtml(nickname)}</div>
+            ${levelBadge}
+          </div>
+        </div>
+        ${btnHtml}
+      </div>`;
   }
 
   function showFandomEmpty(container) {
     if (!container) return;
     container.innerHTML =
-      '<div class="fandom-empty">아직 목록이 없습니다.<br>먼저 픽클러를 찾아보세요!</div>';
+      '<div class="fandom-empty">아직 목록이 없습니다.</div>';
   }
 
   async function renderFandomList(type, userId) {
@@ -464,7 +476,7 @@
     rows.forEach(function (r) {
       var targetId = getFandomTargetUserId(r, type);
       var profile = getFandomProfileFromRow(r, type);
-      if (targetId && !resolveFandomNickname(profile)) {
+      if (targetId && extractFandomNickname(r, type, profile) === '') {
         missingProfileIds.push(targetId);
       }
     });
@@ -472,19 +484,24 @@
     var fallbackMap = await fetchUsersFallbackMap(missingProfileIds);
     var avatarMap = await fetchAvatarHtmlMap(userIds);
 
+    console.log('[P!CKLE Follows] build=' + PICKLE_FOLLOWS_BUILD + ' type=' + type);
+
     var rendered = rows.map(function (r) {
       var targetId = getFandomTargetUserId(r, type);
       var profile = getFandomProfileFromRow(r, type);
-      if ((!profile || !resolveFandomNickname(profile)) && targetId) {
+      if (extractFandomNickname(r, type, profile) === '' && targetId) {
         profile = fallbackMap.get(String(targetId)) || profile;
       }
+      var nickname = resolveFandomNickname(r, type, profile);
       console.log('[P!CKLE Follows] render item:', {
+        build: PICKLE_FOLLOWS_BUILD,
         type: type,
         targetId: targetId,
-        nickname: resolveFandomNickname(profile),
+        nickname: nickname,
+        item: r,
         profile: profile,
       });
-      return renderFandomItem(profile, targetId, type, myId, avatarMap);
+      return renderFandomItem(r, profile, targetId, type, myId, avatarMap);
     });
 
     return rendered.join('');
