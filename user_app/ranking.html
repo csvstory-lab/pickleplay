@@ -126,42 +126,83 @@
     .sub-tab.active { font-weight: 900; }
 
     /* 3. 명예의 전당 (Top 3 시상대) */
-    .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin-bottom: 40px; height: 220px; margin-top: 30px; }
+    .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 10px;
+        margin-bottom: 40px;
+        margin-top: 30px;
+        padding-top: 48px;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
 
     .podium-item {
-        display: flex; flex-direction: column; align-items: center; width: 30%; position: relative;
-        cursor: pointer; transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
-        box-sizing: border-box; padding-bottom: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        width: 30%;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+        box-sizing: border-box;
+        overflow: visible;
+        flex-shrink: 0;
+        gap: 5px;
+        padding-bottom: 38px;
     }
     .podium-item:active { transform: scale(0.93); }
+    .podium-item > .podium-name,
+    .podium-item > .podium-score,
+    .podium-item > .podium-pick-wrap,
+    .podium-item > .podium-rank {
+        flex-shrink: 0;
+    }
 
-    .podium-avatar { width: 56px; height: 56px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: absolute; top: -35px; z-index: 10; transition: transform 0.2s; }
-    .podium-rank { font-family: 'Black Han Sans', sans-serif; font-size: 1.5rem; color: #000; margin-bottom: 5px; flex-shrink: 0; }
-    .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 30px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; flex-shrink: 0; line-height: 1.25; }
-    .podium-score { font-size: 0.75rem; font-weight: 700; margin-top: 5px; transition: color 0.3s; flex-shrink: 0; line-height: 1.25; }
+    .podium-avatar { width: 56px; height: 56px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: absolute; top: -35px; left: 50%; transform: translateX(-50%); z-index: 10; transition: transform 0.2s; }
+    .podium-rank {
+        position: absolute;
+        bottom: 12px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: 1.5rem;
+        color: #000;
+        margin: 0;
+        line-height: 1;
+        z-index: 2;
+    }
+    .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 32px; margin-bottom: 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; padding: 0 4px; box-sizing: border-box; }
+    .podium-score { font-size: 0.75rem; font-weight: 700; margin: 0; transition: color 0.3s; line-height: 1.3; }
 
-    .podium-1 { height: 170px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; }
+    .podium-1 { min-height: 190px; height: 190px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; }
     .podium-1 .podium-avatar { width: 70px; height: 70px; font-size: 2.2rem; top: -45px; border-color: #ffcc00; }
-    .podium-1 .podium-name { font-size: 1rem; margin-top: 40px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .podium-1 .podium-name { font-size: 1rem; margin-top: 42px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-    .podium-2 { height: 140px; background: linear-gradient(180deg, #a1a1aa 0%, #52525b 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d4d4d8; border-bottom: none; }
+    .podium-2 { min-height: 165px; height: 165px; background: linear-gradient(180deg, #a1a1aa 0%, #52525b 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d4d4d8; border-bottom: none; }
     .podium-2 .podium-avatar { border-color: #a1a1aa; }
 
-    .podium-3 { height: 120px; background: linear-gradient(180deg, #b87333 0%, #7a4b22 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d89355; border-bottom: none; }
+    .podium-3 { min-height: 145px; height: 145px; background: linear-gradient(180deg, #b87333 0%, #7a4b22 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d89355; border-bottom: none; }
     .podium-3 .podium-avatar { border-color: #b87333; }
 
-    /* 픽클러 시상대 — [+나의 픽] 버튼 공간 (높이·여백만) */
+    /* 픽클러 시상대 — [+나의 픽] 버튼 포함 높이·여백 */
+    #picklerRankingArea .podium-container {
+        padding-top: 52px;
+    }
+    #picklerRankingArea .podium-1 { min-height: 248px; height: 248px; }
+    #picklerRankingArea .podium-2 { min-height: 222px; height: 222px; }
+    #picklerRankingArea .podium-3 { min-height: 200px; height: 200px; }
     #picklerRankingArea .podium-pick-wrap {
-        margin-top: 6px;
-        margin-bottom: 10px;
-        flex-shrink: 0;
+        margin: 2px 0 0;
         display: flex;
         justify-content: center;
         width: 100%;
-    }
-    #picklerRankingArea .podium-rank {
-        margin-top: auto;
-        margin-bottom: 6px;
+        position: relative;
+        z-index: 12;
     }
 
     /* 4. 랭킹 리스트 (4위 ~ 10위) */
@@ -241,21 +282,21 @@
                 <div class="podium-avatar" style="border-radius:10px;">👗</div>
                 <div class="podium-name">첫 데이트룩 골라주세요!</div>
                 <div class="podium-score">🔥 45.2K</div>
-                <div class="podium-rank" style="margin-top:auto;">2</div>
+                <div class="podium-rank">2</div>
             </div>
             <!-- 1위 (먹잘알) -->
             <div class="podium-item podium-1" onclick="location.href='detail.html'">
                 <div class="podium-avatar" style="border-radius:10px;">🍜</div>
                 <div class="podium-name">평생 라면 vs 평생 치킨</div>
                 <div class="podium-score">🔥 89.1K</div>
-                <div class="podium-rank" style="margin-top:auto;">1</div>
+                <div class="podium-rank">1</div>
             </div>
             <!-- 3위 (블박) -->
             <div class="podium-item podium-3" onclick="location.href='detail.html'">
                 <div class="podium-avatar" style="border-radius:10px;">🚗</div>
                 <div class="podium-name">킥보드 vs 오토바이 과실</div>
                 <div class="podium-score">🔥 32.8K</div>
-                <div class="podium-rank" style="margin-top:auto;">3</div>
+                <div class="podium-rank">3</div>
             </div>
         </div>
 
@@ -292,7 +333,7 @@
                 <div class="podium-name">질주본능블박러</div>
                 <div class="podium-score">⭐ 12.4K</div>
                 <div class="podium-pick-wrap"></div>
-                <div class="podium-rank" style="margin-top:auto;">2</div>
+                <div class="podium-rank">2</div>
             </div>
             <!-- 1위 -->
             <div class="podium-item podium-1" data-user-id="">
@@ -300,7 +341,7 @@
                 <div class="podium-name">쩝쩝박사</div>
                 <div class="podium-score">⭐ 25.8K</div>
                 <div class="podium-pick-wrap"></div>
-                <div class="podium-rank" style="margin-top:auto;">1</div>
+                <div class="podium-rank">1</div>
             </div>
             <!-- 3위 -->
             <div class="podium-item podium-3" data-user-id="">
@@ -308,7 +349,7 @@
                 <div class="podium-name">밸런스파괴자</div>
                 <div class="podium-score">⭐ 9.2K</div>
                 <div class="podium-pick-wrap"></div>
-                <div class="podium-rank" style="margin-top:auto;">3</div>
+                <div class="podium-rank">3</div>
             </div>
         </div>
 
