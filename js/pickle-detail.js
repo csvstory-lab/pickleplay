@@ -1079,6 +1079,10 @@
     cachedVoteStats = voteStats || { votesA: 0, votesB: 0, total: 0 };
     document.title = 'P!CKLE - ' + (post.title || '불판 상세');
 
+    if (window.PickleRankingEvents && window.PickleRankingEvents.recordPostView) {
+      window.PickleRankingEvents.recordPostView(post.id);
+    }
+
     renderAuthor(post);
     renderMeta(post);
 

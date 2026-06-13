@@ -12,6 +12,20 @@
     description: '너의 뇌정지 선택은? 지금 바로 화력을 지원해줘! 🔥',
   };
 
+  function getSharePostId() {
+    if (shareContext.postId) return shareContext.postId;
+    var post = window.PickleDetail?.getCurrentPost?.();
+    if (post?.id) return post.id;
+    return new URLSearchParams(window.location.search).get('id');
+  }
+
+  function recordShareEvent(channel) {
+    var postId = getSharePostId();
+    if (postId && window.PickleRankingEvents?.recordPostShare) {
+      window.PickleRankingEvents.recordPostShare(postId, channel);
+    }
+  }
+
   function setShareContext(ctx) {
     if (!ctx) return;
     shareContext = {
@@ -19,6 +33,7 @@
       url: ctx.url || window.location.href,
       description: ctx.description || shareContext.description,
       imageUrl: ctx.imageUrl || shareContext.imageUrl,
+      postId: ctx.postId || shareContext.postId,
     };
   }
 
@@ -96,11 +111,15 @@
       console.error('[P!CKLE] Kakao share failed', err);
       alert('카카오톡 공유에 실패했습니다. 키·도메인 등록을 확인해 주세요.');
     }
+    recordShareEvent('kakao');
   }
 
   function copyLink() {
     const url = getShareUrl();
-    const done = () => alert('링크가 복사되었습니다!');
+    const done = () => {
+      alert('링크가 복사되었습니다!');
+      recordShareEvent('copy');
+    };
 
     if (navigator.clipboard?.writeText) {
       navigator.clipboard
@@ -141,6 +160,7 @@
           console.warn('[P!CKLE] native share failed', err);
         }
       });
+      recordShareEvent('native');
       return;
     }
     copyLink();

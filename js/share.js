@@ -51,6 +51,9 @@
     try {
       await copyToClipboard(url);
       notifyCopied();
+      if (window.PickleRankingEvents?.recordPostShare && post?.id) {
+        window.PickleRankingEvents.recordPostShare(post.id, 'copy');
+      }
     } catch (err) {
       console.warn('[P!CKLE Share] clipboard failed', err);
       alert('링크 복사에 실패했습니다. URL을 직접 복사해 주세요:\n' + url);
@@ -67,6 +70,7 @@
         title: payload.title,
         url: payload.url,
         description: payload.text,
+        postId: post.id,
       });
       window.PickleShareSheet.openShareSheet();
       return;
@@ -79,6 +83,9 @@
           text: payload.text,
           url: payload.url,
         });
+        if (window.PickleRankingEvents?.recordPostShare) {
+          window.PickleRankingEvents.recordPostShare(post.id, 'native');
+        }
         return;
       } catch (err) {
         if (err?.name === 'AbortError') return;
