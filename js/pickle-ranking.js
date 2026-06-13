@@ -1,6 +1,6 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking4
+ * @build 20260608_ranking5
  * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
@@ -138,15 +138,8 @@
       'background: var(--neon-blue); color: #000; border-color: var(--neon-blue);' +
       '}' +
       '#picklerRankingArea .rank-pick-btn:disabled { opacity: 0.5; cursor: not-allowed; }' +
-      '#picklerRankingArea .podium-pick-wrap {' +
-      'position: relative; z-index: 12; margin-top: 4px; margin-bottom: 2px;' +
-      'display: flex; justify-content: center; width: 100%;' +
-      '}' +
       '#picklerRankingArea .podium-pick-btn {' +
-      'margin-left: 0; padding: 4px 8px; font-size: 0.62rem; line-height: 1.2;' +
-      '}' +
-      '#picklerRankingArea .podium-1 .podium-pick-btn {' +
-      'padding: 5px 10px; font-size: 0.68rem;' +
+      'margin-left: 0; flex-shrink: 0;' +
       '}' +
       '#picklerRankingArea .podium-item { cursor: default; }';
     document.head.appendChild(style);
