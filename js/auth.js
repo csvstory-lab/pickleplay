@@ -100,6 +100,14 @@
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
 
+    if (
+      providerKey === 'google' &&
+      window.PickleInAppBrowser &&
+      window.PickleInAppBrowser.requireExternalBrowserForOAuth()
+    ) {
+      throw new Error('인앱 브라우저에서는 구글 로그인을 사용할 수 없습니다.');
+    }
+
     const sb = getClient();
     const { data, error } = await sb.auth.signInWithOAuth({
       provider,

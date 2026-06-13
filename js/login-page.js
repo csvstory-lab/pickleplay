@@ -187,7 +187,9 @@
           await signInWithOAuth(provider);
         } catch (err) {
           if (err && err.message !== 'Supabase config not ready') {
-            alert(err.message || '소셜 로그인에 실패했습니다.');
+            if (err.message !== '인앱 브라우저에서는 구글 로그인을 사용할 수 없습니다.') {
+              alert(err.message || '소셜 로그인에 실패했습니다.');
+            }
           }
         } finally {
           button.disabled = false;
@@ -318,6 +320,14 @@
   }
 
   async function signInWithOAuth(provider) {
+    if (
+      provider === 'google' &&
+      window.PickleInAppBrowser &&
+      window.PickleInAppBrowser.requireExternalBrowserForOAuth()
+    ) {
+      throw new Error('인앱 브라우저에서는 구글 로그인을 사용할 수 없습니다.');
+    }
+
     if (!guardConfigForUserAction()) {
       throw new Error('Supabase config not ready');
     }
