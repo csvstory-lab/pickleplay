@@ -160,24 +160,73 @@
     }
   }
 
-  var FANDOM_USER_FIELDS_FULL = 'id, nickname, points, star_score, avatar_html';
+  var FANDOM_USER_FIELDS_FULL =
+    'id, nickname, points, star_score, avatar_html, avatar_url';
   var FANDOM_USER_FIELDS_BASE = 'id, nickname, points';
+
+  function unwrapEmbeddedProfile(value) {
+    if (!value) return null;
+    if (Array.isArray(value)) {
+      return value.length ? unwrapEmbeddedProfile(value[0]) : null;
+    }
+    if (typeof value === 'object') return value;
+    return null;
+  }
 
   function getFandomProfileFromRow(row, listType) {
     if (!row) return null;
-    var profile =
-      listType === 'follower'
-        ? row.follower || row.profile
-        : row.following || row.profile;
-    if (profile && typeof profile === 'object' && !Array.isArray(profile)) {
-      return profile;
+
+    var embedKey = listType === 'follower' ? 'follower' : 'following';
+    var candidates = [
+      row[embedKey],
+      row.users,
+      row.profile,
+      row.user,
+    ];
+
+    for (var i = 0; i < candidates.length; i += 1) {
+      var profile = unwrapEmbeddedProfile(candidates[i]);
+      if (profile && (profile.nickname || profile.id)) {
+        return profile;
+      }
     }
+
     return null;
   }
 
   function getFandomTargetUserId(row, listType) {
     if (!row) return null;
+    var profile = getFandomProfileFromRow(row, listType);
+    if (profile && profile.id) return profile.id;
     return listType === 'follower' ? row.follower_id : row.following_id;
+  }
+
+  async function fetchUsersFallbackMap(userIds) {
+    var map = new Map();
+    var uniqueIds = Array.from(
+      new Set((userIds || []).filter(Boolean).map(String))
+    );
+    if (!uniqueIds.length) return map;
+
+    var sb = getSupabaseClient();
+    if (!sb) return map;
+
+    var fieldSets = [
+      FANDOM_USER_FIELDS_FULL,
+      FANDOM_USER_FIELDS_BASE + ', star_score',
+      FANDOM_USER_FIELDS_BASE,
+    ];
+
+    for (var i = 0; i < fieldSets.length; i += 1) {
+      var result = await sb.from('users').select(fieldSets[i]).in('id', uniqueIds);
+      if (result.error) continue;
+      (result.data || []).forEach(function (row) {
+        if (row && row.id) map.set(String(row.id), row);
+      });
+      if (map.size) break;
+    }
+
+    return map;
   }
 
   async function fetchFandomListRows(listType, userId) {
@@ -275,25 +324,42 @@
     return map;
   }
 
-  function buildLevelBadge(userRow) {
-    var pts = 0;
-    if (userRow) {
-      if (userRow.star_score != null && userRow.star_score !== '') {
-        pts = Number(userRow.star_score) || 0;
-      } else if (window.PickleProfile && window.PickleProfile.extractRankingPointsFromRow) {
-        pts = window.PickleProfile.extractRankingPointsFromRow(userRow);
-      } else {
-        pts = Number(userRow.points) || 0;
-      }
+  function resolveRankingPoints(userRow) {
+    if (!userRow) return 0;
+    if (userRow.star_score != null && userRow.star_score !== '') {
+      return Number(userRow.star_score) || 0;
     }
+    if (window.PickleProfile && window.PickleProfile.extractRankingPointsFromRow) {
+      return window.PickleProfile.extractRankingPointsFromRow(userRow);
+    }
+    return Number(userRow.points) || 0;
+  }
+
+  function buildLevelBadge(userRow) {
+    var pts = resolveRankingPoints(userRow);
     if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
       var html = window.PickleProfile.buildLevelBadgeFromPoints(pts);
       return html.replace('grade-badge', 'fandom-lvl');
     }
-    return '<span class="fandom-lvl">Lv.1</span>';
+    var lv = 1;
+    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+      lv = window.PickleProfile.getUserLevelFromPoints(pts);
+    }
+    return '<span class="fandom-lvl">Lv.' + Math.floor(lv) + '</span>';
   }
 
   function renderAvatarHtml(userRow, targetUserId, avatarMap) {
+    if (userRow && userRow.avatar_url) {
+      var url = String(userRow.avatar_url).trim();
+      if (url) {
+        return (
+          '<img src="' +
+          escapeHtml(url) +
+          '" alt="" loading="lazy" decoding="async">'
+        );
+      }
+    }
+
     var fromUser =
       userRow && userRow.avatar_html ? String(userRow.avatar_html).trim() : '';
     if (fromUser) {
@@ -311,13 +377,18 @@
       return escapeHtml(stored);
     }
 
-    var nickname = userRow && userRow.nickname ? String(userRow.nickname).trim() : '';
+    var nickname =
+      userRow && userRow.nickname ? String(userRow.nickname).trim() : '';
     return escapeHtml(nickname.charAt(0) || '🥒');
   }
 
+  function resolveFandomNickname(userRow) {
+    if (!userRow) return '';
+    return String(userRow.nickname || '').trim();
+  }
+
   function renderFandomItem(userRow, targetUserId, listType, myId, avatarMap) {
-    var nickname =
-      userRow && userRow.nickname ? String(userRow.nickname).trim() : '';
+    var nickname = resolveFandomNickname(userRow);
     if (!nickname) nickname = '닉네임 없음';
     var isMine = myId && String(targetUserId) === String(myId);
     var iFollow = myFollowingSet.has(String(targetUserId));
@@ -381,21 +452,42 @@
     if (listResult.error) throw listResult.error;
 
     var rows = listResult.rows || [];
+    console.log('[P!CKLE Follows] fandom raw rows (' + type + '):', rows);
+
     var userIds = rows
       .map(function (r) {
         return getFandomTargetUserId(r, type);
       })
       .filter(Boolean);
 
+    var missingProfileIds = [];
+    rows.forEach(function (r) {
+      var targetId = getFandomTargetUserId(r, type);
+      var profile = getFandomProfileFromRow(r, type);
+      if (targetId && !resolveFandomNickname(profile)) {
+        missingProfileIds.push(targetId);
+      }
+    });
+
+    var fallbackMap = await fetchUsersFallbackMap(missingProfileIds);
     var avatarMap = await fetchAvatarHtmlMap(userIds);
 
-    return rows
-      .map(function (r) {
-        var targetId = getFandomTargetUserId(r, type);
-        var profile = getFandomProfileFromRow(r, type);
-        return renderFandomItem(profile, targetId, type, myId, avatarMap);
-      })
-      .join('');
+    var rendered = rows.map(function (r) {
+      var targetId = getFandomTargetUserId(r, type);
+      var profile = getFandomProfileFromRow(r, type);
+      if ((!profile || !resolveFandomNickname(profile)) && targetId) {
+        profile = fallbackMap.get(String(targetId)) || profile;
+      }
+      console.log('[P!CKLE Follows] render item:', {
+        type: type,
+        targetId: targetId,
+        nickname: resolveFandomNickname(profile),
+        profile: profile,
+      });
+      return renderFandomItem(profile, targetId, type, myId, avatarMap);
+    });
+
+    return rendered.join('');
   }
 
   function animateRemoveFandomItem(itemEl) {
