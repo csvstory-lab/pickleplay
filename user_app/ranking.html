@@ -133,7 +133,7 @@
         gap: 10px;
         margin-bottom: 40px;
         margin-top: 30px;
-        padding-top: 48px;
+        padding-top: 44px;
         height: auto;
         min-height: 0;
         overflow: visible;
@@ -151,13 +151,13 @@
         box-sizing: border-box;
         overflow: visible;
         flex-shrink: 0;
-        gap: 5px;
-        padding-bottom: 38px;
+        gap: 4px;
+        padding-bottom: 32px;
     }
     .podium-item:active { transform: scale(0.93); }
+    #picklerRankingArea .podium-item { cursor: default; }
     .podium-item > .podium-name,
     .podium-item > .podium-score,
-    .podium-item > .podium-pick-wrap,
     .podium-item > .podium-rank {
         flex-shrink: 0;
     }
@@ -176,7 +176,7 @@
         line-height: 1;
         z-index: 2;
     }
-    .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 32px; margin-bottom: 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; padding: 0 4px; box-sizing: border-box; }
+    .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 28px; margin-bottom: 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; padding: 0 4px; box-sizing: border-box; }
     .podium-score { font-size: 0.75rem; font-weight: 700; margin: 0; transition: color 0.3s; line-height: 1.3; }
 
     /* 픽클러 시상대 — 별점 30%+ 확대 (리스트 가독성 맞춤) */
@@ -199,43 +199,15 @@
         font-size: 1.1rem;
     }
 
-    .podium-1 { min-height: 190px; height: 190px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; overflow: visible; }
+    .podium-1 { min-height: 155px; height: 155px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; overflow: visible; }
     .podium-1 .podium-avatar { width: 70px; height: 70px; font-size: 2.2rem; top: -45px; border-color: #ffcc00; }
-    .podium-1 .podium-name { font-size: 1rem; margin-top: 42px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .podium-1 .podium-name { font-size: 1rem; margin-top: 36px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-    .podium-2 { min-height: 165px; height: 165px; background: linear-gradient(180deg, #a1a1aa 0%, #52525b 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d4d4d8; border-bottom: none; }
+    .podium-2 { min-height: 135px; height: 135px; background: linear-gradient(180deg, #a1a1aa 0%, #52525b 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d4d4d8; border-bottom: none; }
     .podium-2 .podium-avatar { border-color: #a1a1aa; }
 
-    .podium-3 { min-height: 145px; height: 145px; background: linear-gradient(180deg, #b87333 0%, #7a4b22 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d89355; border-bottom: none; }
+    .podium-3 { min-height: 118px; height: 118px; background: linear-gradient(180deg, #b87333 0%, #7a4b22 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d89355; border-bottom: none; }
     .podium-3 .podium-avatar { border-color: #b87333; }
-
-    /* 픽클러 시상대 — [+나의 픽] 버튼 포함 높이·여백 */
-    #picklerRankingArea .podium-container {
-        padding-top: 52px;
-        overflow: visible;
-    }
-    #picklerRankingArea .podium-1 { min-height: 248px; height: 248px; overflow: visible; z-index: 8; isolation: isolate; }
-    #picklerRankingArea .podium-2 { min-height: 222px; height: 222px; overflow: visible; }
-    #picklerRankingArea .podium-3 { min-height: 200px; height: 200px; overflow: visible; }
-    #picklerRankingArea .podium-pick-wrap {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 36px;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        width: 100%;
-        z-index: 30;
-        flex-shrink: 0;
-        overflow: visible;
-        pointer-events: auto;
-        visibility: visible;
-    }
-    #picklerRankingArea .podium-1 .podium-pick-wrap {
-        bottom: 36px;
-        z-index: 35;
-    }
 
     /* 4. 랭킹 리스트 (4위 ~ 10위) */
     .ranking-list { display: flex; flex-direction: column; gap: 12px; }
@@ -364,7 +336,6 @@
                 <div class="podium-avatar"></div>
                 <div class="podium-name">…</div>
                 <div class="podium-score">⭐ …</div>
-                <div class="podium-pick-wrap"></div>
                 <div class="podium-rank">2</div>
             </div>
             <!-- 1위 -->
@@ -372,7 +343,6 @@
                 <div class="podium-avatar"></div>
                 <div class="podium-name">…</div>
                 <div class="podium-score">⭐ …</div>
-                <div class="podium-pick-wrap"></div>
                 <div class="podium-rank">1</div>
             </div>
             <!-- 3위 -->
@@ -380,7 +350,6 @@
                 <div class="podium-avatar"></div>
                 <div class="podium-name">…</div>
                 <div class="podium-score">⭐ …</div>
-                <div class="podium-pick-wrap"></div>
                 <div class="podium-rank">3</div>
             </div>
         </div>
@@ -467,7 +436,7 @@
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-profile.js?v=20260608_ranking1"></script>
-<script src="../js/pickle-ranking.js?v=20260608_ranking7"></script>
+<script src="../js/pickle-ranking.js?v=20260608_ranking8"></script>
 
 </body>
 </html>
