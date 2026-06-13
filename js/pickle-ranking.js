@@ -1,6 +1,6 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking2
+ * @build 20260608_ranking4
  * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
@@ -137,7 +137,18 @@
       '#picklerRankingArea .rank-pick-btn.active {' +
       'background: var(--neon-blue); color: #000; border-color: var(--neon-blue);' +
       '}' +
-      '#picklerRankingArea .rank-pick-btn:disabled { opacity: 0.5; cursor: not-allowed; }';
+      '#picklerRankingArea .rank-pick-btn:disabled { opacity: 0.5; cursor: not-allowed; }' +
+      '#picklerRankingArea .podium-pick-wrap {' +
+      'position: relative; z-index: 12; margin-top: 4px; margin-bottom: 2px;' +
+      'display: flex; justify-content: center; width: 100%;' +
+      '}' +
+      '#picklerRankingArea .podium-pick-btn {' +
+      'margin-left: 0; padding: 4px 8px; font-size: 0.62rem; line-height: 1.2;' +
+      '}' +
+      '#picklerRankingArea .podium-1 .podium-pick-btn {' +
+      'padding: 5px 10px; font-size: 0.68rem;' +
+      '}' +
+      '#picklerRankingArea .podium-item { cursor: default; }';
     document.head.appendChild(style);
   }
 
@@ -200,11 +211,25 @@
     }
   }
 
-  function buildPickBtnHtml(targetUserId) {
+  function syncAllPickBtnStates(targetUserId, isFollowingUser) {
+    var area = document.getElementById('picklerRankingArea');
+    if (!area || !targetUserId) return;
+    var id = String(targetUserId);
+    area.querySelectorAll('.rank-pick-btn[data-user-id]').forEach(function (btn) {
+      if (btn.getAttribute('data-user-id') === id) {
+        updatePickBtnState(btn, isFollowingUser);
+      }
+    });
+  }
+
+  function buildPickBtnHtml(targetUserId, variant) {
     if (!shouldShowPickButton(targetUserId)) return '';
     var following = isFollowingUser(targetUserId);
+    var isPodium = variant === 'podium';
     var classes =
-      'rank-pick-btn btn-mypick ' + (following ? 'following active' : 'follow');
+      'rank-pick-btn btn-mypick ' +
+      (isPodium ? 'podium-pick-btn ' : '') +
+      (following ? 'following active' : 'follow');
     var label = following ? '픽 취소' : '+ 나의 픽';
     return (
       '<button type="button" class="' +
@@ -244,7 +269,7 @@
           .eq('following_id', targetUserId);
         if (del.error) throw del.error;
         myFollowingSet.delete(String(targetUserId));
-        updatePickBtnState(btn, false);
+        syncAllPickBtnStates(targetUserId, false);
       } else {
         var ins = await sb.from('user_follows').insert({
           follower_id: userId,
@@ -252,7 +277,7 @@
         });
         if (ins.error) throw ins.error;
         myFollowingSet.add(String(targetUserId));
-        updatePickBtnState(btn, true);
+        syncAllPickBtnStates(targetUserId, true);
       }
     } catch (err) {
       console.error('[P!CKLE Ranking] follow toggle failed', err);
@@ -269,7 +294,7 @@
 
     area.addEventListener('click', function (e) {
       var btn = e.target.closest('.rank-pick-btn');
-      if (!btn) return;
+      if (!btn || !area.contains(btn)) return;
       e.preventDefault();
       e.stopPropagation();
       handlePickBtnClick(btn);
@@ -446,17 +471,21 @@
     if (!slotEl) return;
     if (!row) {
       slotEl.style.display = 'none';
-      slotEl.onclick = null;
+      slotEl.removeAttribute('data-user-id');
+      var emptyWrap = slotEl.querySelector('.podium-pick-wrap');
+      if (emptyWrap) emptyWrap.innerHTML = '';
       return;
     }
 
     slotEl.style.display = '';
+    slotEl.setAttribute('data-user-id', String(row.user_id));
     var nickname = String(row.nickname || '이름없음').trim() || '이름없음';
     var score = formatScore(row.star_score_total);
 
     var avatarEl = slotEl.querySelector('.podium-avatar');
     var nameEl = slotEl.querySelector('.podium-name');
     var scoreEl = slotEl.querySelector('.podium-score');
+    var pickWrap = slotEl.querySelector('.podium-pick-wrap');
     var rankEl = slotEl.querySelector('.podium-rank');
 
     if (avatarEl) {
@@ -467,9 +496,16 @@
     if (scoreEl) scoreEl.textContent = '⭐ ' + score;
     if (rankEl) rankEl.textContent = String(rank);
 
-    slotEl.onclick = function () {
-      /* 프로필 페이지 연동 전 — 클릭 무반응 */
-    };
+    if (!pickWrap) {
+      pickWrap = document.createElement('div');
+      pickWrap.className = 'podium-pick-wrap';
+      if (rankEl) {
+        slotEl.insertBefore(pickWrap, rankEl);
+      } else {
+        slotEl.appendChild(pickWrap);
+      }
+    }
+    pickWrap.innerHTML = buildPickBtnHtml(row.user_id, 'podium');
   }
 
   function buildPicklerListItemHtml(row, rank) {
