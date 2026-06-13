@@ -1,13 +1,17 @@
 /**
- * P!CKLE — 랭킹 페이지 (hall_of_fame.html UI 클래스 재사용)
+ * P!CKLE — ranking.html 랭킹 DB 연동
+ * @build 20260608_ranking1
+ * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
   'use strict';
 
-  var LIMIT = 50;
-  var currentTab = 'grill';
+  var LIMIT = 10;
+  var EMPTY_MSG = '아직 랭킹 데이터가 없습니다.';
   var grillRows = [];
   var picklerRows = [];
+  var postMetaMap = new Map();
+  var userAvatarMap = new Map();
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -18,10 +22,13 @@
   }
 
   function getClient() {
-    if (!window.PickleSupabase || !window.PickleSupabase.getClient) {
-      throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
+    if (window.PickleSupabase && window.PickleSupabase.getClient) {
+      return window.PickleSupabase.getClient();
     }
-    return window.PickleSupabase.getClient();
+    if (window.PickleSupabaseBootstrap && window.PickleSupabaseBootstrap.getClient) {
+      return window.PickleSupabaseBootstrap.getClient();
+    }
+    throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
   }
 
   function formatScore(value) {
@@ -33,272 +40,452 @@
     return n.toFixed(1);
   }
 
-  function postTitle(post) {
-    return (
-      post.title?.trim() ||
-      (post.option_a_name || '') + ' VS ' + (post.option_b_name || '')
-    );
+  function postTitle(row, meta) {
+    if (row && row.title && String(row.title).trim()) {
+      return String(row.title).trim();
+    }
+    if (meta && meta.title && String(meta.title).trim()) {
+      return String(meta.title).trim();
+    }
+    var a = meta && meta.option_a_name ? String(meta.option_a_name).trim() : '';
+    var b = meta && meta.option_b_name ? String(meta.option_b_name).trim() : '';
+    if (a || b) return (a || '?') + ' VS ' + (b || '?');
+    return '제목 없음';
   }
 
-  function postStatusLabel(post) {
-    if (!post.expires_at) return '진행 중';
-    var exp = new Date(post.expires_at);
+  function postStatusLabel(meta) {
+    if (!meta || !meta.expires_at) return '진행 중';
+    var exp = new Date(meta.expires_at);
     if (Number.isNaN(exp.getTime())) return '진행 중';
     return exp.getTime() <= Date.now() ? '마감 완료' : '진행 중';
   }
 
-  function rankBadgeHtml(rank) {
-    if (rank === 1) {
-      return (
-        '<div class="hof-badge-row">' +
-        '<span class="hof-badge hof-badge--landslide">👑 1위</span>' +
-        '</div>'
-      );
-    }
-    if (rank === 2) {
-      return (
-        '<div class="hof-badge-row">' +
-        '<span class="hof-badge hof-badge--scale">🥈 2위</span>' +
-        '</div>'
-      );
-    }
-    if (rank === 3) {
-      return (
-        '<div class="hof-badge-row">' +
-        '<span class="hof-badge hof-badge--debate">🥉 3위</span>' +
-        '</div>'
-      );
-    }
-    return '';
+  function authorLabel(meta) {
+    var name =
+      (meta && meta.author_nickname && String(meta.author_nickname).trim()) ||
+      '이름없음';
+    return '작성자: ' + name;
   }
 
-  function buildGrillCardHtml(post, rank) {
-    var feed = window.PickleFeed;
-    var thumbHtml = '';
-    if (feed && typeof feed.renderCardThumbTop === 'function') {
-      thumbHtml = feed.renderCardThumbTop(post);
-    } else if (post.thumbnail_url) {
-      thumbHtml =
-        '<div class="card-thumb-top">' +
-        '<img class="card-thumb-img" src="' +
-        escapeHtml(post.thumbnail_url) +
-        '" alt="">' +
-        '</div>';
-    } else {
-      thumbHtml =
-        '<div class="card-thumb-top card-thumb-top--fallback">' +
-        '<span class="card-thumb-fallback-label">' +
-        escapeHtml(String(rank) + '위') +
-        '</span></div>';
+  function buildLevelBadgeHtml(points) {
+    var lv = 1;
+    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+      lv = window.PickleProfile.getUserLevelFromPoints(points);
     }
-
     return (
-      '<article class="hof-card list-card" data-id="' +
-      escapeHtml(post.id) +
-      '" role="button" tabindex="0">' +
-      rankBadgeHtml(rank) +
-      thumbHtml +
-      '<div class="card-body">' +
-      '<h3 class="title">' +
-      escapeHtml(postTitle(post)) +
-      '</h3>' +
-      '<div class="hof-result-meta">' +
-      '<span class="hof-result-pct hof-result-pct--b">🔥 ' +
-      formatScore(post.fire_score) +
-      '</span>' +
-      '<span class="hof-result-votes">작성자: ' +
-      escapeHtml(post.author_nickname || '픽클러') +
-      ' · ' +
-      escapeHtml(postStatusLabel(post)) +
-      '</span>' +
-      '</div></div></article>'
+      '<span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.' +
+      Math.floor(lv) +
+      '</span>'
     );
   }
 
-  function buildPicklerCardHtml(user, rank) {
-    var initial = String(user.nickname || '픽').trim().charAt(0) || '픽';
-
-    return (
-      '<article class="hof-card list-card" role="button" tabindex="0">' +
-      rankBadgeHtml(rank) +
-      '<div class="card-thumb-top card-thumb-top--fallback">' +
-      '<span class="card-thumb-fallback-label">' +
-      escapeHtml(initial) +
-      '</span></div>' +
-      '<div class="card-body">' +
-      '<h3 class="title">' +
-      escapeHtml(user.nickname || '픽클러') +
-      '</h3>' +
-      '<div class="hof-result-meta">' +
-      '<span class="hof-result-pct hof-result-pct--a">⭐ ' +
-      formatScore(user.star_score) +
-      '</span>' +
-      '<span class="hof-result-votes">' +
-      rank +
-      '위 · star_score 기준</span>' +
-      '</div></div></article>'
-    );
+  function renderMediaInner(meta, fallbackEmoji) {
+    if (meta && meta.thumbnail_url) {
+      return (
+        '<img src="' +
+        escapeHtml(meta.thumbnail_url) +
+        '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" loading="lazy" decoding="async">'
+      );
+    }
+    if (meta && meta.author_avatar_html) {
+      var av = String(meta.author_avatar_html).trim();
+      if (av.indexOf('<') !== -1) return av;
+      return escapeHtml(av);
+    }
+    return escapeHtml(fallbackEmoji || '🥒');
   }
 
-  function bindGrillNavigation(container) {
-    if (!container || !window.PickleFeed) return;
-    container.querySelectorAll('.hof-card[data-id]').forEach(function (card) {
-      var id = card.dataset.id;
-      if (!id) return;
-      card.addEventListener('click', function () {
-        window.PickleFeed.goDetail(id);
+  function renderUserAvatarInner(userId, nickname, fallbackEmoji) {
+    var meta = userAvatarMap.get(String(userId)) || {};
+    if (meta.avatar_url) {
+      return (
+        '<img src="' +
+        escapeHtml(String(meta.avatar_url).trim()) +
+        '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" loading="lazy" decoding="async">'
+      );
+    }
+    if (meta.avatar_html) {
+      var html = String(meta.avatar_html).trim();
+      if (html.indexOf('<') !== -1) return html;
+      return escapeHtml(html);
+    }
+    var nick = String(nickname || '').trim();
+    return escapeHtml(nick.charAt(0) || fallbackEmoji || '픽');
+  }
+
+  function goDetail(postId) {
+    if (!postId) return;
+    window.location.href = 'detail.html?id=' + encodeURIComponent(String(postId));
+  }
+
+  async function fetchPostMetaMap(postIds) {
+    postMetaMap = new Map();
+    if (!postIds.length) return postMetaMap;
+
+    var sb = getClient();
+    var fieldSets = [
+      'id, title, option_a_name, option_b_name, author_nickname, expires_at, thumbnail_url, author_avatar_html',
+      'id, title, option_a_name, option_b_name, author_nickname, expires_at, thumbnail_url',
+      'id, option_a_name, option_b_name, author_nickname, expires_at',
+    ];
+
+    for (var i = 0; i < fieldSets.length; i += 1) {
+      var result = await sb.from('posts').select(fieldSets[i]).in('id', postIds);
+      if (result.error) continue;
+      (result.data || []).forEach(function (row) {
+        if (row && row.id) postMetaMap.set(String(row.id), row);
       });
-      card.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          window.PickleFeed.goDetail(id);
-        }
+      if (postMetaMap.size) break;
+    }
+
+    return postMetaMap;
+  }
+
+  async function fetchUserAvatarMap(userIds) {
+    userAvatarMap = new Map();
+    if (!userIds.length) return userAvatarMap;
+
+    var sb = getClient();
+    var fieldSets = [
+      'id, nickname, avatar_html, avatar_url',
+      'id, nickname, avatar_html',
+      'id, nickname',
+    ];
+
+    for (var i = 0; i < fieldSets.length; i += 1) {
+      var result = await sb.from('users').select(fieldSets[i]).in('id', userIds);
+      if (result.error) continue;
+      (result.data || []).forEach(function (row) {
+        if (row && row.id) userAvatarMap.set(String(row.id), row);
       });
+      if (userAvatarMap.size) break;
+    }
+
+    return userAvatarMap;
+  }
+
+  async function fetchGrillRanking() {
+    var sb = getClient();
+    var result = await sb
+      .from('hot_grill_ranking')
+      .select('*')
+      .order('hot_grill_score', { ascending: false })
+      .limit(LIMIT);
+
+    if (result.error) throw result.error;
+
+    var rows = result.data || [];
+    var postIds = rows.map(function (r) {
+      return r.post_id;
     });
+    await fetchPostMetaMap(postIds);
+    return rows;
   }
 
-  function showLoading(container) {
-    if (!container) return;
-    container.innerHTML =
-      '<div class="feed-loading">' +
-      '<div class="feed-spinner" aria-hidden="true"></div>' +
-      '<p>🏆 랭킹을 집계하는 중…</p></div>';
+  async function fetchPicklerRanking() {
+    var sb = getClient();
+    var result = await sb
+      .from('top_pickler_ranking')
+      .select('*')
+      .order('star_score_total', { ascending: false })
+      .limit(LIMIT);
+
+    if (result.error) throw result.error;
+
+    var rows = result.data || [];
+    var userIds = rows.map(function (r) {
+      return r.user_id;
+    });
+    await fetchUserAvatarMap(userIds);
+    return rows;
   }
 
-  function emptyHtml(tab) {
-    var msg =
-      tab === 'grill'
-        ? '아직 핫 불판 랭킹 데이터가 없습니다.'
-        : '아직 최고의 픽클러 랭킹 데이터가 없습니다.';
-    return (
-      '<div class="feed-empty">' +
-      '<p class="feed-empty-title">' +
-      escapeHtml(msg) +
-      '</p></div>'
-    );
+  function setListMessage(listEl, message) {
+    if (!listEl) return;
+    listEl.innerHTML =
+      '<div style="text-align:center;padding:40px 20px;color:#a1a1aa;font-weight:700;font-size:0.95rem;">' +
+      escapeHtml(message) +
+      '</div>';
   }
 
-  function updateMeta(tab) {
-    var el = document.getElementById('rankingMeta');
-    if (!el) return;
-    if (tab === 'grill') {
-      el.textContent = 'fire_score 기준 · 투표 +1 · 조회 +0.1 · 댓글 +3 · 공유 +5';
-    } else {
-      el.textContent = 'star_score 기준 · 팔로우 +10 · 참여 +0.1 · 전당 +500 · 베스트댓글 +50';
-    }
+  function setListLoading(listEl) {
+    if (!listEl) return;
+    listEl.innerHTML =
+      '<div style="text-align:center;padding:40px 20px;color:#a1a1aa;font-weight:700;font-size:0.95rem;">불러오는 중…</div>';
   }
 
-  function renderList(tab) {
-    var container = document.getElementById('rankingFeedList');
-    if (!container) return;
-
-    var rows = tab === 'grill' ? grillRows : picklerRows;
-    updateMeta(tab);
-
-    if (!rows.length) {
-      container.innerHTML = emptyHtml(tab);
+  function bindPodiumGrill(slotEl, row, rank) {
+    if (!slotEl) return;
+    if (!row) {
+      slotEl.style.display = 'none';
+      slotEl.onclick = null;
       return;
     }
 
-    var htmlParts = [];
-    rows.forEach(function (row, i) {
-      var rank = i + 1;
-      if (tab === 'grill') {
-        htmlParts.push(buildGrillCardHtml(row, rank));
-      } else {
-        htmlParts.push(buildPicklerCardHtml(row, rank));
-      }
-    });
+    slotEl.style.display = '';
+    var meta = postMetaMap.get(String(row.post_id)) || {};
+    var title = postTitle(row, meta);
+    var status = postStatusLabel(meta);
+    var score = formatScore(row.hot_grill_score);
 
-    container.style.opacity = '0';
-    container.innerHTML = htmlParts.join('');
-    if (tab === 'grill') bindGrillNavigation(container);
-    requestAnimationFrame(function () {
-      container.style.transition = 'opacity 0.3s ease';
-      container.style.opacity = '1';
-    });
-  }
+    var avatarEl = slotEl.querySelector('.podium-avatar');
+    var nameEl = slotEl.querySelector('.podium-name');
+    var scoreEl = slotEl.querySelector('.podium-score');
+    var rankEl = slotEl.querySelector('.podium-rank');
 
-  async function fetchGrillRanking(sb) {
-    var selectVariants = [
-      'id, title, option_a_name, option_b_name, fire_score, thumbnail_url, expires_at, author_nickname, is_sponsor',
-      'id, title, option_a_name, option_b_name, fire_score, thumbnail_url, expires_at, author_nickname',
-      'id, option_a_name, option_b_name, fire_score, expires_at, author_nickname',
-    ];
-    var lastError = null;
-    for (var i = 0; i < selectVariants.length; i++) {
-      var result = await sb
-        .from('posts')
-        .select(selectVariants[i])
-        .eq('visibility_status', 'visible')
-        .order('fire_score', { ascending: false })
-        .limit(LIMIT);
-      if (!result.error) return result.data || [];
-      lastError = result.error;
+    if (avatarEl) {
+      avatarEl.style.borderRadius = '10px';
+      avatarEl.innerHTML = renderMediaInner(meta, '🔥');
     }
-    throw lastError || new Error('핫 불판 랭킹을 불러오지 못했습니다.');
+    if (nameEl) nameEl.textContent = title;
+    if (scoreEl) scoreEl.textContent = '🔥 ' + score;
+    if (rankEl) rankEl.textContent = String(rank);
+
+    slotEl.onclick = function () {
+      goDetail(row.post_id);
+    };
   }
 
-  async function fetchPicklerRanking(sb) {
-    var result = await sb
-      .from('users')
-      .select('id, nickname, star_score')
-      .eq('account_status', 'active')
-      .order('star_score', { ascending: false })
-      .limit(LIMIT);
-    if (result.error) throw result.error;
-    return result.data || [];
+  function buildGrillListItemHtml(row, rank) {
+    var meta = postMetaMap.get(String(row.post_id)) || {};
+    var title = postTitle(row, meta);
+    var status = postStatusLabel(meta);
+    var statusStyle =
+      status === '마감 완료' ? ' style="color:var(--neon-sub);"' : '';
+    var score = formatScore(row.hot_grill_score);
+    var picInner = renderMediaInner(meta, '🔥');
+
+    return (
+      '<div class="rank-item grill" data-post-id="' +
+      escapeHtml(row.post_id) +
+      '">' +
+      '<div class="rank-num">' +
+      rank +
+      '</div>' +
+      '<div class="rank-pic">' +
+      picInner +
+      '</div>' +
+      '<div class="rank-info">' +
+      '<div class="rank-title">' +
+      escapeHtml(title) +
+      '</div>' +
+      '<div class="rank-sub"><span>' +
+      escapeHtml(authorLabel(meta)) +
+      '</span> <span>|</span> <span' +
+      statusStyle +
+      '>' +
+      escapeHtml(status) +
+      '</span></div>' +
+      '</div>' +
+      '<div class="rank-score">' +
+      escapeHtml(score) +
+      ' <span style="font-size:0.8rem;">🔥</span></div>' +
+      '</div>'
+    );
+  }
+
+  function bindPodiumPickler(slotEl, row, rank) {
+    if (!slotEl) return;
+    if (!row) {
+      slotEl.style.display = 'none';
+      slotEl.onclick = null;
+      return;
+    }
+
+    slotEl.style.display = '';
+    var nickname = String(row.nickname || '이름없음').trim() || '이름없음';
+    var score = formatScore(row.star_score_total);
+
+    var avatarEl = slotEl.querySelector('.podium-avatar');
+    var nameEl = slotEl.querySelector('.podium-name');
+    var scoreEl = slotEl.querySelector('.podium-score');
+    var rankEl = slotEl.querySelector('.podium-rank');
+
+    if (avatarEl) {
+      avatarEl.style.borderRadius = '';
+      avatarEl.innerHTML = renderUserAvatarInner(row.user_id, nickname, '😎');
+    }
+    if (nameEl) nameEl.textContent = nickname;
+    if (scoreEl) scoreEl.textContent = '⭐ ' + score;
+    if (rankEl) rankEl.textContent = String(rank);
+
+    slotEl.onclick = function () {
+      /* 프로필 페이지 연동 전 — 클릭 무반응 */
+    };
+  }
+
+  function buildPicklerListItemHtml(row, rank) {
+    var nickname = String(row.nickname || '이름없음').trim() || '이름없음';
+    var score = formatScore(row.star_score_total);
+    var followers = Number(row.follower_count) || 0;
+    var picInner = renderUserAvatarInner(row.user_id, nickname, '😎');
+    var levelBadge = buildLevelBadgeHtml(row.points);
+
+    return (
+      '<div class="rank-item" data-user-id="' +
+      escapeHtml(row.user_id) +
+      '">' +
+      '<div class="rank-num">' +
+      rank +
+      '</div>' +
+      '<div class="rank-pic">' +
+      picInner +
+      '</div>' +
+      '<div class="rank-info">' +
+      '<div class="rank-title">' +
+      escapeHtml(nickname) +
+      ' ' +
+      levelBadge +
+      '</div>' +
+      '<div class="rank-sub"><span>나의 픽: ' +
+      escapeHtml(followers.toLocaleString('ko-KR')) +
+      '명</span></div>' +
+      '</div>' +
+      '<div class="rank-score">' +
+      escapeHtml(score) +
+      ' <span style="font-size:0.8rem;">⭐</span></div>' +
+      '</div>'
+    );
+  }
+
+  function bindGrillListClicks(listEl) {
+    if (!listEl) return;
+    listEl.querySelectorAll('.rank-item.grill[data-post-id]').forEach(function (item) {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function () {
+        goDetail(item.getAttribute('data-post-id'));
+      });
+    });
+  }
+
+  function renderGrillArea() {
+    var area = document.getElementById('grillRankingArea');
+    if (!area) return;
+
+    var podium = area.querySelector('.podium-container');
+    var list = area.querySelector('.ranking-list');
+    var slot1 = area.querySelector('.podium-1');
+    var slot2 = area.querySelector('.podium-2');
+    var slot3 = area.querySelector('.podium-3');
+
+    if (!grillRows.length) {
+      if (podium) podium.style.display = 'none';
+      setListMessage(list, EMPTY_MSG);
+      return;
+    }
+
+    if (podium) podium.style.display = '';
+
+    bindPodiumGrill(slot2, grillRows[1], 2);
+    bindPodiumGrill(slot1, grillRows[0], 1);
+    bindPodiumGrill(slot3, grillRows[2], 3);
+
+    var listRows = grillRows.slice(3);
+    if (!listRows.length) {
+      list.innerHTML = '';
+      return;
+    }
+
+    list.innerHTML = listRows
+      .map(function (row, idx) {
+        return buildGrillListItemHtml(row, idx + 4);
+      })
+      .join('');
+    bindGrillListClicks(list);
+  }
+
+  function renderPicklerArea() {
+    var area = document.getElementById('picklerRankingArea');
+    if (!area) return;
+
+    var podium = area.querySelector('.podium-container');
+    var list = area.querySelector('.ranking-list');
+    var slot1 = area.querySelector('.podium-1');
+    var slot2 = area.querySelector('.podium-2');
+    var slot3 = area.querySelector('.podium-3');
+
+    if (!picklerRows.length) {
+      if (podium) podium.style.display = 'none';
+      setListMessage(list, EMPTY_MSG);
+      return;
+    }
+
+    if (podium) podium.style.display = '';
+
+    bindPodiumPickler(slot2, picklerRows[1], 2);
+    bindPodiumPickler(slot1, picklerRows[0], 1);
+    bindPodiumPickler(slot3, picklerRows[2], 3);
+
+    var listRows = picklerRows.slice(3);
+    if (!listRows.length) {
+      list.innerHTML = '';
+      return;
+    }
+
+    list.innerHTML = listRows
+      .map(function (row, idx) {
+        return buildPicklerListItemHtml(row, idx + 4);
+      })
+      .join('');
+  }
+
+  function setLoadingState() {
+    ['grillRankingArea', 'picklerRankingArea'].forEach(function (id) {
+      var area = document.getElementById(id);
+      if (!area) return;
+      var podium = area.querySelector('.podium-container');
+      var list = area.querySelector('.ranking-list');
+      if (podium) podium.style.display = 'none';
+      setListLoading(list);
+    });
+  }
+
+  function showLoadError(message) {
+    ['grillRankingArea', 'picklerRankingArea'].forEach(function (id) {
+      var area = document.getElementById(id);
+      if (!area) return;
+      var podium = area.querySelector('.podium-container');
+      var list = area.querySelector('.ranking-list');
+      if (podium) podium.style.display = 'none';
+      setListMessage(list, message || '랭킹을 불러오지 못했습니다.');
+    });
   }
 
   async function loadAll() {
-    var container = document.getElementById('rankingFeedList');
-    showLoading(container);
+    setLoadingState();
 
     try {
       if (window.PickleCategories && window.PickleCategories.load) {
         await window.PickleCategories.load();
       }
 
-      var sb = getClient();
-      var results = await Promise.all([
-        fetchGrillRanking(sb),
-        fetchPicklerRanking(sb),
-      ]);
+      var results = await Promise.all([fetchGrillRanking(), fetchPicklerRanking()]);
       grillRows = results[0];
       picklerRows = results[1];
-      renderList(currentTab);
+
+      renderGrillArea();
+      renderPicklerArea();
     } catch (err) {
       console.error('[P!CKLE Ranking]', err);
-      if (container) {
-        container.innerHTML =
-          '<div class="feed-empty feed-error">랭킹을 불러오지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;word-break:break-all;">' +
-          escapeHtml(err.message || String(err)) +
-          '</p></div>';
-      }
+      showLoadError(
+        '랭킹을 불러오지 못했습니다. (' + (err.message || String(err)) + ')'
+      );
     }
   }
 
-  function switchTab(tabName) {
-    currentTab = tabName;
-    var tabGrill = document.getElementById('tabGrill');
-    var tabPickler = document.getElementById('tabPickler');
-    if (tabGrill) tabGrill.classList.toggle('active', tabName === 'grill');
-    if (tabPickler) tabPickler.classList.toggle('active', tabName === 'pickler');
-    renderList(tabName);
-  }
+  function hookSubTabFade() {
+    var orig = window.switchSubTab;
+    if (typeof orig !== 'function') return;
 
-  function bindTabs() {
-    var tabs = document.getElementById('rankingTabs');
-    if (!tabs) return;
-    tabs.querySelectorAll('.category-nav-tab[data-tab]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        switchTab(btn.getAttribute('data-tab') || 'grill');
-      });
-    });
+    window.switchSubTab = function (element) {
+      orig(element);
+      renderGrillArea();
+      renderPicklerArea();
+    };
   }
 
   function init() {
-    bindTabs();
+    hookSubTabFade();
     loadAll();
   }
 
@@ -310,6 +497,5 @@
 
   window.PickleRanking = {
     reload: loadAll,
-    switchTab: switchTab,
   };
 })();
