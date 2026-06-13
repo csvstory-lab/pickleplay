@@ -5,6 +5,7 @@
   'use strict';
 
   var myFollowingSet = new Set();
+  var currentFandomSheetType = null;
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -56,6 +57,19 @@
       .eq('follower_id', userId);
     if (result.error) throw result.error;
     return result.count || 0;
+  }
+
+  function bumpFollowStats(deltaFollowers, deltaFollowing) {
+    var followerEl = document.getElementById('statFollowerCount');
+    var followingEl = document.getElementById('statFollowingCount');
+    if (followerEl && deltaFollowers) {
+      var nextF = Math.max(0, (parseInt(followerEl.textContent, 10) || 0) + deltaFollowers);
+      followerEl.textContent = String(nextF);
+    }
+    if (followingEl && deltaFollowing) {
+      var nextG = Math.max(0, (parseInt(followingEl.textContent, 10) || 0) + deltaFollowing);
+      followingEl.textContent = String(nextG);
+    }
   }
 
   async function refreshMyFollowingSet(userId) {
@@ -111,7 +125,7 @@
 
     if (isFollowingUser) {
       btn.classList.add('following', 'active');
-      btn.classList.remove('follow');
+      btn.classList.remove('follow', 'match-pick');
       btn.textContent = unpickLabel;
       btn.setAttribute('aria-pressed', 'true');
     } else {
@@ -169,6 +183,50 @@
     return map;
   }
 
+  async function fetchAvatarHtmlMap(userIds) {
+    var map = new Map();
+    if (!userIds.length) return map;
+
+    var sb = getSupabaseClient();
+    if (!sb) return map;
+
+    var postsRes = await sb
+      .from('posts')
+      .select('author_id, author_avatar_html, created_at')
+      .in('author_id', userIds)
+      .not('author_avatar_html', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (!postsRes.error && postsRes.data) {
+      postsRes.data.forEach(function (row) {
+        if (!row || !row.author_id) return;
+        var key = String(row.author_id);
+        if (map.has(key)) return;
+        var html = row.author_avatar_html ? String(row.author_avatar_html).trim() : '';
+        if (html) map.set(key, html);
+      });
+    }
+
+    var commentsRes = await sb
+      .from('comments')
+      .select('user_id, author_avatar_html, created_at')
+      .in('user_id', userIds)
+      .not('author_avatar_html', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (!commentsRes.error && commentsRes.data) {
+      commentsRes.data.forEach(function (row) {
+        if (!row || !row.user_id) return;
+        var key = String(row.user_id);
+        if (map.has(key)) return;
+        var html = row.author_avatar_html ? String(row.author_avatar_html).trim() : '';
+        if (html) map.set(key, html);
+      });
+    }
+
+    return map;
+  }
+
   function buildLevelBadge(userRow) {
     var pts = 0;
     if (userRow) {
@@ -179,39 +237,62 @@
       }
     }
     if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
-      return window.PickleProfile.buildLevelBadgeFromPoints(pts);
+      var html = window.PickleProfile.buildLevelBadgeFromPoints(pts);
+      return html.replace('grade-badge', 'fandom-lvl');
     }
     return '<span class="fandom-lvl">Lv.1</span>';
   }
 
-  function renderFandomItem(userRow, targetUserId, listType, myId) {
+  function renderAvatarHtml(userRow, targetUserId, avatarMap) {
+    var stored = avatarMap.get(String(targetUserId));
+    if (stored) {
+      if (stored.indexOf('<') !== -1) {
+        return stored;
+      }
+      return escapeHtml(stored);
+    }
+    var nickname = userRow && userRow.nickname ? userRow.nickname : '픽';
+    return escapeHtml(String(nickname).trim().charAt(0) || '🥒');
+  }
+
+  function renderFandomItem(userRow, targetUserId, listType, myId, avatarMap) {
     var nickname = userRow && userRow.nickname ? userRow.nickname : '픽클러';
-    var initial = escapeHtml(String(nickname).trim().charAt(0) || '🥒');
     var isMine = myId && String(targetUserId) === String(myId);
     var iFollow = myFollowingSet.has(String(targetUserId));
+    var avatarInner = renderAvatarHtml(userRow, targetUserId, avatarMap);
 
     var btnHtml = '';
     if (!isMine) {
-      var pickLabel = listType === 'follower' && !iFollow ? '맞픽 하기' : '픽 하기';
-      var btnClass = iFollow ? 'btn-follow following' : 'btn-follow follow';
-      var btnLabel = iFollow ? '픽 취소' : pickLabel;
-      btnHtml =
-        '<button type="button" class="' +
-        btnClass +
-        '" data-user-id="' +
-        escapeHtml(targetUserId) +
-        '" onclick="PickleFollows.toggleFollowFromButton(this)">' +
-        escapeHtml(btnLabel) +
-        '</button>';
+      if (listType === 'following') {
+        btnHtml =
+          '<button type="button" class="btn-follow following" data-user-id="' +
+          escapeHtml(targetUserId) +
+          '" data-list-type="following" data-action="unfollow">픽 취소</button>';
+      } else if (listType === 'follower') {
+        if (iFollow) {
+          btnHtml =
+            '<button type="button" class="btn-follow following" data-user-id="' +
+            escapeHtml(targetUserId) +
+            '" data-list-type="follower" data-action="unfollow">픽 취소</button>';
+        } else {
+          btnHtml =
+            '<button type="button" class="btn-follow match-pick follow" data-user-id="' +
+            escapeHtml(targetUserId) +
+            '" data-list-type="follower" data-action="match-pick">+맞픽</button>';
+        }
+      }
     }
 
     return (
-      '<div class="fandom-item">' +
+      '<div class="fandom-item" data-user-id="' +
+      escapeHtml(targetUserId) +
+      '">' +
       '<div class="fandom-profile">' +
       '<div class="fandom-avatar">' +
-      initial +
+      avatarInner +
       '</div>' +
-      '<div><div class="fandom-name">' +
+      '<div class="fandom-name-wrap">' +
+      '<div class="fandom-name">' +
       escapeHtml(nickname) +
       '</div>' +
       buildLevelBadge(userRow) +
@@ -219,6 +300,12 @@
       btnHtml +
       '</div>'
     );
+  }
+
+  function showFandomEmpty(container) {
+    if (!container) return;
+    container.innerHTML =
+      '<div class="fandom-empty">아직 목록이 없습니다.<br>먼저 픽클러를 찾아보세요!</div>';
   }
 
   async function renderFandomList(type, userId) {
@@ -229,6 +316,8 @@
     await refreshMyFollowingSet(myId);
 
     var rows = [];
+    var userIds = [];
+
     if (type === 'follower') {
       var followerRes = await sb
         .from('user_follows')
@@ -237,43 +326,172 @@
         .order('created_at', { ascending: false });
       if (followerRes.error) throw followerRes.error;
       rows = followerRes.data || [];
-      var followerIds = rows.map(function (r) {
+      userIds = rows.map(function (r) {
         return r.follower_id;
       });
-      var followerMap = await fetchUserMap(followerIds);
-      return rows
-        .map(function (r) {
-          return renderFandomItem(
-            followerMap.get(String(r.follower_id)),
-            r.follower_id,
-            'follower',
-            myId
-          );
-        })
-        .join('');
+    } else {
+      var followingRes = await sb
+        .from('user_follows')
+        .select('following_id, created_at')
+        .eq('follower_id', userId)
+        .order('created_at', { ascending: false });
+      if (followingRes.error) throw followingRes.error;
+      rows = followingRes.data || [];
+      userIds = rows.map(function (r) {
+        return r.following_id;
+      });
     }
 
-    var followingRes = await sb
-      .from('user_follows')
-      .select('following_id, created_at')
-      .eq('follower_id', userId)
-      .order('created_at', { ascending: false });
-    if (followingRes.error) throw followingRes.error;
-    rows = followingRes.data || [];
-    var followingIds = rows.map(function (r) {
-      return r.following_id;
-    });
-    var followingMap = await fetchUserMap(followingIds);
+    var userMap = await fetchUserMap(userIds);
+    var avatarMap = await fetchAvatarHtmlMap(userIds);
+
     return rows
       .map(function (r) {
+        var targetId = type === 'follower' ? r.follower_id : r.following_id;
         return renderFandomItem(
-          followingMap.get(String(r.following_id)),
-          r.following_id,
-          'following',
-          myId
+          userMap.get(String(targetId)),
+          targetId,
+          type,
+          myId,
+          avatarMap
         );
       })
       .join('');
+  }
+
+  function animateRemoveFandomItem(itemEl) {
+    if (!itemEl) return Promise.resolve();
+    return new Promise(function (resolve) {
+      itemEl.classList.add('is-removing');
+      window.setTimeout(function () {
+        itemEl.remove();
+        resolve();
+      }, 320);
+    });
+  }
+
+  function bindFandomListActions(container) {
+    if (!container || container.dataset.followBound === '1') return;
+    container.dataset.followBound = '1';
+
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest('.btn-follow');
+      if (!btn || btn.disabled) return;
+      handleFandomListAction(btn);
+    });
+  }
+
+  async function handleFandomListAction(btn) {
+    var targetUserId = btn.getAttribute('data-user-id');
+    var listType = btn.getAttribute('data-list-type') || currentFandomSheetType;
+    var action = btn.getAttribute('data-action');
+    var itemEl = btn.closest('.fandom-item');
+    if (!targetUserId) return;
+
+    btn.disabled = true;
+
+    try {
+      if (action === 'unfollow') {
+        var removed = await unfollowUser(targetUserId);
+        if (!removed) return;
+
+        bumpFollowStats(0, -1);
+
+        if (listType === 'following') {
+          await animateRemoveFandomItem(itemEl);
+          var container = document.getElementById('fandomListContent');
+          if (container && !container.querySelector('.fandom-item')) {
+            showFandomEmpty(container);
+          }
+        } else if (listType === 'follower') {
+          btn.classList.remove('following');
+          btn.classList.add('match-pick', 'follow');
+          btn.setAttribute('data-action', 'match-pick');
+          btn.textContent = '+맞픽';
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      if (action === 'match-pick') {
+        var followed = await followUser(targetUserId);
+        if (!followed) return;
+
+        bumpFollowStats(0, 1);
+        btn.classList.remove('match-pick', 'follow');
+        btn.classList.add('following');
+        btn.setAttribute('data-action', 'unfollow');
+        btn.textContent = '픽 취소';
+        btn.disabled = false;
+        return;
+      }
+    } catch (err) {
+      console.error('[P!CKLE Follows] list action failed', err);
+      alert(err.message || '픽 처리에 실패했습니다.');
+      btn.disabled = false;
+    }
+  }
+
+  async function followUser(targetUserId) {
+    var sb = getSupabaseClient();
+    if (!sb) throw new Error('Supabase 연결 실패');
+
+    var myId = await getCurrentUserId();
+    if (!myId) {
+      alert('로그인이 필요합니다.');
+      return false;
+    }
+    if (!targetUserId || myId === targetUserId) return false;
+
+    if (await isFollowing(myId, targetUserId)) {
+      myFollowingSet.add(String(targetUserId));
+      return true;
+    }
+
+    var ins = await sb.from('user_follows').insert({
+      follower_id: myId,
+      following_id: targetUserId,
+    });
+    if (ins.error) throw ins.error;
+    myFollowingSet.add(String(targetUserId));
+    return true;
+  }
+
+  async function unfollowUser(targetUserId) {
+    var sb = getSupabaseClient();
+    if (!sb) throw new Error('Supabase 연결 실패');
+
+    var myId = await getCurrentUserId();
+    if (!myId) {
+      alert('로그인이 필요합니다.');
+      return false;
+    }
+    if (!targetUserId || myId === targetUserId) return false;
+
+    var del = await sb
+      .from('user_follows')
+      .delete()
+      .eq('follower_id', myId)
+      .eq('following_id', targetUserId);
+    if (del.error) throw del.error;
+    myFollowingSet.delete(String(targetUserId));
+    return true;
+  }
+
+  async function toggleFollow(targetUserId) {
+    var myId = await getCurrentUserId();
+    if (!myId) {
+      alert('로그인이 필요합니다.');
+      return null;
+    }
+    if (!targetUserId || myId === targetUserId) return null;
+
+    if (await isFollowing(myId, targetUserId)) {
+      await unfollowUser(targetUserId);
+      return false;
+    }
+    await followUser(targetUserId);
+    return true;
   }
 
   async function openFandomSheet(type) {
@@ -293,64 +511,34 @@
       return;
     }
 
+    currentFandomSheetType = type;
+
     if (typeof closeAllModals === 'function') closeAllModals();
     if (overlay) overlay.classList.add('open');
     sheet.classList.add('open');
+    sheet.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
     if (titleEl) {
       titleEl.textContent =
-        type === 'follower'
-          ? '나를 픽한 픽클러 (팔로워)'
-          : '내가 픽한 픽클러 (팔로잉)';
+        type === 'follower' ? '나를 픽한 픽클러' : '내가 픽한 픽클러';
     }
 
-    contentEl.innerHTML =
-      '<div class="empty-state" style="padding:30px 10px;">불러오는 중…</div>';
+    contentEl.innerHTML = '<div class="fandom-loading">불러오는 중…</div>';
+    bindFandomListActions(contentEl);
 
     try {
       var html = await renderFandomList(type, userId);
-      contentEl.innerHTML = html
-        ? html
-        : '<div class="empty-state" style="padding:30px 10px;">아직 목록이 없습니다.</div>';
+      if (html) {
+        contentEl.innerHTML = html;
+      } else {
+        showFandomEmpty(contentEl);
+      }
     } catch (err) {
       console.error('[P!CKLE Follows] fandom list failed', err);
       contentEl.innerHTML =
-        '<div class="empty-state" style="padding:30px 10px;">목록을 불러오지 못했습니다.</div>';
+        '<div class="fandom-empty">목록을 불러오지 못했습니다.</div>';
     }
-  }
-
-  async function toggleFollow(targetUserId) {
-    var sb = getSupabaseClient();
-    if (!sb) throw new Error('Supabase 연결 실패');
-
-    var myId = await getCurrentUserId();
-    if (!myId) {
-      alert('로그인이 필요합니다.');
-      return null;
-    }
-    if (!targetUserId || myId === targetUserId) return null;
-
-    var already = await isFollowing(myId, targetUserId);
-
-    if (already) {
-      var del = await sb
-        .from('user_follows')
-        .delete()
-        .eq('follower_id', myId)
-        .eq('following_id', targetUserId);
-      if (del.error) throw del.error;
-      myFollowingSet.delete(String(targetUserId));
-      return false;
-    }
-
-    var ins = await sb.from('user_follows').insert({
-      follower_id: myId,
-      following_id: targetUserId,
-    });
-    if (ins.error) throw ins.error;
-    myFollowingSet.add(String(targetUserId));
-    return true;
   }
 
   async function toggleFollowFromButton(btn) {
@@ -409,9 +597,11 @@
       if (!authorId) return;
       btn.disabled = true;
       try {
+        var wasFollowing = await isFollowing(await getCurrentUserId(), authorId);
         var nowFollowing = await toggleFollow(authorId);
         if (nowFollowing === null) return;
         setFollowButtonState(btn, nowFollowing);
+        bumpFollowStats(0, nowFollowing ? 1 : wasFollowing ? -1 : 0);
       } catch (err) {
         console.error('[P!CKLE Follows] detail toggle failed', err);
         alert(err.message || '픽 처리에 실패했습니다.');
@@ -426,11 +616,14 @@
     openFandomSheet: openFandomSheet,
     toggleFollow: toggleFollow,
     toggleFollowFromButton: toggleFollowFromButton,
+    followUser: followUser,
+    unfollowUser: unfollowUser,
     isFollowing: isFollowing,
     syncDetailFollowButton: syncDetailFollowButton,
     bindDetailFollowButton: bindDetailFollowButton,
     setFollowButtonState: setFollowButtonState,
     refreshMyFollowingSet: refreshMyFollowingSet,
+    bumpFollowStats: bumpFollowStats,
   };
 
   window.openFandomSheet = openFandomSheet;
@@ -438,5 +631,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     bindDetailFollowButton();
+    var listEl = document.getElementById('fandomListContent');
+    if (listEl) bindFandomListActions(listEl);
   });
 })();
