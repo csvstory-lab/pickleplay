@@ -1,6 +1,6 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking1
+ * @build 20260608_ranking2
  * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
  */
 (function () {
@@ -12,6 +12,8 @@
   var picklerRows = [];
   var postMetaMap = new Map();
   var userAvatarMap = new Map();
+  var myUserId = null;
+  var myFollowingSet = new Set();
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -116,6 +118,162 @@
   function goDetail(postId) {
     if (!postId) return;
     window.location.href = 'detail.html?id=' + encodeURIComponent(String(postId));
+  }
+
+  function ensurePickBtnStyles() {
+    if (document.getElementById('pickle-ranking-pick-btn-style')) return;
+    var style = document.createElement('style');
+    style.id = 'pickle-ranking-pick-btn-style';
+    style.textContent =
+      '#picklerRankingArea .rank-item { flex-wrap: nowrap; }' +
+      '#picklerRankingArea .rank-pick-btn {' +
+      'flex-shrink: 0; margin-left: 4px; padding: 6px 10px; border-radius: 16px;' +
+      'font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: 0.2s;' +
+      'font-family: inherit; white-space: nowrap; border: 1px solid var(--neon-blue);' +
+      'background: transparent; color: var(--neon-blue);' +
+      '}' +
+      '#picklerRankingArea .rank-pick-btn.follow:active:not(:disabled) { transform: scale(0.94); }' +
+      '#picklerRankingArea .rank-pick-btn.following,' +
+      '#picklerRankingArea .rank-pick-btn.active {' +
+      'background: var(--neon-blue); color: #000; border-color: var(--neon-blue);' +
+      '}' +
+      '#picklerRankingArea .rank-pick-btn:disabled { opacity: 0.5; cursor: not-allowed; }';
+    document.head.appendChild(style);
+  }
+
+  async function getCurrentUserId() {
+    if (myUserId) return myUserId;
+    var sb = getClient();
+    try {
+      var result = await sb.auth.getUser();
+      if (result.error || !result.data.user) return null;
+      myUserId = result.data.user.id;
+      return myUserId;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function refreshMyFollowingSet() {
+    myFollowingSet = new Set();
+    var userId = await getCurrentUserId();
+    if (!userId) return myFollowingSet;
+
+    var sb = getClient();
+    var result = await sb
+      .from('user_follows')
+      .select('following_id')
+      .eq('follower_id', userId);
+
+    if (!result.error) {
+      (result.data || []).forEach(function (row) {
+        if (row && row.following_id) {
+          myFollowingSet.add(String(row.following_id));
+        }
+      });
+    }
+    return myFollowingSet;
+  }
+
+  function isFollowingUser(targetUserId) {
+    return myFollowingSet.has(String(targetUserId));
+  }
+
+  function shouldShowPickButton(targetUserId) {
+    if (!targetUserId) return false;
+    if (myUserId && String(targetUserId) === String(myUserId)) return false;
+    return true;
+  }
+
+  function updatePickBtnState(btn, isFollowingUser) {
+    if (!btn) return;
+    if (isFollowingUser) {
+      btn.classList.add('following', 'active');
+      btn.classList.remove('follow');
+      btn.textContent = '픽 취소';
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      btn.classList.remove('following', 'active');
+      btn.classList.add('follow');
+      btn.textContent = '+ 나의 픽';
+      btn.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  function buildPickBtnHtml(targetUserId) {
+    if (!shouldShowPickButton(targetUserId)) return '';
+    var following = isFollowingUser(targetUserId);
+    var classes =
+      'rank-pick-btn btn-mypick ' + (following ? 'following active' : 'follow');
+    var label = following ? '픽 취소' : '+ 나의 픽';
+    return (
+      '<button type="button" class="' +
+      classes +
+      '" data-user-id="' +
+      escapeHtml(targetUserId) +
+      '" aria-pressed="' +
+      (following ? 'true' : 'false') +
+      '">' +
+      label +
+      '</button>'
+    );
+  }
+
+  async function handlePickBtnClick(btn) {
+    var targetUserId = btn.getAttribute('data-user-id');
+    if (!targetUserId || btn.disabled) return;
+
+    btn.disabled = true;
+
+    try {
+      var userId = await getCurrentUserId();
+      if (!userId) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      if (String(targetUserId) === String(userId)) return;
+
+      var sb = getClient();
+      var alreadyFollowing = isFollowingUser(targetUserId);
+
+      if (alreadyFollowing) {
+        var del = await sb
+          .from('user_follows')
+          .delete()
+          .eq('follower_id', userId)
+          .eq('following_id', targetUserId);
+        if (del.error) throw del.error;
+        myFollowingSet.delete(String(targetUserId));
+        updatePickBtnState(btn, false);
+      } else {
+        var ins = await sb.from('user_follows').insert({
+          follower_id: userId,
+          following_id: targetUserId,
+        });
+        if (ins.error) throw ins.error;
+        myFollowingSet.add(String(targetUserId));
+        updatePickBtnState(btn, true);
+      }
+    } catch (err) {
+      console.error('[P!CKLE Ranking] follow toggle failed', err);
+      alert(err.message || '픽 처리에 실패했습니다.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function bindPicklerFollowDelegation() {
+    var area = document.getElementById('picklerRankingArea');
+    if (!area || area.dataset.pickBound === '1') return;
+    area.dataset.pickBound = '1';
+
+    area.addEventListener('click', function (e) {
+      var btn = e.target.closest('.rank-pick-btn');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      handlePickBtnClick(btn);
+    });
   }
 
   async function fetchPostMetaMap(postIds) {
@@ -344,6 +502,7 @@
       '<div class="rank-score">' +
       escapeHtml(score) +
       ' <span style="font-size:0.8rem;">⭐</span></div>' +
+      buildPickBtnHtml(row.user_id) +
       '</div>'
     );
   }
@@ -459,6 +618,9 @@
         await window.PickleCategories.load();
       }
 
+      myUserId = null;
+      await refreshMyFollowingSet();
+
       var results = await Promise.all([fetchGrillRanking(), fetchPicklerRanking()]);
       grillRows = results[0];
       picklerRows = results[1];
@@ -485,6 +647,8 @@
   }
 
   function init() {
+    ensurePickBtnStyles();
+    bindPicklerFollowDelegation();
     hookSubTabFade();
     loadAll();
   }
