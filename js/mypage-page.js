@@ -228,6 +228,10 @@
 
     fillProfileEditForm(user);
     renderSnsLinkStatus(user);
+
+    if (window.PickleFollows && window.PickleFollows.loadFollowStats) {
+      await window.PickleFollows.loadFollowStats(user.id);
+    }
   }
 
   async function requireAuth() {

@@ -550,7 +550,7 @@
                 <div class="name"><span id="detailAuthorName">픽클러</span> <span class="grade-badge" id="detailAuthorLevelBadge" hidden></span></div>
             </div>
         </div>
-        <button class="btn-mypick" onclick="this.classList.toggle('active'); this.innerText = this.classList.contains('active') ? '나의 픽 ✔' : '+ 나의 픽';">+ 나의 픽</button>
+        <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ 나의 픽</button>
     </div>
 
     <div class="issue-header-box">
@@ -658,6 +658,7 @@
 <script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-ranking-events.js"></script>
+<script src="../js/pickle-follows.js"></script>
 <script src="../js/pickle-detail.js"></script>
 <script>
     // 💡 JS 충돌 방지: 카카오 SDK 초기화 예외 처리

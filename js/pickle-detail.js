@@ -709,6 +709,12 @@
         .trim() || '불판';
       commentInput.placeholder = shortCat + ' 훈수를 자유롭게 남겨보세요.';
     }
+
+    if (window.PickleFollows && post && post.author_id) {
+      window.PickleFollows.syncDetailFollowButton(post.author_id);
+    } else if (window.PickleFollows) {
+      window.PickleFollows.syncDetailFollowButton(null);
+    }
   }
 
   function catLabelFallback(category) {

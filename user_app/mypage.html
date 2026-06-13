@@ -1172,19 +1172,16 @@
     function openPointSheet() { closeAllModals(); overlay.classList.add('open'); document.getElementById('pointSheet').classList.add('open'); document.body.style.overflow = 'hidden'; }
     function openGuideModal() { closeAllModals(); overlay.classList.add('open'); document.getElementById('guideModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
     function openFandomSheet(type) {
-        closeAllModals(); overlay.classList.add('open'); document.getElementById('fandomSheet').classList.add('open'); document.body.style.overflow = 'hidden';
-        const titleEl = document.getElementById('fandomTitle');
-        const contentEl = document.getElementById('fandomListContent');
-        if (type === 'follower') {
-            titleEl.innerText = '나를 픽한 픽클러 (팔로워)';
-        } else {
-            titleEl.innerText = '내가 픽한 픽클러 (팔로잉)';
+        if (window.PickleFollows && window.PickleFollows.openFandomSheet) {
+            window.PickleFollows.openFandomSheet(type);
+            return;
         }
-        contentEl.innerHTML = '<div class="empty-state" style="padding:30px 10px;">아직 목록이 없습니다.</div>';
+        closeAllModals(); overlay.classList.add('open'); document.getElementById('fandomSheet').classList.add('open'); document.body.style.overflow = 'hidden';
     }
     function toggleFollow(btn) {
-        if (btn.classList.contains('following')) { btn.classList.remove('following'); btn.classList.add('follow'); btn.innerText = '픽 하기'; } 
-        else { btn.classList.remove('follow'); btn.classList.add('following'); btn.innerText = '픽 취소'; }
+        if (window.PickleFollows && window.PickleFollows.toggleFollowFromButton) {
+            window.PickleFollows.toggleFollowFromButton(btn);
+        }
     }
     function copyPin(pinCode) { if(navigator.vibrate) navigator.vibrate([50]); alert(`쿠폰 번호 [ ${pinCode} ]\n클립보드에 복사되었습니다!`); }
     function showPointToast() {
@@ -1284,6 +1281,7 @@
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
+<script src="../js/pickle-follows.js"></script>
 <script src="../js/mypage-page.js"></script>
 
 </body>
