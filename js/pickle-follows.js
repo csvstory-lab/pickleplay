@@ -185,38 +185,32 @@
     if (!sb || !userId) return { rows: [], error: null };
 
     var embedKey = listType === 'follower' ? 'follower' : 'following';
+    var idCol = listType === 'follower' ? 'follower_id' : 'following_id';
+    var filterCol = listType === 'follower' ? 'following_id' : 'follower_id';
+    var fkHint = idCol;
     var fkName =
       listType === 'follower'
         ? 'user_follows_follower_id_fkey'
         : 'user_follows_following_id_fkey';
-    var idCol = listType === 'follower' ? 'follower_id' : 'following_id';
-    var filterCol = listType === 'follower' ? 'following_id' : 'follower_id';
+
+    function buildSelect(fields, hint) {
+      return (
+        idCol +
+        ', created_at, ' +
+        embedKey +
+        ':users!' +
+        hint +
+        '(' +
+        fields +
+        ')'
+      );
+    }
 
     var selectVariants = [
-      idCol +
-        ', created_at, ' +
-        embedKey +
-        ':users!' +
-        fkName +
-        '(' +
-        FANDOM_USER_FIELDS_FULL +
-        ')',
-      idCol +
-        ', created_at, ' +
-        embedKey +
-        ':users!' +
-        fkName +
-        '(' +
-        FANDOM_USER_FIELDS_BASE +
-        ', star_score)',
-      idCol +
-        ', created_at, ' +
-        embedKey +
-        ':users!' +
-        fkName +
-        '(' +
-        FANDOM_USER_FIELDS_BASE +
-        ')',
+      buildSelect(FANDOM_USER_FIELDS_FULL, fkHint),
+      buildSelect(FANDOM_USER_FIELDS_FULL, fkName),
+      buildSelect(FANDOM_USER_FIELDS_BASE + ', star_score', fkHint),
+      buildSelect(FANDOM_USER_FIELDS_BASE, fkHint),
     ];
 
     var lastError = null;
