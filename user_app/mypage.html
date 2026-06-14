@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <!-- Google tag (gtag.js) -->
@@ -310,14 +310,6 @@
         color: #a1a1aa;
         border-color: #52525b;
     }
-
-    /* === [고정] 하단 네비게이션 === */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 480px; margin: 0 auto; right: 0; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0; border-top: 1px solid var(--border-color); z-index: 900; }
-    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #52525b; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s;}
-    .nav-icon { font-size: 1.4rem; }
-    .nav-btn.fire-btn .nav-icon { background-color: var(--neon-green); width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: #000; font-size: 1.6rem; transform: translateY(-10px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.3); }
-    .nav-btn.active { color: var(--neon-green); }
-    .nav-btn.active .nav-icon { text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
 
     /* ============================================== */
     /* ⚙️ 통합 슬라이드 패널 구조 (Depth 1 & Depth 2) */
@@ -703,6 +695,7 @@
     .btn-submit-legal:active { transform: scale(0.98); }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
+<link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
 <body>
 
@@ -1227,7 +1220,7 @@
 <nav class="bottom-nav">
     <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
     <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판</span></div>
+    <div class="nav-btn fire-btn" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
     <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
     <div class="nav-btn active" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
