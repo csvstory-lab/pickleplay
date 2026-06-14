@@ -236,18 +236,37 @@ iframe {
   white-space: nowrap;
 }
 
+/* === 남은 시간 텍스트 (피드·상세·검색·마이페이지 공통) === */
+.pickle-meta-timer,
+.feed-meta-timer,
+.poll-time,
+#detailTimer,
+#detailMetaTags .pickle-meta-timer,
+.record-card .status-badge {
+  font-family: 'Pretendard', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0;
+}
+
+.feed-meta-timer {
+  color: var(--text-sub, #a1a1aa);
+  white-space: nowrap;
+}
+
+.feed-meta-timer.is-ended {
+  color: #71717a;
+}
+
 .pickle-meta-timer {
   display: inline-flex;
   align-items: center;
   font-size: 0.76rem;
-  font-weight: 800;
   color: var(--neon-pink, #ff007f);
   background: rgba(255, 0, 127, 0.08);
   border: 1px solid rgba(255, 0, 127, 0.35);
   padding: 4px 10px;
   border-radius: 8px;
   white-space: nowrap;
-  font-family: 'Black Han Sans', sans-serif;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
 }
 
