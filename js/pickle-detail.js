@@ -160,6 +160,7 @@
         description: row.description || null,
         media_url_1: row.media_url_1 || row.option_a_image_url,
         media_url_2: row.media_url_2 || row.option_b_image_url,
+        thumbnail_url: row.thumbnail_url || null,
         media_mode: mapMediaTypeToMode(row.media_type),
         media_type: row.media_type,
         layout_style: row.layout_style,

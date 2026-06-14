@@ -684,12 +684,58 @@
     }
 
     function getSharePayload() {
+        var DEFAULT_SHARE_IMAGE = 'https://pickleplay.kr/images/default_share.jpg';
+
+        function ensureAbsoluteShareUrl(value, fallback) {
+            var raw = value ? String(value).trim() : '';
+            if (!raw) return fallback;
+            if (/^https?:\/\//i.test(raw)) return raw;
+            if (raw.indexOf('//') === 0) return 'https:' + raw;
+            if (raw.charAt(0) === '/') return 'https://pickleplay.kr' + raw;
+            return 'https://pickleplay.kr/' + raw;
+        }
+
+        function isShareableImageUrl(url) {
+            if (!url) return false;
+            var trimmed = String(url).trim();
+            if (!trimmed) return false;
+            if (window.PickleMedia) {
+                if (window.PickleMedia.isValidVideoUrl && window.PickleMedia.isValidVideoUrl(trimmed)) {
+                    return false;
+                }
+                if (window.PickleMedia.looksLikeImageUrl && window.PickleMedia.looksLikeImageUrl(trimmed)) {
+                    return true;
+                }
+            }
+            return /\.(jpe?g|png|gif|webp)(\?|$)/i.test(trimmed);
+        }
+
+        function resolvePostShareImageUrl(post) {
+            if (!post) return DEFAULT_SHARE_IMAGE;
+
+            var candidates = [
+                post.thumbnail_url,
+                post.media_url_1,
+                post.option_a_image_url,
+            ];
+
+            for (var i = 0; i < candidates.length; i++) {
+                var candidate = candidates[i] ? String(candidates[i]).trim() : '';
+                if (candidate && isShareableImageUrl(candidate)) {
+                    return ensureAbsoluteShareUrl(candidate, DEFAULT_SHARE_IMAGE);
+                }
+            }
+
+            return DEFAULT_SHARE_IMAGE;
+        }
+
         var post = window.PickleDetail?.getCurrentPost?.();
         return {
             title: post?.title ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
             text: post
                 ? (post.option_a || '') + ' vs ' + (post.option_b || '') + '. 당신의 선택은?'
                 : '픽클 불판에 참전하세요!',
+            imageUrl: resolvePostShareImageUrl(post),
         };
     }
 
@@ -715,7 +761,7 @@
                 content: {
                     title: share.title,
                     description: share.text,
-                    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
+                    imageUrl: share.imageUrl,
                     link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
                 },
                 buttons: [{ title: '🔥 화력 지원하러 가기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
