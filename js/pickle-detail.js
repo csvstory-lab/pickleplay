@@ -616,6 +616,107 @@
     }
   }
 
+  function truncateCommentSnippet(text, maxLen) {
+    var limit = maxLen || 40;
+    if (!text) return '';
+    var cleaned = String(text).replace(/[\n\r\t]+/g, ' ').trim();
+    if (!cleaned) return '';
+    if (cleaned.length <= limit) return cleaned;
+    return cleaned.slice(0, limit) + '…';
+  }
+
+  function buildCommentNotificationLink(postId, commentId) {
+    var link = 'detail.html?id=' + encodeURIComponent(postId);
+    if (commentId) {
+      link += '#comment-' + encodeURIComponent(commentId);
+    }
+    return link;
+  }
+
+  async function insertCommentNotification(sb, payload) {
+    if (!sb || !payload || !payload.userId || !payload.message) return;
+
+    try {
+      var res = await sb.rpc('pickle_insert_notification', {
+        p_user_id: payload.userId,
+        p_type: payload.type || 'comment',
+        p_message: payload.message,
+        p_link_url: payload.linkUrl || null,
+      });
+
+      if (res.error) {
+        console.warn('[P!CKLE Detail] comment notification RPC', res.error);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Detail] comment notification', err);
+    }
+  }
+
+  async function notifyForNewComment(sb, options) {
+    if (!sb || !options || !options.currentUserId || !options.postId) return;
+
+    var currentUserId = options.currentUserId;
+    var postId = options.postId;
+    var commentId = options.commentId || null;
+    var parentId = options.parentId || null;
+    var text = options.text || '';
+    var snippet = truncateCommentSnippet(text, 40);
+    var linkUrl = buildCommentNotificationLink(postId, commentId);
+
+    if (parentId) {
+      var parentRes = await sb
+        .from('comments')
+        .select('user_id')
+        .eq('id', parentId)
+        .maybeSingle();
+
+      if (parentRes.error || !parentRes.data || !parentRes.data.user_id) {
+        console.warn('[P!CKLE Detail] parent comment lookup', parentRes.error);
+        return;
+      }
+
+      var parentAuthorId = parentRes.data.user_id;
+      if (parentAuthorId === currentUserId) return;
+
+      await insertCommentNotification(sb, {
+        userId: parentAuthorId,
+        type: 'comment',
+        message: "↩️ 내 댓글에 답글이 달렸습니다: '" + snippet + "'",
+        linkUrl: linkUrl,
+      });
+      return;
+    }
+
+    var postAuthorId = options.postAuthorId || null;
+    if (!postAuthorId && currentPost) {
+      postAuthorId = currentPost.author_id || null;
+    }
+
+    if (!postAuthorId) {
+      var postRes = await sb
+        .from('posts')
+        .select('author_id')
+        .eq('id', postId)
+        .maybeSingle();
+
+      if (postRes.error) {
+        console.warn('[P!CKLE Detail] post author lookup', postRes.error);
+        return;
+      }
+
+      postAuthorId = postRes.data ? postRes.data.author_id : null;
+    }
+
+    if (!postAuthorId || postAuthorId === currentUserId) return;
+
+    await insertCommentNotification(sb, {
+      userId: postAuthorId,
+      type: 'comment',
+      message: "💬 내 불판에 새로운 댓글이 달렸습니다: '" + snippet + "'",
+      linkUrl: linkUrl,
+    });
+  }
+
   function closeAllReplyForms() {
     document.querySelectorAll('.comment-reply-form').forEach(function (form) {
       form.classList.add('hidden');
@@ -704,6 +805,20 @@
       }
 
       if (insertResult.error) throw insertResult.error;
+
+      var newReplyId =
+        insertResult.data && insertResult.data.id ? insertResult.data.id : null;
+      var replyParentId = insertPayload.parent_id || null;
+
+      notifyForNewComment(sb, {
+        currentUserId: user.id,
+        postId: currentPostId,
+        commentId: newReplyId,
+        parentId: replyParentId,
+        text: text,
+      }).catch(function (notifyErr) {
+        console.warn('[P!CKLE Detail] reply notification', notifyErr);
+      });
 
       if (inputEl) inputEl.value = '';
       closeAllReplyForms();
@@ -943,6 +1058,17 @@
       if (!newComment.author_avatar_html) {
         newComment.author_avatar_html = authorSnapshot.author_avatar_html;
       }
+
+      notifyForNewComment(sb, {
+        currentUserId: user.id,
+        postId: currentPostId,
+        commentId: newComment.id,
+        parentId: null,
+        text: text,
+        postAuthorId: currentPost ? currentPost.author_id : null,
+      }).catch(function (notifyErr) {
+        console.warn('[P!CKLE Detail] comment notification', notifyErr);
+      });
 
       if (inputEl) inputEl.value = '';
 
