@@ -3,8 +3,8 @@
  * @build 20260608_bottomnav4
  */
 :root {
-  --bottom-nav-fab-size: calc(44px * 1.1);
-  --bottom-nav-fab-font: calc(1.4rem * 1.1);
+  --bottom-nav-fab-size: 62px;
+  --bottom-nav-fab-font: 1.8rem;
   --bottom-nav-label-h: 15px;
   --bottom-nav-icon-gap: 6px;
   --bottom-nav-pad-y: 7px;
@@ -109,21 +109,21 @@
 .nav-btn.fire-btn .nav-icon {
   position: absolute;
   left: 50%;
-  top: 0;
-  transform: translate(-50%, -50%);
-  width: var(--bottom-nav-fab-size);
-  height: var(--bottom-nav-fab-size);
+  top: -30px;
+  transform: translateX(-50%);
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   background-color: var(--bottom-nav-neon-green);
   color: #000;
-  font-size: var(--bottom-nav-fab-font);
+  font-size: 1.8rem;
   box-shadow: 0 4px 16px rgba(57, 255, 20, 0.4);
   z-index: 950;
   pointer-events: auto;
 }
 
 .nav-btn.fire-btn:active .nav-icon {
-  transform: translate(-50%, -50%) scale(0.94);
+  transform: translateX(-50%) scale(0.94);
 }
 
 .nav-btn.fire-btn > span:last-child {
