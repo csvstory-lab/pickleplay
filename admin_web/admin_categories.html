@@ -242,7 +242,9 @@
   <script src="../js/supabase-config.js"></script>
   <script>
       let currentEditMode = 'new';
+      let editingSlug = null;
       let draggedItem = null;
+      let categoriesCache = [];
 
       const container = document.getElementById('categoryListContainer');
 
@@ -266,6 +268,11 @@
               .replace(/'/g, '&#39;');
       }
 
+      /** 신규 INSERT용 slug — c_ + 타임스탬프 + 난수 */
+      function generateSlug() {
+          return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      }
+
       function updateCategoryCounts(categories) {
           const total = categories.length;
           const active = categories.filter(function (cat) { return cat.is_active !== false; }).length;
@@ -276,6 +283,7 @@
       function buildCategoryItemHtml(cat) {
           const isActive = cat.is_active !== false;
           const isFixed = cat.is_fixed === true;
+          const slug = cat.slug || '';
           const itemClasses = ['category-item'];
           if (isFixed) itemClasses.push('fixed-state');
           else itemClasses.push('draggable-item');
@@ -293,7 +301,6 @@
               ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>'
               : '';
 
-          const rowId = cat.id || cat.slug || '';
           const icon = cat.icon || '📁';
           const name = cat.name || '';
 
@@ -302,15 +309,15 @@
               actionsHtml = '<button class="btn-action btn-disabled" disabled>시스템 고정</button>';
           } else {
               actionsHtml = ''
-                  + '<button class="btn-action" onclick="openCategoryModal(\'edit\', ' + JSON.stringify(icon) + ', ' + JSON.stringify(name) + ', ' + JSON.stringify(cat.description || '') + ', ' + isActive + ')">수정</button>'
+                  + '<button class="btn-action btn-edit" data-slug="' + escapeHtml(slug) + '">수정</button>'
                   + (isActive
-                      ? '<button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button>'
-                      : '<button class="btn-action btn-toggle-active" onclick="toggleStatus(this, true)">🙈 활성화</button>')
-                  + '<button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>';
+                      ? '<button class="btn-action btn-toggle-hide btn-toggle" data-slug="' + escapeHtml(slug) + '" data-active="1">👁️ 숨기기</button>'
+                      : '<button class="btn-action btn-toggle-active btn-toggle" data-slug="' + escapeHtml(slug) + '" data-active="0">✨ 활성화</button>')
+                  + '<button class="btn-action btn-delete" data-slug="' + escapeHtml(slug) + '">삭제</button>';
           }
 
           return ''
-              + '<div class="' + itemClasses.join(' ') + '" data-category-id="' + escapeHtml(rowId) + '">'
+              + '<div class="' + itemClasses.join(' ') + '" data-slug="' + escapeHtml(slug) + '">'
               + '  <div class="cat-left">'
               +        handleHtml
               + '    <div class="cat-icon" style="' + iconStyle + '">' + escapeHtml(icon) + '</div>'
@@ -324,14 +331,16 @@
       }
 
       function renderCategoryList(categories) {
-          if (!categories.length) {
+          categoriesCache = categories || [];
+
+          if (!categoriesCache.length) {
               container.innerHTML = '<div class="category-list-empty">등록된 카테고리가 없습니다.</div>';
               updateCategoryCounts([]);
               return;
           }
 
-          container.innerHTML = categories.map(buildCategoryItemHtml).join('');
-          updateCategoryCounts(categories);
+          container.innerHTML = categoriesCache.map(buildCategoryItemHtml).join('');
+          updateCategoryCounts(categoriesCache);
           bindDraggableItems();
       }
 
@@ -341,8 +350,8 @@
           try {
               const sb = getSupabaseClient();
               const { data, error } = await sb
-                  .from('pickle_categories')
-                  .select('id, slug, icon, name, description, sort_order, is_active, is_fixed')
+                  .from('categories')
+                  .select('*')
                   .order('sort_order', { ascending: true });
 
               if (error) throw error;
@@ -356,65 +365,113 @@
           }
       }
 
-      // 이모지 변경 시뮬레이션
-      function changeEmojiPrompt() {
-          const newEmoji = prompt("사용할 이모지를 입력하세요 (예: ⚽, 🚀, 💻)", "🔥");
-          if(newEmoji) {
-              document.getElementById('catIconInput').innerText = newEmoji;
-          }
+      function findCategoryBySlug(slug) {
+          return categoriesCache.find(function (cat) { return cat.slug === slug; }) || null;
       }
 
-      // 숨김 / 활성 토글 UI 스크립트
-      function toggleStatus(btn, isHidden = false) {
-          const item = btn.closest('.category-item');
-          if(isHidden) {
+      function applyActiveUi(item, isActive) {
+          if (isActive) {
               item.classList.remove('hidden-state');
               item.querySelector('.cat-icon').style = '';
               item.querySelector('.cat-name').style.color = '#fff';
               item.querySelector('.cat-name .badge').className = 'badge badge-active';
               item.querySelector('.cat-name .badge').innerText = '👁️ Active';
-
-              btn.className = 'btn-action btn-toggle-hide';
-              btn.innerText = '👁️ 숨기기';
-              btn.setAttribute('onclick', 'toggleStatus(this, false)');
           } else {
-              if(confirm('이 카테고리를 유저 앱에서 숨김 처리하시겠습니까?\n기존 불판 데이터는 보존됩니다.')){
-                  item.classList.add('hidden-state');
-                  item.querySelector('.cat-icon').style = 'filter: grayscale(100%); opacity: 0.5;';
-                  item.querySelector('.cat-name').style.color = 'var(--text-sub)';
-                  item.querySelector('.cat-name .badge').className = 'badge badge-hidden';
-                  item.querySelector('.cat-name .badge').innerText = '🙈 Hidden';
+              item.classList.add('hidden-state');
+              item.querySelector('.cat-icon').style = 'filter: grayscale(100%); opacity: 0.5;';
+              item.querySelector('.cat-name').style.color = 'var(--text-sub)';
+              item.querySelector('.cat-name .badge').className = 'badge badge-hidden';
+              item.querySelector('.cat-name .badge').innerText = '🙈 Hidden';
+          }
 
-                  btn.className = 'btn-action btn-toggle-active';
-                  btn.innerText = '🙈 활성화';
-                  btn.setAttribute('onclick', 'toggleStatus(this, true)');
+          const toggleBtn = item.querySelector('.btn-toggle');
+          if (!toggleBtn) return;
+
+          if (isActive) {
+              toggleBtn.className = 'btn-action btn-toggle-hide btn-toggle';
+              toggleBtn.dataset.active = '1';
+              toggleBtn.textContent = '👁️ 숨기기';
+          } else {
+              toggleBtn.className = 'btn-action btn-toggle-active btn-toggle';
+              toggleBtn.dataset.active = '0';
+              toggleBtn.textContent = '✨ 활성화';
+          }
+      }
+
+      async function toggleStatus(slug, shouldActivate) {
+          const cat = findCategoryBySlug(slug);
+          const item = container.querySelector('.category-item[data-slug="' + slug + '"]');
+          if (!cat || !item || item.classList.contains('fixed-state')) return;
+
+          if (!shouldActivate) {
+              if (!confirm('이 카테고리를 유저 앱에서 숨김 처리하시겠습니까?\n기존 불판 데이터는 보존됩니다.')) {
+                  return;
               }
           }
-      }
 
-      // 삭제 로직
-      function deleteCategory(btn) {
-          const item = btn.closest('.category-item');
-          if (item.classList.contains('fixed-state')) return;
+          try {
+              const sb = getSupabaseClient();
+              const { error } = await sb
+                  .from('categories')
+                  .update({ is_active: shouldActivate })
+                  .eq('slug', slug);
 
-          const catName = item.querySelector('.cat-name').childNodes[0].nodeValue.trim();
-          if(confirm(`[${catName}] 카테고리를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-              item.remove();
-              alert('삭제가 완료되었습니다.');
-              const remaining = container.querySelectorAll('.category-item').length;
-              const active = container.querySelectorAll('.category-item:not(.hidden-state)').length;
-              document.getElementById('totalCatCount').textContent = remaining + '개';
-              document.getElementById('activeCatCount').textContent = active + '개';
+              if (error) throw error;
+
+              cat.is_active = shouldActivate;
+              applyActiveUi(item, shouldActivate);
+              updateCategoryCounts(categoriesCache);
+          } catch (err) {
+              alert('상태 변경 실패: ' + (err.message || String(err)));
           }
       }
 
-      // 모달 오픈 로직
-      function openCategoryModal(mode, icon = '🌟', name = '', desc = '', isActive = true) {
+      async function deleteCategory(slug) {
+          const cat = findCategoryBySlug(slug);
+          const item = container.querySelector('.category-item[data-slug="' + slug + '"]');
+          if (!cat || !item || item.classList.contains('fixed-state') || cat.is_fixed === true) return;
+
+          if (!confirm('[' + cat.name + '] 카테고리를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+              return;
+          }
+
+          try {
+              const sb = getSupabaseClient();
+              const { error } = await sb
+                  .from('categories')
+                  .delete()
+                  .eq('slug', slug);
+
+              if (error) throw error;
+
+              categoriesCache = categoriesCache.filter(function (c) { return c.slug !== slug; });
+              item.remove();
+
+              if (!categoriesCache.length) {
+                  container.innerHTML = '<div class="category-list-empty">등록된 카테고리가 없습니다.</div>';
+              }
+              updateCategoryCounts(categoriesCache);
+              alert('삭제가 완료되었습니다.');
+          } catch (err) {
+              alert('삭제 실패: ' + (err.message || String(err)));
+          }
+      }
+
+      function changeEmojiPrompt() {
+          const newEmoji = prompt('사용할 이모지를 입력하세요 (예: ⚽, 🚀, 💻)', '🔥');
+          if (newEmoji) {
+              document.getElementById('catIconInput').innerText = newEmoji;
+          }
+      }
+
+      function openCategoryModal(mode, slug, icon, name, desc, isActive) {
           currentEditMode = mode;
+          editingSlug = mode === 'edit' ? slug : null;
+
           const modal = document.getElementById('categoryModal');
           const title = document.getElementById('modalTitle');
 
-          if(mode === 'new') {
+          if (mode === 'new') {
               title.innerHTML = '➕ 신규 카테고리 추가';
               document.getElementById('catIconInput').innerText = '🌟';
               document.getElementById('catNameInput').value = '';
@@ -422,10 +479,10 @@
               document.getElementById('catStatusInput').checked = true;
           } else {
               title.innerHTML = '✏️ 카테고리 설정 수정';
-              document.getElementById('catIconInput').innerText = icon;
-              document.getElementById('catNameInput').value = name;
-              document.getElementById('catDescInput').value = desc;
-              document.getElementById('catStatusInput').checked = isActive;
+              document.getElementById('catIconInput').innerText = icon || '📁';
+              document.getElementById('catNameInput').value = name || '';
+              document.getElementById('catDescInput').value = desc || '';
+              document.getElementById('catStatusInput').checked = isActive !== false;
           }
 
           modal.style.display = 'flex';
@@ -433,50 +490,109 @@
 
       function closeCategoryModal() {
           document.getElementById('categoryModal').style.display = 'none';
+          editingSlug = null;
       }
 
-      // 신규 카테고리 저장 로직
       async function saveCategory() {
-          const FB = window.PickleAdminFirebase;
           const name = document.getElementById('catNameInput').value.trim();
-          const icon = document.getElementById('catIconInput').innerText;
+          const icon = document.getElementById('catIconInput').innerText.trim() || '📁';
           const desc = document.getElementById('catDescInput').value.trim();
           const isActive = document.getElementById('catStatusInput').checked;
+          const btnSubmit = document.getElementById('btnModalSubmit');
 
-          if(!name) {
+          if (!name) {
               alert('카테고리명은 필수 입력 사항입니다!');
               return;
           }
 
-          const categoryData = { name, icon, desc, isActive, mode: currentEditMode };
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = '저장 중…';
 
-          if(currentEditMode === 'new') {
-              if (FB && typeof FB.persistNew === 'function') {
-                  const created = await FB.persistNew('categories', categoryData, {
-                      page: 'admin_categories',
-                      successMessage: `[${name}] 카테고리가 Firebase에 추가되었습니다!`,
-                  });
-                  if (!created.ok) return;
+          try {
+              const sb = getSupabaseClient();
+
+              if (currentEditMode === 'new') {
+                  const slug = generateSlug();
+                  const maxOrder = categoriesCache.reduce(function (max, cat) {
+                      return Math.max(max, Number(cat.sort_order) || 0);
+                  }, 0);
+
+                  const row = {
+                      slug: slug,
+                      name: name,
+                      icon: icon,
+                      description: desc || null,
+                      sort_order: maxOrder + 10,
+                      is_active: isActive,
+                      is_fixed: false,
+                  };
+
+                  const { error } = await sb.from('categories').insert(row);
+                  if (error) throw error;
+                  alert('[' + name + '] 카테고리가 추가되었습니다.');
+              } else {
+                  if (!editingSlug) {
+                      throw new Error('수정할 카테고리(slug)를 찾을 수 없습니다.');
+                  }
+
+                  const row = {
+                      name: name,
+                      icon: icon,
+                      description: desc || null,
+                      is_active: isActive,
+                  };
+
+                  const { error } = await sb.from('categories').update(row).eq('slug', editingSlug);
+                  if (error) throw error;
+                  alert('[' + name + '] 카테고리 정보가 수정되었습니다.');
               }
+
+              closeCategoryModal();
               await loadCategories();
-          } else {
-              if (FB && typeof FB.persist === 'function') {
-                  const docId = FB.slugify(name);
-                  const updated = await FB.persist('categories', docId, categoryData, {
-                      page: 'admin_categories',
-                      successMessage: `[${name}] 카테고리 정보가 Firebase에 수정되었습니다!`,
-                  });
-                  if (!updated.ok) return;
-              }
-              await loadCategories();
+          } catch (err) {
+              alert('저장 실패: ' + (err.message || String(err)));
+          } finally {
+              btnSubmit.disabled = false;
+              btnSubmit.textContent = '저장 완료';
           }
-
-          closeCategoryModal();
       }
 
-      // ==========================================
-      // 💡 드래그 앤 드롭(Drag & Drop) 정렬 스크립트
-      // ==========================================
+      async function saveOrder() {
+          const items = [...container.querySelectorAll('.category-item')];
+          if (!items.length) return;
+
+          const updates = items.map(function (el, index) {
+              return {
+                  slug: el.dataset.slug,
+                  sort_order: index + 1,
+              };
+          }).filter(function (row) { return row.slug; });
+
+          if (!updates.length) return;
+
+          try {
+              const sb = getSupabaseClient();
+              const results = await Promise.all(updates.map(function (row) {
+                  return sb
+                      .from('categories')
+                      .update({ sort_order: row.sort_order })
+                      .eq('slug', row.slug);
+              }));
+
+              const failed = results.find(function (res) { return res.error; });
+              if (failed && failed.error) throw failed.error;
+
+              updates.forEach(function (row) {
+                  const cached = findCategoryBySlug(row.slug);
+                  if (cached) cached.sort_order = row.sort_order;
+              });
+          } catch (err) {
+              console.error('[admin_categories] saveOrder failed:', err);
+              alert('순서 저장 실패: ' + (err.message || String(err)));
+              await loadCategories();
+          }
+      }
+
       function makeDraggable(item) {
           if (item.classList.contains('fixed-state')) return;
 
@@ -492,6 +608,7 @@
           item.addEventListener('dragend', function() {
               item.classList.remove('dragging');
               draggedItem = null;
+              saveOrder();
           });
       }
 
@@ -527,6 +644,31 @@
               return closest;
           }, { offset: Number.NEGATIVE_INFINITY }).element;
       }
+
+      container.addEventListener('click', function(e) {
+          const editBtn = e.target.closest('.btn-edit');
+          if (editBtn) {
+              const slug = editBtn.dataset.slug;
+              const cat = findCategoryBySlug(slug);
+              if (cat) {
+                  openCategoryModal('edit', cat.slug, cat.icon, cat.name, cat.description || '', cat.is_active !== false);
+              }
+              return;
+          }
+
+          const toggleBtn = e.target.closest('.btn-toggle');
+          if (toggleBtn) {
+              const slug = toggleBtn.dataset.slug;
+              const shouldActivate = toggleBtn.dataset.active === '0';
+              toggleStatus(slug, shouldActivate);
+              return;
+          }
+
+          const deleteBtn = e.target.closest('.btn-delete');
+          if (deleteBtn) {
+              deleteCategory(deleteBtn.dataset.slug);
+          }
+      });
 
       document.addEventListener('DOMContentLoaded', function() {
           loadCategories();
