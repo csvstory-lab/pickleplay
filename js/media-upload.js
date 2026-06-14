@@ -51,19 +51,49 @@
     }
   }
 
-  function loadImageElement(file) {
+  function readFileAsDataUrl(file) {
     return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
-      var img = new Image();
-      img.onload = function () {
-        URL.revokeObjectURL(url);
-        resolve(img);
+      var reader = new FileReader();
+      reader.onload = function () {
+        resolve(reader.result);
       };
-      img.onerror = function () {
-        URL.revokeObjectURL(url);
-        reject(new Error('이미지를 불러올 수 없습니다.'));
+      reader.onerror = function () {
+        reject(new Error('이미지 파일을 읽을 수 없습니다.'));
       };
-      img.src = url;
+      reader.onabort = function () {
+        reject(new Error('이미지 파일 읽기가 중단되었습니다.'));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function loadImageElement(file) {
+    return readFileAsDataUrl(file).then(function (dataUrl) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image();
+
+        function finishLoad() {
+          var width = img.naturalWidth || img.width;
+          var height = img.naturalHeight || img.height;
+          if (!width || !height) {
+            reject(new Error('이미지 크기를 확인할 수 없습니다.'));
+            return;
+          }
+          resolve(img);
+        }
+
+        img.onload = function () {
+          if (typeof img.decode === 'function') {
+            img.decode().then(finishLoad).catch(finishLoad);
+            return;
+          }
+          finishLoad();
+        };
+        img.onerror = function () {
+          reject(new Error('이미지를 불러올 수 없습니다.'));
+        };
+        img.src = dataUrl;
+      });
     });
   }
 
