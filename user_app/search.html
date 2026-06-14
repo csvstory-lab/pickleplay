@@ -45,19 +45,26 @@
     
     /* 💡 검색바 모서리 둥글게 최신 스타일 적용 */
     .search-bar-container {
+        position: relative;
         display: flex; align-items: center; background-color: var(--card-bg);
         border: 1px solid var(--border-color); border-radius: 20px; padding: 12px 18px;
         transition: border-color 0.2s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
     }
     .search-bar-container:focus-within { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
     
-    .search-icon { font-size: 1.2rem; color: var(--text-sub); margin-right: 10px; }
+    .search-icon { font-size: 1.2rem; color: var(--text-sub); margin-right: 10px; flex-shrink: 0; }
     .search-input {
-        flex: 1; background: transparent; border: none; color: #fff;
+        flex: 1; min-width: 0; background: transparent; border: none; color: #fff;
         font-family: 'Pretendard', sans-serif; font-size: 1rem; font-weight: 600; outline: none;
+        padding-right: 40px;
     }
     .search-input::placeholder { color: #52525b; font-weight: 500; }
-    .btn-clear { background: none; border: none; color: var(--text-sub); font-size: 1.2rem; cursor: pointer; display: none; padding: 0; transition: color 0.2s; }
+    .btn-clear {
+        position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; color: var(--text-sub); font-size: 1.2rem;
+        cursor: pointer; display: none; padding: 0; margin: 0; line-height: 1;
+        transition: color 0.2s; z-index: 1;
+    }
     .btn-clear:active { color: var(--neon-pink); }
 
     /* === 메인 컨텐츠 === */
