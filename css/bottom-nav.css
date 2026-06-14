@@ -1,11 +1,17 @@
 /**
  * P!CKLE — 통합 하단 네비게이션
- * @build 20260613_bottomnav2
+ * @build 20260613_bottomnav3
  */
 :root {
   --bottom-nav-fab-size: 44px;
   --bottom-nav-label-h: 15px;
-  --bottom-nav-row-h: calc(var(--bottom-nav-fab-size) / 2 + var(--bottom-nav-label-h) + 3px);
+  --bottom-nav-icon-gap: 6px;
+  --bottom-nav-pad-y: 7px;
+  --bottom-nav-pad-x: 8px;
+  --bottom-nav-row-h: calc(
+    var(--bottom-nav-fab-size) / 2 + var(--bottom-nav-label-h) + var(--bottom-nav-icon-gap) +
+      var(--bottom-nav-pad-y) * 2
+  );
   --bottom-nav-font: 0.75rem;
   --bottom-nav-font-fire: 0.68rem;
   --bottom-nav-neon-green: var(--neon-green, #39ff14);
@@ -22,10 +28,10 @@
   z-index: 900;
   display: flex;
   justify-content: space-around;
-  align-items: flex-end;
+  align-items: stretch;
   box-sizing: border-box;
   min-height: var(--bottom-nav-row-h);
-  padding: 0 4px calc(4px + env(safe-area-inset-bottom, 0px));
+  padding: 2px var(--bottom-nav-pad-x) calc(var(--bottom-nav-pad-y) + env(safe-area-inset-bottom, 0px));
   background-color: rgba(26, 26, 29, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -41,10 +47,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 2px;
+  gap: var(--bottom-nav-icon-gap);
   min-width: 0;
-  height: var(--bottom-nav-row-h);
-  padding: 0 2px 1px;
+  min-height: var(--bottom-nav-row-h);
+  padding: var(--bottom-nav-pad-y) 4px;
   border: none;
   background: transparent;
   color: #aaaaaa;
@@ -71,9 +77,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
-  font-size: 1.25rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  font-size: 1.3rem;
   line-height: 1;
   transition: filter 0.2s, transform 0.2s;
 }
@@ -86,10 +92,11 @@
   filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.55));
 }
 
-/* 🔥 중앙 FAB — 상단 경계선에 절반 걸침, 라벨과 간격 좁게 */
+/* 🔥 중앙 FAB — 상단 경계에 절반 걸침, 라벨은 하단 정렬 */
 .nav-btn.fire-btn {
   justify-content: flex-end;
-  padding-bottom: 1px;
+  padding-top: 0;
+  padding-bottom: var(--bottom-nav-pad-y);
 }
 
 .nav-btn.fire-btn .nav-icon {
@@ -113,7 +120,7 @@
 
 .nav-btn.fire-btn > span:last-child {
   font-size: var(--bottom-nav-font-fire);
-  margin-top: calc(var(--bottom-nav-fab-size) / 2 + 1px);
+  margin-top: 0;
 }
 
 .nav-btn.fire-btn.active {
