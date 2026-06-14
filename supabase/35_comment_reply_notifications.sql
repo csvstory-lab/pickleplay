@@ -50,11 +50,11 @@ BEGIN
       RETURN NEW;
     END IF;
 
-    v_message := '↩️ 내 댓글에 답글이 달렸습니다: ''' || v_snippet || '''';
+    v_message := '내 댓글에 답글이 달렸습니다.';
 
     PERFORM public.pickle_insert_notification(
       v_parent_author,
-      'comment',
+      'reply',
       v_message,
       v_link
     );

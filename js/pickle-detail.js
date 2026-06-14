@@ -9,6 +9,11 @@
   var currentPostId = null;
   var likedCommentIdSet = Object.create(null);
   var openReplyParentId = null;
+  var commentListDelegationBound = false;
+  var commentFormBound = false;
+  var replySubmitInFlight = false;
+  var commentSubmitInFlight = false;
+  var commentByIdCache = Object.create(null);
 
   function categoryDisplay(category) {
     if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
@@ -633,23 +638,86 @@
     return link;
   }
 
-  async function insertCommentNotification(sb, payload) {
-    if (!sb || !payload || !payload.userId || !payload.message) return;
+  async function deliverNotification(sb, payload) {
+    if (!sb || !payload || !payload.userId || !payload.message) return false;
 
-    try {
-      var res = await sb.rpc('pickle_insert_notification', {
+    var notiType = payload.type || 'comment';
+    var linkUrl = payload.linkUrl || null;
+
+    var insertRes = await sb.from('notifications').insert({
+      user_id: payload.userId,
+      type: notiType,
+      message: payload.message,
+      link_url: linkUrl,
+    });
+
+    if (!insertRes.error) return true;
+
+    console.error('알림 전송 실패:', insertRes.error);
+
+    var rpcRes = await sb.rpc('pickle_insert_notification', {
+      p_user_id: payload.userId,
+      p_type: notiType,
+      p_message: payload.message,
+      p_link_url: linkUrl,
+    });
+
+    if (!rpcRes.error) return true;
+
+    console.error('[P!CKLE Detail] 알림 RPC 실패:', rpcRes.error);
+
+    if (notiType === 'reply') {
+      var fallbackRes = await sb.rpc('pickle_insert_notification', {
         p_user_id: payload.userId,
-        p_type: payload.type || 'comment',
+        p_type: 'comment',
         p_message: payload.message,
-        p_link_url: payload.linkUrl || null,
+        p_link_url: linkUrl,
       });
 
-      if (res.error) {
-        console.warn('[P!CKLE Detail] comment notification RPC', res.error);
-      }
-    } catch (err) {
-      console.warn('[P!CKLE Detail] comment notification', err);
+      if (!fallbackRes.error) return true;
+      console.error('[P!CKLE Detail] 알림 RPC(comment fallback) 실패:', fallbackRes.error);
     }
+
+    return false;
+  }
+
+  async function resolveParentCommentAuthor(sb, parentId) {
+    if (!parentId) return null;
+
+    var cached = commentByIdCache[parentId];
+    if (cached && cached.user_id) return cached.user_id;
+
+    var parentRes = await sb
+      .from('comments')
+      .select('user_id')
+      .eq('id', parentId)
+      .single();
+
+    if (parentRes.error) {
+      console.error('알림 전송 실패: 부모 댓글 조회 실패', parentRes.error);
+      return null;
+    }
+
+    if (!parentRes.data || !parentRes.data.user_id) {
+      console.error('알림 전송 실패: 부모 댓글 작성자를 찾을 수 없습니다.');
+      return null;
+    }
+
+    return parentRes.data.user_id;
+  }
+
+  async function sendReplyNotification(sb, parentId, newCommentId, currentUserId) {
+    if (!sb || !parentId || !newCommentId || !currentUserId || !currentPostId) return;
+
+    var parentAuthorId = await resolveParentCommentAuthor(sb, parentId);
+    if (!parentAuthorId || parentAuthorId === currentUserId) return;
+
+    await deliverNotification(sb, {
+      userId: parentAuthorId,
+      type: 'reply',
+      message: '내 댓글에 답글이 달렸습니다.',
+      linkUrl: buildCommentNotificationLink(currentPostId, newCommentId),
+    });
   }
 
   async function notifyForNewComment(sb, options) {
@@ -658,34 +726,9 @@
     var currentUserId = options.currentUserId;
     var postId = options.postId;
     var commentId = options.commentId || null;
-    var parentId = options.parentId || null;
     var text = options.text || '';
     var snippet = truncateCommentSnippet(text, 40);
     var linkUrl = buildCommentNotificationLink(postId, commentId);
-
-    if (parentId) {
-      var parentRes = await sb
-        .from('comments')
-        .select('user_id')
-        .eq('id', parentId)
-        .maybeSingle();
-
-      if (parentRes.error || !parentRes.data || !parentRes.data.user_id) {
-        console.warn('[P!CKLE Detail] parent comment lookup', parentRes.error);
-        return;
-      }
-
-      var parentAuthorId = parentRes.data.user_id;
-      if (parentAuthorId === currentUserId) return;
-
-      await insertCommentNotification(sb, {
-        userId: parentAuthorId,
-        type: 'comment',
-        message: "↩️ 내 댓글에 답글이 달렸습니다: '" + snippet + "'",
-        linkUrl: linkUrl,
-      });
-      return;
-    }
 
     var postAuthorId = options.postAuthorId || null;
     if (!postAuthorId && currentPost) {
@@ -700,7 +743,7 @@
         .maybeSingle();
 
       if (postRes.error) {
-        console.warn('[P!CKLE Detail] post author lookup', postRes.error);
+        console.error('알림 전송 실패: 불판 작성자 조회 실패', postRes.error);
         return;
       }
 
@@ -709,11 +752,18 @@
 
     if (!postAuthorId || postAuthorId === currentUserId) return;
 
-    await insertCommentNotification(sb, {
+    await deliverNotification(sb, {
       userId: postAuthorId,
       type: 'comment',
       message: "💬 내 불판에 새로운 댓글이 달렸습니다: '" + snippet + "'",
       linkUrl: linkUrl,
+    });
+  }
+
+  function setReplySubmitButtonsDisabled(disabled, activeBtn) {
+    document.querySelectorAll('.comment-reply-submit').forEach(function (btn) {
+      btn.disabled = disabled;
+      btn.textContent = disabled && btn === activeBtn ? '등록 중…' : '등록';
     });
   }
 
@@ -746,7 +796,7 @@
   }
 
   async function submitReply(parentId) {
-    if (!parentId || !currentPostId) return;
+    if (!parentId || !currentPostId || replySubmitInFlight) return;
 
     var form = document.querySelector(
       '.comment-reply-form[data-parent-id="' + String(parentId).replace(/"/g, '') + '"]'
@@ -762,22 +812,19 @@
       return;
     }
 
-    var sb = window.PickleSupabase.getClient();
-    var authResult = await sb.auth.getUser();
-
-    if (authResult.error || !authResult.data || !authResult.data.user) {
-      alert('답글을 남기려면 로그인이 필요합니다.');
-      return;
-    }
-
-    var user = authResult.data.user;
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = '등록 중…';
-    }
+    replySubmitInFlight = true;
+    setReplySubmitButtonsDisabled(true, submitBtn);
 
     try {
+      var sb = window.PickleSupabase.getClient();
+      var authResult = await sb.auth.getUser();
+
+      if (authResult.error || !authResult.data || !authResult.data.user) {
+        alert('답글을 남기려면 로그인이 필요합니다.');
+        return;
+      }
+
+      var user = authResult.data.user;
       var authorSnapshot = extractCommentAuthorSnapshot(user);
       var insertPayload = {
         user_id: user.id,
@@ -810,15 +857,9 @@
         insertResult.data && insertResult.data.id ? insertResult.data.id : null;
       var replyParentId = insertPayload.parent_id || null;
 
-      notifyForNewComment(sb, {
-        currentUserId: user.id,
-        postId: currentPostId,
-        commentId: newReplyId,
-        parentId: replyParentId,
-        text: text,
-      }).catch(function (notifyErr) {
-        console.warn('[P!CKLE Detail] reply notification', notifyErr);
-      });
+      if (replyParentId && newReplyId) {
+        await sendReplyNotification(sb, replyParentId, newReplyId, user.id);
+      }
 
       if (inputEl) inputEl.value = '';
       closeAllReplyForms();
@@ -832,48 +873,53 @@
         alert('답글 등록에 실패했습니다. ' + msg);
       }
     } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '등록';
-      }
+      replySubmitInFlight = false;
+      setReplySubmitButtonsDisabled(false);
     }
   }
 
-  function bindCommentListEvents(listEl) {
-    if (!listEl || listEl.dataset.boundComments === '1') return;
-    listEl.dataset.boundComments = '1';
+  function onCommentListClick(e) {
+    var likeBtn = e.target.closest('.comment-like-btn');
+    if (likeBtn) {
+      e.preventDefault();
+      toggleCommentLike(likeBtn.getAttribute('data-comment-id'), likeBtn);
+      return;
+    }
 
-    listEl.addEventListener('click', function (e) {
-      var likeBtn = e.target.closest('.comment-like-btn');
-      if (likeBtn) {
-        e.preventDefault();
-        toggleCommentLike(likeBtn.getAttribute('data-comment-id'), likeBtn);
-        return;
-      }
+    var replyBtn = e.target.closest('.comment-reply-btn');
+    if (replyBtn) {
+      e.preventDefault();
+      toggleReplyForm(replyBtn.getAttribute('data-comment-id'));
+      return;
+    }
 
-      var replyBtn = e.target.closest('.comment-reply-btn');
-      if (replyBtn) {
-        e.preventDefault();
-        toggleReplyForm(replyBtn.getAttribute('data-comment-id'));
-        return;
-      }
+    var replySubmit = e.target.closest('.comment-reply-submit');
+    if (replySubmit) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (replySubmitInFlight || replySubmit.disabled) return;
+      submitReply(replySubmit.getAttribute('data-parent-id'));
+    }
+  }
 
-      var replySubmit = e.target.closest('.comment-reply-submit');
-      if (replySubmit) {
-        e.preventDefault();
-        submitReply(replySubmit.getAttribute('data-parent-id'));
-      }
-    });
+  function onCommentListKeydown(e) {
+    var replyInput = e.target.closest('.comment-reply-input');
+    if (replyInput && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (replySubmitInFlight) return;
+      var form = replyInput.closest('.comment-reply-form');
+      var parentId = form ? form.getAttribute('data-parent-id') : null;
+      if (parentId) submitReply(parentId);
+    }
+  }
 
-    listEl.addEventListener('keydown', function (e) {
-      var replyInput = e.target.closest('.comment-reply-input');
-      if (replyInput && e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        var form = replyInput.closest('.comment-reply-form');
-        var parentId = form ? form.getAttribute('data-parent-id') : null;
-        if (parentId) submitReply(parentId);
-      }
-    });
+  function bindCommentListDelegationOnce() {
+    var rootEl = $('commentActive') || $('detailCommentList');
+    if (!rootEl || commentListDelegationBound) return;
+
+    rootEl.addEventListener('click', onCommentListClick);
+    rootEl.addEventListener('keydown', onCommentListKeydown);
+    commentListDelegationBound = true;
   }
 
   function focusCommentFromHash() {
@@ -922,7 +968,6 @@
     if (!comments.length) {
       listEl.innerHTML =
         '<p class="comments-empty-msg" id="detailCommentEmpty">아직 댓글이 없습니다. 첫 훈수를 남겨보세요!</p>';
-      listEl.dataset.boundComments = '';
       return;
     }
 
@@ -932,9 +977,6 @@
         return renderCommentThreadHtml(parent, tree.repliesByParent);
       })
       .join('');
-
-    listEl.dataset.boundComments = '';
-    bindCommentListEvents(listEl);
   }
 
   async function loadComments(postId) {
@@ -955,6 +997,11 @@
         })
       );
 
+      commentByIdCache = Object.create(null);
+      comments.forEach(function (comment) {
+        if (comment && comment.id) commentByIdCache[comment.id] = comment;
+      });
+
       renderCommentsList(comments);
       updateCommentHeader(comments.length);
       renderStats(cachedVoteStats, comments.length);
@@ -970,13 +1017,14 @@
       if (listEl) {
         listEl.innerHTML =
           '<p class="comments-empty-msg">댓글을 불러오지 못했습니다.</p>';
-        listEl.dataset.boundComments = '';
       }
       return [];
     }
   }
 
   async function submitComment() {
+    if (commentSubmitInFlight) return;
+
     var inputEl = $('detailCommentInput');
     var submitBtn = $('detailCommentSubmit');
     var text = inputEl ? inputEl.value.trim() : '';
@@ -991,25 +1039,7 @@
       return;
     }
 
-    var sb = window.PickleSupabase.getClient();
-    var authResult = await sb.auth.getUser();
-
-    if (authResult.error) {
-      console.error('[P!CKLE Detail] auth', authResult.error);
-      alert('로그인 상태를 확인할 수 없습니다. 다시 로그인해 주세요.');
-      return;
-    }
-
-    var user = authResult.data && authResult.data.user;
-    if (!user) {
-      alert('댓글을 남기려면 로그인이 필요합니다.');
-      window.location.href =
-        'login.html?redirect=' +
-        encodeURIComponent(
-          'detail.html?id=' + encodeURIComponent(currentPostId)
-        );
-      return;
-    }
+    commentSubmitInFlight = true;
 
     if (submitBtn) {
       submitBtn.disabled = true;
@@ -1017,6 +1047,26 @@
     }
 
     try {
+      var sb = window.PickleSupabase.getClient();
+      var authResult = await sb.auth.getUser();
+
+      if (authResult.error) {
+        console.error('[P!CKLE Detail] auth', authResult.error);
+        alert('로그인 상태를 확인할 수 없습니다. 다시 로그인해 주세요.');
+        return;
+      }
+
+      var user = authResult.data && authResult.data.user;
+      if (!user) {
+        alert('댓글을 남기려면 로그인이 필요합니다.');
+        window.location.href =
+          'login.html?redirect=' +
+          encodeURIComponent(
+            'detail.html?id=' + encodeURIComponent(currentPostId)
+          );
+        return;
+      }
+
       var authorSnapshot = extractCommentAuthorSnapshot(user);
       var insertPayload = {
         user_id: user.id,
@@ -1059,15 +1109,13 @@
         newComment.author_avatar_html = authorSnapshot.author_avatar_html;
       }
 
-      notifyForNewComment(sb, {
+      await notifyForNewComment(sb, {
         currentUserId: user.id,
         postId: currentPostId,
         commentId: newComment.id,
         parentId: null,
         text: text,
         postAuthorId: currentPost ? currentPost.author_id : null,
-      }).catch(function (notifyErr) {
-        console.warn('[P!CKLE Detail] comment notification', notifyErr);
       });
 
       if (inputEl) inputEl.value = '';
@@ -1079,6 +1127,7 @@
         '댓글 등록에 실패했습니다. ' + (err.message || String(err))
       );
     } finally {
+      commentSubmitInFlight = false;
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = '등록';
@@ -1086,7 +1135,10 @@
     }
   }
 
-  function bindCommentForm() {
+  function bindCommentFormOnce() {
+    if (commentFormBound) return;
+    commentFormBound = true;
+
     var submitBtn = $('detailCommentSubmit');
     var inputEl = $('detailCommentInput');
 
@@ -1800,7 +1852,6 @@
     renderStats(voteStats, commentCount);
     updateCommentHeader(commentCount);
     loadComments(post.id);
-    bindCommentForm();
 
     detailHasVoted = false;
     resultConfettiFired = false;
@@ -1882,5 +1933,9 @@
 
   window.toggleCommentLike = toggleCommentLike;
 
-  document.addEventListener('DOMContentLoaded', loadDetail);
+  document.addEventListener('DOMContentLoaded', function () {
+    bindCommentListDelegationOnce();
+    bindCommentFormOnce();
+    loadDetail();
+  });
 })();

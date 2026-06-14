@@ -15,6 +15,7 @@
 
   var TYPE_META = {
     comment: { icon: '💬', css: 'type-comment' },
+    reply: { icon: '↩️', css: 'type-reply' },
     vote: { icon: '🗳️', css: 'type-vote' },
     end: { icon: '⏳', css: 'type-end' },
     honor: { icon: '🏅', css: 'type-honor' },
