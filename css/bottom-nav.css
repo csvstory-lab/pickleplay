@@ -1,11 +1,13 @@
 /**
  * P!CKLE — 통합 하단 네비게이션
- * @build 20260613_bottomnav1
+ * @build 20260613_bottomnav2
  */
 :root {
-  --bottom-nav-fab-size: 46px;
-  --bottom-nav-label-h: 14px;
-  --bottom-nav-inner-h: 42px;
+  --bottom-nav-fab-size: 44px;
+  --bottom-nav-label-h: 15px;
+  --bottom-nav-row-h: calc(var(--bottom-nav-fab-size) / 2 + var(--bottom-nav-label-h) + 3px);
+  --bottom-nav-font: 0.75rem;
+  --bottom-nav-font-fire: 0.68rem;
   --bottom-nav-neon-green: var(--neon-green, #39ff14);
 }
 
@@ -22,13 +24,13 @@
   justify-content: space-around;
   align-items: flex-end;
   box-sizing: border-box;
-  min-height: calc(var(--bottom-nav-inner-h) + var(--bottom-nav-fab-size) / 2);
-  padding: 0 6px calc(6px + env(safe-area-inset-bottom, 0px));
-  background-color: rgba(18, 18, 20, 0.97);
+  min-height: var(--bottom-nav-row-h);
+  padding: 0 4px calc(4px + env(safe-area-inset-bottom, 0px));
+  background-color: rgba(26, 26, 29, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 -6px 28px rgba(0, 0, 0, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
   overflow: visible;
 }
 
@@ -39,15 +41,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
-  height: calc(var(--bottom-nav-inner-h) + var(--bottom-nav-fab-size) / 2);
-  padding: calc(var(--bottom-nav-fab-size) / 2) 2px 4px;
+  height: var(--bottom-nav-row-h);
+  padding: 0 2px 1px;
   border: none;
   background: transparent;
   color: #aaaaaa;
   font-family: 'Pretendard', sans-serif;
-  font-size: 0.68rem;
+  font-size: var(--bottom-nav-font);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -84,9 +86,10 @@
   filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.55));
 }
 
-/* 🔥 중앙 FAB — 절반만 바깥으로 */
+/* 🔥 중앙 FAB — 상단 경계선에 절반 걸침, 라벨과 간격 좁게 */
 .nav-btn.fire-btn {
   justify-content: flex-end;
+  padding-bottom: 1px;
 }
 
 .nav-btn.fire-btn .nav-icon {
@@ -99,8 +102,8 @@
   border-radius: 50%;
   background-color: var(--bottom-nav-neon-green);
   color: #000;
-  font-size: 1.45rem;
-  box-shadow: 0 5px 16px rgba(57, 255, 20, 0.35);
+  font-size: 1.4rem;
+  box-shadow: 0 4px 14px rgba(57, 255, 20, 0.35);
   z-index: 1;
 }
 
@@ -109,7 +112,8 @@
 }
 
 .nav-btn.fire-btn > span:last-child {
-  font-size: 0.62rem;
+  font-size: var(--bottom-nav-font-fire);
+  margin-top: calc(var(--bottom-nav-fab-size) / 2 + 1px);
 }
 
 .nav-btn.fire-btn.active {
@@ -118,5 +122,5 @@
 
 .nav-btn.fire-btn.active .nav-icon {
   filter: none;
-  box-shadow: 0 6px 20px rgba(57, 255, 20, 0.45);
+  box-shadow: 0 5px 18px rgba(57, 255, 20, 0.45);
 }
