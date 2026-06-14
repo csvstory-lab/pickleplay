@@ -335,8 +335,8 @@
   function renderExploreHtml(topSlugs) {
     var html =
       '<div class="explore-card" data-explore-hall="1" role="button" tabindex="0">' +
-      '<div class="explore-icon">🏆</div>' +
-      '<div class="explore-text">명예의 전당</div>' +
+      '<div class="explore-icon">🏅</div>' +
+      '<div class="explore-text">전당 후보작</div>' +
       '</div>';
 
     (topSlugs || []).slice(0, 3).forEach(function (slug) {

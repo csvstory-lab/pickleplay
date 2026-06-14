@@ -99,6 +99,10 @@
     .btn-delete { color: var(--neon-pink); border-color: transparent; }
     .btn-delete:hover { background-color: rgba(255, 0, 127, 0.1); border-color: var(--neon-pink); color: var(--neon-pink); }
     .btn-disabled { color: #52525b; border-color: transparent; cursor: not-allowed; }
+    .btn-preview { color: var(--neon-blue); border-color: rgba(0, 240, 255, 0.35); }
+    .btn-preview:hover { background-color: rgba(0, 240, 255, 0.08); border-color: var(--neon-blue); color: var(--neon-blue); }
+    .category-item[data-hall-preview="1"] .cat-left { cursor: pointer; }
+    .category-item[data-hall-preview="1"] .cat-left:hover .cat-name { color: var(--neon-blue); }
 
     /* === 모달 === */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -247,6 +251,17 @@
       let categoriesCache = [];
 
       const container = document.getElementById('categoryListContainer');
+      const HALL_CATEGORY_SLUG = 'c_hall';
+      const HALL_USER_PREVIEW_URL = '../user_app/hall_of_fame.html';
+
+      function isHallCategory(cat) {
+          const slug = String(cat && cat.slug ? cat.slug : '').trim().toLowerCase();
+          return slug === HALL_CATEGORY_SLUG || slug === 'hall';
+      }
+
+      function openHallUserPreview() {
+          window.open(HALL_USER_PREVIEW_URL, '_blank', 'noopener,noreferrer');
+      }
 
       function getSupabaseClient() {
           const cfg = window.PICKLE_SUPABASE_CONFIG;
@@ -305,8 +320,11 @@
           const name = cat.name || '';
 
           let actionsHtml;
-          if (isFixed) {
+          if (isFixed || isHallCategory(cat)) {
               actionsHtml = '<button class="btn-action btn-disabled" disabled>시스템 고정</button>';
+              if (isHallCategory(cat)) {
+                  actionsHtml += '<button type="button" class="btn-action btn-preview btn-hall-preview">👁️ 유저앱 미리보기</button>';
+              }
           } else {
               actionsHtml = ''
                   + '<button class="btn-action btn-edit" data-slug="' + escapeHtml(slug) + '">수정</button>'
@@ -316,8 +334,10 @@
                   + '<button class="btn-action btn-delete" data-slug="' + escapeHtml(slug) + '">삭제</button>';
           }
 
+          const hallPreviewAttr = isHallCategory(cat) ? ' data-hall-preview="1"' : '';
+
           return ''
-              + '<div class="' + itemClasses.join(' ') + '" data-slug="' + escapeHtml(slug) + '">'
+              + '<div class="' + itemClasses.join(' ') + '" data-slug="' + escapeHtml(slug) + '"' + hallPreviewAttr + '>'
               + '  <div class="cat-left">'
               +        handleHtml
               + '    <div class="cat-icon" style="' + iconStyle + '">' + escapeHtml(icon) + '</div>'
@@ -646,6 +666,17 @@
       }
 
       container.addEventListener('click', function(e) {
+          if (e.target.closest('.btn-hall-preview')) {
+              openHallUserPreview();
+              return;
+          }
+
+          const hallRow = e.target.closest('[data-hall-preview="1"]');
+          if (hallRow && !e.target.closest('.action-btns')) {
+              openHallUserPreview();
+              return;
+          }
+
           const editBtn = e.target.closest('.btn-edit');
           if (editBtn) {
               const slug = editBtn.dataset.slug;

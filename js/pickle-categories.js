@@ -11,6 +11,14 @@
     href: 'hall_of_fame.html',
   };
 
+  /** DB categories.slug — 전당 후보작 전용(칩 바 HALL_NAV_ITEM과 중복 방지) */
+  var HALL_DB_SLUGS = { c_hall: true, hall: true };
+
+  function isHallDbSlug(raw) {
+    var slug = String(raw || '').trim().toLowerCase();
+    return !!HALL_DB_SLUGS[slug];
+  }
+
   var SLUG_META = { all: { label: '🔥 모든 불판' } };
 
   /** DB 장애 시 폴백 (오프라인·RLS 미적용) */
@@ -99,7 +107,9 @@
   }
 
   function applyCategoryList(list) {
-    cache.list = list || [];
+    cache.list = (list || []).filter(function (c) {
+      return c && c.slug && !isHallDbSlug(c.slug);
+    });
     rebuildIndexes(cache.list);
     cache.loaded = true;
     return cache.list;
@@ -231,6 +241,10 @@
   }
 
   function goCategory(slug, sort) {
+    if (isHallDbSlug(slug)) {
+      window.location.href = HALL_NAV_ITEM.href;
+      return;
+    }
     window.location.href = buildCategoryUrl(slug, sort);
   }
 
@@ -522,6 +536,8 @@
     getCategories: getCategories,
     getNavItems: getNavItems,
     HALL_NAV_ITEM: HALL_NAV_ITEM,
+    HALL_PAGE_URL: HALL_NAV_ITEM.href,
+    isHallDbSlug: isHallDbSlug,
     SLUG_META: SLUG_META,
     normalizeSlug: normalizeSlug,
     normalizeCategorySlug: normalizeCategorySlug,
