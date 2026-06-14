@@ -2,8 +2,9 @@
  * P!CKLE — 모바일 터치/줌 · 가로 모드 경고
  */
 
+html,
 body {
-  touch-action: pan-x pan-y;
+  touch-action: manipulation;
 }
 
 .landscape-warning {

@@ -2,13 +2,14 @@
  * P!CKLE — 반응형 레이아웃 · 미디어 · 텍스트 넘침 방지
  */
 
-/* 최상위 가로 스크롤 차단 */
+/* 최상위 가로 스크롤 차단 · 더블탭 줌 방지 */
+html,
 body {
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  touch-action: pan-x pan-y;
+  touch-action: manipulation;
 }
 
 main {
