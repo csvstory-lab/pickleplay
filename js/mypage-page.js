@@ -774,6 +774,74 @@
     );
   }
 
+  function getCommentDisplayText(comment) {
+    if (!comment) return '';
+    return String(comment.filtered_content || comment.content || '').trim();
+  }
+
+  function truncateCommentText(text, maxLen) {
+    var value = String(text || '').trim();
+    if (value.length <= maxLen) return value;
+    return value.slice(0, maxLen) + '…';
+  }
+
+  function normalizeCommentRow(row) {
+    if (!row || !row.post_id) return null;
+
+    var post = row.posts != null ? row.posts : row.post;
+    if (Array.isArray(post)) post = post[0];
+    if (!post || !post.id) return null;
+
+    return {
+      comment: row,
+      post: post,
+    };
+  }
+
+  function buildCommentRecordCard(row) {
+    var comment = row.comment;
+    var post = row.post;
+    var expired = isPostTimeExpired(post.expires_at);
+    var statusClass = expired ? 'done' : 'ing';
+    var statusText = getRemainingTime(post.expires_at);
+    var title = post.title || post.option_a_name || '제목 없음';
+    var preview = truncateCommentText(getCommentDisplayText(comment), 100);
+
+    return (
+      '<div class="record-card comment-card" data-id="' +
+      escapeHtml(post.id) +
+      '" role="button" tabindex="0" aria-label="' +
+      escapeHtml(title) +
+      '">' +
+      '<div class="card-header">' +
+      '<div class="card-header-left">' +
+      '<span class="status-badge ' +
+      statusClass +
+      '">' +
+      escapeHtml(statusText) +
+      '</span>' +
+      '</div>' +
+      '<span class="card-date">' +
+      escapeHtml(formatCardDate(comment.created_at)) +
+      '</span>' +
+      '</div>' +
+      '<div class="card-title">' +
+      escapeHtml(title) +
+      '</div>' +
+      '<div class="comment-preview">' +
+      '<span class="comment-preview-label">💬 내 댓글</span>' +
+      escapeHtml(preview || '(내용 없음)') +
+      '</div>' +
+      '<div class="card-footer-stats">' +
+      '<span>' +
+      escapeHtml(categoryLabel(post.category)) +
+      '</span>' +
+      '<span>불판 보러가기 →</span>' +
+      '</div>' +
+      '</div>'
+    );
+  }
+
   function buildCouponCard(coupon) {
     var isUsed = !!coupon.is_used;
     var badgeClass = isUsed ? 'badge-used' : 'badge-unused';
@@ -1255,6 +1323,44 @@
     }
   }
 
+  async function loadCommentedPosts(userId) {
+    var container = document.getElementById('commentedArea');
+    if (!container) return;
+
+    try {
+      var sb = getSupabaseClient();
+      var result = await sb
+        .from('comments')
+        .select(
+          'id, content, filtered_content, created_at, post_id, visibility_status, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status )'
+        )
+        .eq('user_id', userId)
+        .eq('visibility_status', 'visible')
+        .order('created_at', { ascending: false });
+
+      if (result.error) throw result.error;
+
+      var rows = (result.data || [])
+        .map(normalizeCommentRow)
+        .filter(function (row) {
+          return row !== null;
+        });
+
+      if (!rows.length) {
+        container.innerHTML =
+          '<div class="empty-state" id="commentedEmpty">아직 작성한 댓글이 없습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = rows.map(buildCommentRecordCard).join('');
+      bindRecordCards(container);
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 쓴 댓글 로드 실패', err);
+      container.innerHTML =
+        '<div class="empty-state" id="commentedEmpty">댓글 목록을 불러오지 못했습니다.</div>';
+    }
+  }
+
   async function loadSavedCoupons(userId) {
     if (savedCouponsInflight) {
       return savedCouponsInflight;
@@ -1323,6 +1429,7 @@
   var mypageTabLoaded = {
     created: false,
     voted: false,
+    commented: false,
     saved: false,
   };
 
@@ -1332,6 +1439,9 @@
     if (tabName === 'voted' && !mypageTabLoaded.voted) {
       mypageTabLoaded.voted = true;
       await loadVotedPosts(currentUser.id);
+    } else if (tabName === 'commented' && !mypageTabLoaded.commented) {
+      mypageTabLoaded.commented = true;
+      await loadCommentedPosts(currentUser.id);
     } else if (tabName === 'saved') {
       await loadSavedCoupons(currentUser.id);
       mypageTabLoaded.saved = true;
@@ -1380,6 +1490,7 @@
     saveProfile: saveProfile,
     loadCreatedPosts: loadCreatedPosts,
     loadVotedPosts: loadVotedPosts,
+    loadCommentedPosts: loadCommentedPosts,
     loadSavedCoupons: loadSavedCoupons,
     onTabSwitch: onTabSwitch,
     copyPinToClipboard: copyPinToClipboard,

@@ -146,6 +146,17 @@
     .card-footer-stats { display: flex; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
     .stat-fire { color: var(--theme-gold); }
 
+    .record-card.comment-card .comment-preview {
+        font-size: 0.88rem; font-weight: 600; color: #d4d4d8; line-height: 1.45;
+        margin-bottom: 12px; padding: 10px 12px; border-radius: 10px;
+        background: #09090b; border: 1px solid #3f3f46;
+        border-left: 3px solid var(--neon-green); word-break: break-all;
+    }
+    .record-card.comment-card .comment-preview-label {
+        display: block; font-size: 0.68rem; font-weight: 800; color: var(--neon-green);
+        margin-bottom: 6px; letter-spacing: -0.02em;
+    }
+
     /* 불판 수정 슬라이드 패널 */
     #postEditPanel { z-index: 9300; background-color: var(--bg-color); left: 0; right: 0; margin: 0 auto; }
     .post-edit-content { padding: 24px 20px 40px; }
@@ -798,6 +809,7 @@
     <div class="my-tab-wrapper">
         <button class="my-tab active" id="tabCreated" onclick="switchMyTab('created')">🔥 지핀 불판</button>
         <button class="my-tab" id="tabVoted" onclick="switchMyTab('voted')">🥊 참전 기록</button>
+        <button class="my-tab" id="tabCommented" onclick="switchMyTab('commented')">💬 쓴 댓글</button>
         <button class="my-tab" id="tabSaved" onclick="switchMyTab('saved')">🎁 보관함</button>
     </div>
 
@@ -807,6 +819,10 @@
 
     <div class="list-container hidden" id="votedArea">
         <div class="empty-state" id="votedEmpty">아직 참전한 불판이 없습니다.</div>
+    </div>
+
+    <div class="list-container hidden" id="commentedArea">
+        <div class="empty-state" id="commentedEmpty">아직 작성한 댓글이 없습니다.</div>
     </div>
 
     <div class="list-container hidden" id="savedArea">
@@ -1256,7 +1272,7 @@
 
     // --- 마이페이지 메인 탭 전환 ---
     function switchMyTab(tabName) {
-        ['Created', 'Voted', 'Saved'].forEach(name => {
+        ['Created', 'Voted', 'Commented', 'Saved'].forEach(name => {
             document.getElementById(`tab${name}`).classList.remove('active');
             document.getElementById(`${name.toLowerCase()}Area`).classList.add('hidden');
         });
