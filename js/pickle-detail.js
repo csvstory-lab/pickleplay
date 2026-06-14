@@ -41,31 +41,34 @@
   }
 
   function normalizePicklePostsRow(row) {
-    return {
-      id: row.id,
-      title: row.title || '',
-      category: row.category,
-      option_a: row.option_a || '',
-      option_b: row.option_b || '',
-      description: row.description || null,
-      media_url_1: row.media_url_1,
-      media_url_2: row.media_url_2,
-      media_mode: row.media_mode || 'text',
-      media_type: row.media_mode,
-      layout_style: row.media_orientation || row.layout_style,
-      hashtags: row.hashtags || row.tags || '',
-      tags: row.tags || row.hashtags || '',
-      created_at: row.created_at,
-      duration: row.duration,
-      expires_at: row.expires_at || row.end_at || row.end_date || null,
-      start_at: row.start_at,
-      end_at: row.end_at || row.end_date,
-      end_date: row.end_date || row.end_at,
-      media_layout: row.media_layout || row.layout_style || 'horizontal',
-      authorNickname: null,
-      author_nickname: '',
-      author_avatar_html: '',
-    };
+    return Object.assign(
+      {
+        id: row.id,
+        title: row.title || '',
+        category: row.category,
+        option_a: row.option_a || '',
+        option_b: row.option_b || '',
+        description: row.description || null,
+        media_url_1: row.media_url_1,
+        media_url_2: row.media_url_2,
+        media_mode: row.media_mode || 'text',
+        media_type: row.media_mode,
+        layout_style: row.media_orientation || row.layout_style,
+        hashtags: row.hashtags || row.tags || '',
+        tags: row.tags || row.hashtags || '',
+        created_at: row.created_at,
+        duration: row.duration,
+        expires_at: row.expires_at || row.end_at || row.end_date || null,
+        start_at: row.start_at,
+        end_at: row.end_at || row.end_date,
+        end_date: row.end_date || row.end_at,
+        media_layout: row.media_layout || row.layout_style || 'horizontal',
+        authorNickname: null,
+        author_nickname: '',
+        author_avatar_html: '',
+      },
+      resolveAuthorFieldsFromRow(row)
+    );
   }
 
   function resolveAuthorFieldsFromRow(row) {
@@ -80,7 +83,7 @@
       authorPoints = window.PickleProfile.extractRankingPointsFromRow(userRow);
     }
     return {
-      author_id: row.author_id || null,
+      author_id: row.author_id || row.user_id || null,
       author_ranking_points: authorPoints,
       author_nickname: nickname,
       author_avatar_html: avatarHtml,
@@ -592,9 +595,9 @@
 
         if (insResult.error) {
           if (insResult.error.code === '23505') {
-            setCommentLiked(commentId, true);
-            updateCommentLikeButton(btnEl, Math.max(currentCount, nextCount), true);
-            return;
+        setCommentLiked(commentId, true);
+        updateCommentLikeButton(btnEl, Math.max(currentCount, nextCount), true);
+        return;
           }
           throw insResult.error;
         }
@@ -1217,19 +1220,102 @@
     if (submitBtn) submitBtn.disabled = false;
   }
 
-  async function syncCommentAreaAccess(post) {
-    if (!post || isPostExpired(post)) return;
+  function resetVoteOptionStyles() {
+    var optA = $('optBtnA');
+    var optB = $('optBtnB');
+    if (optA) optA.classList.remove('selected-a', 'selected-b');
+    if (optB) optB.classList.remove('selected-a', 'selected-b');
+  }
+
+  function applyVoteSelectionUI(choice) {
+    if (!choice) return;
+    resetVoteOptionStyles();
+    var optEl = choice === 'A' ? $('optBtnA') : $('optBtnB');
+    if (optEl) {
+      optEl.classList.add(choice === 'A' ? 'selected-a' : 'selected-b');
+    }
+  }
+
+  function canCastVoteNow() {
+    return !!(currentPost && currentPostId && !detailHasVoted && !isPostExpired(currentPost));
+  }
+
+  function bindDetailMediaVoteHandlers() {
+    var container = $('videoContainer');
+    if (!container) return;
+
+    if (container.dataset.voteBound !== '1') {
+      container.dataset.voteBound = '1';
+
+      container.addEventListener('click', function (e) {
+        if (!canCastVoteNow()) return;
+        if (e.target.closest('iframe') || e.target.closest('a.youtube-watch-fallback')) {
+          return;
+        }
+
+        var half = e.target.closest('.split-half[data-side]');
+        if (!half) return;
+
+        var side = half.getAttribute('data-side');
+        if (side !== 'A' && side !== 'B') return;
+
+        e.preventDefault();
+        var optEl = side === 'A' ? $('optBtnA') : $('optBtnB');
+        castVote(side, e, optEl || half);
+      });
+
+      container.addEventListener('keydown', function (e) {
+        if (!canCastVoteNow()) return;
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+
+        var half = e.target.closest('.split-half[data-side]');
+        if (!half) return;
+
+        e.preventDefault();
+        var side = half.getAttribute('data-side');
+        var optEl = side === 'A' ? $('optBtnA') : $('optBtnB');
+        castVote(side, e, optEl || half);
+      });
+    }
+
+    var halves = container.querySelectorAll('.split-half[data-side]');
+    halves.forEach(function (half) {
+      half.classList.toggle('is-vote-disabled', !canCastVoteNow());
+    });
+  }
+
+  async function syncDetailViewerState(post) {
+    if (!post) return;
+
+    if (isPostExpired(post)) {
+      unlockCommentsArea();
+      return;
+    }
 
     var sb = window.PickleSupabase.getClient();
     var authResult = await sb.auth.getUser();
     var user = authResult.data && authResult.data.user ? authResult.data.user : null;
-    if (!user) return;
+
+    showVoteOptions();
+    resetVoteOptionStyles();
+    detailHasVoted = false;
+
+    var blindFeedback = $('blindFeedback');
+    if (blindFeedback) blindFeedback.classList.remove('show');
+
+    if (post.author_id && window.PickleFollows && window.PickleFollows.syncDetailFollowButton) {
+      await window.PickleFollows.syncDetailFollowButton(post.author_id);
+    }
+
+    if (!user) {
+      bindDetailMediaVoteHandlers();
+      return;
+    }
 
     if (post.author_id && post.author_id === user.id) {
       unlockCommentsArea();
-      if (post.id) {
-        await loadComments(post.id);
-      }
+      if (post.id) await loadComments(post.id);
+      bindDetailMediaVoteHandlers();
       return;
     }
 
@@ -1240,17 +1326,17 @@
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (voteResult.error || !voteResult.data) return;
+    if (voteResult.error || !voteResult.data) {
+      bindDetailMediaVoteHandlers();
+      return;
+    }
 
     detailHasVoted = true;
+    applyVoteSelectionUI(voteResult.data.choice);
     unlockCommentsArea();
-
-    var blindFeedback = $('blindFeedback');
     if (blindFeedback) blindFeedback.classList.add('show');
-
-    if (post.id) {
-      await loadComments(post.id);
-    }
+    if (post.id) await loadComments(post.id);
+    bindDetailMediaVoteHandlers();
   }
 
   function ensureCommentsEnabledWhenExpired(post) {
@@ -1537,6 +1623,7 @@
     }
 
     setTimeout(revealBlindVoteFeedback, 800);
+    bindDetailMediaVoteHandlers();
   }
 
   function renderDetail(post, voteStats, commentCount) {
@@ -1577,8 +1664,11 @@
     }
 
     var mediaEl = $('videoContainer');
-    if (mediaEl && window.PickleMediaView) {
-      mediaEl.innerHTML = window.PickleMediaView.buildDetailMediaHtml(post);
+    if (mediaEl) {
+      mediaEl.dataset.voteBound = '';
+      if (window.PickleMediaView) {
+        mediaEl.innerHTML = window.PickleMediaView.buildDetailMediaHtml(post);
+      }
     }
 
     renderStats(voteStats, commentCount);
@@ -1604,7 +1694,7 @@
     }
 
     ensureCommentsEnabledWhenExpired(post);
-    syncCommentAreaAccess(post);
+    syncDetailViewerState(post);
   }
 
   function showError(message) {

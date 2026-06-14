@@ -35,6 +35,7 @@
         margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+        touch-action: pan-x pan-y;
     }
 
     /* === 상단 헤더 === */
@@ -149,6 +150,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+    .media-container .split-half.media-vote-tap {
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .media-container .split-half.media-vote-tap:active:not(.is-vote-disabled) {
+        transform: scale(0.98);
+    }
+    .media-container .split-half.media-vote-tap.is-vote-disabled {
+        cursor: default;
     }
     .media-container .split-left { background: linear-gradient(135deg, #0a192f, #000); border: 2px solid var(--neon-blue); }
     .media-container .split-right { background: linear-gradient(135deg, #2e1a2a, #000); border: 2px solid var(--neon-pink); }
@@ -500,9 +511,16 @@
 
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
+<link rel="stylesheet" href="../css/mobile-shell.css">
 <link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
 <body>
+
+<div id="landscape-warning" class="landscape-warning" aria-hidden="true">
+    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
+    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
+    <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
+</div>
 
 <header id="mainHeader">
     <div class="top-row">
@@ -697,7 +715,7 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-ranking-events.js"></script>
 <script src="../js/pickle-follows.js"></script>
-<script src="../js/pickle-detail.js?v=20260608_detail_fix1"></script>
+<script src="../js/pickle-detail.js?v=20260608_detail_mobile1"></script>
 <script>
     function ensureKakaoReady() {
         if (!window.Kakao) return false;

@@ -239,10 +239,12 @@
     }
 
     return (
-      '<div class="split-half ' +
+      '<div class="split-half media-vote-tap ' +
       sideClass +
       '" data-side="' +
       side +
+      '" role="button" tabindex="0" aria-label="' +
+      escapeHtml(side + ' 선택 · ' + (label || '투표')) +
       '">' +
       inner +
       '</div>'

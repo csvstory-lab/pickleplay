@@ -37,6 +37,7 @@ body.pickle-app {
   margin: 0;
   min-height: 100%;
   min-height: 100dvh;
+  touch-action: pan-x pan-y;
   background: var(--bg-outer);
   background-image:
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(57, 255, 20, 0.07), transparent),

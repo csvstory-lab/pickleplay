@@ -717,14 +717,21 @@
     var btn = document.getElementById('detailFollowBtn');
     if (!btn) return;
 
+    var resolvedAuthorId = authorId ? String(authorId).trim() : '';
+    if (!resolvedAuthorId) {
+      btn.hidden = true;
+      btn.removeAttribute('data-user-id');
+      return;
+    }
+
     var myId = await getCurrentUserId();
-    if (!myId || !authorId || myId === authorId) {
+    if (myId && String(myId) === resolvedAuthorId) {
       btn.hidden = true;
       return;
     }
 
     btn.hidden = false;
-    btn.setAttribute('data-user-id', authorId);
+    btn.setAttribute('data-user-id', resolvedAuthorId);
 
     try {
       var following = await isFollowing(myId, authorId);

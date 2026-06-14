@@ -1,0 +1,57 @@
+/**
+ * P!CKLE — 모바일 터치/줌 · 가로 모드 경고
+ */
+
+body {
+  touch-action: pan-x pan-y;
+}
+
+.landscape-warning {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 28px;
+  box-sizing: border-box;
+  background: #09090b;
+  text-align: center;
+  font-family: 'Black Han Sans', 'Pretendard', sans-serif;
+  border: 4px solid #fff;
+  box-shadow: inset 0 0 80px rgba(57, 255, 20, 0.08);
+}
+
+.landscape-warning__icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 16px rgba(255, 0, 127, 0.55));
+}
+
+.landscape-warning__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 5vw, 1.85rem);
+  font-weight: 900;
+  color: #39ff14;
+  text-shadow:
+    3px 3px 0 #000,
+    0 0 24px rgba(57, 255, 20, 0.45);
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.landscape-warning__sub {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ff007f;
+  letter-spacing: -0.02em;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .landscape-warning {
+    display: flex;
+  }
+}

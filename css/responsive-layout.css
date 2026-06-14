@@ -8,6 +8,7 @@ body {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  touch-action: pan-x pan-y;
 }
 
 main {
