@@ -399,10 +399,66 @@
     .comment-list { display: flex; flex-direction: column; gap: 15px; }
     .comment-item { display: flex; gap: 12px; }
     .comment-content { flex: 1; background-color: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid #222; }
-    .comment-user { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .comment-user { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
     .comment-pick-a { color: var(--neon-blue); font-size: 0.7rem; border: 1px solid var(--neon-blue); padding: 2px 6px; border-radius: 4px; }
     .comment-pick-b { color: var(--neon-pink); font-size: 0.7rem; border: 1px solid var(--neon-pink); padding: 2px 6px; border-radius: 4px; }
     .comment-text { font-size: 0.95rem; line-height: 1.4; }
+    .comment-actions {
+        display: flex; align-items: center; gap: 10px; margin-top: 10px;
+        padding-top: 8px; border-top: 1px dashed #3f3f46;
+    }
+    .comment-action-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 10px; border-radius: 999px; border: 1px solid #3f3f46;
+        background: #09090b; color: #a1a1aa; font-size: 0.72rem; font-weight: 800;
+        cursor: pointer; transition: 0.2s; font-family: inherit; line-height: 1.2;
+    }
+    .comment-action-btn:active { transform: scale(0.96); }
+    .comment-like-btn.is-liked {
+        color: var(--neon-pink); border-color: var(--neon-pink);
+        background: rgba(255, 0, 127, 0.12);
+        box-shadow: 0 0 10px rgba(255, 0, 127, 0.25);
+    }
+    .comment-like-count { min-width: 0.8rem; text-align: center; }
+    .comment-replies {
+        display: flex; flex-direction: column; gap: 10px;
+        margin: 10px 0 0 18px; padding-left: 12px;
+        border-left: 2px solid #3f3f46;
+    }
+    .comment-item--reply { margin-left: 0; }
+    .comment-item--reply .comment-content {
+        border-color: #3f3f46;
+        background: linear-gradient(180deg, #1a1a1e 0%, var(--card-bg) 100%);
+    }
+    .comment-reply-marker {
+        font-size: 0.85rem; color: var(--neon-blue); font-weight: 900;
+        margin-right: 4px; flex-shrink: 0;
+    }
+    .comment-reply-form {
+        display: flex; gap: 8px; margin-top: 10px;
+    }
+    .comment-reply-form.hidden { display: none; }
+    .comment-reply-input {
+        flex: 1; background: #09090b; border: 1px solid #3f3f46;
+        border-radius: 12px; padding: 8px 12px; color: #fff; font-size: 0.85rem;
+        outline: none; font-family: inherit;
+    }
+    .comment-reply-input:focus { border-color: var(--neon-green); }
+    .comment-reply-submit {
+        flex-shrink: 0; background: var(--neon-green); color: #000; border: none;
+        border-radius: 12px; padding: 0 14px; font-size: 0.78rem; font-weight: 800;
+        cursor: pointer; font-family: inherit;
+    }
+    .comment-reply-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    @keyframes commentHighlightPulse {
+        0%, 100% { border-color: #222; box-shadow: none; }
+        50% { border-color: var(--neon-green); box-shadow: 0 0 18px rgba(57, 255, 20, 0.45); }
+    }
+    .comment-item.highlight-pulse .comment-content,
+    .comment-item--reply.highlight-pulse .comment-content {
+        animation: commentHighlightPulse 0.85s ease-in-out 2;
+        border-color: var(--neon-green);
+    }
     .comments-empty-msg { text-align: center; color: var(--text-sub); font-size: 0.88rem; font-weight: 700; padding: 24px 12px; margin: 0; }
     .comment-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -641,7 +697,7 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-ranking-events.js"></script>
 <script src="../js/pickle-follows.js"></script>
-<script src="../js/pickle-detail.js"></script>
+<script src="../js/pickle-detail.js?v=20260613_detail_comments1"></script>
 <script>
     function ensureKakaoReady() {
         if (!window.Kakao) return false;

@@ -810,6 +810,8 @@
     return (
       '<div class="record-card comment-card" data-id="' +
       escapeHtml(post.id) +
+      '" data-comment-id="' +
+      escapeHtml(comment.id) +
       '" role="button" tabindex="0" aria-label="' +
       escapeHtml(title) +
       '">' +
@@ -959,7 +961,7 @@
 
   function bindRecordCards(container) {
     if (!container) return;
-    container.querySelectorAll('.record-card').forEach(function (card) {
+    container.querySelectorAll('.record-card:not(.comment-card)').forEach(function (card) {
       var id = card.dataset.id;
       if (!id) return;
       card.addEventListener('click', function () {
@@ -981,6 +983,34 @@
         var postId = btn.dataset.postId;
         if (postId) {
           openPostEditPanel(postId);
+        }
+      });
+    });
+
+    bindCommentRecordCards(container);
+  }
+
+  function bindCommentRecordCards(container) {
+    if (!container) return;
+
+    container.querySelectorAll('.record-card.comment-card').forEach(function (card) {
+      var postId = card.dataset.id;
+      var commentId = card.dataset.commentId;
+      if (!postId) return;
+
+      function goDetailWithCommentFocus() {
+        var url = 'detail.html?id=' + encodeURIComponent(postId);
+        if (commentId) {
+          url += '#comment-' + encodeURIComponent(commentId);
+        }
+        window.location.href = url;
+      }
+
+      card.addEventListener('click', goDetailWithCommentFocus);
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goDetailWithCommentFocus();
         }
       });
     });

@@ -7,6 +7,8 @@
   var currentPost = null;
   var timerInterval = null;
   var currentPostId = null;
+  var likedCommentIdSet = Object.create(null);
+  var openReplyParentId = null;
 
   function categoryDisplay(category) {
     if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
@@ -133,6 +135,9 @@
 
     row.author_nickname = nickname || null;
     row.author_avatar_html = avatarHtml || null;
+    row.parent_id = row.parent_id || null;
+    row.like_count = Number(row.like_count);
+    if (!Number.isFinite(row.like_count) || row.like_count < 0) row.like_count = 0;
     return row;
   }
 
@@ -318,17 +323,105 @@
     return escapeHtml(raw);
   }
 
-  function renderCommentItemHtml(comment) {
-    var body = comment.filtered_content || comment.content || '';
+  function isCommentLiked(commentId) {
+    return !!likedCommentIdSet[commentId];
+  }
+
+  function setCommentLiked(commentId, liked) {
+    if (liked) likedCommentIdSet[commentId] = true;
+    else delete likedCommentIdSet[commentId];
+  }
+
+  function buildCommentTree(comments) {
+    var parents = [];
+    var repliesByParent = Object.create(null);
+
+    (comments || []).forEach(function (comment) {
+      if (comment.parent_id) {
+        if (!repliesByParent[comment.parent_id]) {
+          repliesByParent[comment.parent_id] = [];
+        }
+        repliesByParent[comment.parent_id].push(comment);
+      } else {
+        parents.push(comment);
+      }
+    });
+
+    parents.sort(function (a, b) {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    Object.keys(repliesByParent).forEach(function (parentId) {
+      repliesByParent[parentId].sort(function (a, b) {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+    });
+
+    return { parents: parents, repliesByParent: repliesByParent };
+  }
+
+  function renderCommentActionsHtml(comment, options) {
+    options = options || {};
+    var likeCount = Number(comment.like_count);
+    if (!Number.isFinite(likeCount) || likeCount < 0) likeCount = 0;
+    var liked = isCommentLiked(comment.id);
+    var likeClass = liked ? ' comment-like-btn is-liked' : ' comment-like-btn';
+    var replyBtn = options.isReply
+      ? ''
+      : '<button type="button" class="comment-action-btn comment-reply-btn" data-comment-id="' +
+        escapeHtml(comment.id) +
+        '">💬 답글</button>';
+
+    var replyForm = options.isReply
+      ? ''
+      : '<div class="comment-reply-form hidden" data-parent-id="' +
+        escapeHtml(comment.id) +
+        '">' +
+        '<input type="text" class="comment-reply-input" maxlength="2000" placeholder="답글을 입력하세요">' +
+        '<button type="button" class="comment-reply-submit" data-parent-id="' +
+        escapeHtml(comment.id) +
+        '">등록</button>' +
+        '</div>';
+
     return (
-      '<div class="comment-item" data-comment-id="' +
+      '<div class="comment-actions">' +
+      '<button type="button" class="comment-action-btn' +
+      likeClass +
+      '" data-comment-id="' +
+      escapeHtml(comment.id) +
+      '">❤️ <span class="comment-like-count">' +
+      likeCount.toLocaleString() +
+      '</span></button>' +
+      replyBtn +
+      '</div>' +
+      replyForm
+    );
+  }
+
+  function renderCommentItemHtml(comment, options) {
+    options = options || {};
+    var body = comment.filtered_content || comment.content || '';
+    var isReply = !!options.isReply;
+    var itemClass = isReply ? 'comment-item comment-item--reply' : 'comment-item';
+    var replyMarker = isReply
+      ? '<span class="comment-reply-marker" aria-hidden="true">↳</span>'
+      : '';
+
+    return (
+      '<div class="' +
+      itemClass +
+      '" id="comment-' +
+      escapeHtml(comment.id) +
+      '" data-comment-id="' +
       escapeHtml(comment.id) +
       '">' +
       '<div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:50%;">' +
       commentAuthorAvatarInner(comment) +
       '</div>' +
       '<div class="comment-content">' +
-      '<div class="comment-user"><span>' +
+      '<div class="comment-user">' +
+      replyMarker +
+      '<span>' +
       escapeHtml(commentAuthorLabel(comment)) +
       '</span><span style="font-size:0.7rem;color:#71717a;">' +
       escapeHtml(formatCommentTime(comment.created_at)) +
@@ -336,15 +429,62 @@
       '<div class="comment-text">' +
       escapeHtml(body) +
       '</div>' +
+      renderCommentActionsHtml(comment, options) +
       '</div>' +
       '</div>'
     );
   }
 
+  function renderCommentThreadHtml(parent, repliesByParent) {
+    var replies = repliesByParent[parent.id] || [];
+    var repliesHtml = replies
+      .map(function (reply) {
+        return renderCommentItemHtml(reply, { isReply: true });
+      })
+      .join('');
+
+    return (
+      '<div class="comment-thread" data-thread-id="' +
+      escapeHtml(parent.id) +
+      '">' +
+      renderCommentItemHtml(parent, { isReply: false }) +
+      (repliesHtml
+        ? '<div class="comment-replies">' + repliesHtml + '</div>'
+        : '') +
+      '</div>'
+    );
+  }
+
   var COMMENT_SELECT_VARIANTS = [
+    'id, content, filtered_content, created_at, user_id, parent_id, like_count, author_nickname, author_avatar_html',
+    'id, content, filtered_content, created_at, user_id, parent_id, like_count, users:user_id ( nickname )',
     'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html',
     'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )',
   ];
+
+  async function fetchMyLikedCommentIds(sb, userId, commentIds) {
+    likedCommentIdSet = Object.create(null);
+    if (!userId || !commentIds || !commentIds.length) return;
+
+    try {
+      var result = await sb
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', userId)
+        .in('comment_id', commentIds);
+
+      if (result.error) {
+        console.warn('[P!CKLE Detail] comment_likes 조회 실패', result.error);
+        return;
+      }
+
+      (result.data || []).forEach(function (row) {
+        if (row && row.comment_id) likedCommentIdSet[row.comment_id] = true;
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Detail] comment_likes 조회 예외', err);
+    }
+  }
 
   async function fetchCommentsList(sb, postId) {
     var lastError = null;
@@ -355,7 +495,7 @@
         .select(COMMENT_SELECT_VARIANTS[i])
         .eq('post_id', postId)
         .eq('visibility_status', 'visible')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (!result.error) {
         return (result.data || []).map(normalizeCommentRow);
@@ -369,6 +509,233 @@
     }
 
     throw lastError || new Error('댓글을 불러오지 못했습니다.');
+  }
+
+  function updateCommentLikeButton(btn, likeCount, liked) {
+    if (!btn) return;
+    btn.classList.toggle('is-liked', !!liked);
+    var countEl = btn.querySelector('.comment-like-count');
+    if (countEl) countEl.textContent = Number(likeCount || 0).toLocaleString();
+  }
+
+  async function toggleCommentLike(commentId, btnEl) {
+    if (!commentId) return;
+
+    var sb = window.PickleSupabase.getClient();
+    var authResult = await sb.auth.getUser();
+    if (authResult.error || !authResult.data || !authResult.data.user) {
+      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      return;
+    }
+
+    var userId = authResult.data.user.id;
+    var currentlyLiked = isCommentLiked(commentId);
+    var countEl = btnEl ? btnEl.querySelector('.comment-like-count') : null;
+    var currentCount = countEl ? Number(String(countEl.textContent || '0').replace(/,/g, '')) : 0;
+    if (!Number.isFinite(currentCount)) currentCount = 0;
+
+    try {
+      if (currentlyLiked) {
+        var delResult = await sb
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', userId);
+
+        if (delResult.error) throw delResult.error;
+        setCommentLiked(commentId, false);
+        updateCommentLikeButton(btnEl, Math.max(0, currentCount - 1), false);
+      } else {
+        var insResult = await sb.from('comment_likes').insert({
+          comment_id: commentId,
+          user_id: userId,
+        });
+
+        if (insResult.error) {
+          if (insResult.error.code === '23505') {
+            setCommentLiked(commentId, true);
+            updateCommentLikeButton(btnEl, currentCount, true);
+            return;
+          }
+          throw insResult.error;
+        }
+
+        if (window.PickleRankingEvents && window.PickleRankingEvents.recordCommentLike) {
+          window.PickleRankingEvents.recordCommentLike(commentId);
+        }
+
+        setCommentLiked(commentId, true);
+        updateCommentLikeButton(btnEl, currentCount + 1, true);
+      }
+    } catch (err) {
+      console.error('[P!CKLE Detail] 댓글 좋아요 토글 실패', err);
+      alert('좋아요 처리에 실패했습니다. ' + (err.message || String(err)));
+    }
+  }
+
+  function closeAllReplyForms() {
+    document.querySelectorAll('.comment-reply-form').forEach(function (form) {
+      form.classList.add('hidden');
+    });
+    openReplyParentId = null;
+  }
+
+  function toggleReplyForm(parentId) {
+    if (!parentId) return;
+
+    var form = document.querySelector(
+      '.comment-reply-form[data-parent-id="' + String(parentId).replace(/"/g, '') + '"]'
+    );
+    if (!form) return;
+
+    if (openReplyParentId === parentId && !form.classList.contains('hidden')) {
+      form.classList.add('hidden');
+      openReplyParentId = null;
+      return;
+    }
+
+    closeAllReplyForms();
+    form.classList.remove('hidden');
+    openReplyParentId = parentId;
+    var input = form.querySelector('.comment-reply-input');
+    if (input) input.focus();
+  }
+
+  async function submitReply(parentId) {
+    if (!parentId || !currentPostId) return;
+
+    var form = document.querySelector(
+      '.comment-reply-form[data-parent-id="' + String(parentId).replace(/"/g, '') + '"]'
+    );
+    if (!form) return;
+
+    var inputEl = form.querySelector('.comment-reply-input');
+    var submitBtn = form.querySelector('.comment-reply-submit');
+    var text = inputEl ? inputEl.value.trim() : '';
+
+    if (!text) {
+      alert('답글 내용을 입력해주세요.');
+      return;
+    }
+
+    var sb = window.PickleSupabase.getClient();
+    var authResult = await sb.auth.getUser();
+
+    if (authResult.error || !authResult.data || !authResult.data.user) {
+      alert('답글을 남기려면 로그인이 필요합니다.');
+      return;
+    }
+
+    var user = authResult.data.user;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '등록 중…';
+    }
+
+    try {
+      var authorSnapshot = extractCommentAuthorSnapshot(user);
+      var insertPayload = {
+        user_id: user.id,
+        post_id: currentPostId,
+        parent_id: parentId,
+        content: text,
+        filtered_content: text,
+        ai_filter_status: 'passed',
+        visibility_status: 'visible',
+        author_nickname: authorSnapshot.author_nickname,
+        author_avatar_html: authorSnapshot.author_avatar_html,
+      };
+
+      var insertResult = await sb.from('comments').insert(insertPayload).select('id').single();
+
+      if (insertResult.error && isCommentSchemaColumnError(insertResult.error)) {
+        delete insertPayload.parent_id;
+        delete insertPayload.author_nickname;
+        delete insertPayload.author_avatar_html;
+        insertResult = await sb.from('comments').insert(insertPayload).select('id').single();
+      }
+
+      if (insertResult.error) throw insertResult.error;
+
+      if (inputEl) inputEl.value = '';
+      closeAllReplyForms();
+      await loadComments(currentPostId);
+    } catch (err) {
+      console.error('[P!CKLE Detail] 답글 등록 실패', err);
+      var msg = String(err.message || err);
+      if (msg.indexOf('parent_id') !== -1) {
+        alert('대댓글 기능을 사용하려면 supabase/34_comments_parent_id.sql 을 실행해 주세요.');
+      } else {
+        alert('답글 등록에 실패했습니다. ' + msg);
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '등록';
+      }
+    }
+  }
+
+  function bindCommentListEvents(listEl) {
+    if (!listEl || listEl.dataset.boundComments === '1') return;
+    listEl.dataset.boundComments = '1';
+
+    listEl.addEventListener('click', function (e) {
+      var likeBtn = e.target.closest('.comment-like-btn');
+      if (likeBtn) {
+        e.preventDefault();
+        toggleCommentLike(likeBtn.getAttribute('data-comment-id'), likeBtn);
+        return;
+      }
+
+      var replyBtn = e.target.closest('.comment-reply-btn');
+      if (replyBtn) {
+        e.preventDefault();
+        toggleReplyForm(replyBtn.getAttribute('data-comment-id'));
+        return;
+      }
+
+      var replySubmit = e.target.closest('.comment-reply-submit');
+      if (replySubmit) {
+        e.preventDefault();
+        submitReply(replySubmit.getAttribute('data-parent-id'));
+      }
+    });
+
+    listEl.addEventListener('keydown', function (e) {
+      var replyInput = e.target.closest('.comment-reply-input');
+      if (replyInput && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        var form = replyInput.closest('.comment-reply-form');
+        var parentId = form ? form.getAttribute('data-parent-id') : null;
+        if (parentId) submitReply(parentId);
+      }
+    });
+  }
+
+  function focusCommentFromHash() {
+    var hash = window.location.hash || '';
+    if (!hash || hash.indexOf('#comment-') !== 0) return;
+
+    var commentId = decodeURIComponent(hash.slice('#comment-'.length));
+    if (!commentId) return;
+
+    var el =
+      document.getElementById('comment-' + commentId) ||
+      document.querySelector(
+        '[data-comment-id="' + String(commentId).replace(/"/g, '') + '"]'
+      );
+
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('highlight-pulse');
+    void el.offsetWidth;
+    el.classList.add('highlight-pulse');
+    window.setTimeout(function () {
+      el.classList.remove('highlight-pulse');
+    }, 2000);
   }
 
   function updateCommentHeader(count) {
@@ -393,10 +760,19 @@
     if (!comments.length) {
       listEl.innerHTML =
         '<p class="comments-empty-msg" id="detailCommentEmpty">아직 댓글이 없습니다. 첫 훈수를 남겨보세요!</p>';
+      listEl.dataset.boundComments = '';
       return;
     }
 
-    listEl.innerHTML = comments.map(renderCommentItemHtml).join('');
+    var tree = buildCommentTree(comments);
+    listEl.innerHTML = tree.parents
+      .map(function (parent) {
+        return renderCommentThreadHtml(parent, tree.repliesByParent);
+      })
+      .join('');
+
+    listEl.dataset.boundComments = '';
+    bindCommentListEvents(listEl);
   }
 
   async function loadComments(postId) {
@@ -405,9 +781,26 @@
     try {
       var sb = window.PickleSupabase.getClient();
       var comments = await fetchCommentsList(sb, postId);
+      var authResult = await sb.auth.getUser();
+      var userId =
+        authResult.data && authResult.data.user ? authResult.data.user.id : null;
+
+      await fetchMyLikedCommentIds(
+        sb,
+        userId,
+        comments.map(function (comment) {
+          return comment.id;
+        })
+      );
+
       renderCommentsList(comments);
       updateCommentHeader(comments.length);
       renderStats(cachedVoteStats, comments.length);
+
+      window.requestAnimationFrame(function () {
+        window.setTimeout(focusCommentFromHash, 100);
+      });
+
       return comments;
     } catch (err) {
       console.error('[P!CKLE Detail] 댓글 로드 실패', err);
@@ -415,6 +808,7 @@
       if (listEl) {
         listEl.innerHTML =
           '<p class="comments-empty-msg">댓글을 불러오지 못했습니다.</p>';
+        listEl.dataset.boundComments = '';
       }
       return [];
     }
@@ -505,22 +899,7 @@
 
       if (inputEl) inputEl.value = '';
 
-      var listEl = $('detailCommentList');
-      var emptyEl = $('detailCommentEmpty');
-      if (emptyEl) emptyEl.remove();
-
-      if (listEl) {
-        listEl.insertAdjacentHTML(
-          'afterbegin',
-          renderCommentItemHtml(newComment)
-        );
-      }
-
-      var count = listEl
-        ? listEl.querySelectorAll('.comment-item').length
-        : 1;
-      updateCommentHeader(count);
-      renderStats(cachedVoteStats, count);
+      await loadComments(currentPostId);
     } catch (err) {
       console.error('[P!CKLE Detail] 댓글 등록 실패', err);
       alert(
@@ -1200,7 +1579,11 @@
     castVote: castVote,
     submitComment: submitComment,
     loadComments: loadComments,
+    toggleCommentLike: toggleCommentLike,
+    focusCommentFromHash: focusCommentFromHash,
   };
+
+  window.toggleCommentLike = toggleCommentLike;
 
   document.addEventListener('DOMContentLoaded', loadDetail);
 })();
