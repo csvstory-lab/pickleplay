@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P!CKLE - Admin: 불판 상세 및 댓글 관리</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
     :root {
@@ -21,13 +20,13 @@
         --border-color: #27272a;
     }
 
-    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pentabreed', 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
     /* === 💡 완벽 복원된 사이드바 === */
     .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
     .sidebar::-webkit-scrollbar { display: none; }
     .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
-    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; }
+    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; }
     .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
     .nav-menu { list-style: none; padding: 0; margin: 0; }
     .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
@@ -76,7 +75,7 @@
     /* 우측 요약 통계 */
     .stat-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: #09090b; border-radius: 8px; border: 1px solid #27272a; }
     .stat-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; }
-    .stat-val { font-size: 1.2rem; font-weight: 900; color: #fff; font-family: 'Black Han Sans', sans-serif; }
+    .stat-val { font-size: 1.2rem; font-weight: 900; color: #fff; }
     
     .btn-action-post { width: 100%; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; border: none; font-size: 0.95rem; transition: 0.2s; }
     .btn-stop-post { background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); border: 1px solid var(--neon-pink); }
@@ -88,7 +87,7 @@
     .section-title { font-size: 1.1rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
     
     .filter-group { display: flex; gap: 10px; }
-    .admin-select, .admin-input { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; outline: none; transition: 0.2s;}
+    .admin-select, .admin-input { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; outline: none; transition: 0.2s;}
     .admin-input:focus, .admin-select:focus { border-color: var(--neon-green); }
     .admin-select { cursor: pointer; }
 
@@ -117,7 +116,7 @@
 
     /* 액션 버튼 (댓글) */
     .action-btns { display: flex; gap: 8px; }
-    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-sm:active { transform: scale(0.95); }
     .btn-blind { background-color: rgba(255, 0, 127, 0.1); border: 1px solid var(--neon-pink); color: var(--neon-pink); }
     .btn-blind:hover { background-color: var(--neon-pink); color: #fff; }

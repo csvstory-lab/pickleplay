@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P!CKLE - Admin: 카테고리 관리 (드래그 앤 드롭 적용)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
     :root {
@@ -21,13 +20,13 @@
         --theme-gold: #ffcc00;
     }
 
-    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pentabreed', 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
     /* === 사이드바 === */
     .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; flex-shrink: 0; overflow-y: auto; scrollbar-width: none;}
     .sidebar::-webkit-scrollbar { display: none; }
     .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
-    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
+    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
     .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
 
     .nav-menu { list-style: none; padding: 0; margin: 0; }
@@ -56,7 +55,7 @@
     .info-text { font-size: 0.9rem; color: var(--text-sub); font-weight: 600; }
     .info-text span { color: #fff; font-weight: 800; }
     
-    .btn-add { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 0.95rem; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+    .btn-add { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-weight: 900; font-size: 0.95rem; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
     .btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(57,255,20,0.3); }
 
     /* 카테고리 리스트 UI */
@@ -89,7 +88,7 @@
 
     /* 액션 버튼 */
     .action-btns { display: flex; gap: 8px; }
-    .btn-action { background-color: transparent; border: 1px solid #3f3f46; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-action { background-color: transparent; border: 1px solid #3f3f46; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-action:hover { background-color: #27272a; border-color: #fff; }
     .btn-toggle-hide { color: var(--text-sub); border-color: #3f3f46; }
     .btn-toggle-active { color: var(--neon-green); border-color: var(--neon-green); }
@@ -110,7 +109,7 @@
     .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
     .form-label { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
     .form-label .req { color: var(--neon-pink); }
-    .form-input { background: #09090b; border: 1px solid #3f3f46; border-radius: 8px; color: #fff; font-size: 0.95rem; font-family: 'Pretendard', sans-serif; padding: 12px 15px; width: 100%; outline: none; transition: 0.2s; box-sizing: border-box; }
+    .form-input { background: #09090b; border: 1px solid #3f3f46; border-radius: 8px; color: #fff; font-size: 0.95rem; font-family: 'Pentabreed', 'Pretendard', sans-serif; padding: 12px 15px; width: 100%; outline: none; transition: 0.2s; box-sizing: border-box; }
     .form-input:focus { border-color: var(--neon-green); }
     
     /* 이모지 선택기 UI */
@@ -128,9 +127,9 @@
     input:checked + .slider:before { transform: translateX(20px); }
 
     .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; border-top: 1px solid #27272a; padding: 20px 0 0 0; }
-    .btn-modal-cancel { padding: 10px 20px; border-radius: 8px; border: 1px solid #52525b; background: transparent; color: #fff; cursor: pointer; font-weight: 800; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-modal-cancel { padding: 10px 20px; border-radius: 8px; border: 1px solid #52525b; background: transparent; color: #fff; cursor: pointer; font-weight: 800; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-modal-cancel:hover { background: #27272a; }
-    .btn-modal-submit { padding: 10px 24px; border-radius: 8px; border: none; background: var(--neon-green); color: #000; font-weight: 900; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-modal-submit { padding: 10px 24px; border-radius: 8px; border: none; background: var(--neon-green); color: #000; font-weight: 900; cursor: pointer; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-modal-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(57,255,20,0.3); }
 
 </style>

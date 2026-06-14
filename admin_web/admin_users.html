@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P!CKLE - Admin: 회원 관리 (정책 원칙 완벽 적용)</title>
-<!-- 💡 Black Han Sans 완전 삭제, 오직 Pretendard만 사용 -->
+<!-- Pentabreed + Pretendard -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 
 <style>
@@ -23,7 +23,7 @@
         --alert-yellow: #ffcc00;
     }
 
-    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pentabreed', 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
     /* === 사이드바 === */
     .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
@@ -66,17 +66,17 @@
     .input-group { display: flex; flex-direction: column; gap: 6px; }
     .input-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); }
     
-    .admin-input, .admin-select { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.85rem; padding: 10px 12px; border-radius: 8px; outline: none; transition: 0.2s; }
+    .admin-input, .admin-select { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-size: 0.85rem; padding: 10px 12px; border-radius: 8px; outline: none; transition: 0.2s; }
     .admin-input:focus, .admin-select:focus { border-color: var(--neon-green); }
     .admin-input { width: 180px; }
     .admin-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px; }
     
-    .btn-search { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 0.9rem; padding: 10px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; height: 38px; }
+    .btn-search { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-weight: 800; font-size: 0.9rem; padding: 10px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; height: 38px; }
     .btn-search:active { transform: scale(0.95); }
 
     /* 리스트 컨트롤 */
     .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .list-count-select { background: transparent; border: 1px solid #3f3f46; color: var(--text-sub); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; outline: none; font-family: 'Pretendard', sans-serif; cursor: pointer; }
+    .list-count-select { background: transparent; border: 1px solid #3f3f46; color: var(--text-sub); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; outline: none; font-family: 'Pentabreed', 'Pretendard', sans-serif; cursor: pointer; }
 
     /* 3. 데이터 테이블 영역 */
     .table-container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
@@ -121,7 +121,7 @@
 
     /* 💡 벌점 버튼 복구 및 액션 버튼 */
     .action-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
-    .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; gap: 4px; flex-shrink: 0; font-family: 'Pretendard', sans-serif;}
+    .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; gap: 4px; flex-shrink: 0; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-sm:active { transform: scale(0.95); }
     
     .btn-detail { background-color: #3f3f46; color: #fff; }

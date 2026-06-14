@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P!CKLE - Admin: 신고 및 제재 관리 (3단계 자동화 시스템 적용)</title>
-<!-- 💡 오직 Pretendard 폰트만 적용 (Black Han Sans 완전 삭제) -->
+<!-- Pentabreed + Pretendard -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 
 <style>
@@ -25,7 +25,7 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+    body { font-family: 'Pentabreed', 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
     /* === 사이드바 === */
     .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; flex-shrink: 0; overflow-y: auto; scrollbar-width: none; }
@@ -75,10 +75,10 @@
 
     /* 필터 바 */
     .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border-color); }
-    .filter-select, .filter-input { background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; font-family: 'Pretendard', sans-serif; outline: none; }
+    .filter-select, .filter-input { background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; font-family: 'Pentabreed', 'Pretendard', sans-serif; outline: none; }
     .filter-input { width: 250px; }
     .filter-select:focus, .filter-input:focus { border-color: var(--alert-red); }
-    .btn-search { background: #3f3f46; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
+    .btn-search { background: #3f3f46; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-search:hover { background: #52525b; }
 
     /* 리스트 및 테이블 */
@@ -108,7 +108,7 @@
 
     /* 액션 버튼 */
     .action-btns { display: flex; gap: 8px; justify-content: center; }
-    .btn-action { padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; gap: 4px; font-family: 'Pretendard', sans-serif;}
+    .btn-action { padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; gap: 4px; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .btn-action:active { transform: scale(0.95); }
     .btn-sanction { background-color: var(--alert-red); color: #fff; box-shadow: 0 0 10px rgba(255, 51, 51, 0.3); }
     .btn-sanction:hover { background-color: #ff1a1a; box-shadow: 0 0 15px rgba(255, 51, 51, 0.5); }
@@ -169,7 +169,7 @@
     .calc-score { font-size: 1.1rem; font-weight: 900; color: #fff; }
     .calc-punish { font-size: 1.1rem; font-weight: 900; color: var(--alert-red); background: rgba(255,0,127,0.1); padding: 6px 12px; border-radius: 6px; }
 
-    .form-textarea { width: 100%; padding: 15px; border: 1px solid #3f3f46; border-radius: 8px; background: #09090b; color: #fff; font-size: 0.9rem; font-family: 'Pretendard', sans-serif; outline: none; min-height: 80px; resize: none; }
+    .form-textarea { width: 100%; padding: 15px; border: 1px solid #3f3f46; border-radius: 8px; background: #09090b; color: #fff; font-size: 0.9rem; font-family: 'Pentabreed', 'Pretendard', sans-serif; outline: none; min-height: 80px; resize: none; }
     .form-textarea:focus { border-color: var(--neon-blue); }
 
     /* 💡 가이드라인 발송 체크박스 추가 */
@@ -179,7 +179,7 @@
     .checkbox-info span { font-size: 0.9rem; font-weight: 800; color: #fff; }
     .checkbox-info small { font-size: 0.75rem; color: var(--text-sub); line-height: 1.4; }
 
-    .btn-submit-sanction { margin-top: 20px; padding: 18px; border-radius: 12px; font-size: 1.1rem; font-weight: 900; cursor: pointer; border: none; background: var(--alert-red); color: #fff; box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3); transition: 0.2s; display: flex; justify-content: center; gap: 8px; font-family: 'Pretendard', sans-serif; }
+    .btn-submit-sanction { margin-top: 20px; padding: 18px; border-radius: 12px; font-size: 1.1rem; font-weight: 900; cursor: pointer; border: none; background: var(--alert-red); color: #fff; box-shadow: 0 4px 15px rgba(255, 51, 51, 0.3); transition: 0.2s; display: flex; justify-content: center; gap: 8px; font-family: 'Pentabreed', 'Pretendard', sans-serif; }
     .btn-submit-sanction:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 51, 51, 0.5); }
 
 </style>
