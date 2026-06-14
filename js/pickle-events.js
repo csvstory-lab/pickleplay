@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events9
+ * @build 20260613_events10
  */
 (function () {
   'use strict';
@@ -21,6 +21,25 @@
   var SHARE_SITE_ORIGIN = 'https://pickleplay.kr';
   var SHARE_EVENT_PAGE = SHARE_SITE_ORIGIN + '/user_app/event.html';
   var DEFAULT_EVENT_SHARE_IMAGE = SHARE_SITE_ORIGIN + '/images/default_share.jpg';
+
+  var DEFAULT_EVENT_NOTICE_ITEMS = [
+    {
+      label: '경품 지급 방식',
+      text: "당첨자 경품은 앱 내 '내 보관함'으로 지급되지 않으며, 제출해주신 구글 폼 연락처를 통해 개별 문자(또는 카카오톡 선물하기)로 직접 발송됩니다.",
+    },
+    {
+      label: '보관함 확인 불가',
+      text: "본 이벤트의 경품은 시스템 연동이 되지 않으므로, 마이페이지의 '내 보관함'에서는 당첨 내역 및 쿠폰 조회가 불가능한 점 양해 부탁드립니다.",
+    },
+    {
+      label: '당첨 취소 조건',
+      text: '당첨자 발표 후 안내된 기한(통상 7일) 내에 경품 수령 정보를 입력하지 않으실 경우, 당첨이 자동 취소되며 추가 보상은 불가합니다.',
+    },
+    {
+      label: '개인정보 활용',
+      text: '수집된 개인정보는 경품 발송 목적으로만 사용되며, 발송 완료 후 안전하게 파기됩니다.',
+    },
+  ];
 
   function ensureAbsoluteShareUrl(value, fallback) {
     var raw = value ? String(value).trim() : '';
@@ -172,12 +191,31 @@
       '<ul class="notice-list">' +
       list
         .map(function (item) {
-          return '<li>' + escapeHtml(String(item)) + '</li>';
+          if (item && typeof item === 'object' && item.label) {
+            return (
+              '<li style="margin-bottom:14px;line-height:1.65;">' +
+              '<strong style="color:#fff;display:block;margin-bottom:5px;font-size:0.88rem;">' +
+              escapeHtml(item.label) +
+              '</strong>' +
+              '<span style="color:#a1a1aa;font-size:0.85rem;">' +
+              escapeHtml(item.text || '') +
+              '</span></li>'
+            );
+          }
+          return (
+            '<li style="margin-bottom:10px;line-height:1.6;color:#a1a1aa;">' +
+            escapeHtml(String(item)) +
+            '</li>'
+          );
         })
         .join('') +
       '</ul>' +
       '</div>'
     );
+  }
+
+  function buildEventNoticeHtml() {
+    return buildNoticeListHtml(DEFAULT_EVENT_NOTICE_ITEMS);
   }
 
   function buildWinnerItemHtml(w) {
@@ -338,7 +376,7 @@
       '<p class="d-desc">' +
       descToHtml(row.description) +
       '</p>' +
-      buildNoticeListHtml(row.notice_items) +
+      buildEventNoticeHtml() +
       '</div>'
     );
   }
@@ -358,6 +396,7 @@
       '<div class="d-desc">' +
       descToHtml(row.description) +
       buildWinnerBoxHtml(row) +
+      buildEventNoticeHtml() +
       '</div>' +
       '</div>'
     );
