@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events8
+ * @build 20260613_events9
  */
 (function () {
   'use strict';
@@ -764,27 +764,30 @@
 
   function hookShareFunctions() {
     window.sendKakaoEventMessage = function () {
-      // 1. SDK 초기화 체크
-      if (!window.Kakao || !window.Kakao.isInitialized()) {
-        alert('카카오 공유 기능이 준비되지 않았습니다.');
-        return;
-      }
-
-      // 2. 화면에서 직접 안전하게 데이터 추출 (오류 원천 차단)
-      const titleEl = document.querySelector('.d-title');
-      const eventTitle = titleEl ? titleEl.innerText : '🎁 P!CKLE 스페셜 이벤트';
-
-      // ★ 핵심: 무조건 안전한 현재 화면의 브라우저 절대경로를 가져옴
-      const currentUrl = window.location.href;
-
-      // 3. 카카오 공유 실행 (Feed 타입)
       try {
+        // 1. 카카오 스크립트 자체가 로드되었는지 확인
+        if (!window.Kakao) {
+          alert('카카오 스크립트 자체가 로드되지 않았습니다. 인터넷 상태를 확인하거나 새로고침 해주세요.');
+          return;
+        }
+
+        // 2. 초기화 안 되어있으면 버튼 누를 때 강제 시동!
+        if (!Kakao.isInitialized()) {
+          // 대표님의 실제 자바스크립트 키
+          Kakao.init('f18676580f0d5bc2f8f6374d138bb200');
+        }
+
+        // 3. 화면 데이터 안전하게 추출
+        const titleEl = document.querySelector('.d-title');
+        const eventTitle = titleEl ? titleEl.innerText : '🎁 P!CKLE 스페셜 이벤트';
+        const currentUrl = window.location.href;
+
+        // 4. 카카오톡 공유 강제 실행
         Kakao.Share.sendDefault({
           objectType: 'feed',
           content: {
             title: eventTitle,
             description: '지금 바로 픽클(P!CKLE)에서 혜택을 확인해 보세요!',
-            // ★ 핵심: 카카오가 거부할 수 없도록 이미지도 절대경로로 하드코딩 고정
             imageUrl: 'https://pickleplay.kr/images/default_share.jpg',
             link: {
               mobileWebUrl: currentUrl,
@@ -802,7 +805,8 @@
           ],
         });
       } catch (e) {
-        console.error('카카오 공유 에러:', e);
+        // ★ 핵심: 카카오가 시동을 거부한 진짜 이유를 폰 화면에 띄워버림!
+        alert('카카오 에러 발생: ' + e.message);
       }
     };
 
