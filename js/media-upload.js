@@ -5,7 +5,13 @@
   'use strict';
 
   const BUCKET = 'post_media';
-  const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+  const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
+  const MAX_OUTPUT_BYTES = 500 * 1024;
+  const OPTIMIZE_MAX_WIDTH = 1200;
+  const OPTIMIZE_QUALITY = 0.7;
+  const ASPECT_16_9 = 16 / 9;
+  /** @deprecated — 입력 허용 상한은 MAX_SOURCE_BYTES 사용 */
+  const MAX_IMAGE_BYTES = MAX_SOURCE_BYTES;
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
   /** YouTube 동영상 ID (11자) 추출용 정규식 */
@@ -40,21 +46,159 @@
     if (!ALLOWED_TYPES.includes(file.type)) {
       throw new Error('JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다.');
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      throw new Error('이미지는 장당 5MB 이하만 가능합니다.');
+    if (file.size > MAX_SOURCE_BYTES) {
+      throw new Error('이미지는 장당 10MB 이하만 가능합니다.');
     }
   }
 
-  async function uploadPostImage(file, userId) {
+  function loadImageElement(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error('이미지를 불러올 수 없습니다.'));
+      };
+      img.src = url;
+    });
+  }
+
+  function canvasToBlob(canvas, mimeType, quality) {
+    return new Promise(function (resolve) {
+      canvas.toBlob(function (blob) {
+        resolve(blob || null);
+      }, mimeType, quality);
+    });
+  }
+
+  function pickOutputMimeType() {
+    var canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    var supportsWebp = false;
+    try {
+      supportsWebp = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    } catch (_) {
+      supportsWebp = false;
+    }
+    return supportsWebp ? 'image/webp' : 'image/jpeg';
+  }
+
+  function buildOptimizedFileName(originalName, mimeType) {
+    var base = String(originalName || 'image').replace(/\.[^.]+$/, '') || 'image';
+    var ext = mimeType === 'image/webp' ? 'webp' : 'jpg';
+    return base + '.' + ext;
+  }
+
+  /**
+   * Canvas — 16:9(또는 지정 비율) 중앙 크롭 · max-width 1200 · webp/jpeg q0.7 · ~500KB 이하
+   * @param {File} file
+   * @param {{ aspectRatio?: number, maxWidth?: number, quality?: number, maxOutputBytes?: number }} [options]
+   * @returns {Promise<File>}
+   */
+  async function compressAndCropImage(file, options) {
+    options = options || {};
+    var aspectRatio = options.aspectRatio != null ? options.aspectRatio : ASPECT_16_9;
+    var maxWidth = options.maxWidth != null ? options.maxWidth : OPTIMIZE_MAX_WIDTH;
+    var quality = options.quality != null ? options.quality : OPTIMIZE_QUALITY;
+    var maxOutputBytes = options.maxOutputBytes != null ? options.maxOutputBytes : MAX_OUTPUT_BYTES;
+
+    if (!file || !file.size) {
+      throw new Error('최적화할 이미지 파일이 없습니다.');
+    }
+
+    var img = await loadImageElement(file);
+    var sw = img.naturalWidth || img.width;
+    var sh = img.naturalHeight || img.height;
+
+    if (!sw || !sh) {
+      throw new Error('이미지 크기를 확인할 수 없습니다.');
+    }
+
+    var cropW;
+    var cropH;
+    var sx;
+    var sy;
+    var sourceAspect = sw / sh;
+
+    if (sourceAspect > aspectRatio) {
+      cropH = sh;
+      cropW = Math.round(sh * aspectRatio);
+      sx = Math.round((sw - cropW) / 2);
+      sy = 0;
+    } else {
+      cropW = sw;
+      cropH = Math.round(sw / aspectRatio);
+      sx = 0;
+      sy = Math.round((sh - cropH) / 2);
+    }
+
+    var outW = Math.min(maxWidth, cropW);
+    var outH = Math.max(1, Math.round(outW / aspectRatio));
+    var mimeType = pickOutputMimeType();
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('이미지 최적화를 지원하지 않는 환경입니다.');
+    }
+
+    function renderAt(width, height) {
+      canvas.width = width;
+      canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(img, sx, sy, cropW, cropH, 0, 0, width, height);
+    }
+
+    renderAt(outW, outH);
+
+    var blob = await canvasToBlob(canvas, mimeType, quality);
+    if (!blob) {
+      mimeType = 'image/jpeg';
+      blob = await canvasToBlob(canvas, mimeType, quality);
+    }
+    if (!blob) {
+      throw new Error('이미지 압축에 실패했습니다.');
+    }
+
+    while (blob.size > maxOutputBytes && quality > 0.45) {
+      quality = Math.max(0.45, quality - 0.08);
+      blob = await canvasToBlob(canvas, mimeType, quality);
+      if (!blob) break;
+    }
+
+    while (blob && blob.size > maxOutputBytes && outW > 480) {
+      outW = Math.round(outW * 0.85);
+      outH = Math.max(1, Math.round(outW / aspectRatio));
+      renderAt(outW, outH);
+      blob = await canvasToBlob(canvas, mimeType, quality);
+    }
+
+    if (!blob) {
+      throw new Error('이미지 압축에 실패했습니다.');
+    }
+
+    return new File([blob], buildOptimizedFileName(file.name, mimeType), {
+      type: mimeType,
+      lastModified: Date.now(),
+    });
+  }
+
+  async function uploadPostImage(file, userId, options) {
     validateImageFile(file);
+    var optimized = await compressAndCropImage(file, options);
     const sb = window.PickleSupabase.getClient();
-    const ext = sanitizeExt(file.name);
+    const ext = sanitizeExt(optimized.name);
     const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${ext}`;
 
-    const { error } = await sb.storage.from(BUCKET).upload(path, file, {
+    const { error } = await sb.storage.from(BUCKET).upload(path, optimized, {
       cacheControl: '3600',
       upsert: false,
-      contentType: file.type,
+      contentType: optimized.type,
     });
 
     if (error) {
@@ -237,6 +381,7 @@
   window.PickleMedia = {
     BUCKET,
     uploadPostImage,
+    compressAndCropImage,
     extractYouTubeId,
     buildYouTubeEmbedUrl,
     detectVideoFormat,
@@ -247,5 +392,9 @@
     looksLikeImageUrl,
     validateImageFile,
     MAX_IMAGE_BYTES,
+    MAX_SOURCE_BYTES,
+    MAX_OUTPUT_BYTES,
+    OPTIMIZE_MAX_WIDTH,
+    OPTIMIZE_QUALITY,
   };
 })();

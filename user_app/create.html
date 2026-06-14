@@ -307,7 +307,7 @@
 
     <div class="form-group form-group-thumbnail">
         <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint">(선택)</span></label>
-        <p class="upload-size-hint">(※ 5MB 이하, 16:9 비율 권장. 리스트에만 노출됩니다)</p>
+        <p class="upload-size-hint">(※ 최대 10MB · 업로드 시 16:9 자동 압축. 리스트에만 노출)</p>
         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="thumbnailInput" onchange="onThumbnailSelected(this)">
         <div class="upload-box ratio-16-9" id="boxThumbnail" onclick="document.getElementById('thumbnailInput').click()">
             <div class="icon-plus">🖼️</div>
@@ -408,7 +408,7 @@
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/pickle-notifications.js"></script>
-<script src="../js/media-upload.js"></script>
+<script src="../js/media-upload.js?v=20260613_media1"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
@@ -533,7 +533,7 @@
     let createThumbnailFile = null;
 
     const CREATE_THUMB_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const CREATE_THUMB_MAX_BYTES = 5 * 1024 * 1024;
+    const CREATE_THUMB_MAX_BYTES = 10 * 1024 * 1024;
 
     function validateCreateThumbnailFile(file) {
         if (!file || typeof File === 'undefined' || !(file instanceof File)) {
@@ -543,7 +543,7 @@
             return '비어 있는 파일은 업로드할 수 없습니다.';
         }
         if (file.size > CREATE_THUMB_MAX_BYTES) {
-            return '사진 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.';
+            return '사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.';
         }
         if (!CREATE_THUMB_ALLOWED_TYPES.includes(file.type)) {
             return 'JPG, PNG, WEBP, GIF 이미지만 썸네일로 업로드할 수 있습니다.';
@@ -620,7 +620,7 @@
 
         const layout = getMediaLayout();
         currentOri = layout;
-        const sizeHint = '<p class="upload-size-hint">(※ 최대 5MB 이하의 이미지 파일만 가능)</p>';
+        const sizeHint = '<p class="upload-size-hint">(※ 최대 10MB · 업로드 시 자동 압축)</p>';
 
         // 슬롯 생성 함수
         const makeSlot = (id, label, ratioClass, iconColor) => `
@@ -668,9 +668,9 @@
         const file = input.files?.[0];
         if (!file) return;
 
-        const MAX_BYTES = 5 * 1024 * 1024;
+        const MAX_BYTES = 10 * 1024 * 1024;
         if (file.size > MAX_BYTES) {
-            alert('사진 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
+            alert('사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.');
             input.value = '';
             return;
         }
@@ -723,9 +723,12 @@
             return { media_mode: 'text' };
         }
 
+        const layout = getMediaLayout();
+        const mediaAspectRatio = layout === 'vertical' ? 9 / 16 : 16 / 9;
+        const uploadOpts = { aspectRatio: mediaAspectRatio };
+
         if (currentMode === 'single') {
             const urlVal = document.getElementById('url_single')?.value.trim() || '';
-            const layout = getMediaLayout();
             if (urlVal) {
                 return {
                     media_mode: 'single',
@@ -734,7 +737,7 @@
                 };
             }
             if (uploadFiles.single) {
-                const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId);
+                const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts);
                 return {
                     media_mode: 'single',
                     media_orientation: layout,
@@ -744,17 +747,16 @@
         }
 
         if (currentMode === 'vs') {
-            const layout = getMediaLayout();
             const urlA = document.getElementById('url_vsA')?.value.trim() || '';
             const urlB = document.getElementById('url_vsB')?.value.trim() || '';
             let mediaUrl1 = urlA || null;
             let mediaUrl2 = urlB || null;
 
             if (!urlA && uploadFiles.vsA) {
-                mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId);
+                mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts);
             }
             if (!urlB && uploadFiles.vsB) {
-                mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId);
+                mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts);
             }
 
             return {
@@ -845,28 +847,11 @@
                     return false;
                 }
 
-                const createThumbExt = (createThumbFileForUpload.name.split('.').pop() || 'jpg').toLowerCase();
-                const createThumbStorageName = 'thumb_' + Date.now() + '.' + createThumbExt;
-                const createThumbStoragePath = 'thumbnails/' + createThumbStorageName;
-
-                const { error: createThumbUploadError } = await supabase.storage
-                    .from('post_media')
-                    .upload(createThumbStoragePath, createThumbFileForUpload, {
-                        cacheControl: '3600',
-                        upsert: false,
-                        contentType: createThumbFileForUpload.type || undefined,
-                    });
-
-                if (createThumbUploadError) {
-                    alert('창고 에러 원인: ' + createThumbUploadError.message);
-                    return false;
-                }
-
-                const { data: createThumbPublicUrlData } = supabase.storage
-                    .from('post_media')
-                    .getPublicUrl(createThumbStoragePath);
-
-                createThumbnailUrl = createThumbPublicUrlData.publicUrl;
+                createThumbnailUrl = await window.PickleMedia.uploadPostImage(
+                    createThumbFileForUpload,
+                    createAuthUser.id,
+                    { aspectRatio: 16 / 9 }
+                );
             }
 
             const result = await window.PickleCreatePage.submitPost(

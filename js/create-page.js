@@ -335,16 +335,11 @@
       type: file.type,
     });
 
-    var MAX_BYTES = 5 * 1024 * 1024;
-    if (file.size > MAX_BYTES) {
-      throw new Error('썸네일 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
-    }
-
     if (!window.PickleMedia?.uploadPostImage) {
       throw new Error('이미지 업로드 모듈을 불러오지 못했습니다.');
     }
 
-    var url = await window.PickleMedia.uploadPostImage(file, userId);
+    var url = await window.PickleMedia.uploadPostImage(file, userId, { aspectRatio: 16 / 9 });
     if (!url || !String(url).trim()) {
       throw new Error('썸네일 업로드는 완료됐지만 URL을 받지 못했습니다.');
     }

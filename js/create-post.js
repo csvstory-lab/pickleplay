@@ -238,8 +238,9 @@
     }
 
     if (f0 && f1) {
-      const url1 = await window.PickleMedia.uploadPostImage(f0, userId);
-      const url2 = await window.PickleMedia.uploadPostImage(f1, userId);
+      const uploadOpts = { aspectRatio: 16 / 9 };
+      const url1 = await window.PickleMedia.uploadPostImage(f0, userId, uploadOpts);
+      const url2 = await window.PickleMedia.uploadPostImage(f1, userId, uploadOpts);
       const layout = state.layout === 'vertical' ? 'vertical' : 'horizontal';
       return {
         media_type: 'dual',
@@ -252,7 +253,7 @@
     }
 
     const singleFile = f0 || f1;
-    const url1 = await window.PickleMedia.uploadPostImage(singleFile, userId);
+    const url1 = await window.PickleMedia.uploadPostImage(singleFile, userId, { aspectRatio: 16 / 9 });
     return {
       media_type: 'single',
       media_url_1: url1,
