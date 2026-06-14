@@ -19,9 +19,10 @@ body {
   box-sizing: border-box;
   background: #09090b;
   text-align: center;
-  font-family: 'Black Han Sans', 'Pretendard', sans-serif;
+  font-family: 'Pretendard', sans-serif;
   border: 4px solid #fff;
   box-shadow: inset 0 0 80px rgba(57, 255, 20, 0.08);
+  word-break: keep-all;
 }
 
 .landscape-warning__icon {
@@ -32,22 +33,27 @@ body {
 
 .landscape-warning__title {
   margin: 0;
+  font-family: 'Pretendard', sans-serif;
   font-size: clamp(1.35rem, 5vw, 1.85rem);
-  font-weight: 900;
+  font-weight: 700;
   color: #39ff14;
   text-shadow:
-    3px 3px 0 #000,
-    0 0 24px rgba(57, 255, 20, 0.45);
-  line-height: 1.35;
+    2px 2px 0 #000,
+    0 0 20px rgba(57, 255, 20, 0.35);
+  line-height: 1.4;
+  letter-spacing: -0.5px;
   word-break: keep-all;
 }
 
 .landscape-warning__sub {
   margin: 0;
+  font-family: 'Pretendard', sans-serif;
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #ff007f;
-  letter-spacing: -0.02em;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
+  word-break: keep-all;
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
