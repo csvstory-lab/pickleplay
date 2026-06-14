@@ -129,6 +129,27 @@
     .lock-sub { color: var(--text-sub); font-size: 0.8rem; margin-top: 5px; text-align: center; padding: 0 15px; }
     .btn-test-toggle { background: transparent; border: 1px solid var(--theme-gold); color: var(--theme-gold); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: bold; flex-shrink: 0; }
     .btn-test-toggle:hover { background: rgba(255,204,0,0.1); }
+
+    /* 픽클 활력 지표 (Vitality) */
+    .vitality-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    @media (max-width: 960px) { .vitality-grid { grid-template-columns: 1fr; } }
+    .vitality-card { background-color: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px; transition: all 0.2s; }
+    .vitality-card:hover { transform: translateY(-4px); }
+    .vitality-card-viral { border-color: rgba(0, 240, 255, 0.4); }
+    .vitality-card-viral:hover { border-color: var(--neon-blue); box-shadow: 0 4px 20px rgba(0, 240, 255, 0.1); }
+    .vitality-card-dopamine { border-color: rgba(57, 255, 20, 0.4); }
+    .vitality-card-dopamine:hover { border-color: var(--neon-green); box-shadow: 0 4px 20px rgba(57, 255, 20, 0.1); }
+    .vitality-card-ignition { border-color: rgba(255, 204, 0, 0.4); }
+    .vitality-card-ignition:hover { border-color: var(--theme-gold); box-shadow: 0 4px 20px rgba(255, 204, 0, 0.1); }
+    .vitality-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .vitality-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .vitality-label { font-size: 0.9rem; color: var(--text-sub); font-weight: 800; line-height: 1.35; }
+    .vitality-value { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; color: #fff; margin-bottom: 6px; }
+    .vitality-card-viral .vitality-value { color: var(--neon-blue); }
+    .vitality-card-dopamine .vitality-value { color: var(--neon-green); }
+    .vitality-card-ignition .vitality-value { color: var(--theme-gold); }
+    .vitality-change { font-size: 0.8rem; font-weight: 700; margin-bottom: 12px; }
+    .vitality-desc { font-size: 0.78rem; color: #71717a; font-weight: 600; line-height: 1.45; border-top: 1px solid #27272a; padding-top: 12px; margin-top: 4px; }
 </style>
 <!-- Firebase (App + Analytics + Firestore) -->
 <script type="module" src="js/firebase-init.js"></script>
@@ -222,6 +243,37 @@
                 <div class="kpi-card danger-card" style="border-color: var(--neon-pink);" onclick="alert('신고 접수 조회')">
                     <div class="kpi-title" style="color: var(--neon-pink);">오늘 접수된 신고 건수</div>
                     <div class="kpi-value" style="color: var(--neon-pink);">45</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="kpi-section-title">🔥 픽클 활력 지표 (Vitality)</div>
+            <div class="vitality-grid">
+                <div class="vitality-card vitality-card-viral">
+                    <div class="vitality-head">
+                        <span class="vitality-icon">🚀</span>
+                        <div class="vitality-label">불판 바이럴 지수 (공유 전환율)</div>
+                    </div>
+                    <div class="vitality-value">142%</div>
+                    <div class="vitality-change change-up">▲ +12% (전일 대비)</div>
+                    <div class="vitality-desc">외부 공유 클릭 대비 신규 유입 비율</div>
+                </div>
+                <div class="vitality-card vitality-card-dopamine">
+                    <div class="vitality-head">
+                        <span class="vitality-icon">🔥</span>
+                        <div class="vitality-label">도파민 전환율 (투표 참여율)</div>
+                    </div>
+                    <div class="vitality-value">68.5%</div>
+                    <div class="vitality-desc">불판 조회수 대비 실제 투표(나의픽) 참여 비율</div>
+                </div>
+                <div class="vitality-card vitality-card-ignition">
+                    <div class="vitality-head">
+                        <span class="vitality-icon">⏱️</span>
+                        <div class="vitality-label">불판 점화 속도 (Time-to-Ignition)</div>
+                    </div>
+                    <div class="vitality-value">평균 12분</div>
+                    <div class="vitality-desc">새 불판 생성 후 첫 10명 투표 완료까지의 시간</div>
                 </div>
             </div>
         </div>
