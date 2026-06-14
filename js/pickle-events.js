@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events7
+ * @build 20260613_events8
  */
 (function () {
   'use strict';
@@ -764,37 +764,45 @@
 
   function hookShareFunctions() {
     window.sendKakaoEventMessage = function () {
-      if (!window.Kakao || !window.Kakao.Share) {
-        alert('카카오 공유를 사용할 수 없습니다.');
+      // 1. SDK 초기화 체크
+      if (!window.Kakao || !window.Kakao.isInitialized()) {
+        alert('카카오 공유 기능이 준비되지 않았습니다.');
         return;
       }
-      var payload = getSharePayload();
+
+      // 2. 화면에서 직접 안전하게 데이터 추출 (오류 원천 차단)
+      const titleEl = document.querySelector('.d-title');
+      const eventTitle = titleEl ? titleEl.innerText : '🎁 P!CKLE 스페셜 이벤트';
+
+      // ★ 핵심: 무조건 안전한 현재 화면의 브라우저 절대경로를 가져옴
+      const currentUrl = window.location.href;
+
+      // 3. 카카오 공유 실행 (Feed 타입)
       try {
         Kakao.Share.sendDefault({
           objectType: 'feed',
           content: {
-            title: payload.title,
-            description: payload.kakaoDescription,
-            imageUrl: ensureAbsoluteShareUrl(payload.imageUrl, DEFAULT_EVENT_SHARE_IMAGE),
+            title: eventTitle,
+            description: '지금 바로 픽클(P!CKLE)에서 혜택을 확인해 보세요!',
+            // ★ 핵심: 카카오가 거부할 수 없도록 이미지도 절대경로로 하드코딩 고정
+            imageUrl: 'https://pickleplay.kr/images/default_share.jpg',
             link: {
-              mobileWebUrl: payload.url,
-              webUrl: payload.url,
+              mobileWebUrl: currentUrl,
+              webUrl: currentUrl,
             },
           },
           buttons: [
             {
-              title: '\uD83C\uDF81 \uC774\uBCA4\uD2B8 \uD655\uC778\uD558\uB7EC \uAC00\uAE30',
+              title: '앱에서 참여하기',
               link: {
-                mobileWebUrl: payload.url,
-                webUrl: payload.url,
+                mobileWebUrl: currentUrl,
+                webUrl: currentUrl,
               },
             },
           ],
         });
-        if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
-      } catch (err) {
-        console.error('[P!CKLE Events] Kakao share failed', err);
-        alert('카카오 공유에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      } catch (e) {
+        console.error('카카오 공유 에러:', e);
       }
     };
 
