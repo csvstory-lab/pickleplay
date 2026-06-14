@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events6
+ * @build 20260613_events7
  */
 (function () {
   'use strict';
@@ -17,8 +17,19 @@
   var PARTICIPATE_DONE_MSG = '🎉 응모가 완료되었습니다! 당첨자 발표일을 기대해 주세요.';
 
   var SHARE_PROMO_TEXT = '지금 P!CKLE에서 혜택을 확인해 보세요!';
-  var DEFAULT_EVENT_SHARE_IMAGE =
-    'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80';
+  var NATIVE_SHARE_TEXT = '🎁 픽클 이벤트에 참여하고 혜택을 받아보세요!';
+  var SHARE_SITE_ORIGIN = 'https://pickleplay.kr';
+  var SHARE_EVENT_PAGE = SHARE_SITE_ORIGIN + '/user_app/event.html';
+  var DEFAULT_EVENT_SHARE_IMAGE = SHARE_SITE_ORIGIN + '/images/default_share.jpg';
+
+  function ensureAbsoluteShareUrl(value, fallback) {
+    var raw = value ? String(value).trim() : '';
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.indexOf('//') === 0) return 'https:' + raw;
+    if (raw.charAt(0) === '/') return SHARE_SITE_ORIGIN + raw;
+    return SHARE_SITE_ORIGIN + '/' + raw;
+  }
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -720,22 +731,22 @@
   }
 
   function buildEventDeepLink(eventId) {
-    var url = new URL(window.location.href);
-    url.search = '';
-    url.searchParams.set('id', String(eventId));
+    var url = new URL(SHARE_EVENT_PAGE);
+    if (eventId != null && String(eventId).trim() !== '') {
+      url.searchParams.set('id', String(eventId));
+    }
     return url.toString();
   }
 
   function getSharePayload() {
     var row = currentEventData;
     if (!row) {
-      var fallbackTitle = 'P!CKLE 이벤트';
       return {
-        title: fallbackTitle,
+        title: 'P!CKLE 이벤트',
         kakaoDescription: SHARE_PROMO_TEXT,
-        nativeText: '[🎁 P!CKLE 이벤트] ' + fallbackTitle + ' - 지금 바로 참여해보세요!',
+        nativeText: NATIVE_SHARE_TEXT,
         imageUrl: DEFAULT_EVENT_SHARE_IMAGE,
-        url: window.location.href.split('#')[0],
+        url: SHARE_EVENT_PAGE,
       };
     }
 
@@ -745,8 +756,8 @@
     return {
       title: title,
       kakaoDescription: SHARE_PROMO_TEXT,
-      nativeText: '[🎁 P!CKLE 이벤트] ' + title + ' - 지금 바로 참여해보세요!',
-      imageUrl: thumb || DEFAULT_EVENT_SHARE_IMAGE,
+      nativeText: NATIVE_SHARE_TEXT,
+      imageUrl: ensureAbsoluteShareUrl(thumb, DEFAULT_EVENT_SHARE_IMAGE),
       url: buildEventDeepLink(row.id),
     };
   }
@@ -758,28 +769,33 @@
         return;
       }
       var payload = getSharePayload();
-      Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: payload.title,
-          description: payload.kakaoDescription,
-          imageUrl: payload.imageUrl,
-          link: {
-            mobileWebUrl: payload.url,
-            webUrl: payload.url,
-          },
-        },
-        buttons: [
-          {
-            title: '\uD83C\uDF81 \uC774\uBCA4\uD2B8 \uD655\uC778\uD558\uB7EC \uAC00\uAE30',
+      try {
+        Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: payload.title,
+            description: payload.kakaoDescription,
+            imageUrl: ensureAbsoluteShareUrl(payload.imageUrl, DEFAULT_EVENT_SHARE_IMAGE),
             link: {
               mobileWebUrl: payload.url,
               webUrl: payload.url,
             },
           },
-        ],
-      });
-      if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
+          buttons: [
+            {
+              title: '\uD83C\uDF81 \uC774\uBCA4\uD2B8 \uD655\uC778\uD558\uB7EC \uAC00\uAE30',
+              link: {
+                mobileWebUrl: payload.url,
+                webUrl: payload.url,
+              },
+            },
+          ],
+        });
+        if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
+      } catch (err) {
+        console.error('[P!CKLE Events] Kakao share failed', err);
+        alert('카카오 공유에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      }
     };
 
     window.nativeShare = function () {
@@ -788,13 +804,17 @@
         navigator
           .share({
             title: payload.title,
-            text: payload.nativeText,
+            text: NATIVE_SHARE_TEXT,
             url: payload.url,
           })
           .then(function () {
             if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
           })
-          .catch(function () {});
+          .catch(function (err) {
+            if (err && err.name !== 'AbortError') {
+              console.error('[P!CKLE Events] native share failed', err);
+            }
+          });
       } else {
         alert('현재 브라우저에서는 기본 공유 기능을 지원하지 않습니다. 링크 복사를 이용해주세요.');
       }
