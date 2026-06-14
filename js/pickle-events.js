@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events5
+ * @build 20260613_events6
  */
 (function () {
   'use strict';
@@ -9,12 +9,16 @@
   var eventRows = [];
   var eventMap = new Map();
   var currentEventId = null;
-  var currentShareEvent = null;
+  var currentEventData = null;
   var participatedIds = new Set();
   var detailBarRenderSeq = 0;
   var detailHistoryActive = false;
   var suppressDetailPopstate = false;
   var PARTICIPATE_DONE_MSG = '🎉 응모가 완료되었습니다! 당첨자 발표일을 기대해 주세요.';
+
+  var SHARE_PROMO_TEXT = '지금 P!CKLE에서 혜택을 확인해 보세요!';
+  var DEFAULT_EVENT_SHARE_IMAGE =
+    'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80';
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -374,7 +378,7 @@
   }
 
   function participateCurrent() {
-    var row = currentShareEvent;
+    var row = currentEventData;
     if (!row || !currentEventId) return;
     if (hasParticipated(currentEventId)) return;
 
@@ -535,7 +539,7 @@
   }
 
   function openWinnerForm() {
-    var row = currentShareEvent;
+    var row = currentEventData;
     if (!row) return;
     var formUrl =
       row.winner_form_url != null ? String(row.winner_form_url).trim() : '';
@@ -595,7 +599,7 @@
     if (view) view.classList.remove('open');
     document.body.style.overflow = '';
     currentEventId = null;
-    currentShareEvent = null;
+    currentEventData = null;
   }
 
   function syncUrlWithoutEventId() {
@@ -657,7 +661,7 @@
     if (!view || !content || !bottomBar) return;
 
     currentEventId = String(eventId);
-    currentShareEvent = row;
+    currentEventData = row;
 
     var ended = isEndedRow(row);
     content.innerHTML = ended ? buildEndedDetailHtml(row) : buildOngoingDetailHtml(row);
@@ -715,26 +719,35 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function buildEventDeepLink(eventId) {
+    var url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('id', String(eventId));
+    return url.toString();
+  }
+
   function getSharePayload() {
-    var row = currentShareEvent;
+    var row = currentEventData;
     if (!row) {
+      var fallbackTitle = 'P!CKLE 이벤트';
       return {
-        title: 'P!CKLE 이벤트',
-        text: 'P!CKLE에서 진행 중인 이벤트를 확인해 보세요!',
-        imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
-        url: window.location.href,
+        title: fallbackTitle,
+        kakaoDescription: SHARE_PROMO_TEXT,
+        nativeText: '[🎁 P!CKLE 이벤트] ' + fallbackTitle + ' - 지금 바로 참여해보세요!',
+        imageUrl: DEFAULT_EVENT_SHARE_IMAGE,
+        url: window.location.href.split('#')[0],
       };
     }
-    var url = new URL(window.location.href);
-    url.searchParams.set('id', String(row.id));
+
+    var title = String(row.title || 'P!CKLE 이벤트').trim();
+    var thumb = row.thumbnail_url ? String(row.thumbnail_url).trim() : '';
+
     return {
-      title: row.title,
-      text: String(row.description || row.title).replace(/<[^>]+>/g, '').slice(0, 120),
-      imageUrl:
-        row.thumbnail_url ||
-        row.detail_banner_url ||
-        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
-      url: url.toString(),
+      title: title,
+      kakaoDescription: SHARE_PROMO_TEXT,
+      nativeText: '[🎁 P!CKLE 이벤트] ' + title + ' - 지금 바로 참여해보세요!',
+      imageUrl: thumb || DEFAULT_EVENT_SHARE_IMAGE,
+      url: buildEventDeepLink(row.id),
     };
   }
 
@@ -749,14 +762,20 @@
         objectType: 'feed',
         content: {
           title: payload.title,
-          description: payload.text,
+          description: payload.kakaoDescription,
           imageUrl: payload.imageUrl,
-          link: { mobileWebUrl: payload.url, webUrl: payload.url },
+          link: {
+            mobileWebUrl: payload.url,
+            webUrl: payload.url,
+          },
         },
         buttons: [
           {
-            title: '🎁 이벤트 응모하러 가기',
-            link: { mobileWebUrl: payload.url, webUrl: payload.url },
+            title: '\uD83C\uDF81 \uC774\uBCA4\uD2B8 \uD655\uC778\uD558\uB7EC \uAC00\uAE30',
+            link: {
+              mobileWebUrl: payload.url,
+              webUrl: payload.url,
+            },
           },
         ],
       });
@@ -767,7 +786,11 @@
       var payload = getSharePayload();
       if (navigator.share) {
         navigator
-          .share({ title: payload.title, text: payload.text, url: payload.url })
+          .share({
+            title: payload.title,
+            text: payload.nativeText,
+            url: payload.url,
+          })
           .then(function () {
             if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
           })
