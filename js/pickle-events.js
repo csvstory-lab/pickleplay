@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events2
+ * @build 20260613_events3
  */
 (function () {
   'use strict';
@@ -162,21 +162,89 @@
     );
   }
 
+  function buildWinnerItemHtml(w) {
+    return (
+      '<div class="winner-item"><span>' +
+      escapeHtml(w.nickname || '—') +
+      '</span><span style="color:var(--text-sub);">UID: ' +
+      escapeHtml(w.uid_mask || '***') +
+      '</span></div>'
+    );
+  }
+
+  function winnersHaveRank(winners) {
+    return winners.some(function (w) {
+      return w && w.rank != null && String(w.rank).trim() !== '';
+    });
+  }
+
+  function compareRankKeys(a, b) {
+    var na = /^\d+$/.test(a) ? Number(a) : NaN;
+    var nb = /^\d+$/.test(b) ? Number(b) : NaN;
+    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+    return String(a).localeCompare(String(b), 'ko');
+  }
+
+  function formatRankLabel(rank) {
+    if (rank == null || rank === '') return '당첨';
+    var s = String(rank);
+    if (/^\d+$/.test(s)) return s + '등';
+    return s;
+  }
+
+  function groupWinnersByRank(winners) {
+    var map = new Map();
+    winners.forEach(function (w) {
+      var key =
+        w && w.rank != null && String(w.rank).trim() !== ''
+          ? String(w.rank).trim()
+          : '__flat__';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(w);
+    });
+    var keys = Array.from(map.keys()).filter(function (k) {
+      return k !== '__flat__';
+    });
+    keys.sort(compareRankKeys);
+    if (map.has('__flat__')) keys.push('__flat__');
+    return keys.map(function (key) {
+      return { rank: key === '__flat__' ? null : key, items: map.get(key) };
+    });
+  }
+
+  function buildWinnerListBodyHtml(winners) {
+    if (!winners.length) return '';
+    if (winnersHaveRank(winners)) {
+      var groups = groupWinnersByRank(winners);
+      return groups
+        .map(function (group) {
+          var rankLabel =
+            group.rank != null
+              ? '<div style="font-size:0.78rem;font-weight:900;color:var(--theme-gold);margin-bottom:8px;letter-spacing:0.04em;">' +
+                escapeHtml(formatRankLabel(group.rank)) +
+                '</div>'
+              : '';
+          return (
+            '<div style="margin-bottom:14px;">' +
+            rankLabel +
+            '<div class="winner-list-wrap">' +
+            group.items.map(buildWinnerItemHtml).join('') +
+            '</div></div>'
+          );
+        })
+        .join('');
+    }
+    return (
+      '<div class="winner-list-wrap">' + winners.map(buildWinnerItemHtml).join('') + '</div>'
+    );
+  }
+
   function buildWinnerBoxHtml(row) {
-    // 추후 당첨자 개별 푸시 알림에서 구글 폼 링크 제공
     var winners = Array.isArray(row.winners) ? row.winners : [];
     if (!winners.length && !row.winner_box_title) return '';
-    var items = winners
-      .map(function (w) {
-        return (
-          '<div class="winner-item"><span>' +
-          escapeHtml(w.nickname || '—') +
-          '</span><span style="color:var(--text-sub);">UID: ' +
-          escapeHtml(w.uid_mask || '***') +
-          '</span></div>'
-        );
-      })
-      .join('');
+    var rankNotice = winnersHaveRank(winners)
+      ? '<div style="text-align:center;font-size:0.82rem;color:var(--neon-blue);font-weight:700;margin-bottom:18px;letter-spacing:0.02em;opacity:0.95;">(개별 알림 및 쿠폰 발송 완료)</div>'
+      : '';
     var summary = row.winner_summary
       ? '<div style="text-align:center; font-size:0.85rem; color:var(--text-sub); margin-top:20px; font-weight:700;">' +
         escapeHtml(row.winner_summary) +
@@ -187,9 +255,8 @@
       '<h3 class="winner-title">' +
       escapeHtml(row.winner_box_title || '🎉 당첨자 발표') +
       '</h3>' +
-      '<div class="winner-list-wrap">' +
-      items +
-      '</div>' +
+      rankNotice +
+      buildWinnerListBodyHtml(winners) +
       summary +
       '</div>'
     );
@@ -319,6 +386,74 @@
     );
   }
 
+  async function ensureAuthReady() {
+    if (window.PickleAuth && window.PickleAuth.init) {
+      try {
+        await window.PickleAuth.init();
+      } catch (err) {
+        console.warn('[P!CKLE Events] auth init skipped', err);
+      }
+    }
+  }
+
+  function getCurrentUserId() {
+    if (window.PickleAuth && window.PickleAuth.getUser) {
+      var user = window.PickleAuth.getUser();
+      if (user && user.id) return String(user.id);
+    }
+    return null;
+  }
+
+  function isCurrentUserWinner(row) {
+    var userId = getCurrentUserId();
+    if (!userId || !row) return false;
+    var winners = Array.isArray(row.winners) ? row.winners : [];
+    return winners.some(function (w) {
+      if (!w || typeof w !== 'object') return false;
+      if (w.user_id && String(w.user_id) === userId) return true;
+      if (w.id && String(w.id) === userId) return true;
+      return false;
+    });
+  }
+
+  function buildEndedDisabledBarHtml() {
+    return '<button class="btn-disabled-huge" type="button" disabled>종료된 이벤트입니다</button>';
+  }
+
+  function buildWinnerClaimButtonHtml() {
+    return (
+      '<button class="btn-participate-huge" type="button" onclick="PickleEvents.openWinnerForm()">' +
+      '🎁 경품 수령 정보 입력하기' +
+      '</button>'
+    );
+  }
+
+  async function renderEndedBottomBar(row) {
+    var bottomBar = document.getElementById('detailBottomBar');
+    if (!bottomBar) return;
+
+    if (row.status !== 'ended') {
+      bottomBar.innerHTML = buildEndedDisabledBarHtml();
+      return;
+    }
+
+    await ensureAuthReady();
+    bottomBar.innerHTML =
+      isCurrentUserWinner(row) ? buildWinnerClaimButtonHtml() : buildEndedDisabledBarHtml();
+  }
+
+  function openWinnerForm() {
+    var row = currentShareEvent;
+    if (!row) return;
+    var formUrl =
+      row.winner_form_url != null ? String(row.winner_form_url).trim() : '';
+    if (!formUrl) {
+      alert('폼 링크가 준비 중입니다');
+      return;
+    }
+    window.open(formUrl, '_blank', 'noopener,noreferrer');
+  }
+
   function setListMessage(listEl, message) {
     if (!listEl) return;
     listEl.innerHTML =
@@ -371,7 +506,7 @@
     return result.data || [];
   }
 
-  function openDetail(eventId) {
+  async function openDetail(eventId) {
     var row = eventMap.get(String(eventId));
     if (!row) return;
 
@@ -385,9 +520,12 @@
 
     var ended = isEndedRow(row);
     content.innerHTML = ended ? buildEndedDetailHtml(row) : buildOngoingDetailHtml(row);
-    bottomBar.innerHTML = ended
-      ? '<button class="btn-disabled-huge" disabled>종료된 이벤트입니다</button>'
-      : buildOngoingBottomBar(row);
+    if (ended) {
+      bottomBar.innerHTML = buildEndedDisabledBarHtml();
+      await renderEndedBottomBar(row);
+    } else {
+      bottomBar.innerHTML = buildOngoingBottomBar(row);
+    }
 
     view.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -558,5 +696,6 @@
     reload: loadAll,
     getSharePayload: getSharePayload,
     participate: participateCurrent,
+    openWinnerForm: openWinnerForm,
   };
 })();
