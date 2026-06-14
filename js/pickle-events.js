@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events4
+ * @build 20260613_events5
  */
 (function () {
   'use strict';
@@ -12,6 +12,8 @@
   var currentShareEvent = null;
   var participatedIds = new Set();
   var detailBarRenderSeq = 0;
+  var detailHistoryActive = false;
+  var suppressDetailPopstate = false;
   var PARTICIPATE_DONE_MSG = '🎉 응모가 완료되었습니다! 당첨자 발표일을 기대해 주세요.';
 
   function escapeHtml(str) {
@@ -383,12 +385,37 @@
 
   function buildOngoingBottomBar(row) {
     return (
-      '<button class="btn-share-huge" onclick="openShareSheet()">' +
+      '<button type="button" class="btn-share-huge" onclick="window.openShareSheet()">' +
       '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>' +
       '<span class="share-text">소문내기</span>' +
       '</button>' +
       buildParticipateButtonHtml(row)
     );
+  }
+
+  function openShareSheetHandler() {
+    var overlay = document.getElementById('commonOverlay');
+    var sheet = document.getElementById('shareSheet');
+    if (!overlay || !sheet) {
+      console.warn('[P!CKLE Events] share sheet elements not found');
+      return;
+    }
+    overlay.classList.add('open');
+    sheet.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function bindDetailBottomBarEvents() {
+    var bottomBar = document.getElementById('detailBottomBar');
+    if (!bottomBar || bottomBar.dataset.pickleEventsBound === '1') return;
+    bottomBar.dataset.pickleEventsBound = '1';
+    bottomBar.addEventListener('click', function (e) {
+      var shareBtn = e.target.closest('.btn-share-huge');
+      if (!shareBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openShareSheetHandler();
+    });
   }
 
   async function ensureAuthReady() {
@@ -558,6 +585,55 @@
     }
   }
 
+  function isDetailViewOpen() {
+    var view = document.getElementById('eventDetailView');
+    return Boolean(view && view.classList.contains('open'));
+  }
+
+  function closeDetailUI() {
+    var view = document.getElementById('eventDetailView');
+    if (view) view.classList.remove('open');
+    document.body.style.overflow = '';
+    currentEventId = null;
+    currentShareEvent = null;
+  }
+
+  function syncUrlWithoutEventId() {
+    if (!window.history || !window.history.replaceState) return;
+    var url = new URL(window.location.href);
+    if (!url.searchParams.has('id')) return;
+    url.searchParams.delete('id');
+    window.history.replaceState(window.history.state, '', url.toString());
+  }
+
+  function pushDetailHistory(eventId) {
+    if (!window.history || !window.history.pushState) return;
+    var url = new URL(window.location.href);
+    url.searchParams.set('id', String(eventId));
+    window.history.pushState(
+      { pickleEventDetail: true, eventId: String(eventId) },
+      '',
+      url.toString()
+    );
+    detailHistoryActive = true;
+  }
+
+  function handleDetailPopstate() {
+    if (suppressDetailPopstate) {
+      suppressDetailPopstate = false;
+      return;
+    }
+    if (!isDetailViewOpen()) return;
+    detailHistoryActive = false;
+    closeDetailUI();
+  }
+
+  function bindDetailHistoryEvents() {
+    if (window.__pickleEventsPopstateBound) return;
+    window.__pickleEventsPopstateBound = true;
+    window.addEventListener('popstate', handleDetailPopstate);
+  }
+
   async function fetchEvents() {
     var sb = getClient();
     var result = await sb
@@ -594,25 +670,27 @@
     view.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    if (window.history && window.history.replaceState) {
-      var url = new URL(window.location.href);
-      url.searchParams.set('id', String(eventId));
-      window.history.replaceState({}, '', url.toString());
-    }
+    pushDetailHistory(eventId);
   }
 
-  function closeDetail() {
-    var view = document.getElementById('eventDetailView');
-    if (view) view.classList.remove('open');
-    document.body.style.overflow = '';
-    currentEventId = null;
-    currentShareEvent = null;
+  function closeDetail(fromHistory) {
+    if (!isDetailViewOpen()) return;
 
-    if (window.history && window.history.replaceState) {
-      var url = new URL(window.location.href);
-      url.searchParams.delete('id');
-      window.history.replaceState({}, '', url.toString());
+    closeDetailUI();
+
+    if (fromHistory) {
+      detailHistoryActive = false;
+      return;
     }
+
+    if (detailHistoryActive) {
+      detailHistoryActive = false;
+      suppressDetailPopstate = true;
+      window.history.back();
+      return;
+    }
+
+    syncUrlWithoutEventId();
   }
 
   function switchTab(tab) {
@@ -744,6 +822,9 @@
 
   function init() {
     hookShareFunctions();
+    bindDetailBottomBarEvents();
+    bindDetailHistoryEvents();
+    window.openShareSheet = openShareSheetHandler;
     window.switchTab = switchTab;
     window.openDetail = openDetail;
     window.closeDetail = closeDetail;
@@ -761,5 +842,6 @@
     getSharePayload: getSharePayload,
     participate: participateCurrent,
     openWinnerForm: openWinnerForm,
+    openShareSheet: openShareSheetHandler,
   };
 })();
