@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events10
+ * @build 20260613_events11
  */
 (function () {
   'use strict';

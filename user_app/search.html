@@ -146,94 +146,15 @@
         
         <!-- 1. 실시간 급상승 검색어 -->
         <div class="section-title"><span>🔥</span> 실시간 급상승 불판</div>
-        <div class="trending-box">
-            <div class="trending-item" onclick="triggerSearch('환승연애')">
-                <div class="trend-left">
-                    <span class="trend-rank top">1</span>
-                    <span class="trend-keyword">환승연애</span>
-                </div>
-                <span class="trend-badge badge-up">▲ 급상승</span>
-            </div>
-            <div class="trending-item" onclick="triggerSearch('블박 과실')">
-                <div class="trend-left">
-                    <span class="trend-rank top">2</span>
-                    <span class="trend-keyword">블박 과실</span>
-                </div>
-                <span class="trend-badge badge-stay">- 유지</span>
-            </div>
-            <div class="trending-item" onclick="triggerSearch('평생 라면')">
-                <div class="trend-left">
-                    <span class="trend-rank top">3</span>
-                    <span class="trend-keyword">평생 라면</span>
-                </div>
-                <span class="trend-badge badge-new">N NEW</span>
-            </div>
-            <div class="trending-item" onclick="triggerSearch('소개팅 룩')">
-                <div class="trend-left">
-                    <span class="trend-rank">4</span>
-                    <span class="trend-keyword">소개팅 룩</span>
-                </div>
-                <span class="trend-badge badge-up">▲ 2</span>
-            </div>
-            <div class="trending-item" onclick="triggerSearch('민초단')">
-                <div class="trend-left">
-                    <span class="trend-rank">5</span>
-                    <span class="trend-keyword">민초단</span>
-                </div>
-                <span class="trend-badge badge-stay">- 유지</span>
-            </div>
-        </div>
+        <div class="trending-box" id="trendingBox"></div>
 
         <!-- 2. 에디터 추천 탐험 카테고리 -->
         <div class="section-title"><span>🧭</span> 에디터 추천 탐험</div>
-        <div class="explore-grid">
-            <div class="explore-card" onclick="triggerSearch('#명예의전당')">
-                <div class="explore-icon">🏆</div>
-                <div class="explore-text">명예의 전당</div>
-            </div>
-            <div class="explore-card" onclick="triggerSearch('#먹잘알')">
-                <div class="explore-icon">🍕</div>
-                <div class="explore-text">먹잘알/푸파</div>
-            </div>
-            <div class="explore-card" onclick="triggerSearch('#연애상담')">
-                <div class="explore-icon">💔</div>
-                <div class="explore-text">연애/썸/이별</div>
-            </div>
-            <div class="explore-card" onclick="triggerSearch('#직장생활')">
-                <div class="explore-icon">💼</div>
-                <div class="explore-text">K-직장인</div>
-            </div>
-        </div>
+        <div class="explore-grid" id="exploreGrid"></div>
 
         <!-- 3. 지금 터지기 직전인 핫 불판 프리뷰 -->
         <div class="section-title"><span>⏱️</span> 지금 터지기 직전인 불판</div>
-        <div class="poll-list">
-            <div class="poll-card" onclick="location.href='detail.html'">
-                <div class="poll-header">
-                    <span class="poll-fire">🔥 981명 참전 중</span>
-                    <span class="poll-time">10분 후 종료</span>
-                </div>
-                <div class="poll-title">회식 자리에서 고기 굽기, 막내의 의무인가 센스의 영역인가?</div>
-                <div class="vs-preview">
-                    <div class="vs-item">당연히 막내가 굽지</div>
-                    <span class="vs-center">VS</span>
-                    <div class="vs-item">잘 굽는 사람이 굽자</div>
-                </div>
-            </div>
-
-            <div class="poll-card" onclick="location.href='detail.html'">
-                <div class="poll-header">
-                    <span class="poll-fire">🔥 1,204명 참전 중</span>
-                    <span class="poll-time">25분 후 종료</span>
-                </div>
-                <div class="poll-title">아이폰 쌩폰으로 쓰기 vs 강화유리+범퍼케이스 풀무장하기</div>
-                <div class="vs-preview">
-                    <div class="vs-item">잡스의 철학 쌩폰</div>
-                    <span class="vs-center">VS</span>
-                    <div class="vs-item">액정 깨지면 멘탈도 깨짐</div>
-                </div>
-            </div>
-        </div>
+        <div class="poll-list" id="hotPollList"></div>
     </div> <!-- // defaultExploreUI -->
 
 
@@ -243,52 +164,10 @@
     <div id="searchResultsUI" class="hidden">
         <div class="search-result-header">
             <div class="result-keyword" id="searchKeywordDisplay">'키워드'</div>
-            <div class="result-count">검색 결과 3건</div>
+            <div class="result-count" id="searchResultCount">검색 결과 0건</div>
         </div>
         
-        <div class="poll-list">
-            <!-- 검색 결과 카드 1 -->
-            <div class="poll-card" onclick="location.href='detail.html'">
-                <div class="poll-header">
-                    <span class="poll-fire">🔥 12,402명 참전 중</span>
-                    <span class="poll-time">진행 중</span>
-                </div>
-                <div class="poll-title" id="resTitle1">검색된 제목이 노출됩니다.</div>
-                <div class="vs-preview">
-                    <div class="vs-item">A 의견입니다</div>
-                    <span class="vs-center">VS</span>
-                    <div class="vs-item">B 의견입니다</div>
-                </div>
-            </div>
-
-            <!-- 검색 결과 카드 2 -->
-            <div class="poll-card" onclick="location.href='detail.html'">
-                <div class="poll-header">
-                    <span class="poll-fire">🔥 8,912명 참전 중</span>
-                    <span class="poll-time">마감 완료</span>
-                </div>
-                <div class="poll-title">관련된 또 다른 흥미로운 논쟁거리입니다.</div>
-                <div class="vs-preview">
-                    <div class="vs-item">무조건 찬성</div>
-                    <span class="vs-center">VS</span>
-                    <div class="vs-item">절대 반대</div>
-                </div>
-            </div>
-
-            <!-- 검색 결과 카드 3 -->
-            <div class="poll-card" onclick="location.href='detail.html'">
-                <div class="poll-header">
-                    <span class="poll-fire">🔥 3,110명 참전 중</span>
-                    <span class="poll-time">2시간 후 종료</span>
-                </div>
-                <div class="poll-title">해시태그나 내용에 키워드가 포함된 불판입니다.</div>
-                <div class="vs-preview">
-                    <div class="vs-item">이게 맞지</div>
-                    <span class="vs-center">VS</span>
-                    <div class="vs-item">저게 맞지</div>
-                </div>
-            </div>
-        </div>
+        <div class="poll-list" id="searchResultsList"></div>
     </div> <!-- // searchResultsUI -->
 
 </main>
@@ -355,31 +234,29 @@
         executeSearch(keyword);
     }
 
-    // 💡 검색 실행 (결과창 노출) 함수
+    // 💡 검색 실행 (결과창 노출) — pickle-search.js에서 Supabase 연동
     function executeSearch(keyword) {
-        if(navigator.vibrate) navigator.vibrate(20);
-        document.getElementById('searchInput').blur(); // 모바일 키보드 내림
-        
-        // 탐험 UI 숨기고 결과 UI 노출
-        document.getElementById('defaultExploreUI').classList.add('hidden');
-        document.getElementById('searchResultsUI').classList.remove('hidden');
-        
-        // 검색 키워드 텍스트 변경
-        document.getElementById('searchKeywordDisplay').innerText = `'${keyword}'`;
-        
-        // 디자인적 시뮬레이션을 위해 첫 번째 결과의 제목에 키워드를 섞어줌
-        document.getElementById('resTitle1').innerText = `[${keyword}] 관련 논쟁! 당신의 생각은?`;
-        
-        window.scrollTo(0,0);
+        if (window.PickleSearch && window.PickleSearch.executeSearch) {
+            window.PickleSearch.executeSearch(keyword);
+        }
     }
 
     // 💡 탐험 화면(기본)으로 돌아가는 함수
     function showExploreUI() {
+        if (window.PickleSearch && window.PickleSearch.showExploreUI) {
+            window.PickleSearch.showExploreUI();
+            return;
+        }
         document.getElementById('searchResultsUI').classList.add('hidden');
         document.getElementById('defaultExploreUI').classList.remove('hidden');
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/pickle-categories.js"></script>
+<script src="../js/pickle-search.js?v=20260613_search1"></script>
 
 </body>
 </html>
