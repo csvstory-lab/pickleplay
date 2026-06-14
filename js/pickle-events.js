@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events1
+ * @build 20260613_events2
  */
 (function () {
   'use strict';
@@ -10,6 +10,8 @@
   var eventMap = new Map();
   var currentEventId = null;
   var currentShareEvent = null;
+  var participatedIds = new Set();
+  var PARTICIPATE_DONE_MSG = '🎉 응모가 완료되었습니다! 당첨자 발표일을 기대해 주세요.';
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -161,6 +163,7 @@
   }
 
   function buildWinnerBoxHtml(row) {
+    // 추후 당첨자 개별 푸시 알림에서 구글 폼 링크 제공
     var winners = Array.isArray(row.winners) ? row.winners : [];
     if (!winners.length && !row.winner_box_title) return '';
     var items = winners
@@ -271,27 +274,48 @@
     );
   }
 
+  function hasParticipated(eventId) {
+    return participatedIds.has(String(eventId));
+  }
+
+  function markParticipateButtonDone() {
+    var btn = document.getElementById('detailParticipateBtn');
+    if (!btn) return;
+    btn.className = 'btn-disabled-huge';
+    btn.disabled = true;
+    btn.removeAttribute('onclick');
+    btn.textContent = '응모 완료';
+  }
+
+  function buildParticipateButtonHtml(row) {
+    if (hasParticipated(row.id)) {
+      return '<button class="btn-disabled-huge" type="button" disabled id="detailParticipateBtn">응모 완료</button>';
+    }
+    var label = escapeHtml(row.participate_label || '응모하기');
+    return (
+      '<button class="btn-participate-huge" type="button" id="detailParticipateBtn" onclick="PickleEvents.participate()">' +
+      label +
+      '</button>'
+    );
+  }
+
   function participateCurrent() {
     var row = currentShareEvent;
-    if (!row) return;
-    var formUrl = row.google_form_url ? String(row.google_form_url).trim() : '';
-    if (formUrl) {
-      window.location.href = formUrl;
-      return;
-    }
-    alert('이벤트 응모가 완료되었습니다! 🎉');
+    if (!row || !currentEventId) return;
+    if (hasParticipated(currentEventId)) return;
+
+    alert(PARTICIPATE_DONE_MSG);
+    participatedIds.add(String(currentEventId));
+    markParticipateButtonDone();
   }
 
   function buildOngoingBottomBar(row) {
-    var label = escapeHtml(row.participate_label || '응모하기');
     return (
       '<button class="btn-share-huge" onclick="openShareSheet()">' +
       '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>' +
       '<span class="share-text">소문내기</span>' +
       '</button>' +
-      '<button class="btn-participate-huge" onclick="PickleEvents.participate()">' +
-      label +
-      '</button>'
+      buildParticipateButtonHtml(row)
     );
   }
 
