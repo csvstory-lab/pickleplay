@@ -80,6 +80,10 @@
     .cat-name { font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 8px; min-width: 180px; transition: 0.3s;}
     .cat-stats { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; }
     .cat-stats span { color: var(--theme-gold); font-weight: 800; transition: 0.3s;}
+    .cat-desc { font-size: 0.8rem; color: var(--text-sub); font-weight: 600; margin-top: 2px; max-width: 420px; line-height: 1.35; }
+
+    .category-list-empty { text-align: center; padding: 48px 20px; color: var(--text-sub); font-size: 0.9rem; font-weight: 600; }
+    .category-list-empty.error { color: var(--neon-pink); }
 
     /* 상태 뱃지 */
     .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; transition: 0.3s;}
@@ -175,124 +179,14 @@
         
         <div class="section-header">
             <div class="header-info">
-                <div class="info-text">총 카테고리: <span id="totalCatCount">12개</span></div>
-                <div class="info-text">운영 중(Active): <span style="color:var(--neon-green);" id="activeCatCount">11개</span></div>
+                <div class="info-text">총 카테고리: <span id="totalCatCount">—</span></div>
+                <div class="info-text">운영 중(Active): <span style="color:var(--neon-green);" id="activeCatCount">—</span></div>
             </div>
             <button class="btn-add" onclick="openCategoryModal('new')">➕ 새 카테고리 추가</button>
         </div>
 
         <div class="category-list" id="categoryListContainer">
-            
-            <div class="category-item fixed-state">
-                <div class="cat-left">
-                    <div class="drag-handle" style="opacity: 0.2; cursor:not-allowed;">≡</div>
-                    <div class="cat-icon">🏆</div>
-                    <div class="cat-info">
-                        <div class="cat-name">명예의 전당 <span class="badge badge-active">Active</span></div>
-                        <div class="cat-stats">불판: <span>5,102</span></div>
-                    </div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-action btn-disabled" disabled>시스템 고정</button>
-                </div>
-            </div>
-
-            <div class="category-item fixed-state">
-                <div class="cat-left">
-                    <div class="drag-handle" style="opacity: 0.2; cursor:not-allowed;">≡</div>
-                    <div class="cat-icon">📣</div>
-                    <div class="cat-info">
-                        <div class="cat-name">픽클 오피셜 <span class="badge badge-active">Active</span></div>
-                        <div class="cat-stats">불판: <span>124</span></div>
-                    </div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-action btn-disabled" disabled>시스템 고정</button>
-                </div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">💔</div>
-                    <div class="cat-info"><div class="cat-name">연애 / 썸 / 이별 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>8,921</span></div></div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-action" onclick="openCategoryModal('edit', '💔', '연애 / 썸 / 이별')">수정</button>
-                    <button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button>
-                    <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
-                </div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🤯</div>
-                    <div class="cat-info"><div class="cat-name">뇌정지 밸런스 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>6,150</span></div></div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-action" onclick="openCategoryModal('edit', '🤯', '뇌정지 밸런스')">수정</button>
-                    <button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button>
-                    <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
-                </div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🤬</div>
-                    <div class="cat-info"><div class="cat-name">빌런 / 썰 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>4,890</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🤬', '빌런 / 썰')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🍕</div>
-                    <div class="cat-info"><div class="cat-name">먹잘알 / 푸파 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>5,230</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🍕', '먹잘알 / 푸파')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">👗</div>
-                    <div class="cat-info"><div class="cat-name">OOTD / 참견 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>2,105</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '👗', 'OOTD / 참견')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">💸</div>
-                    <div class="cat-info"><div class="cat-name">텅장 / 소비 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>3,750</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '💸', '텅장 / 소비')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🚗</div>
-                    <div class="cat-info"><div class="cat-name">블박 / 과실비율 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>1,840</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🚗', '블박 / 과실비율')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🧠</div>
-                    <div class="cat-info"><div class="cat-name">MBTI / 심리 <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>7,620</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🧠', 'MBTI / 심리')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon">🎤</div>
-                    <div class="cat-info"><div class="cat-name">돌판 / K-POP <span class="badge badge-active">Active</span></div><div class="cat-stats">불판: <span>4,120</span></div></div>
-                </div>
-                <div class="action-btns"><button class="btn-action" onclick="openCategoryModal('edit', '🎤', '돌판 / K-POP')">수정</button><button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button><button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button></div>
-            </div>
-
-            <div class="category-item draggable-item hidden-state">
-                <div class="cat-left"><div class="drag-handle">≡</div><div class="cat-icon" style="filter:grayscale(100%); opacity:0.5;">🙇‍♂️</div>
-                    <div class="cat-info"><div class="cat-name" style="color:var(--text-sub);">명절 / 잔소리 <span class="badge badge-hidden">Hidden</span></div><div class="cat-stats">불판: <span style="color:var(--text-sub);">120</span></div></div>
-                </div>
-                <div class="action-btns">
-                    <button class="btn-action" onclick="openCategoryModal('edit', '🙇‍♂️', '명절 / 잔소리')">수정</button>
-                    <button class="btn-action btn-toggle-active" onclick="toggleStatus(this, true)">✨ 활성화</button>
-                    <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
-                </div>
-            </div>
-
+            <div class="category-list-empty" id="categoryListPlaceholder">카테고리를 불러오는 중…</div>
         </div>
         
         <div style="font-size: 0.8rem; color: var(--text-sub); text-align: center; margin-bottom: 40px;">
@@ -344,9 +238,124 @@
       </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
   <script>
       let currentEditMode = 'new';
-      
+      let draggedItem = null;
+
+      const container = document.getElementById('categoryListContainer');
+
+      function getSupabaseClient() {
+          const cfg = window.PICKLE_SUPABASE_CONFIG;
+          if (!cfg || !cfg.url || !cfg.anonKey) {
+              throw new Error('Supabase 접속 정보가 없습니다. js/supabase-config.js 를 확인해 주세요.');
+          }
+          if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+              throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
+          }
+          return window.supabase.createClient(cfg.url.trim(), cfg.anonKey.trim());
+      }
+
+      function escapeHtml(str) {
+          return String(str ?? '')
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
+      }
+
+      function updateCategoryCounts(categories) {
+          const total = categories.length;
+          const active = categories.filter(function (cat) { return cat.is_active !== false; }).length;
+          document.getElementById('totalCatCount').textContent = total + '개';
+          document.getElementById('activeCatCount').textContent = active + '개';
+      }
+
+      function buildCategoryItemHtml(cat) {
+          const isActive = cat.is_active !== false;
+          const isFixed = cat.is_fixed === true;
+          const itemClasses = ['category-item'];
+          if (isFixed) itemClasses.push('fixed-state');
+          else itemClasses.push('draggable-item');
+          if (!isActive) itemClasses.push('hidden-state');
+
+          const iconStyle = isActive ? '' : 'filter: grayscale(100%); opacity: 0.5;';
+          const nameStyle = isActive ? '' : 'color: var(--text-sub);';
+          const badgeClass = isActive ? 'badge-active' : 'badge-hidden';
+          const badgeText = isActive ? '👁️ Active' : '🙈 Hidden';
+          const handleHtml = isFixed
+              ? '<div class="drag-handle" style="opacity: 0.5; cursor: not-allowed;">🔒</div>'
+              : '<div class="drag-handle">≡</div>';
+
+          const descriptionHtml = cat.description
+              ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>'
+              : '';
+
+          const rowId = cat.id || cat.slug || '';
+          const icon = cat.icon || '📁';
+          const name = cat.name || '';
+
+          let actionsHtml;
+          if (isFixed) {
+              actionsHtml = '<button class="btn-action btn-disabled" disabled>시스템 고정</button>';
+          } else {
+              actionsHtml = ''
+                  + '<button class="btn-action" onclick="openCategoryModal(\'edit\', ' + JSON.stringify(icon) + ', ' + JSON.stringify(name) + ', ' + JSON.stringify(cat.description || '') + ', ' + isActive + ')">수정</button>'
+                  + (isActive
+                      ? '<button class="btn-action btn-toggle-hide" onclick="toggleStatus(this)">👁️ 숨기기</button>'
+                      : '<button class="btn-action btn-toggle-active" onclick="toggleStatus(this, true)">🙈 활성화</button>')
+                  + '<button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>';
+          }
+
+          return ''
+              + '<div class="' + itemClasses.join(' ') + '" data-category-id="' + escapeHtml(rowId) + '">'
+              + '  <div class="cat-left">'
+              +        handleHtml
+              + '    <div class="cat-icon" style="' + iconStyle + '">' + escapeHtml(icon) + '</div>'
+              + '    <div class="cat-info">'
+              + '      <div class="cat-name" style="' + nameStyle + '">' + escapeHtml(name) + ' <span class="badge ' + badgeClass + '">' + badgeText + '</span></div>'
+              +        descriptionHtml
+              + '    </div>'
+              + '  </div>'
+              + '  <div class="action-btns">' + actionsHtml + '</div>'
+              + '</div>';
+      }
+
+      function renderCategoryList(categories) {
+          if (!categories.length) {
+              container.innerHTML = '<div class="category-list-empty">등록된 카테고리가 없습니다.</div>';
+              updateCategoryCounts([]);
+              return;
+          }
+
+          container.innerHTML = categories.map(buildCategoryItemHtml).join('');
+          updateCategoryCounts(categories);
+          bindDraggableItems();
+      }
+
+      async function loadCategories() {
+          container.innerHTML = '<div class="category-list-empty" id="categoryListPlaceholder">카테고리를 불러오는 중…</div>';
+
+          try {
+              const sb = getSupabaseClient();
+              const { data, error } = await sb
+                  .from('pickle_categories')
+                  .select('id, slug, icon, name, description, sort_order, is_active, is_fixed')
+                  .order('sort_order', { ascending: true });
+
+              if (error) throw error;
+
+              renderCategoryList(data || []);
+          } catch (err) {
+              console.error('[admin_categories] loadCategories failed:', err);
+              container.innerHTML = '<div class="category-list-empty error">카테고리를 불러오지 못했습니다.<br>' + escapeHtml(err.message || String(err)) + '</div>';
+              document.getElementById('totalCatCount').textContent = '—';
+              document.getElementById('activeCatCount').textContent = '—';
+          }
+      }
+
       // 이모지 변경 시뮬레이션
       function changeEmojiPrompt() {
           const newEmoji = prompt("사용할 이모지를 입력하세요 (예: ⚽, 🚀, 💻)", "🔥");
@@ -363,23 +372,21 @@
               item.querySelector('.cat-icon').style = '';
               item.querySelector('.cat-name').style.color = '#fff';
               item.querySelector('.cat-name .badge').className = 'badge badge-active';
-              item.querySelector('.cat-name .badge').innerText = 'Active';
-              item.querySelector('.cat-stats span').style.color = 'var(--theme-gold)';
-              
+              item.querySelector('.cat-name .badge').innerText = '👁️ Active';
+
               btn.className = 'btn-action btn-toggle-hide';
               btn.innerText = '👁️ 숨기기';
               btn.setAttribute('onclick', 'toggleStatus(this, false)');
           } else {
-              if(confirm('이 카테고리를 유저 앱에서 숨김 처리하시겠습니까?\\n기존 불판 데이터는 보존됩니다.')){
+              if(confirm('이 카테고리를 유저 앱에서 숨김 처리하시겠습니까?\n기존 불판 데이터는 보존됩니다.')){
                   item.classList.add('hidden-state');
                   item.querySelector('.cat-icon').style = 'filter: grayscale(100%); opacity: 0.5;';
                   item.querySelector('.cat-name').style.color = 'var(--text-sub)';
                   item.querySelector('.cat-name .badge').className = 'badge badge-hidden';
-                  item.querySelector('.cat-name .badge').innerText = 'Hidden';
-                  item.querySelector('.cat-stats span').style.color = 'var(--text-sub)';
-                  
+                  item.querySelector('.cat-name .badge').innerText = '🙈 Hidden';
+
                   btn.className = 'btn-action btn-toggle-active';
-                  btn.innerText = '✨ 활성화';
+                  btn.innerText = '🙈 활성화';
                   btn.setAttribute('onclick', 'toggleStatus(this, true)');
               }
           }
@@ -388,19 +395,25 @@
       // 삭제 로직
       function deleteCategory(btn) {
           const item = btn.closest('.category-item');
+          if (item.classList.contains('fixed-state')) return;
+
           const catName = item.querySelector('.cat-name').childNodes[0].nodeValue.trim();
-          if(confirm(`[${catName}] 카테고리를 정말 삭제하시겠습니까?\\n이 작업은 되돌릴 수 없습니다.`)) {
+          if(confirm(`[${catName}] 카테고리를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
               item.remove();
               alert('삭제가 완료되었습니다.');
+              const remaining = container.querySelectorAll('.category-item').length;
+              const active = container.querySelectorAll('.category-item:not(.hidden-state)').length;
+              document.getElementById('totalCatCount').textContent = remaining + '개';
+              document.getElementById('activeCatCount').textContent = active + '개';
           }
       }
 
       // 모달 오픈 로직
-      function openCategoryModal(mode, icon = '🌟', name = '') {
+      function openCategoryModal(mode, icon = '🌟', name = '', desc = '', isActive = true) {
           currentEditMode = mode;
           const modal = document.getElementById('categoryModal');
           const title = document.getElementById('modalTitle');
-          
+
           if(mode === 'new') {
               title.innerHTML = '➕ 신규 카테고리 추가';
               document.getElementById('catIconInput').innerText = '🌟';
@@ -411,10 +424,10 @@
               title.innerHTML = '✏️ 카테고리 설정 수정';
               document.getElementById('catIconInput').innerText = icon;
               document.getElementById('catNameInput').value = name;
-              document.getElementById('catDescInput').value = '기존에 설정된 카테고리 설명 텍스트입니다.';
-              document.getElementById('catStatusInput').checked = true;
+              document.getElementById('catDescInput').value = desc;
+              document.getElementById('catStatusInput').checked = isActive;
           }
-          
+
           modal.style.display = 'flex';
       }
 
@@ -438,120 +451,86 @@
           const categoryData = { name, icon, desc, isActive, mode: currentEditMode };
 
           if(currentEditMode === 'new') {
-              const listContainer = document.getElementById('categoryListContainer');
-              
-              const newItem = document.createElement('div');
-              // 드래그 가능한 클래스 추가
-              newItem.className = isActive ? 'category-item draggable-item' : 'category-item draggable-item hidden-state';
-              
-              const badgeClass = isActive ? 'badge-active' : 'badge-hidden';
-              const badgeText = isActive ? 'Active' : 'Hidden';
-              const iconStyle = isActive ? '' : 'filter: grayscale(100%); opacity: 0.5;';
-              const nameColor = isActive ? '#fff' : 'var(--text-sub)';
-              const statColor = isActive ? 'var(--theme-gold)' : 'var(--text-sub)';
-
-              newItem.innerHTML = `
-                  <div class="cat-left">
-                      <div class="drag-handle">≡</div>
-                      <div class="cat-icon" style="${iconStyle}">${icon}</div>
-                      <div class="cat-info">
-                          <div class="cat-name" style="color:${nameColor};">${name} <span class="badge ${badgeClass}">${badgeText}</span></div>
-                          <div class="cat-stats">불판: <span style="color:${statColor}">0</span></div>
-                      </div>
-                  </div>
-                  <div class="action-btns">
-                      <button class="btn-action" onclick="openCategoryModal('edit', '${icon}', '${name}')">수정</button>
-                      <button class="btn-action ${isActive ? 'btn-toggle-hide' : 'btn-toggle-active'}" onclick="toggleStatus(this, ${!isActive})">${isActive ? '👁️ 숨기기' : '✨ 활성화'}</button>
-                      <button class="btn-action btn-delete" onclick="deleteCategory(this)">삭제</button>
-                  </div>
-              `;
-              
-              listContainer.appendChild(newItem);
-              // 새로 추가된 아이템에도 드래그 기능 적용
-              makeDraggable(newItem);
-              
-              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-              const created = await FB.persistNew('categories', categoryData, {
-                  page: 'admin_categories',
-                  successMessage: `[${name}] 카테고리가 Firebase에 추가되었습니다!`,
-              });
-              if (!created.ok) return;
+              if (FB && typeof FB.persistNew === 'function') {
+                  const created = await FB.persistNew('categories', categoryData, {
+                      page: 'admin_categories',
+                      successMessage: `[${name}] 카테고리가 Firebase에 추가되었습니다!`,
+                  });
+                  if (!created.ok) return;
+              }
+              await loadCategories();
           } else {
-              const docId = FB.slugify(name);
-              const updated = await FB.persist('categories', docId, categoryData, {
-                  page: 'admin_categories',
-                  successMessage: `[${name}] 카테고리 정보가 Firebase에 수정되었습니다!`,
-              });
-              if (!updated.ok) return;
+              if (FB && typeof FB.persist === 'function') {
+                  const docId = FB.slugify(name);
+                  const updated = await FB.persist('categories', docId, categoryData, {
+                      page: 'admin_categories',
+                      successMessage: `[${name}] 카테고리 정보가 Firebase에 수정되었습니다!`,
+                  });
+                  if (!updated.ok) return;
+              }
+              await loadCategories();
           }
-          
+
           closeCategoryModal();
       }
 
       // ==========================================
       // 💡 드래그 앤 드롭(Drag & Drop) 정렬 스크립트
       // ==========================================
-      const container = document.getElementById('categoryListContainer');
-      let draggedItem = null;
-
       function makeDraggable(item) {
-          // 시스템 고정 항목은 드래그 기능에서 제외
           if (item.classList.contains('fixed-state')) return;
 
           item.setAttribute('draggable', 'true');
 
-          item.addEventListener('dragstart', function(e) {
+          item.addEventListener('dragstart', function() {
               draggedItem = item;
-              // 시각적 효과를 위해 setTimeout 사용
-              setTimeout(() => {
+              setTimeout(function() {
                   item.classList.add('dragging');
               }, 0);
           });
 
           item.addEventListener('dragend', function() {
-              draggedItem.classList.remove('dragging');
+              item.classList.remove('dragging');
               draggedItem = null;
           });
       }
 
-      // 컨테이너 드래그 오버 로직
+      function bindDraggableItems() {
+          container.querySelectorAll('.draggable-item').forEach(makeDraggable);
+      }
+
       container.addEventListener('dragover', function(e) {
-          e.preventDefault(); // 기본 드롭 방지 로직 해제
-          
+          e.preventDefault();
+
           const afterElement = getDragAfterElement(container, e.clientY);
           const dragging = document.querySelector('.dragging');
-          
+
           if (dragging) {
               if (afterElement == null) {
                   container.appendChild(dragging);
-              } else {
-                  // 시스템 고정 항목 위로는 이동하지 못하도록 방어
-                  if(!afterElement.classList.contains('fixed-state')) {
-                      container.insertBefore(dragging, afterElement);
-                  }
+              } else if (!afterElement.classList.contains('fixed-state')) {
+                  container.insertBefore(dragging, afterElement);
               }
           }
       });
 
-      // 마우스 위치에 따른 삽입 위치 계산
       function getDragAfterElement(container, y) {
-          // 고정된 항목과 현재 드래그 중인 항목은 제외하고 계산
           const draggableElements = [...container.querySelectorAll('.category-item:not(.dragging):not(.fixed-state)')];
 
-          return draggableElements.reduce((closest, child) => {
+          return draggableElements.reduce(function(closest, child) {
               const box = child.getBoundingClientRect();
               const offset = y - box.top - box.height / 2;
-              
+
               if (offset < 0 && offset > closest.offset) {
                   return { offset: offset, element: child };
-              } else {
-                  return closest;
               }
+              return closest;
           }, { offset: Number.NEGATIVE_INFINITY }).element;
       }
 
-      // 초기 로드 시 기존의 드래그 가능 아이템들에 이벤트 바인딩
-      document.querySelectorAll('.draggable-item').forEach(makeDraggable);
+      document.addEventListener('DOMContentLoaded', function() {
+          loadCategories();
+      });
   </script>
 
 </body>
