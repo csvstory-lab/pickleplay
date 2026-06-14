@@ -1,9 +1,10 @@
 /**
  * P!CKLE — 통합 하단 네비게이션
- * @build 20260613_bottomnav3
+ * @build 20260608_bottomnav4
  */
 :root {
-  --bottom-nav-fab-size: 44px;
+  --bottom-nav-fab-size: calc(44px * 1.1);
+  --bottom-nav-fab-font: calc(1.4rem * 1.1);
   --bottom-nav-label-h: 15px;
   --bottom-nav-icon-gap: 6px;
   --bottom-nav-pad-y: 7px;
@@ -31,7 +32,7 @@
   align-items: stretch;
   box-sizing: border-box;
   min-height: var(--bottom-nav-row-h);
-  padding: 2px var(--bottom-nav-pad-x) calc(var(--bottom-nav-pad-y) + env(safe-area-inset-bottom, 0px));
+  padding: 0 var(--bottom-nav-pad-x) calc(var(--bottom-nav-pad-y) + env(safe-area-inset-bottom, 0px));
   background-color: rgba(26, 26, 29, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -46,11 +47,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--bottom-nav-icon-gap);
   min-width: 0;
   min-height: var(--bottom-nav-row-h);
   padding: var(--bottom-nav-pad-y) 4px;
+  margin: 0;
   border: none;
   background: transparent;
   color: #aaaaaa;
@@ -70,6 +72,7 @@
   min-height: var(--bottom-nav-label-h);
   line-height: var(--bottom-nav-label-h);
   white-space: nowrap;
+  margin: 0;
 }
 
 .nav-btn .nav-icon {
@@ -79,6 +82,7 @@
   justify-content: center;
   width: 1.45rem;
   height: 1.45rem;
+  margin: 0;
   font-size: 1.3rem;
   line-height: 1;
   transition: filter 0.2s, transform 0.2s;
@@ -92,11 +96,14 @@
   filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.55));
 }
 
-/* 🔥 중앙 FAB — 상단 경계에 절반 걸침, 라벨은 하단 정렬 */
+/* 🔥 중앙 FAB — 상단 경계에 절반(50%) 걸침, 라벨은 하단 정렬 */
 .nav-btn.fire-btn {
   justify-content: flex-end;
+  align-items: center;
+  overflow: visible;
   padding-top: 0;
   padding-bottom: var(--bottom-nav-pad-y);
+  z-index: 910;
 }
 
 .nav-btn.fire-btn .nav-icon {
@@ -109,9 +116,10 @@
   border-radius: 50%;
   background-color: var(--bottom-nav-neon-green);
   color: #000;
-  font-size: 1.4rem;
-  box-shadow: 0 4px 14px rgba(57, 255, 20, 0.35);
-  z-index: 1;
+  font-size: var(--bottom-nav-fab-font);
+  box-shadow: 0 4px 16px rgba(57, 255, 20, 0.4);
+  z-index: 950;
+  pointer-events: auto;
 }
 
 .nav-btn.fire-btn:active .nav-icon {
@@ -120,7 +128,7 @@
 
 .nav-btn.fire-btn > span:last-child {
   font-size: var(--bottom-nav-font-fire);
-  margin-top: 0;
+  margin: 0;
 }
 
 .nav-btn.fire-btn.active {
@@ -129,5 +137,5 @@
 
 .nav-btn.fire-btn.active .nav-icon {
   filter: none;
-  box-shadow: 0 5px 18px rgba(57, 255, 20, 0.45);
+  box-shadow: 0 6px 20px rgba(57, 255, 20, 0.5);
 }
