@@ -1,6 +1,6 @@
 /**
  * P!CKLE — event.html 이벤트 DB 연동
- * @build 20260613_events3
+ * @build 20260613_events4
  */
 (function () {
   'use strict';
@@ -11,6 +11,7 @@
   var currentEventId = null;
   var currentShareEvent = null;
   var participatedIds = new Set();
+  var detailBarRenderSeq = 0;
   var PARTICIPATE_DONE_MSG = '🎉 응모가 완료되었습니다! 당첨자 발표일을 기대해 주세요.';
 
   function escapeHtml(str) {
@@ -163,11 +164,15 @@
   }
 
   function buildWinnerItemHtml(w) {
+    var mask =
+      w && w.uid_mask != null && String(w.uid_mask).trim() !== ''
+        ? String(w.uid_mask).trim()
+        : '***';
     return (
       '<div class="winner-item"><span>' +
-      escapeHtml(w.nickname || '—') +
+      escapeHtml(w && w.nickname ? w.nickname : '—') +
       '</span><span style="color:var(--text-sub);">UID: ' +
-      escapeHtml(w.uid_mask || '***') +
+      escapeHtml(mask) +
       '</span></div>'
     );
   }
@@ -396,23 +401,66 @@
     }
   }
 
-  function getCurrentUserId() {
-    if (window.PickleAuth && window.PickleAuth.getUser) {
-      var user = window.PickleAuth.getUser();
-      if (user && user.id) return String(user.id);
+  function normalizeUid(value) {
+    return value == null ? '' : String(value).trim().toLowerCase();
+  }
+
+  async function resolveAuthUid() {
+    var sb = getClient();
+
+    try {
+      var userResult = await sb.auth.getUser();
+      if (userResult.data && userResult.data.user && userResult.data.user.id) {
+        return String(userResult.data.user.id);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Events] getUser failed', err);
     }
+
+    try {
+      var sessionResult = await sb.auth.getSession();
+      if (
+        sessionResult.data &&
+        sessionResult.data.session &&
+        sessionResult.data.session.user &&
+        sessionResult.data.session.user.id
+      ) {
+        return String(sessionResult.data.session.user.id);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Events] getSession failed', err);
+    }
+
+    await ensureAuthReady();
+
+    if (window.PickleAuth && window.PickleAuth.refreshSession) {
+      try {
+        await window.PickleAuth.refreshSession();
+      } catch (err) {
+        console.warn('[P!CKLE Events] refreshSession failed', err);
+      }
+    }
+
+    if (window.PickleAuth && window.PickleAuth.getUser) {
+      var cachedUser = window.PickleAuth.getUser();
+      if (cachedUser && cachedUser.id) return String(cachedUser.id);
+    }
+
     return null;
   }
 
-  function isCurrentUserWinner(row) {
-    var userId = getCurrentUserId();
-    if (!userId || !row) return false;
+  async function isCurrentUserWinner(row) {
+    if (!row) return false;
+    var authUid = await resolveAuthUid();
+    if (!authUid) return false;
+
+    var normalizedAuth = normalizeUid(authUid);
     var winners = Array.isArray(row.winners) ? row.winners : [];
+
     return winners.some(function (w) {
       if (!w || typeof w !== 'object') return false;
-      if (w.user_id && String(w.user_id) === userId) return true;
-      if (w.id && String(w.id) === userId) return true;
-      return false;
+      if (w.uid == null || String(w.uid).trim() === '') return false;
+      return normalizeUid(w.uid) === normalizedAuth;
     });
   }
 
@@ -428,18 +476,35 @@
     );
   }
 
-  async function renderEndedBottomBar(row) {
+  async function renderEndedBottomBar(row, eventId) {
     var bottomBar = document.getElementById('detailBottomBar');
     if (!bottomBar) return;
 
+    var seq = ++detailBarRenderSeq;
+    var targetEventId = String(eventId || row.id);
+
     if (row.status !== 'ended') {
-      bottomBar.innerHTML = buildEndedDisabledBarHtml();
+      if (seq === detailBarRenderSeq && currentEventId === targetEventId) {
+        bottomBar.innerHTML = buildEndedDisabledBarHtml();
+      }
       return;
     }
 
-    await ensureAuthReady();
     bottomBar.innerHTML =
-      isCurrentUserWinner(row) ? buildWinnerClaimButtonHtml() : buildEndedDisabledBarHtml();
+      '<button class="btn-disabled-huge" type="button" disabled>확인 중…</button>';
+
+    var isWinner = false;
+    try {
+      isWinner = await isCurrentUserWinner(row);
+    } catch (err) {
+      console.error('[P!CKLE Events] winner check failed', err);
+    }
+
+    if (seq !== detailBarRenderSeq || currentEventId !== targetEventId) return;
+
+    bottomBar.innerHTML = isWinner
+      ? buildWinnerClaimButtonHtml()
+      : buildEndedDisabledBarHtml();
   }
 
   function openWinnerForm() {
@@ -521,8 +586,7 @@
     var ended = isEndedRow(row);
     content.innerHTML = ended ? buildEndedDetailHtml(row) : buildOngoingDetailHtml(row);
     if (ended) {
-      bottomBar.innerHTML = buildEndedDisabledBarHtml();
-      await renderEndedBottomBar(row);
+      await renderEndedBottomBar(row, currentEventId);
     } else {
       bottomBar.innerHTML = buildOngoingBottomBar(row);
     }
