@@ -19,8 +19,6 @@
 <title>P!CKLE - 이벤트 및 혜택 (OS 공유 기능 추가)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
-<!-- 💡 카카오 SDK 스크립트 추가 -->
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js" integrity="sha384-kdLEaAosA22O27B8K2180I02y8z2NFsB2TfHq87Xq1XnWeA/e/RkOksb0kzoofbZ" crossorigin="anonymous"></script>
 
 <style>
     :root {
@@ -321,9 +319,6 @@
 </div>
 
 <script>
-    // 🚀 [중요] 카카오 JS 키를 넣으세요! (불판 공유할 때 썼던 키와 동일)
-    Kakao.init('f18676580f0d5bc2f8f6374d138bb200');
-
     let lastScrollTop = 0;
     window.addEventListener('scroll', function() {
         let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -360,6 +355,14 @@
         document.getElementById('shareSheet').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
+</script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js"></script>
+<script>
+  // 스크립트 로드 완료 시점에 즉시 시동을 검
+  if (window.Kakao && !window.Kakao.isInitialized()) {
+      Kakao.init('f18676580f0d5bc2f8f6374d138bb200');
+      console.log("Kakao SDK Initialized Success!");
+  }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
