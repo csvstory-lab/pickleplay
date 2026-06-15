@@ -295,6 +295,65 @@
         align-self: center;
     }
     .btn-email-signup-link:active { color: var(--neon-green); }
+    .btn-forgot-password {
+        background: none; border: none;
+        color: var(--text-sub);
+        font-size: 0.82rem; font-weight: 700;
+        cursor: pointer; padding: 4px 0 2px;
+        align-self: center;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .btn-forgot-password:active { color: var(--neon-pink); }
+
+    /* 비밀번호 찾기 모달 */
+    .auth-modal-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(4px);
+        display: none; align-items: center; justify-content: center;
+        padding: 20px;
+    }
+    .auth-modal-overlay.open { display: flex; }
+    .auth-modal {
+        width: 100%; max-width: 360px;
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px 20px;
+        box-shadow: 6px 6px 0 #000;
+    }
+    .auth-modal-title {
+        margin: 0 0 8px;
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: 1.25rem;
+        color: #fff;
+    }
+    .auth-modal-desc {
+        margin: 0 0 16px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-sub);
+        line-height: 1.5;
+    }
+    .auth-modal-actions {
+        display: flex; gap: 10px; margin-top: 16px;
+    }
+    .auth-modal-btn {
+        flex: 1; padding: 14px 12px;
+        border-radius: 12px; border: 2px solid #000;
+        font-family: 'Pretendard', sans-serif;
+        font-size: 0.95rem; font-weight: 800;
+        cursor: pointer;
+    }
+    .auth-modal-btn--cancel {
+        background: transparent; color: #fff;
+        border-color: #52525b;
+    }
+    .auth-modal-btn--confirm {
+        background: var(--neon-green); color: #000;
+    }
+    .auth-modal-btn:disabled { opacity: 0.6; cursor: wait; }
     .auth-divider {
         display: flex; align-items: center; gap: 10px;
         color: #52525b; font-size: 0.75rem; font-weight: 800;
@@ -373,6 +432,7 @@
                 <input type="email" id="mainEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
                 <input type="password" id="mainPwInput" class="email-field" placeholder="비밀번호" autocomplete="current-password">
                 <button type="button" id="btnEmailLogin" class="btn-email-login">로그인</button>
+                <button type="button" id="btnForgotPassword" class="btn-forgot-password">비밀번호를 잊으셨나요?</button>
                 <button type="button" id="btnEmailSignup" class="btn-email-signup-link">이메일로 가입하기</button>
             </form>
 
@@ -439,6 +499,19 @@
         </div>
     </div>
 
+    </div>
+
+    <!-- 비밀번호 찾기 모달 -->
+    <div id="forgotPwModalOverlay" class="auth-modal-overlay" aria-hidden="true">
+        <div class="auth-modal" role="dialog" aria-labelledby="forgotPwModalTitle">
+            <h3 id="forgotPwModalTitle" class="auth-modal-title">비밀번호 찾기</h3>
+            <p class="auth-modal-desc">가입하신 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.</p>
+            <input type="email" id="forgotPwEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
+            <div class="auth-modal-actions">
+                <button type="button" id="btnForgotPwCancel" class="auth-modal-btn auth-modal-btn--cancel">취소</button>
+                <button type="button" id="btnForgotPwConfirm" class="auth-modal-btn auth-modal-btn--confirm">확인</button>
+            </div>
+        </div>
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

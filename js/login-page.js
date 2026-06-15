@@ -47,14 +47,26 @@
     return window.location.origin + '/index.html';
   }
 
-  function isStrongPassword(password) {
-    return STRONG_PASSWORD_RE.test(String(password || ''));
+  function getResetPasswordRedirectTo() {
+    return window.location.origin + '/reset_password.html';
   }
 
-  function formatAuthError(err) {
-    var msg = (err && err.message) ? err.message : '요청에 실패했습니다.';
-    if (/invalid login credentials/i.test(msg)) {
-      return '이메일 또는 비밀번호가 올바르지 않습니다.';
+  function formatLoginError(err) {
+    var code = (err && err.code) ? String(err.code) : '';
+    var msg = (err && err.message) ? String(err.message) : '';
+
+    if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) {
+      return '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
+    }
+    if (code === 'user_not_found' || /user not found/i.test(msg)) {
+      return '가입되지 않은 이메일입니다.';
+    }
+    if (
+      code === 'invalid_credentials' ||
+      /invalid login credentials/i.test(msg) ||
+      /invalid email or password/i.test(msg)
+    ) {
+      return '비밀번호가 일치하지 않습니다.';
     }
     if (/user already registered/i.test(msg)) {
       return '이미 가입된 이메일입니다. 로그인해 주세요.';
@@ -65,7 +77,86 @@
     if (/unable to validate email/i.test(msg)) {
       return '올바른 이메일 주소를 입력해 주세요.';
     }
-    return msg;
+    return msg || '요청에 실패했습니다.';
+  }
+
+  function formatAuthError(err) {
+    return formatLoginError(err);
+  }
+
+  function isStrongPassword(password) {
+    return STRONG_PASSWORD_RE.test(String(password || ''));
+  }
+
+  function bindForgotPassword() {
+    var openBtn = document.getElementById('btnForgotPassword');
+    var overlay = document.getElementById('forgotPwModalOverlay');
+    var cancelBtn = document.getElementById('btnForgotPwCancel');
+    var confirmBtn = document.getElementById('btnForgotPwConfirm');
+    var emailInput = document.getElementById('forgotPwEmailInput');
+    var mainEmailInput = document.getElementById('mainEmailInput');
+    if (!openBtn || !overlay || !confirmBtn || !emailInput) return;
+
+    function openModal() {
+      emailInput.value = mainEmailInput ? mainEmailInput.value.trim() : '';
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      emailInput.focus();
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    openBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openModal();
+    });
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeModal();
+      });
+    }
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal();
+    });
+
+    confirmBtn.addEventListener('click', async function () {
+      if (!guardConfigForUserAction()) return;
+
+      var email = emailInput.value.trim();
+      if (!email || email.indexOf('@') === -1) {
+        alert('올바른 이메일 주소를 입력해 주세요.');
+        emailInput.focus();
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '발송 중…';
+
+      try {
+        await resetPasswordForEmail(email);
+        closeModal();
+        alert('입력하신 이메일로 비밀번호 재설정 링크를 발송했습니다.');
+      } catch (err) {
+        alert(formatLoginError(err));
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '확인';
+      }
+    });
+
+    emailInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmBtn.click();
+      }
+      if (e.key === 'Escape') closeModal();
+    });
   }
 
   function bindAuthScreens() {
@@ -151,7 +242,7 @@
         await signInWithEmail(creds.email, creds.password);
         window.location.href = getRedirectAfterLogin();
       } catch (err) {
-        alert(formatAuthError(err));
+        alert(formatLoginError(err));
       } finally {
         loginBtn.disabled = false;
         loginBtn.textContent = '로그인';
@@ -335,14 +426,27 @@
       throw new Error('지원하지 않는 로그인 방식입니다.');
     }
     var sb = getSupabaseClient();
-    var oauthRedirect = window.location.origin + '/index.html';
+    var oauthOptions = {
+      redirectTo: getOAuthRedirectTo(),
+    };
+    if (provider === 'kakao') {
+      oauthOptions.redirectTo = window.location.origin + '/index.html';
+      oauthOptions.queryParams = { prompt: 'login' };
+    }
     var result = await sb.auth.signInWithOAuth({
       provider: provider,
-      options: {
-        redirectTo: oauthRedirect,
-      },
+      options: oauthOptions,
     });
 
+    if (result.error) throw result.error;
+    return result.data;
+  }
+
+  async function resetPasswordForEmail(email) {
+    var sb = getSupabaseClient();
+    var result = await sb.auth.resetPasswordForEmail(String(email).trim(), {
+      redirectTo: getResetPasswordRedirectTo(),
+    });
     if (result.error) throw result.error;
     return result.data;
   }
@@ -392,6 +496,7 @@
   async function initLoginPage() {
     var screenApi = bindAuthScreens();
     bindLoginForm();
+    bindForgotPassword();
     bindSocialLogin();
     bindSignupForm(screenApi);
 
@@ -418,8 +523,11 @@
     signUpWithEmail: signUpWithEmail,
     signInWithEmail: signInWithEmail,
     signUpOrSignIn: signUpOrSignIn,
+    resetPasswordForEmail: resetPasswordForEmail,
     getRedirectAfterLogin: getRedirectAfterLogin,
     getOAuthRedirectTo: getOAuthRedirectTo,
+    getResetPasswordRedirectTo: getResetPasswordRedirectTo,
+    formatLoginError: formatLoginError,
     guardConfigForUserAction: guardConfigForUserAction,
     isStrongPassword: isStrongPassword,
     init: initLoginPage,

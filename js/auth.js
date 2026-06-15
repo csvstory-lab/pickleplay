@@ -50,7 +50,40 @@
   }
 
   function getOAuthRedirectTo() {
-    return new URL(getRedirectPath(), window.location.href).href;
+    return window.location.origin + '/index.html';
+  }
+
+  function getResetPasswordRedirectTo() {
+    return window.location.origin + '/reset_password.html';
+  }
+
+  function formatLoginError(err) {
+    const code = err?.code ? String(err.code) : '';
+    const msg = err?.message ? String(err.message) : '';
+
+    if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) {
+      return '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
+    }
+    if (code === 'user_not_found' || /user not found/i.test(msg)) {
+      return '가입되지 않은 이메일입니다.';
+    }
+    if (
+      code === 'invalid_credentials' ||
+      /invalid login credentials/i.test(msg) ||
+      /invalid email or password/i.test(msg)
+    ) {
+      return '비밀번호가 일치하지 않습니다.';
+    }
+    if (/user already registered/i.test(msg)) {
+      return '이미 가입된 이메일입니다. 로그인해 주세요.';
+    }
+    if (/password should be at least/i.test(msg)) {
+      return '비밀번호는 6자 이상이어야 합니다.';
+    }
+    if (/unable to validate email/i.test(msg)) {
+      return '올바른 이메일 주소를 입력해 주세요.';
+    }
+    return msg || '요청에 실패했습니다.';
   }
 
   function goToLogin(options) {
@@ -109,17 +142,30 @@
     }
 
     const sb = getClient();
+    const oauthOptions = {
+      redirectTo: getOAuthRedirectTo(),
+    };
+    if (providerKey === 'kakao') {
+      oauthOptions.redirectTo = window.location.origin + '/index.html';
+      oauthOptions.queryParams = { prompt: 'login' };
+    } else if (providerKey !== 'kakao' && getRedirectPath() !== 'index.html') {
+      oauthOptions.redirectTo = new URL(getRedirectPath(), window.location.href).href;
+    }
+
     const { data, error } = await sb.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: getOAuthRedirectTo(),
-        queryParams:
-          providerKey === 'kakao'
-            ? { prompt: 'login' }
-            : undefined,
-      },
+      options: oauthOptions,
     });
 
+    if (error) throw error;
+    return data;
+  }
+
+  async function resetPasswordForEmail(email) {
+    const sb = getClient();
+    const { data, error } = await sb.auth.resetPasswordForEmail(String(email).trim(), {
+      redirectTo: getResetPasswordRedirectTo(),
+    });
     if (error) throw error;
     return data;
   }
@@ -290,7 +336,58 @@
           showAuthMessage('로그인 성공! 이동합니다…', false);
           setTimeout(redirectAfterAuth, 400);
         } catch (err) {
-          showAuthMessage(err.message || '로그인에 실패했습니다.', true);
+          alert(formatLoginError(err));
+        }
+      });
+    }
+
+    const btnForgotPassword = document.getElementById('btnForgotPassword');
+    const forgotOverlay = document.getElementById('forgotPwModalOverlay');
+    const forgotEmailInput = document.getElementById('forgotPwEmailInput');
+    const btnForgotPwConfirm = document.getElementById('btnForgotPwConfirm');
+    const btnForgotPwCancel = document.getElementById('btnForgotPwCancel');
+
+    if (btnForgotPassword && forgotOverlay && forgotEmailInput && btnForgotPwConfirm) {
+      const closeForgotModal = () => {
+        forgotOverlay.classList.remove('open');
+        forgotOverlay.setAttribute('aria-hidden', 'true');
+      };
+
+      btnForgotPassword.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mainEmail = document.getElementById('mainEmailInput');
+        forgotEmailInput.value = mainEmail?.value?.trim() || formLogin?.email?.value?.trim() || '';
+        forgotOverlay.classList.add('open');
+        forgotOverlay.setAttribute('aria-hidden', 'false');
+        forgotEmailInput.focus();
+      });
+
+      btnForgotPwCancel?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeForgotModal();
+      });
+
+      forgotOverlay.addEventListener('click', (e) => {
+        if (e.target === forgotOverlay) closeForgotModal();
+      });
+
+      btnForgotPwConfirm.addEventListener('click', async () => {
+        const email = forgotEmailInput.value.trim();
+        if (!email || !email.includes('@')) {
+          alert('올바른 이메일 주소를 입력해 주세요.');
+          forgotEmailInput.focus();
+          return;
+        }
+
+        btnForgotPwConfirm.disabled = true;
+        try {
+          await resetPasswordForEmail(email);
+          closeForgotModal();
+          alert('입력하신 이메일로 비밀번호 재설정 링크를 발송했습니다.');
+        } catch (err) {
+          alert(formatLoginError(err));
+        } finally {
+          btnForgotPwConfirm.disabled = false;
         }
       });
     }
@@ -371,6 +468,8 @@
     signOut,
     updateNickname,
     signInWithOAuth,
+    resetPasswordForEmail,
+    formatLoginError,
     goToLogin,
     refreshSession,
     emailLocalPart,
