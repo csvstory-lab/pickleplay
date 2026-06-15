@@ -46,7 +46,9 @@
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
         background: linear-gradient(90deg, var(--neon-green), #aaff00);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent; margin: 0; cursor: pointer;
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; }
@@ -404,8 +406,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
-<script src="../js/supabase-client.js"></script>
 <script src="../js/supabase-bootstrap.js"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
@@ -891,11 +893,18 @@
                 const authResult = await supabase.auth.getUser();
                 const createAuthUser = authResult.data?.user;
                 if (!createAuthUser) {
+                    if (
+                        window.location.hash.includes('access_token=') ||
+                        window.location.hash.includes('type=recovery') ||
+                        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+                    ) {
+                        return false;
+                    }
                     if (window.PickleAuth?.alertLoginRequired) {
                         window.PickleAuth.alertLoginRequired('로그인 후 불판을 지필 수 있습니다.', function () {
                             location.href = 'login.html?redirect=create.html&from=create';
                         });
-                    } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+                    } else {
                         alert('로그인 후 불판을 지필 수 있습니다.');
                         location.href = 'login.html?redirect=create.html&from=create';
                     }

@@ -347,6 +347,12 @@
     const text = input?.value || '';
 
     if (!window.PickleAuth?.isLoggedIn()) {
+      if (
+        window.location.hash.includes('access_token=') ||
+        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+      ) {
+        return;
+      }
       alert('댓글을 남기려면 로그인이 필요합니다');
       window.location.href = 'login.html?redirect=index.html';
       return;

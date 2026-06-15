@@ -267,6 +267,13 @@
   }
 
   function goLogin() {
+    if (
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery') ||
+      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+    ) {
+      return;
+    }
     window.location.href = 'login.html?redirect=create.html&from=create';
   }
 
@@ -387,9 +394,15 @@
 
     var user = authResult.data?.user;
     if (!user) {
+      if (
+        window.location.hash.includes('access_token=') ||
+        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+      ) {
+        return { cancelled: true };
+      }
       if (window.PickleAuth?.alertLoginRequired) {
         window.PickleAuth.alertLoginRequired('로그인 후 불판을 지필 수 있습니다.', goLogin);
-      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      } else {
         alert('로그인 후 불판을 지필 수 있습니다.');
         goLogin();
       }

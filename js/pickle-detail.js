@@ -34,27 +34,96 @@
       : String(str ?? '');
   }
 
+  function getSharedSupabaseClient() {
+    if (window.PickleAuth && window.PickleAuth.getClient) {
+      try {
+        return window.PickleAuth.getClient();
+      } catch (e) {
+        /* fall through */
+      }
+    }
+    if (window.PickleSupabaseBootstrap && window.PickleSupabaseBootstrap.getClient) {
+      return window.PickleSupabaseBootstrap.getClient();
+    }
+    if (window.PickleSupabase && window.PickleSupabase.getClient) {
+      return window.PickleSupabase.getClient();
+    }
+    throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
+  }
+
   async function getAuthUserForAction() {
-    if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
-      return window.PickleAuth.getUserWhenReady();
+    try {
+      if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
+        return await window.PickleAuth.resolveAuthUser();
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Detail] auth resolve failed', err);
     }
-    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.waitForOAuthSession) {
-      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+
+    var sb = getSharedSupabaseClient();
+
+    if (window.PickleAuth && window.PickleAuth.waitForAuthHydration) {
+      var session = await window.PickleAuth.waitForAuthHydration(sb);
+      if (session && session.user) return session.user;
     }
-    var sb = window.PickleSupabase.getClient();
-    var authResult = await sb.auth.getUser();
-    if (authResult.error || !authResult.data || !authResult.data.user) {
-      return null;
+
+    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
+      return window.PickleAuth.safeGetSessionUser(sb);
     }
-    return authResult.data.user;
+
+    var sessionResult = await sb.auth.getSession();
+    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
+      return sessionResult.data.session.user;
+    }
+
+    return null;
+  }
+
+  function isSessionMissingError(err) {
+    if (window.PickleAuth && window.PickleAuth.isSessionMissingError) {
+      return window.PickleAuth.isSessionMissingError(err);
+    }
+    var msg = String(err && err.message ? err.message : err || '').toLowerCase();
+    return msg.indexOf('auth session missing') !== -1 || msg.indexOf('session missing') !== -1;
+  }
+
+  function isAuthRelatedDbError(err) {
+    if (!err) return false;
+    var code = String(err.code || '');
+    var msg = String(err.message || err || '').toLowerCase();
+    return (
+      code === '42501' ||
+      code === 'PGRST301' ||
+      msg.indexOf('row-level security') !== -1 ||
+      msg.indexOf('jwt') !== -1 ||
+      msg.indexOf('not authenticated') !== -1 ||
+      msg.indexOf('auth session') !== -1 ||
+      msg.indexOf('session missing') !== -1
+    );
+  }
+
+  function isProfileMissingDbError(err) {
+    if (!err) return false;
+    var code = String(err.code || '');
+    var msg = String(err.message || err || '').toLowerCase();
+    return (
+      code === '23503' &&
+      (msg.indexOf('users') !== -1 || msg.indexOf('user_id') !== -1)
+    );
   }
 
   function alertLoginRequired(message, onRedirect) {
+    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.promptLoginRequired) {
+      return window.PickleOAuthCallbackGuard.promptLoginRequired(message, onRedirect);
+    }
+    var isOAuthCallback =
+      window.location.hash.indexOf('access_token=') !== -1 ||
+      window.location.hash.indexOf('type=recovery') !== -1;
+    if (isOAuthCallback) {
+      return false;
+    }
     if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
       return window.PickleAuth.alertLoginRequired(message, onRedirect);
-    }
-    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.shouldSuppressLoginAlert()) {
-      return false;
     }
     alert(message);
     if (typeof onRedirect === 'function') {
@@ -1253,7 +1322,9 @@
       throw legacy.error;
     }
     if (legacy.data) {
-      return normalizePicklePostsRow(legacy.data);
+      var legacyPost = normalizePicklePostsRow(legacy.data);
+      legacyPost._voteTable = 'pickle_posts';
+      return legacyPost;
     }
 
     return null;
@@ -1492,9 +1563,8 @@
       return;
     }
 
-    var sb = window.PickleSupabase.getClient();
-    var authResult = await sb.auth.getUser();
-    var user = authResult.data && authResult.data.user ? authResult.data.user : null;
+    var sb = getSharedSupabaseClient();
+    var user = await getAuthUserForAction();
 
     showVoteOptions();
     resetVoteOptionStyles();
@@ -1704,19 +1774,39 @@
   }
 
   async function submitVoteToSupabase(postId, choice) {
-    var sb = window.PickleSupabase.getClient();
+    var sb = getSharedSupabaseClient();
     var user = await getAuthUserForAction();
     if (!user) {
       throw new Error('LOGIN_REQUIRED');
     }
 
-    var insertResult = await sb.from('votes').insert({
-      user_id: user.id,
-      post_id: postId,
-      choice: choice,
-    });
+    async function insertVote() {
+      return sb.from('votes').insert({
+        user_id: user.id,
+        post_id: postId,
+        choice: choice,
+      });
+    }
+
+    var insertResult = await insertVote();
+
+    if (insertResult.error && isAuthRelatedDbError(insertResult.error)) {
+      if (window.PickleAuth && window.PickleAuth.refreshSession) {
+        await window.PickleAuth.refreshSession();
+      }
+      user = await getAuthUserForAction();
+      if (!user) {
+        throw new Error('LOGIN_REQUIRED');
+      }
+      insertResult = await insertVote();
+    }
 
     if (insertResult.error) {
+      if (isProfileMissingDbError(insertResult.error)) {
+        throw new Error(
+          '회원 프로필이 아직 동기화되지 않았습니다. 잠시 후 다시 시도하거나 새로고침해 주세요.'
+        );
+      }
       throw insertResult.error;
     }
   }
@@ -1788,6 +1878,11 @@
       return;
     }
 
+    if (currentPost._voteTable === 'pickle_posts') {
+      alert('이 불판은 구버전 데이터라 투표 저장을 지원하지 않습니다.');
+      return;
+    }
+
     detailHasVoted = true;
     playVotePickEffects(choice, event, element);
 
@@ -1803,7 +1898,19 @@
       element.classList.remove('selected-a', 'selected-b');
 
       var msg = String(err.message || err || '');
-      if (msg === 'LOGIN_REQUIRED') {
+      if (
+        msg === 'LOGIN_REQUIRED' ||
+        isSessionMissingError(err) ||
+        msg.toLowerCase().indexOf('auth session missing') !== -1
+      ) {
+        alertLoginRequired('투표하려면 로그인이 필요합니다.', function () {
+          window.location.href =
+            'login.html?redirect=' +
+            encodeURIComponent('detail.html?id=' + encodeURIComponent(currentPostId));
+        });
+        return;
+      }
+      if (isAuthRelatedDbError(err)) {
         alertLoginRequired('투표하려면 로그인이 필요합니다.', function () {
           window.location.href =
             'login.html?redirect=' +

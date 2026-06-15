@@ -164,8 +164,31 @@
     return '이메일 계정 인증됨';
   }
 
+  function isOAuthCallback() {
+    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.isOAuthCallback) {
+      return window.PickleOAuthCallbackGuard.isOAuthCallback();
+    }
+    var hash = window.location.hash || '';
+    return hash.indexOf('access_token=') !== -1 || hash.indexOf('type=recovery') !== -1;
+  }
+
   function redirectToLogin() {
+    if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return;
+    }
     window.location.replace('login.html?redirect=mypage.html');
+  }
+
+  function promptLoginRequired(message) {
+    if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return;
+    }
+    if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+      window.PickleAuth.alertLoginRequired(message, redirectToLogin);
+      return;
+    }
+    alert(message || '로그인이 필요한 페이지입니다.');
+    redirectToLogin();
   }
 
   function renderSnsLinkStatus(user) {
@@ -234,26 +257,47 @@
     }
   }
 
-  async function requireAuth() {
-    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+  async function resolveAuthUserOnly() {
+    if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
+      try {
+        var readyUser = await window.PickleAuth.resolveAuthUser({ timeoutMs: 5000 });
+        if (readyUser) return readyUser;
+      } catch (err) {
+        console.warn('[P!CKLE Mypage] resolveAuthUser', err);
+      }
+    } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
       await window.PickleAuth.waitForSessionReady();
-    } else if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
     }
 
     var sb = getSupabaseClient();
-    var result = await sb.auth.getUser();
-    if (result.error) throw result.error;
-    if (!result.data.user) {
-      if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
-        window.PickleAuth.alertLoginRequired('로그인이 필요한 페이지입니다.', redirectToLogin);
-      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-        alert('로그인이 필요한 페이지입니다.');
-        redirectToLogin();
-      }
+
+    if (window.PickleAuth && window.PickleAuth.waitForAuthHydration) {
+      var hydrated = await window.PickleAuth.waitForAuthHydration(sb, { timeoutMs: 5000 });
+      if (hydrated && hydrated.user) return hydrated.user;
+    }
+
+    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
+      var sessionUser = await window.PickleAuth.safeGetSessionUser(sb);
+      if (sessionUser) return sessionUser;
+    }
+
+    var sessionResult = await sb.auth.getSession();
+    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
+      return sessionResult.data.session.user;
+    }
+
+    return null;
+  }
+
+  async function requireAuth() {
+    var user = await resolveAuthUserOnly();
+    if (user) return user;
+
+    if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
       return null;
     }
-    return result.data.user;
+    promptLoginRequired('로그인이 필요한 페이지입니다.');
+    return null;
   }
 
   function bindProfileEditOpen() {
@@ -525,10 +569,15 @@
   }
 
   async function waitForSupabaseSession(sb, maxAttempts) {
-    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+    if (window.PickleAuth && window.PickleAuth.waitForAuthHydration) {
+      var hydratedSession = await window.PickleAuth.waitForAuthHydration(sb, {
+        timeoutMs: 4000,
+      });
+      if (hydratedSession && hydratedSession.access_token && hydratedSession.user) {
+        return hydratedSession;
+      }
+    } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
       await window.PickleAuth.waitForSessionReady();
-    } else if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
     }
 
     var attempts = maxAttempts || 10;
@@ -548,12 +597,14 @@
 
   async function ensureAuthenticatedSession(sb) {
     var session = await waitForSupabaseSession(sb);
-    var userResult = await sb.auth.getUser();
-    if (userResult.error) throw userResult.error;
-    if (!userResult.data || !userResult.data.user) {
-      throw new Error('LOGIN_REQUIRED');
+    if (session && session.user) {
+      return session.user;
     }
-    return userResult.data.user;
+    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
+      var user = await window.PickleAuth.safeGetSessionUser(sb);
+      if (user) return user;
+    }
+    throw new Error('LOGIN_REQUIRED');
   }
 
   async function fetchUserCoupons(sb, userId) {
@@ -961,12 +1012,10 @@
     } catch (err) {
       console.error('[P!CKLE Mypage] 쿠폰 상태 변경 실패', err);
       if (String(err.message || err) === 'LOGIN_REQUIRED') {
-        if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
-          window.PickleAuth.alertLoginRequired('로그인이 필요합니다.', redirectToLogin);
-        } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-          alert('로그인이 필요합니다.');
-          redirectToLogin();
+        if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return;
         }
+        promptLoginRequired('로그인이 필요합니다.');
         return;
       }
       if (isCouponsPermissionError(err)) {
@@ -1128,12 +1177,10 @@
       }
       var authResult = await sb.auth.getUser();
       if (authResult.error || !authResult.data?.user) {
-        if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
-          window.PickleAuth.alertLoginRequired('로그인이 필요합니다.', redirectToLogin);
-        } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-          alert('로그인이 필요합니다.');
-          redirectToLogin();
+        if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return;
         }
+        promptLoginRequired('로그인이 필요합니다.');
         return;
       }
 
@@ -1203,12 +1250,10 @@
     var authResult = await sb.auth.getUser();
 
     if (authResult.error || !authResult.data?.user) {
-      if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
-        window.PickleAuth.alertLoginRequired('로그인이 필요합니다.', redirectToLogin);
-      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-        alert('로그인이 필요합니다.');
-        redirectToLogin();
+      if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        return;
       }
+      promptLoginRequired('로그인이 필요합니다.');
       return;
     }
 
@@ -1519,10 +1564,10 @@
 
   async function initMypage() {
     try {
-      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+        await window.PickleOAuthCallbackGuard.waitForOAuthSession({ timeoutMs: 5000 });
+      } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
         await window.PickleAuth.waitForSessionReady();
-      } else if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-        await window.PickleOAuthCallbackGuard.waitForOAuthSession();
       }
 
       if (window.PickleCategories && window.PickleCategories.load) {
@@ -1532,17 +1577,40 @@
       var b = window.PickleSupabaseBootstrap;
       if (!b || !b.isReady()) {
         console.warn('[P!CKLE Mypage]', b ? b.getErrorMessage() : 'bootstrap missing');
-        if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
-          window.PickleAuth.alertLoginRequired('로그인이 필요한 페이지입니다.', redirectToLogin);
-        } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-          alert('로그인이 필요한 페이지입니다.');
-          redirectToLogin();
+        if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return;
         }
+        promptLoginRequired('로그인이 필요한 페이지입니다.');
         return;
       }
 
-      var user = await requireAuth();
-      if (!user) return;
+      var user = await resolveAuthUserOnly();
+      if (!user) {
+        await new Promise(function (resolve) {
+          var settled = false;
+          function finish() {
+            if (settled) return;
+            settled = true;
+            resolve();
+          }
+          window.addEventListener('pickle-auth-changed', function onAuthChanged(ev) {
+            if (ev.detail && ev.detail.session && ev.detail.session.user) {
+              window.removeEventListener('pickle-auth-changed', onAuthChanged);
+              finish();
+            }
+          });
+          setTimeout(finish, 3000);
+        });
+        user = await resolveAuthUserOnly();
+      }
+
+      if (!user) {
+        if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return;
+        }
+        promptLoginRequired('로그인이 필요한 페이지입니다.');
+        return;
+      }
 
       await renderProfile(user);
       bindProfileEditOpen();
@@ -1556,12 +1624,10 @@
       mypageTabLoaded.voted = true;
     } catch (err) {
       console.error('[P!CKLE Mypage]', err);
-      if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
-        window.PickleAuth.alertLoginRequired('로그인이 필요한 페이지입니다.', redirectToLogin);
-      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-        alert('로그인이 필요한 페이지입니다.');
-        redirectToLogin();
+      if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        return;
       }
+      promptLoginRequired('로그인이 필요한 페이지입니다.');
     }
   }
 
@@ -1595,5 +1661,14 @@
     });
   });
 
-  document.addEventListener('DOMContentLoaded', initMypage);
+  document.addEventListener('DOMContentLoaded', function () {
+    var startMypage = function () {
+      initMypage();
+    };
+    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      window.PickleAuth.waitForSessionReady().then(startMypage).catch(startMypage);
+    } else {
+      startMypage();
+    }
+  });
 })();

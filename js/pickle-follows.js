@@ -30,30 +30,38 @@
   }
 
   async function getCurrentUserId() {
-    if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
-      var readyUser = await window.PickleAuth.getUserWhenReady();
+    if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
+      var readyUser = await window.PickleAuth.resolveAuthUser();
       return readyUser ? readyUser.id : null;
-    }
-    if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
     }
     var sb = getSupabaseClient();
     if (!sb) return null;
     try {
-      var result = await sb.auth.getUser();
-      if (result.error || !result.data.user) return null;
-      return result.data.user.id;
+      if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
+        var sessionUser = await window.PickleAuth.safeGetSessionUser(sb);
+        return sessionUser ? sessionUser.id : null;
+      }
+      var result = await sb.auth.getSession();
+      if (result.data && result.data.session && result.data.session.user) {
+        return result.data.session.user.id;
+      }
+      return null;
     } catch (e) {
       return null;
     }
   }
 
   function showLoginRequiredAlert() {
+    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.promptLoginRequired) {
+      window.PickleOAuthCallbackGuard.promptLoginRequired('로그인이 필요합니다.');
+      return;
+    }
+    var isOAuthCallback = window.location.hash.indexOf('access_token=') !== -1;
+    if (isOAuthCallback) return;
     if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
       window.PickleAuth.alertLoginRequired('로그인이 필요합니다.');
       return;
     }
-    if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) return;
     alert('로그인이 필요합니다.');
   }
 

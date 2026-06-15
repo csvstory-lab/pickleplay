@@ -170,6 +170,12 @@
   function goCreate(e) {
     if (window.PickleAuth && !window.PickleAuth.isLoggedIn()) {
       e.preventDefault();
+      if (
+        window.location.hash.includes('access_token=') ||
+        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+      ) {
+        return;
+      }
       alert('불판을 만들려면 로그인이 필요합니다');
       window.PickleAuth.goToLogin({ redirect: 'create.html', from: 'create' });
       return;
@@ -180,6 +186,12 @@
   function goMypage(e) {
     if (window.PickleAuth && !window.PickleAuth.isLoggedIn()) {
       e.preventDefault();
+      if (
+        window.location.hash.includes('access_token=') ||
+        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+      ) {
+        return;
+      }
       window.PickleAuth.goToLogin({ redirect: 'mypage.html' });
       return;
     }

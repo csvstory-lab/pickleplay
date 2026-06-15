@@ -199,7 +199,10 @@
 
     ensureAuthReady().then(function (user) {
       if (!user) {
-        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        if (
+          window.location.hash.includes('access_token=') ||
+          window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+        ) {
           return;
         }
         if (window.PickleAuth && window.PickleAuth.goToLogin) {

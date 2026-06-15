@@ -107,12 +107,19 @@
     }
   }
 
+  function normalizeSupabaseUrl(url) {
+    return String(url || '')
+      .trim()
+      .replace(/\/rest\/v1\/?$/i, '')
+      .replace(/\/+$/, '');
+  }
+
   function getClient() {
     assertReady();
     if (!cachedClient) {
       var cfg = readConfig();
       cachedClient = window.supabase.createClient(
-        String(cfg.url).trim().replace(/\/+$/, ''),
+        normalizeSupabaseUrl(cfg.url),
         String(cfg.anonKey).trim(),
         {
           auth: {

@@ -44,14 +44,25 @@
   }
 
   async function requireAuth() {
+    if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
+      var readyUser = await window.PickleAuth.resolveAuthUser();
+      if (readyUser) return readyUser;
+    }
+
     var sb = getSupabaseClient();
-    var result = await sb.auth.getUser();
-    if (result.error) throw result.error;
-    if (!result.data.user) {
-      window.location.replace('login.html?redirect=settings.html');
+    var sessionResult = await sb.auth.getSession();
+    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
+      return sessionResult.data.session.user;
+    }
+
+    if (
+      window.location.hash.includes('access_token=') ||
+      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+    ) {
       return null;
     }
-    return result.data.user;
+    window.location.replace('login.html?redirect=settings.html');
+    return null;
   }
 
   async function handleLogout() {
@@ -76,6 +87,12 @@
       var b = window.PickleSupabaseBootstrap;
       if (!b || !b.isReady()) {
         console.warn('[P!CKLE Settings]', b ? b.getErrorMessage() : 'bootstrap missing');
+        if (
+          window.location.hash.includes('access_token=') ||
+          window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+        ) {
+          return;
+        }
         window.location.replace('login.html?redirect=settings.html');
         return;
       }
@@ -85,6 +102,12 @@
       bindLogout();
     } catch (err) {
       console.error('[P!CKLE Settings]', err);
+      if (
+        window.location.hash.includes('access_token=') ||
+        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+      ) {
+        return;
+      }
       window.location.replace('login.html?redirect=settings.html');
     }
   }

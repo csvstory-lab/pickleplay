@@ -39,6 +39,12 @@
   }
 
   function goToLoginForVote() {
+    const isOAuthCallback =
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery');
+    if (isOAuthCallback || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return;
+    }
     if (window.PickleAuth?.goToLogin) {
       window.PickleAuth.goToLogin({ redirect: 'index.html', from: 'vote' });
       return;
@@ -269,7 +275,6 @@
     if (!card || card.classList.contains('voted') || btn.disabled) return;
 
     if (!window.PickleAuth?.isLoggedIn()) {
-      alert('투표하려면 로그인이 필요합니다');
       goToLoginForVote();
       return;
     }

@@ -24,6 +24,12 @@
   }
 
   function requireLogin() {
+    if (
+      window.location.hash.includes('access_token=') ||
+      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+    ) {
+      return;
+    }
     alert('불판을 만들려면 로그인이 필요합니다');
     if (window.PickleAuth?.goToLogin) {
       window.PickleAuth.goToLogin({ redirect: 'create.html', from: 'create' });

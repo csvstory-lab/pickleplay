@@ -1,19 +1,48 @@
 /**
- * P!CKLE — OAuth 콜백 URL hash 감지 · 세션 대기 (리다이렉트/알림 루프 방지)
+ * P!CKLE — OAuth 콜백 URL hash 감지 · 세션 대기 · 로그인 알림/리다이렉트 차단
  */
 (function () {
   'use strict';
 
   var oauthWaitPromise = null;
   var oauthWaitInProgress = false;
+  var nativeAlert = window.alert;
+
+  /** @returns {boolean} URL hash에 OAuth 토큰이 있는지 */
+  function isOAuthCallback() {
+    var hash = window.location.hash || '';
+    return hash.indexOf('access_token=') !== -1 || hash.indexOf('type=recovery') !== -1;
+  }
 
   function isOAuthCallbackHash() {
-    var hash = window.location.hash || '';
-    return hash.indexOf('access_token') !== -1 || hash.indexOf('type=recovery') !== -1;
+    return isOAuthCallback();
   }
 
   function shouldBlockAuthRedirect() {
-    return isOAuthCallbackHash();
+    return isOAuthCallback();
+  }
+
+  function shouldSuppressLoginAlert() {
+    return (
+      isOAuthCallback() ||
+      oauthWaitInProgress ||
+      !!window.__PICKLE_OAUTH_CALLBACK_PENDING
+    );
+  }
+
+  /**
+   * 세션 없을 때만 로그인 알림·리다이렉트 (OAuth 콜백 중에는 절대 실행 안 함)
+   * @returns {boolean} 알림/리다이렉트를 실행했으면 true
+   */
+  function promptLoginRequired(message, onRedirect) {
+    if (shouldSuppressLoginAlert()) {
+      return false;
+    }
+    alert(message || '로그인이 필요합니다.');
+    if (typeof onRedirect === 'function') {
+      onRedirect();
+    }
+    return true;
   }
 
   function getKakaoOAuthRedirectTo() {
@@ -39,7 +68,7 @@
   }
 
   function clearOAuthHashFromUrl() {
-    if (!isOAuthCallbackHash()) return;
+    if (!isOAuthCallback()) return;
     if (window.history && window.history.replaceState) {
       window.history.replaceState(
         null,
@@ -50,27 +79,34 @@
   }
 
   function markOAuthPending() {
-    if (isOAuthCallbackHash()) {
+    if (isOAuthCallback()) {
       window.__PICKLE_OAUTH_CALLBACK_PENDING = true;
     }
   }
 
-  function shouldSuppressLoginAlert() {
-    return (
-      oauthWaitInProgress ||
-      !!window.__PICKLE_OAUTH_CALLBACK_PENDING ||
-      isOAuthCallbackHash()
-    );
+  function isLoginRelatedAlertMessage(msg) {
+    return /로그인이 필요|login required|auth session missing/i.test(String(msg || ''));
+  }
+
+  /** OAuth 콜백 중 로그인 관련 alert 전역 차단 (누락된 호출 경로 대비) */
+  function installLoginAlertGuard() {
+    window.alert = function (msg) {
+      if (shouldSuppressLoginAlert() && isLoginRelatedAlertMessage(msg)) {
+        console.log('[P!CKLE OAuth] login alert suppressed:', msg);
+        return;
+      }
+      return nativeAlert.call(window, msg);
+    };
   }
 
   /**
-   * URL hash에 OAuth 토큰이 있을 때 Supabase 세션 파싱 완료까지 대기 (최대 ~2초)
+   * URL hash에 OAuth 토큰이 있을 때 Supabase 세션 파싱 완료까지 대기
    * @returns {Promise<object|null>} session 또는 null
    */
   function waitForOAuthSession(options) {
-    var timeoutMs = (options && options.timeoutMs) || 2000;
+    var timeoutMs = (options && options.timeoutMs) || 5000;
 
-    if (!isOAuthCallbackHash() && !window.__PICKLE_OAUTH_CALLBACK_PENDING) {
+    if (!isOAuthCallback() && !window.__PICKLE_OAUTH_CALLBACK_PENDING) {
       return Promise.resolve(null);
     }
 
@@ -83,8 +119,10 @@
       var sb = getSupabaseClientForOAuth();
       if (!sb || !sb.auth) {
         setTimeout(function () {
-          oauthWaitInProgress = false;
-          window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
+          if (!isOAuthCallback()) {
+            oauthWaitInProgress = false;
+            window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
+          }
           resolve(null);
         }, timeoutMs);
         return;
@@ -93,21 +131,49 @@
       var settled = false;
       var subscription = null;
 
-      function settle(session) {
+      function finish(session) {
         if (settled) return;
         settled = true;
-        oauthWaitInProgress = false;
-        window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
 
         if (subscription && typeof subscription.unsubscribe === 'function') {
           subscription.unsubscribe();
         }
 
-        if (session) {
-          clearOAuthHashFromUrl();
+        if (session && sb.auth && typeof sb.auth.setSession === 'function') {
+          sb.auth
+            .setSession(session)
+            .then(function () {
+              oauthWaitInProgress = false;
+              window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
+              clearOAuthHashFromUrl();
+              resolve(session);
+            })
+            .catch(function () {
+              oauthWaitInProgress = false;
+              window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
+              clearOAuthHashFromUrl();
+              resolve(session);
+            });
+          return;
         }
 
-        resolve(session || null);
+        if (session) {
+          oauthWaitInProgress = false;
+          window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
+          clearOAuthHashFromUrl();
+          resolve(session);
+          return;
+        }
+
+        if (isOAuthCallback()) {
+          oauthWaitInProgress = false;
+          resolve(null);
+          return;
+        }
+
+        oauthWaitInProgress = false;
+        window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
+        resolve(null);
       }
 
       var changeResult = sb.auth.onAuthStateChange(function (event, session) {
@@ -117,7 +183,7 @@
             event === 'INITIAL_SESSION' ||
             event === 'TOKEN_REFRESHED')
         ) {
-          settle(session);
+          finish(session);
         }
       });
       subscription =
@@ -125,13 +191,13 @@
 
       sb.auth.getSession().then(function (res) {
         if (res.data && res.data.session) {
-          settle(res.data.session);
+          finish(res.data.session);
         }
       });
 
       setTimeout(function () {
         sb.auth.getSession().then(function (res) {
-          settle((res.data && res.data.session) || null);
+          finish((res.data && res.data.session) || null);
         });
       }, timeoutMs);
     });
@@ -140,11 +206,14 @@
   }
 
   markOAuthPending();
+  installLoginAlertGuard();
 
   window.PickleOAuthCallbackGuard = {
+    isOAuthCallback: isOAuthCallback,
     isOAuthCallbackHash: isOAuthCallbackHash,
     shouldBlockAuthRedirect: shouldBlockAuthRedirect,
     shouldSuppressLoginAlert: shouldSuppressLoginAlert,
+    promptLoginRequired: promptLoginRequired,
     getKakaoOAuthRedirectTo: getKakaoOAuthRedirectTo,
     waitForOAuthSession: waitForOAuthSession,
     clearOAuthHashFromUrl: clearOAuthHashFromUrl,

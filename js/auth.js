@@ -14,7 +14,101 @@
   };
 
   function getClient() {
-    return window.PickleSupabase.getClient();
+    if (window.PickleSupabaseBootstrap?.isReady()) {
+      return window.PickleSupabaseBootstrap.getClient();
+    }
+    if (window.PickleSupabase?.getClient) {
+      return window.PickleSupabase.getClient();
+    }
+    throw new Error(
+      'Supabase 클라이언트를 불러오지 못했습니다. supabase-bootstrap.js 로드 순서를 확인해 주세요.'
+    );
+  }
+
+  function isSessionMissingError(err) {
+    const msg = String(err?.message || err || '').toLowerCase();
+    return msg.includes('auth session missing') || msg.includes('session missing');
+  }
+
+  /**
+   * localStorage 세션 hydration · INITIAL_SESSION 이벤트까지 대기
+   */
+  function waitForAuthHydration(sb, options) {
+    const timeoutMs = (options && options.timeoutMs) || 4000;
+    const pollMs = (options && options.pollMs) || 100;
+
+    return new Promise(function (resolve) {
+      let settled = false;
+      let subscription = null;
+      let pollTimer = null;
+      let timeoutTimer = null;
+
+      function finish(session) {
+        if (settled) return;
+        settled = true;
+        if (pollTimer) clearInterval(pollTimer);
+        if (timeoutTimer) clearTimeout(timeoutTimer);
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        }
+        resolve(session || null);
+      }
+
+      sb.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) {
+          finish(res.data.session);
+        }
+      });
+
+      const changeResult = sb.auth.onAuthStateChange(function (event, session) {
+        if (
+          session &&
+          (event === 'INITIAL_SESSION' ||
+            event === 'SIGNED_IN' ||
+            event === 'TOKEN_REFRESHED' ||
+            event === 'USER_UPDATED')
+        ) {
+          finish(session);
+        }
+      });
+      subscription = changeResult.data && changeResult.data.subscription;
+
+      pollTimer = setInterval(function () {
+        sb.auth.getSession().then(function (res) {
+          if (res.data && res.data.session) {
+            finish(res.data.session);
+          }
+        });
+      }, pollMs);
+
+      timeoutTimer = setTimeout(function () {
+        sb.auth.getSession().then(function (res) {
+          finish((res.data && res.data.session) || null);
+        });
+      }, timeoutMs);
+    });
+  }
+
+  async function safeGetSessionUser(sb) {
+    const { data, error } = await sb.auth.getSession();
+    if (error || !data?.session?.user) return null;
+    return data.session.user;
+  }
+
+  async function resolveAuthUser(options) {
+    await waitForSessionReady();
+
+    if (getUser()) return getUser();
+
+    const sb = getClient();
+    const session = await waitForAuthHydration(sb, options);
+    if (session?.user) {
+      currentSession = session;
+      updateNav();
+      return session.user;
+    }
+
+    return null;
   }
 
   function emailLocalPart(email) {
@@ -95,6 +189,12 @@
   }
 
   function goToLogin(options) {
+    const isOAuthCallback =
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery');
+    if (isOAuthCallback || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return;
+    }
     const redirect = encodeURIComponent(options?.redirect || 'index.html');
     const from = options?.from ? `&from=${options.from}` : '';
     window.location.href = `login.html?redirect=${redirect}${from}`;
@@ -137,19 +237,17 @@
   }
 
   async function getUserWhenReady() {
-    await waitForSessionReady();
-    if (getUser()) return getUser();
-    const sb = getClient();
-    const { data, error } = await sb.auth.getUser();
-    if (error) throw error;
-    if (data.user && !currentSession) {
-      await refreshSession();
-    }
-    return data.user ?? null;
+    return resolveAuthUser();
   }
 
   function alertLoginRequired(message, onRedirect) {
-    if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+    if (window.PickleOAuthCallbackGuard?.promptLoginRequired) {
+      return window.PickleOAuthCallbackGuard.promptLoginRequired(message, onRedirect);
+    }
+    const isOAuthCallback =
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery');
+    if (isOAuthCallback) {
       return false;
     }
     alert(message || '로그인이 필요합니다.');
@@ -482,8 +580,18 @@
       if (isOAuthCallback) {
         console.log('[P!CKLE Auth] OAuth 토큰 처리 대기 — 세션 파싱까지 보류');
         if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-          await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+          const oauthSession = await window.PickleOAuthCallbackGuard.waitForOAuthSession({
+            timeoutMs: 5000,
+          });
+          if (oauthSession) {
+            currentSession = oauthSession;
+          }
         }
+      }
+
+      const hydrated = await waitForAuthHydration(sb, { timeoutMs: isOAuthCallback ? 4000 : 3000 });
+      if (hydrated && !currentSession) {
+        currentSession = hydrated;
       }
 
       await refreshSession();
@@ -524,8 +632,13 @@
   window.PickleAuth = {
     init,
     waitForSessionReady,
+    waitForAuthHydration,
     getUserWhenReady,
+    resolveAuthUser,
+    safeGetSessionUser,
     alertLoginRequired,
+    getClient,
+    isSessionMissingError,
     isLoggedIn,
     getSession,
     getUser,

@@ -15,13 +15,21 @@
     return window.PickleNotifications;
   }
 
+  function isOAuthCallback() {
+    return (
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery') ||
+      (window.PickleOAuthCallbackGuard &&
+        window.PickleOAuthCallbackGuard.shouldSuppressLoginAlert &&
+        window.PickleOAuthCallbackGuard.shouldSuppressLoginAlert())
+    );
+  }
+
   async function requireUser() {
     if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
       var user = await window.PickleAuth.getUserWhenReady();
       if (!user) {
-        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-          return null;
-        }
+        if (isOAuthCallback()) return null;
         window.PickleAuth.goToLogin({ redirect: 'notifications.html' });
         return null;
       }
@@ -31,9 +39,7 @@
     if (window.PickleAuth && window.PickleAuth.init) {
       await window.PickleAuth.init();
       if (!window.PickleAuth.isLoggedIn()) {
-        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-          return null;
-        }
+        if (isOAuthCallback()) return null;
         window.PickleAuth.goToLogin({ redirect: 'notifications.html' });
         return null;
       }
@@ -45,15 +51,13 @@
     }
 
     var sb = window.PickleSupabase.getClient();
-    var result = await sb.auth.getUser();
-    if (!result.data || !result.data.user) {
-      if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-        return null;
-      }
-      window.location.href = 'login.html?redirect=notifications.html';
-      return null;
+    var sessionResult = await sb.auth.getSession();
+    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
+      return sessionResult.data.session.user;
     }
-    return result.data.user;
+    if (isOAuthCallback()) return null;
+    window.location.href = 'login.html?redirect=notifications.html';
+    return null;
   }
 
   function renderEmpty() {

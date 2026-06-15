@@ -38,7 +38,7 @@
   let cachedClient = null;
 
   function getClient() {
-    if (window.PickleSupabaseBootstrap?.isReady()) {
+    if (window.PickleSupabaseBootstrap) {
       return window.PickleSupabaseBootstrap.getClient();
     }
 
