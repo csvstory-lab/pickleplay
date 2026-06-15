@@ -55,12 +55,12 @@
     /* 메인 브랜딩 영역 */
     .hero-section {
         flex: none; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        text-align: center; padding: 0 20px;
-        margin-bottom: 28px;
+        text-align: center; padding: 0 20px 12px;
+        margin-bottom: 44px;
     }
     
     .floating-emoji {
-        font-size: 3rem; margin-bottom: 4px;
+        font-size: 3rem; margin-bottom: 10px;
         animation: float 3s ease-in-out infinite;
         filter: drop-shadow(0 10px 15px rgba(57, 255, 20, 0.3));
     }
@@ -80,13 +80,14 @@
 
     .brand-slogan {
         font-size: 0.95rem; font-weight: 700; color: var(--text-sub); line-height: 1.45;
-        margin-top: 10px; word-break: keep-all;
+        margin-top: 14px; word-break: keep-all;
     }
     .brand-slogan strong { color: #fff; }
 
     /* 로그인 버튼 영역 */
     .login-section {
         padding: 0 20px; display: flex; flex-direction: column; gap: 10px;
+        margin-top: 4px;
         animation: slideUp 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
         transform: translateY(50px); opacity: 0;
     }
@@ -286,25 +287,43 @@
         box-shadow: 2px 2px 0 #000;
     }
     .btn-email-login:disabled { opacity: 0.65; cursor: wait; }
-    .btn-email-signup-link {
-        background: none; border: none;
-        color: var(--text-sub);
-        font-size: 0.85rem; font-weight: 800;
-        text-decoration: underline;
-        cursor: pointer; padding: 8px 0 4px;
-        align-self: center;
+
+    /* 서브 링크 — 비밀번호 찾기 · 이메일 가입 (한 줄) */
+    .auth-sub-links {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 2px;
+        padding: 0 4px;
     }
-    .btn-email-signup-link:active { color: var(--neon-green); }
-    .btn-forgot-password {
-        background: none; border: none;
-        color: var(--text-sub);
-        font-size: 0.82rem; font-weight: 700;
-        cursor: pointer; padding: 4px 0 2px;
-        align-self: center;
+    .auth-sub-link {
+        background: none;
+        border: none;
+        padding: 4px 0;
+        font-family: 'Pretendard', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #a1a1aa;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 0.2s ease, text-decoration-color 0.2s ease;
+        white-space: nowrap;
+    }
+    .auth-sub-link:hover {
+        color: #d4d4d8;
         text-decoration: underline;
         text-underline-offset: 3px;
     }
-    .btn-forgot-password:active { color: var(--neon-pink); }
+    .auth-sub-link:active { color: var(--neon-green); }
+    .auth-sub-links-divider {
+        flex-shrink: 0;
+        color: #3f3f46;
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: 1;
+        user-select: none;
+    }
 
     /* 비밀번호 찾기 모달 */
     .auth-modal-overlay {
@@ -387,15 +406,16 @@
     /* 모바일 — 터치 영역·간격 확대 */
     @media (max-width: 480px), (max-height: 740px) {
         .login-page-wrap { padding: 16px 0 24px; }
-        .hero-section { margin-bottom: 32px; }
-        .floating-emoji { font-size: 2.5rem; margin-bottom: 2px; }
+        .hero-section { margin-bottom: 48px; padding-bottom: 16px; }
+        .floating-emoji { font-size: 2.5rem; margin-bottom: 12px; }
         .brand-logo { font-size: 2.2rem; }
-        .brand-slogan { font-size: 0.88rem; margin-top: 6px; }
-        .login-section { padding: 0 20px; gap: 14px; }
+        .brand-slogan { font-size: 0.88rem; margin-top: 12px; }
+        .login-section { padding: 0 20px; gap: 14px; margin-top: 8px; }
         .email-auth-block { gap: 14px; }
         .email-field { padding: 17px 18px; min-height: 56px; font-size: 1.05rem; }
         .btn-email-login { padding: 18px 20px; min-height: 56px; font-size: 1.15rem; margin-top: 6px; }
-        .btn-email-signup-link { padding: 10px 0 6px; }
+        .auth-sub-links { margin-top: 0; padding: 0 2px; }
+        .auth-sub-link { font-size: 0.82rem; }
         .auth-divider { margin: 12px 0 8px; }
         .social-btn { padding: 17px 20px; min-height: 56px; font-size: 0.98rem; }
         .login-footer { margin-top: 12px; font-size: 0.68rem; }
@@ -432,8 +452,11 @@
                 <input type="email" id="mainEmailInput" class="email-field" placeholder="이메일 주소" autocomplete="email">
                 <input type="password" id="mainPwInput" class="email-field" placeholder="비밀번호" autocomplete="current-password">
                 <button type="button" id="btnEmailLogin" class="btn-email-login">로그인</button>
-                <button type="button" id="btnForgotPassword" class="btn-forgot-password">비밀번호를 잊으셨나요?</button>
-                <button type="button" id="btnEmailSignup" class="btn-email-signup-link">이메일로 가입하기</button>
+                <div class="auth-sub-links">
+                    <button type="button" id="btnForgotPassword" class="auth-sub-link">비밀번호를 잊으셨나요?</button>
+                    <span class="auth-sub-links-divider" aria-hidden="true">|</span>
+                    <button type="button" id="btnEmailSignup" class="auth-sub-link">이메일로 가입하기</button>
+                </div>
             </form>
 
             <div class="auth-divider">또는</div>
