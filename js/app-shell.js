@@ -168,8 +168,17 @@
   }
 
   function goCreate(e) {
-    if (window.PickleAuth && !window.PickleAuth.isLoggedIn()) {
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
+    }
+    if (window.PickleAuth?.navigateWhenAuthReady) {
+      window.PickleAuth.navigateWhenAuthReady('create.html', {
+        requireAuth: true,
+        message: '불판을 만들려면 로그인이 필요합니다.',
+      });
+      return;
+    }
+    if (window.PickleAuth && !window.PickleAuth.isLoggedIn()) {
       if (
         window.location.hash.includes('access_token=') ||
         window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
@@ -184,8 +193,14 @@
   }
 
   function goMypage(e) {
-    if (window.PickleAuth && !window.PickleAuth.isLoggedIn()) {
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
+    }
+    if (window.PickleAuth?.navigateWhenAuthReady) {
+      window.PickleAuth.navigateWhenAuthReady('mypage.html', { requireAuth: true });
+      return;
+    }
+    if (window.PickleAuth && !window.PickleAuth.isLoggedIn()) {
       if (
         window.location.hash.includes('access_token=') ||
         window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()

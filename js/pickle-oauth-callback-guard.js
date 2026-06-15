@@ -67,6 +67,65 @@
     return null;
   }
 
+  function isSessionStoredInLocalStorage() {
+    if (window.PickleAuth && window.PickleAuth.isSessionStoredInLocalStorage) {
+      return window.PickleAuth.isSessionStoredInLocalStorage();
+    }
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.indexOf('sb-') === 0 && key.indexOf('-auth-token') !== -1) {
+          var raw = localStorage.getItem(key);
+          if (raw && raw.indexOf('access_token') !== -1) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    return false;
+  }
+
+  /**
+   * setSession 성공 후 localStorage persist 확인 (hash 제거 전 필수)
+   */
+  function waitForSessionStored(sb, timeoutMs) {
+    var limit = timeoutMs || 5000;
+    var pollMs = 100;
+    var started = Date.now();
+
+    return new Promise(function (resolve) {
+      function attempt() {
+        if (!sb || !sb.auth) {
+          resolve(false);
+          return;
+        }
+
+        sb.auth.getSession().then(function (res) {
+          var session = res.data && res.data.session;
+          if (session && session.access_token && isSessionStoredInLocalStorage()) {
+            resolve(true);
+            return;
+          }
+          if (Date.now() - started >= limit) {
+            resolve(false);
+            return;
+          }
+          setTimeout(attempt, pollMs);
+        }).catch(function () {
+          if (Date.now() - started >= limit) {
+            resolve(false);
+            return;
+          }
+          setTimeout(attempt, pollMs);
+        });
+      }
+
+      attempt();
+    });
+  }
+
   function clearOAuthHashFromUrl() {
     if (!isOAuthCallback()) return;
     if (window.history && window.history.replaceState) {
@@ -100,11 +159,11 @@
   }
 
   /**
-   * URL hash에 OAuth 토큰이 있을 때 Supabase 세션 파싱 완료까지 대기
+   * URL hash에 OAuth 토큰이 있을 때 Supabase 세션 파싱 + localStorage 저장 완료까지 대기
    * @returns {Promise<object|null>} session 또는 null
    */
   function waitForOAuthSession(options) {
-    var timeoutMs = (options && options.timeoutMs) || 5000;
+    var timeoutMs = (options && options.timeoutMs) || 8000;
 
     if (!isOAuthCallback() && !window.__PICKLE_OAUTH_CALLBACK_PENDING) {
       return Promise.resolve(null);
@@ -119,8 +178,8 @@
       var sb = getSupabaseClientForOAuth();
       if (!sb || !sb.auth) {
         setTimeout(function () {
+          oauthWaitInProgress = false;
           if (!isOAuthCallback()) {
-            oauthWaitInProgress = false;
             window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
           }
           resolve(null);
@@ -131,7 +190,7 @@
       var settled = false;
       var subscription = null;
 
-      function finish(session) {
+      function finalize(session, stored) {
         if (settled) return;
         settled = true;
 
@@ -139,41 +198,64 @@
           subscription.unsubscribe();
         }
 
-        if (session && sb.auth && typeof sb.auth.setSession === 'function') {
-          sb.auth
-            .setSession(session)
-            .then(function () {
-              oauthWaitInProgress = false;
-              window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
-              clearOAuthHashFromUrl();
-              resolve(session);
-            })
-            .catch(function () {
-              oauthWaitInProgress = false;
-              window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
-              clearOAuthHashFromUrl();
-              resolve(session);
-            });
-          return;
-        }
+        oauthWaitInProgress = false;
 
-        if (session) {
-          oauthWaitInProgress = false;
+        if (session && stored) {
           window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
           clearOAuthHashFromUrl();
           resolve(session);
           return;
         }
 
+        if (session && !stored) {
+          console.warn(
+            '[P!CKLE OAuth] session detected but localStorage persist not confirmed — hash kept'
+          );
+          resolve(session);
+          return;
+        }
+
         if (isOAuthCallback()) {
-          oauthWaitInProgress = false;
           resolve(null);
           return;
         }
 
-        oauthWaitInProgress = false;
         window.__PICKLE_OAUTH_CALLBACK_PENDING = false;
         resolve(null);
+      }
+
+      function finish(session) {
+        if (settled) return;
+
+        if (session && sb.auth && typeof sb.auth.setSession === 'function') {
+          sb.auth
+            .setSession({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            })
+            .then(function () {
+              return waitForSessionStored(sb, 5000);
+            })
+            .then(function (stored) {
+              finalize(session, stored);
+            })
+            .catch(function (err) {
+              console.warn('[P!CKLE OAuth] setSession failed', err);
+              waitForSessionStored(sb, 2000).then(function (stored) {
+                finalize(session, stored);
+              });
+            });
+          return;
+        }
+
+        if (session) {
+          waitForSessionStored(sb, 3000).then(function (stored) {
+            finalize(session, stored);
+          });
+          return;
+        }
+
+        finalize(null, false);
       }
 
       var changeResult = sb.auth.onAuthStateChange(function (event, session) {
@@ -216,6 +298,7 @@
     promptLoginRequired: promptLoginRequired,
     getKakaoOAuthRedirectTo: getKakaoOAuthRedirectTo,
     waitForOAuthSession: waitForOAuthSession,
+    waitForSessionStored: waitForSessionStored,
     clearOAuthHashFromUrl: clearOAuthHashFromUrl,
   };
 })();

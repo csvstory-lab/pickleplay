@@ -194,6 +194,38 @@
     redirectToLogin();
   }
 
+  function isAuthRelatedError(err) {
+    if (!err) return false;
+    var msg = String(err.message || err).toLowerCase();
+    var code = String(err.code || '');
+    if (String(err.message || err) === 'LOGIN_REQUIRED') return true;
+    if (window.PickleAuth && window.PickleAuth.isSessionMissingError) {
+      if (window.PickleAuth.isSessionMissingError(err)) return true;
+    }
+    return (
+      code === '42501' ||
+      code === 'PGRST301' ||
+      msg.indexOf('row-level security') !== -1 ||
+      msg.indexOf('jwt') !== -1 ||
+      msg.indexOf('not authenticated') !== -1 ||
+      msg.indexOf('auth session') !== -1 ||
+      msg.indexOf('session missing') !== -1
+    );
+  }
+
+  function handleMypageError(err, contextMessage) {
+    console.error('[P!CKLE Mypage]', contextMessage || '', err);
+    if (isAuthRelatedError(err)) {
+      if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        return;
+      }
+      promptLoginRequired('로그인이 필요한 페이지입니다.');
+      return;
+    }
+    var prefix = contextMessage ? contextMessage + ' ' : '';
+    alert(prefix + (err && err.message ? err.message : String(err)));
+  }
+
   function renderSnsLinkStatus(user) {
     var el = document.getElementById('snsLinkStatus');
     if (!el) return;
@@ -1011,7 +1043,6 @@
 
       await loadSavedCoupons(userId);
     } catch (err) {
-      console.error('[P!CKLE Mypage] 쿠폰 상태 변경 실패', err);
       if (String(err.message || err) === 'LOGIN_REQUIRED') {
         if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
           return;
@@ -1025,7 +1056,7 @@
         );
         return;
       }
-      alert('쿠폰 상태 변경에 실패했습니다. ' + getSupabaseErrorMessage(err));
+      handleMypageError(err, '쿠폰 상태 변경에 실패했습니다.');
     }
   }
 
@@ -1504,9 +1535,8 @@
       bindCouponCards(container, userId);
     } catch (err) {
       if (loadSeq !== savedCouponsLoadSeq) return;
-      console.error('[P!CKLE Mypage] 보관함 로드 실패', err);
       container.dataset.loadState = 'error';
-      if (String(err.message || err) === 'LOGIN_REQUIRED') {
+      if (String(err.message || err) === 'LOGIN_REQUIRED' || isAuthRelatedError(err)) {
         if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
           container.innerHTML =
             '<div class="empty-state" id="savedEmpty">보관함 불러오는 중…</div>';
@@ -1577,11 +1607,7 @@
       ]);
       mypageTabLoaded.voted = true;
     } catch (err) {
-      console.error('[P!CKLE Mypage]', err);
-      if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-        return;
-      }
-      promptLoginRequired('로그인이 필요한 페이지입니다.');
+      handleMypageError(err, '마이페이지를 불러오지 못했습니다.');
     }
   }
 

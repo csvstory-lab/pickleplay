@@ -175,6 +175,214 @@
     });
   }
 
+  const AUTH_REQUIRED_PAGES = new Set([
+    'mypage.html',
+    'create.html',
+    'settings.html',
+    'notifications.html',
+  ]);
+
+  function parsePageFromUrl(url) {
+    const s = String(url || '').split('?')[0].split('#')[0];
+    return s.split('/').pop() || '';
+  }
+
+  function isAuthRequiredPage(url) {
+    return AUTH_REQUIRED_PAGES.has(parsePageFromUrl(url));
+  }
+
+  function isSessionStoredInLocalStorage() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          const raw = localStorage.getItem(key);
+          if (raw && raw.includes('access_token')) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    return false;
+  }
+
+  /**
+   * getSession() + localStorage persist 확인까지 대기 (OAuth commit 보장)
+   */
+  async function waitForSessionPersisted(sb, options) {
+    const timeoutMs = (options && options.timeoutMs) || 8000;
+    const pollMs = (options && options.pollMs) || 100;
+    const started = Date.now();
+
+    while Date.now() - started < timeoutMs) {
+      const { data, error } = await sb.auth.getSession();
+      if (!error && data?.session?.access_token) {
+        if (isSessionStoredInLocalStorage()) {
+          currentSession = data.session;
+          return data.session;
+        }
+      }
+      await new Promise(function (resolve) {
+        setTimeout(resolve, pollMs);
+      });
+    }
+
+    const { data } = await sb.auth.getSession();
+    if (data?.session) {
+      currentSession = data.session;
+    }
+    return data?.session ?? null;
+  }
+
+  /**
+   * 카카오/OAuth metadata 닉네임 → public.users 덮어쓰기 (트리거 기본값 '픽클러' 교정)
+   */
+  async function syncProfileNicknameFromMetadata(sb, user, profile) {
+    if (!sb || !user?.id) return profile;
+
+    const meta = user.user_metadata || {};
+    const derivedNick = extractNicknameFromMeta(meta);
+    if (!derivedNick || derivedNick === '픽클러') {
+      return profile;
+    }
+
+    const dbNick = profile?.nickname ? String(profile.nickname).trim() : '';
+    const shouldUpdate = !dbNick || dbNick === '픽클러';
+
+    if (!shouldUpdate) {
+      return profile;
+    }
+
+    const { data, error } = await sb
+      .from('users')
+      .update({ nickname: derivedNick })
+      .eq('id', user.id)
+      .select('id, nickname, avatar_html, avatar_url, bio, signup_platform, points')
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[P!CKLE Auth] public.users nickname sync failed', error);
+      return profile;
+    }
+
+    const metaNick = meta.nickname ? String(meta.nickname).trim() : '';
+    if (!metaNick || metaNick === '픽클러') {
+      try {
+        await sb.auth.updateUser({
+          data: Object.assign({}, meta, { nickname: derivedNick }),
+        });
+      } catch (metaErr) {
+        console.warn('[P!CKLE Auth] auth metadata nickname sync failed', metaErr);
+      }
+    }
+
+    return data || Object.assign({}, profile || {}, { nickname: derivedNick });
+  }
+
+  /**
+   * 세션 localStorage commit 대기 후 페이지 이동 (인증 필요 페이지는 ensureAuthenticated 후 이동)
+   */
+  async function navigateWhenAuthReady(url, options) {
+    const opts = options || {};
+    const targetUrl = String(url || '').trim();
+    if (!targetUrl) return;
+
+    try {
+      await init();
+      const sb = getClient();
+
+      const isOAuthCallback =
+        window.location.hash.includes('access_token=') ||
+        window.location.hash.includes('type=recovery');
+
+      if (isOAuthCallback && window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+        await window.PickleOAuthCallbackGuard.waitForOAuthSession({
+          timeoutMs: opts.timeoutMs || 8000,
+        });
+      }
+
+      await waitForSessionPersisted(sb, { timeoutMs: opts.timeoutMs || 8000 });
+
+      const needsAuth =
+        opts.requireAuth === true ||
+        (opts.requireAuth !== false && isAuthRequiredPage(targetUrl));
+
+      if (needsAuth) {
+        const auth = await ensureAuthenticated({ timeoutMs: opts.timeoutMs || 8000 });
+        if (!auth?.user) {
+          if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+            return;
+          }
+          await requireAuth({
+            redirect: parsePageFromUrl(targetUrl),
+            message: opts.message || '로그인이 필요한 페이지입니다.',
+          });
+          return;
+        }
+      } else {
+        await waitForAuthHydration(sb, { timeoutMs: 3000, pollMs: 80 });
+      }
+
+      window.location.href = targetUrl;
+    } catch (err) {
+      console.error('[P!CKLE Auth] navigateWhenAuthReady failed', err);
+      if (opts.fallbackNavigate !== false && !isAuthRequiredPage(targetUrl)) {
+        window.location.href = targetUrl;
+      }
+    }
+  }
+
+  function extractNavHrefFromOnclick(el) {
+    if (!el) return null;
+    const onclick = el.getAttribute('onclick') || '';
+    const match = onclick.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+    return match ? match[1] : null;
+  }
+
+  function bindGlobalNavGuard() {
+    if (window.__PICKLE_NAV_GUARD_BOUND) return;
+    window.__PICKLE_NAV_GUARD_BOUND = true;
+
+    document.addEventListener(
+      'click',
+      function (e) {
+        const navBtn = e.target.closest('.bottom-nav .nav-btn');
+        const logo = e.target.closest('.logo');
+        const el = navBtn || (logo && extractNavHrefFromOnclick(logo) ? logo : null);
+        if (!el) return;
+
+        const href = extractNavHrefFromOnclick(el);
+        if (!href || !/\.html/.test(href)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        navigateWhenAuthReady(href);
+      },
+      true
+    );
+
+    upgradeInlineNavHandlers();
+  }
+
+  function upgradeInlineNavHandlers() {
+    document
+      .querySelectorAll('.bottom-nav .nav-btn[onclick*="location.href"], .logo[onclick*="location.href"]')
+      .forEach(function (el) {
+        const href = extractNavHrefFromOnclick(el);
+        if (!href || !/\.html/.test(href)) return;
+        el.removeAttribute('onclick');
+        if (el.dataset.pickleNavBound === '1') return;
+        el.dataset.pickleNavBound = '1';
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', function (e) {
+          e.preventDefault();
+          navigateWhenAuthReady(href);
+        });
+      });
+  }
+
   /**
    * 세션 hydration 완료까지 대기 후 { session, user, profile } 반환.
    * 로그인하지 않았으면 user/profile은 null (알림·리다이렉트 없음).
@@ -212,6 +420,11 @@
       }
 
       const sb = getClient();
+
+      if (isOAuthCallback) {
+        await waitForSessionPersisted(sb, { timeoutMs: Math.max(timeoutMs, 8000) });
+      }
+
       const hydrated = await waitForAuthHydration(sb, { timeoutMs, pollMs: 80 });
 
       if (hydrated) {
@@ -235,6 +448,7 @@
 
       if (!skipProfile) {
         profile = await fetchUserProfile(sb, rawUser.id);
+        profile = await syncProfileNicknameFromMetadata(sb, rawUser, profile);
         user = mergeUserWithProfile(rawUser, profile);
         enrichedUser = user;
         enrichedProfile = profile;
@@ -818,6 +1032,7 @@
       updateNav();
       bindNavActions();
       bindLoginPage();
+      bindGlobalNavGuard();
 
       sb.auth.onAuthStateChange((_event, session) => {
         currentSession = session;
@@ -831,9 +1046,19 @@
           new CustomEvent('pickle-auth-changed', { detail: { session } })
         );
         if (session?.user) {
-          ensureAuthenticated({ forceRefresh: true, skipProfile: false }).catch(function (err) {
-            console.warn('[P!CKLE Auth] profile refresh after auth change', err);
-          });
+          ensureAuthenticated({ forceRefresh: true, skipProfile: false })
+            .then(function (auth) {
+              if (auth?.user && auth?.profile) {
+                syncProfileNicknameFromMetadata(getClient(), auth.user, auth.profile).catch(
+                  function (syncErr) {
+                    console.warn('[P!CKLE Auth] nickname sync after auth change', syncErr);
+                  }
+                );
+              }
+            })
+            .catch(function (err) {
+              console.warn('[P!CKLE Auth] profile refresh after auth change', err);
+            });
         }
       });
     })();
@@ -859,12 +1084,17 @@
     waitForAuthHydration,
     ensureAuthenticated,
     requireAuth,
+    navigateWhenAuthReady,
+    waitForSessionPersisted,
+    isAuthRequiredPage,
+    syncProfileNicknameFromMetadata,
     getUserWhenReady,
     resolveAuthUser,
     safeGetSessionUser,
     getEnrichedUser,
     fetchUserProfile,
     mergeUserWithProfile,
+    isSessionStoredInLocalStorage,
     alertLoginRequired,
     getClient,
     isSessionMissingError,

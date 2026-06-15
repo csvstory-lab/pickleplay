@@ -55,10 +55,19 @@
 
   async function fetchUserVotes(postIds) {
     userVotesMap = new Map();
-    if (!window.PickleAuth?.isLoggedIn() || !postIds.length) return;
+    if (!postIds.length) return;
+
+    let user = null;
+    if (window.PickleAuth?.ensureAuthenticated) {
+      const auth = await window.PickleAuth.ensureAuthenticated({ skipProfile: true });
+      user = auth?.user ?? null;
+    } else if (window.PickleAuth?.resolveAuthUser) {
+      user = await window.PickleAuth.resolveAuthUser();
+    }
+    if (!user?.id) return;
 
     const sb = window.PickleSupabase.getClient();
-    const userId = window.PickleAuth.getUser().id;
+    const userId = user.id;
     const { data, error } = await sb
       .from('votes')
       .select('post_id, choice')
@@ -258,9 +267,8 @@
     });
   }
 
-  async function submitVote(postId, choice) {
+  async function submitVote(postId, choice, userId) {
     const sb = window.PickleSupabase.getClient();
-    const userId = window.PickleAuth.getUser().id;
     const { error } = await sb.from('votes').insert({
       user_id: userId,
       post_id: postId,
@@ -269,12 +277,27 @@
     if (error) throw error;
   }
 
+  async function resolveVoteUser() {
+    if (window.PickleAuth?.ensureAuthenticated) {
+      const auth = await window.PickleAuth.ensureAuthenticated({ skipProfile: true, timeoutMs: 8000 });
+      return auth?.user ?? null;
+    }
+    if (window.PickleAuth?.resolveAuthUser) {
+      return window.PickleAuth.resolveAuthUser();
+    }
+    if (window.PickleAuth?.isLoggedIn?.()) {
+      return window.PickleAuth.getUser();
+    }
+    return null;
+  }
+
   async function onVoteClick(e) {
     const btn = e.currentTarget;
     const card = btn.closest('.poll-card');
     if (!card || card.classList.contains('voted') || btn.disabled) return;
 
-    if (!window.PickleAuth?.isLoggedIn()) {
+    const user = await resolveVoteUser();
+    if (!user?.id) {
       goToLoginForVote();
       return;
     }
@@ -287,7 +310,7 @@
     btn.disabled = true;
 
     try {
-      await submitVote(postId, choice);
+      await submitVote(postId, choice, user.id);
       postsCache = await fetchPosts();
       renderFeed(postsCache);
       showToast('투표가 반영되었습니다!');
@@ -298,6 +321,11 @@
         alert('이미 이 불판에 투표하셨습니다.');
         postsCache = await fetchPosts();
         renderFeed(postsCache);
+      } else if (
+        window.PickleAuth?.isSessionMissingError?.(err) ||
+        /auth session missing|login_required/i.test(msg)
+      ) {
+        goToLoginForVote();
       } else {
         alert('투표 저장 실패: ' + msg);
       }

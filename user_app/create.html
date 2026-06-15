@@ -272,7 +272,7 @@
 
 <header id="mainHeader">
     <div class="top-row">
-        <h1 class="logo" style="cursor:pointer;" onclick="location.href='index.html'">P!CKLE</h1>
+        <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
         <div class="header-actions">
             <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
@@ -397,11 +397,11 @@
 </main>
 
 <nav class="bottom-nav">
-    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn active" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    <div class="nav-btn fire-btn active" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

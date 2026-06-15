@@ -178,11 +178,11 @@
 </main>
 
 <nav class="bottom-nav">
-    <div class="nav-btn" onclick="location.href='ranking.html'"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="location.href='event.html'"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="location.href='create.html'"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn active" onclick="location.href='search.html'"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
+    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
+    <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
 
 <script>
