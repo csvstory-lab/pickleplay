@@ -348,8 +348,10 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
+<script src="../js/supabase-bootstrap.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>

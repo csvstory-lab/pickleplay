@@ -24,15 +24,35 @@
       'option_a_name',
       'option_b_name',
       'tags',
-      'vote_count',
-      'comment_count',
       'expires_at',
       'visibility_status',
-      'status',
       'created_at',
       'author_id',
       'author_nickname',
     ].join(', '),
+    [
+      'id',
+      'title',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'expires_at',
+      'visibility_status',
+      'created_at',
+      'author_id',
+    ].join(', '),
+    [
+      'id',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'visibility_status',
+      'created_at',
+      'author_id',
+    ].join(', '),
+  ];
+
+  var POST_SELECT_WITH_STATS = [
     [
       'id',
       'title',
@@ -40,24 +60,15 @@
       'option_a_name',
       'option_b_name',
       'tags',
+      'vote_count',
+      'comment_count',
       'expires_at',
       'visibility_status',
       'created_at',
       'author_id',
       'author_nickname',
     ].join(', '),
-    [
-      'id',
-      'title',
-      'category',
-      'option_a_name',
-      'option_b_name',
-      'expires_at',
-      'visibility_status',
-      'created_at',
-      'author_id',
-    ].join(', '),
-  ];
+  ].concat(POST_SELECT_VARIANTS);
 
   var TRENDING_SELECT_VARIANTS = [
     'category, vote_count, comment_count, created_at',
@@ -97,13 +108,27 @@
 
   function isSchemaColumnError(err) {
     if (!err) return false;
-    var msg = String(err.message || err.details || '').toLowerCase();
+    var msg = String(err.message || err.details || err.hint || '').toLowerCase();
     return (
       err.code === '42703' ||
       err.code === 'PGRST204' ||
-      /column/.test(msg) ||
-      /does not exist/.test(msg)
+      err.code === 'PGRST100' ||
+      err.status === 400 && (/column/.test(msg) || /does not exist/.test(msg) || /could not find/.test(msg))
     );
+  }
+
+  function quotePostgrestValue(value) {
+    return '"' + String(value || '').replace(/"/g, '""') + '"';
+  }
+
+  function buildTextSearchOrFilter(pattern, fields) {
+    var cols = fields || ['title', 'tags', 'author_nickname', 'option_a_name', 'option_b_name'];
+    var quoted = quotePostgrestValue(pattern);
+    return cols
+      .map(function (col) {
+        return col + '.ilike.' + quoted;
+      })
+      .join(',');
   }
 
   async function queryWithColumnFallback(sb, table, variants, applyFilters) {
@@ -133,6 +158,13 @@
 
   function applyActivePostsFilter(q) {
     return applyVisiblePostsFilter(q).gt('expires_at', nowIso());
+  }
+
+  function applyPostsListFilters(q, mode) {
+    if (mode === 'active') {
+      return applyActivePostsFilter(q);
+    }
+    return applyVisiblePostsFilter(q);
   }
 
   function sanitizeIlikePattern(keyword) {
@@ -500,29 +532,37 @@
     var sb = getClient();
     if (!sb) return [];
 
-    var orders = ['vote_count', null];
+    var filterModes = ['active', 'visible'];
+    var selectVariants = POST_SELECT_WITH_STATS;
+    var orders = ['vote_count', 'created_at'];
 
-    for (var o = 0; o < orders.length; o++) {
-      var orderCol = orders[o];
+    for (var fm = 0; fm < filterModes.length; fm++) {
+      var filterMode = filterModes[fm];
 
-      for (var i = 0; i < POST_SELECT_VARIANTS.length; i++) {
-        var cols = POST_SELECT_VARIANTS[i];
+      for (var o = 0; o < orders.length; o++) {
+        var orderCol = orders[o];
 
-        var result = await queryWithColumnFallback(sb, 'posts', [cols], function (q) {
-          q = applyActivePostsFilter(q);
-          if (orderCol) {
-            return q.order(orderCol, { ascending: false }).limit(2);
+        for (var i = 0; i < selectVariants.length; i++) {
+          var cols = selectVariants[i];
+
+          var result = await queryWithColumnFallback(sb, 'posts', [cols], function (q) {
+            q = applyPostsListFilters(q, filterMode);
+            if (orderCol === 'vote_count') {
+              return q.order('vote_count', { ascending: false }).limit(2);
+            }
+            return q.order('created_at', { ascending: false }).limit(2);
+          });
+
+          if (!result.error && result.data) {
+            return result.data;
           }
-          return q.order('created_at', { ascending: false }).limit(2);
-        });
 
-        if (!result.error && result.data) {
-          return result.data;
-        }
-
-        if (result.error && !isSchemaColumnError(result.error)) {
-          console.warn('[P!CKLE Search] 핫 불판 조회 실패', result.error);
-          break;
+          if (result.error && !isSchemaColumnError(result.error)) {
+            console.warn('[P!CKLE Search] 핫 불판 조회 실패', result.error);
+            if (orderCol === 'vote_count') {
+              break;
+            }
+          }
         }
       }
     }
@@ -562,30 +602,36 @@
       });
     }
 
-    var orFilter =
-      'title.ilike.' +
-      pattern +
-      ',tags.ilike.' +
-      pattern +
-      ',author_nickname.ilike.' +
-      pattern;
+    var orFieldSets = [
+      ['title', 'tags', 'author_nickname', 'option_a_name', 'option_b_name'],
+      ['title', 'option_a_name', 'option_b_name'],
+      ['title'],
+    ];
 
-    for (var i = 0; i < POST_SELECT_VARIANTS.length; i++) {
-      var cols = POST_SELECT_VARIANTS[i];
-      var textResult = await applyVisiblePostsFilter(sb.from('posts').select(cols))
-        .or(orFilter)
-        .order('created_at', { ascending: false })
-        .limit(40);
+    for (var f = 0; f < orFieldSets.length; f++) {
+      var orFilter = buildTextSearchOrFilter(pattern, orFieldSets[f]);
+      var matched = false;
 
-      if (!textResult.error) {
-        addRows(textResult.data);
-        break;
+      for (var i = 0; i < POST_SELECT_VARIANTS.length; i++) {
+        var cols = POST_SELECT_VARIANTS[i];
+        var textResult = await applyVisiblePostsFilter(sb.from('posts').select(cols))
+          .or(orFilter)
+          .order('created_at', { ascending: false })
+          .limit(40);
+
+        if (!textResult.error) {
+          addRows(textResult.data);
+          matched = true;
+          break;
+        }
+
+        if (!isSchemaColumnError(textResult.error)) {
+          console.warn('[P!CKLE Search] 텍스트 검색 실패', textResult.error);
+          break;
+        }
       }
 
-      if (!isSchemaColumnError(textResult.error)) {
-        console.warn('[P!CKLE Search] 텍스트 검색 실패', textResult.error);
-        break;
-      }
+      if (matched) break;
     }
 
     var userResult = await sb
