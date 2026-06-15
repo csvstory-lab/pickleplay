@@ -495,13 +495,11 @@
     });
   }
 
-  function filterCategoriesForCreate(rawCategories, canCreateOfficial) {
-    var allowOfficial = canCreateOfficial === true;
-
+  function filterCategoriesForCreate(rawCategories, isOfficialCreator) {
     return (rawCategories || []).filter(function (cat) {
       if (!cat || !cat.slug) return false;
       if (cat.slug === 'c_hall') return false;
-      if (cat.slug === 'c_official') return allowOfficial;
+      if (cat.slug === 'c_official') return isOfficialCreator === true;
       return true;
     });
   }
@@ -521,11 +519,11 @@
     renderCategoryGrids(scope, { categories: cache.list });
   }
 
-  async function loadCategoriesForCreate(canCreateOfficial) {
+  async function loadCategoriesForCreate(isOfficialCreator) {
     await loadCategories(true);
-    var filtered = filterCategoriesForCreate(getCategories(), canCreateOfficial);
-    applyCreateCategoryList(filtered, document);
-    return filtered;
+    var filteredCategories = filterCategoriesForCreate(getCategories(), isOfficialCreator);
+    applyCreateCategoryList(filteredCategories, document);
+    return filteredCategories;
   }
 
   function mountAllCategoryUi(root) {

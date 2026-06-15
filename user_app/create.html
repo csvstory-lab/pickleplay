@@ -413,27 +413,32 @@
 <script src="../js/create-page.js"></script>
 <script>
     /** 불판 생성 — 픽클 오피셜 카테고리 노출 권한 (user_roles 연동) */
-    const OFFICIAL_CREATOR_ROLES = ['super', 'marketer', 'admin'];
-
-    async function fetchCanCreateOfficial(userEmail) {
-        const email = String(userEmail || '').trim().toLowerCase();
-        if (!email || !window.PickleSupabase?.getClient) return false;
+    async function resolveOfficialCreatorStatus() {
+        let isOfficialCreator = false;
 
         try {
+            if (window.PickleAuth?.init) {
+                await window.PickleAuth.init();
+            }
+            const currentUser = window.PickleAuth?.getUser?.();
+            if (!currentUser?.email || !window.PickleSupabase?.getClient) {
+                return false;
+            }
+
             const sb = window.PickleSupabase.getClient();
             const { data, error } = await sb
                 .from('user_roles')
-                .select('role, status')
-                .eq('email', email)
-                .maybeSingle();
+                .select('role')
+                .eq('email', String(currentUser.email).trim().toLowerCase())
+                .single();
 
             if (error || !data) return false;
-            if (data.status === 'suspend') return false;
-            return OFFICIAL_CREATOR_ROLES.indexOf(data.role) !== -1;
+            isOfficialCreator = data.role === 'super' || data.role === 'marketer';
         } catch (err) {
             console.warn('[create] user_roles 조회 실패 — 픽클 오피셜 숨김', err);
-            return false;
         }
+
+        return isOfficialCreator;
     }
 
     async function loadCategories() {
@@ -442,23 +447,10 @@
             return;
         }
 
-        let currentUserEmail = '';
-        try {
-            if (window.PickleAuth?.init) {
-                await window.PickleAuth.init();
-            }
-            const user = window.PickleAuth?.getUser?.();
-            if (user?.email) {
-                currentUserEmail = String(user.email).trim();
-            }
-        } catch (err) {
-            console.warn('[create] 로그인 정보 확인 실패 — 일반 카테고리만 표시', err);
-        }
-
-        const canCreateOfficial = await fetchCanCreateOfficial(currentUserEmail);
+        const isOfficialCreator = await resolveOfficialCreatorStatus();
 
         try {
-            await window.PickleCategories.loadCategoriesForCreate(canCreateOfficial);
+            await window.PickleCategories.loadCategoriesForCreate(isOfficialCreator);
         } catch (err) {
             console.error('[create] loadCategories failed:', err);
         }
