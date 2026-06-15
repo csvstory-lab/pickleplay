@@ -117,16 +117,41 @@
     return /youtube|youtu\.be|tiktok|vimeo|\.mp4|\.webm/i.test(url);
   }
 
-  /** 피드 썸네일 — posts.thumbnail_url 만 허용 (본문 미디어 스포일러 차단) */
+  function isCssThumbnailValue(value) {
+    if (value == null || value === '') return false;
+    var s = String(value).trim();
+    return (
+      /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s) ||
+      /^linear-gradient\(/i.test(s) ||
+      /^radial-gradient\(/i.test(s) ||
+      /^rgba?\(/i.test(s) ||
+      /^hsla?\(/i.test(s)
+    );
+  }
+
+  /** 피드 썸네일 — posts.thumbnail_url (http URL 또는 CSS 배경값) */
   function resolveFeedThumbnailUrl(thumbnailUrl) {
     try {
       if (thumbnailUrl == null || thumbnailUrl === '') return null;
       var url = String(thumbnailUrl).trim();
-      if (!url || isVideoUrl(url)) return null;
+      if (!url) return null;
+      if (isCssThumbnailValue(url)) return url;
+      if (isVideoUrl(url)) return null;
       return url;
     } catch (_) {
       return null;
     }
+  }
+
+  function isCssFeedThumbnail(value) {
+    return isCssThumbnailValue(value);
+  }
+
+  function escapeCssBackground(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
   }
 
   function safeTotalVotes(post) {
@@ -324,13 +349,22 @@
   }
 
   function renderCardThumbTop(post) {
-    var thumbUrl = resolveFeedThumbnailUrl((post && post.thumbnail_url) || null);
+    var rawThumb = post && post.thumbnail_url;
+    var thumbValue = resolveFeedThumbnailUrl(rawThumb);
 
-    if (thumbUrl) {
+    if (thumbValue && isCssFeedThumbnail(thumbValue)) {
+      return (
+        '<div class="card-thumb-top" style="background:' +
+        escapeCssBackground(thumbValue) +
+        '"></div>'
+      );
+    }
+
+    if (thumbValue) {
       return (
         '<div class="card-thumb-top">' +
         '<img class="card-thumb-img" src="' +
-        escapeHtml(thumbUrl) +
+        escapeHtml(thumbValue) +
         '" alt="' +
         escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
         '" loading="lazy" decoding="async">' +

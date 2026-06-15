@@ -260,6 +260,18 @@
     }
     .thumb-color-item:active { transform: scale(0.92); border-color: var(--neon-green); }
 
+    .thumb-search-wrap { margin-bottom: 12px; }
+    .thumb-search-input {
+        width: 100%; box-sizing: border-box; margin-bottom: 0;
+        padding: 12px 15px; font-size: 0.9rem;
+    }
+    .thumb-search-hint, .thumb-search-status {
+        color: #71717a; font-size: 0.8rem; text-align: center;
+        margin: 12px 0 0; line-height: 1.45;
+    }
+    .thumb-search-status.is-loading { color: var(--neon-green); }
+    .thumb-search-status.is-error { color: var(--alert-red); }
+
     /* A/B 입력 필드 */
     .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
     .ab-input-wrapper { position: relative; }
@@ -365,8 +377,20 @@
         <button type="button" class="thumb-tab" data-tab="color" onclick="switchThumbTab('color')">🎨 배경색</button>
     </div>
     <div class="thumb-tab-panel active" id="thumbPanelAlbum" role="tabpanel"></div>
-    <div class="thumb-tab-panel" id="thumbPanelFree" role="tabpanel"></div>
-    <div class="thumb-tab-panel" id="thumbPanelGif" role="tabpanel"></div>
+    <div class="thumb-tab-panel" id="thumbPanelFree" role="tabpanel">
+        <div class="thumb-search-wrap">
+            <input type="search" class="thumb-search-input input-box" id="thumbFreeSearch" placeholder="무료 사진 검색 (Enter)" autocomplete="off">
+        </div>
+        <div class="thumb-grid" id="thumbFreeGrid"></div>
+        <p class="thumb-search-hint" id="thumbFreeHint">Pixabay에서 무료 사진을 검색해 보세요.</p>
+    </div>
+    <div class="thumb-tab-panel" id="thumbPanelGif" role="tabpanel">
+        <div class="thumb-search-wrap">
+            <input type="search" class="thumb-search-input input-box" id="thumbGifSearch" placeholder="움짤 검색 (Enter)" autocomplete="off">
+        </div>
+        <div class="thumb-grid" id="thumbGifGrid"></div>
+        <p class="thumb-search-hint" id="thumbGifHint">Giphy에서 움짤을 검색해 보세요.</p>
+    </div>
     <div class="thumb-tab-panel" id="thumbPanelColor" role="tabpanel"></div>
 </div>
 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="thumbAlbumInput" onchange="onThumbAlbumFileSelected(this)">
@@ -617,43 +641,60 @@
     let currentOri = 'horizontal';
     let uploadStatus = { single: false, vsA: false, vsB: false };
     let uploadFiles = { single: null, vsA: null, vsB: null };
-    let createThumbnailFile = null;
-    let createThumbnailPreviewUrl = null;
+    const PIXABAY_API_KEY = 'YOUR_PIXABAY_KEY';
+    const GIPHY_API_KEY = 'YOUR_GIPHY_KEY';
 
-    const THUMB_MOCK = {
-        album: [
-            { type: 'picker' },
-            { url: 'https://picsum.photos/seed/pickle-album-1/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-album-2/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-album-3/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-album-4/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-album-5/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-album-6/400/400' },
-        ],
-        free: [
-            { url: 'https://picsum.photos/seed/pickle-free-1/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-2/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-3/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-4/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-5/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-6/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-7/400/400' },
-            { url: 'https://picsum.photos/seed/pickle-free-8/400/400' },
-        ],
-        gif: [
-            { url: 'https://picsum.photos/seed/pickle-gif-1/400/400', badge: 'GIF' },
-            { url: 'https://picsum.photos/seed/pickle-gif-2/400/400', badge: 'GIF' },
-            { url: 'https://picsum.photos/seed/pickle-gif-3/400/400', badge: 'GIF' },
-            { url: 'https://picsum.photos/seed/pickle-gif-4/400/400', badge: 'GIF' },
-            { url: 'https://picsum.photos/seed/pickle-gif-5/400/400', badge: 'GIF' },
-            { url: 'https://picsum.photos/seed/pickle-gif-6/400/400', badge: 'GIF' },
-        ],
-        colors: [
-            '#09090b', '#18181b', '#27272a', '#39ff14',
-            '#ff007f', '#00f0ff', '#ffcc00', '#a855f7',
-            '#ef4444', '#3b82f6', '#14b8a6', '#f97316',
-        ],
+    /** @type {{ type: 'none'|'file'|'url'|'css', file: File|null, url: string|null, css: string|null }} */
+    let createThumbnailState = { type: 'none', file: null, url: null, css: null };
+
+    const THUMB_COLOR_PRESETS = [
+        '#09090b', '#18181b', '#27272a', '#39ff14',
+        '#ff007f', '#00f0ff', '#ffcc00', '#a855f7',
+        '#ef4444', '#3b82f6', '#14b8a6', '#f97316',
+        'linear-gradient(135deg, #39ff14 0%, #aaff00 100%)',
+        'linear-gradient(135deg, #ff007f 0%, #ffcc00 100%)',
+        'linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%)',
+        'linear-gradient(135deg, #09090b 0%, #27272a 100%)',
+    ];
+
+    function setCreateThumbnailState(type, payload) {
+        createThumbnailState = { type: type || 'none', file: null, url: null, css: null };
+        if (type === 'file' && payload instanceof File) {
+            createThumbnailState.file = payload;
+        } else if (type === 'url' && payload) {
+            createThumbnailState.url = String(payload).trim();
+        } else if (type === 'css' && payload) {
+            createThumbnailState.css = String(payload).trim();
+        }
+    }
+
+    window.getPickleCreateThumbnailState = function () {
+        return {
+            type: createThumbnailState.type,
+            file: createThumbnailState.file,
+            url: createThumbnailState.url,
+            css: createThumbnailState.css,
+        };
     };
+
+    function resetThumbPreviewBoxStyles(box) {
+        box.style.background = '';
+        box.style.backgroundColor = '';
+        box.style.backgroundImage = '';
+    }
+
+    function applyThumbPreviewToBox(box, mode, value) {
+        resetThumbPreviewBoxStyles(box);
+        if (mode === 'url') {
+            box.style.backgroundColor = '#0f0f11';
+            box.style.backgroundImage = 'url("' + value + '")';
+            box.style.backgroundSize = 'cover';
+            box.style.backgroundPosition = 'center';
+        } else if (mode === 'css') {
+            box.style.background = value;
+        }
+        box.classList.add('has-preview');
+    }
 
     function closeAllCreateSheets() {
         const categorySheet = document.getElementById('categorySheet');
@@ -709,11 +750,143 @@
         if (panel) panel.classList.add('active');
     }
 
+    function initThumbnailUi() {
+        renderThumbAlbumPanel();
+        renderThumbColorGrid('thumbPanelColor', THUMB_COLOR_PRESETS);
+        bindThumbSearchInputs();
+    }
+
+    function renderThumbAlbumPanel() {
+        renderThumbImageGrid('thumbPanelAlbum', [{ type: 'picker' }], true);
+    }
+
+    function bindThumbSearchInputs() {
+        const freeInput = document.getElementById('thumbFreeSearch');
+        const gifInput = document.getElementById('thumbGifSearch');
+        if (freeInput) {
+            freeInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchPixabayPhotos(freeInput.value);
+                }
+            });
+        }
+        if (gifInput) {
+            gifInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchGiphyGifs(gifInput.value);
+                }
+            });
+        }
+    }
+
+    function setThumbSearchStatus(elementId, message, variant) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.textContent = message;
+        el.classList.remove('is-loading', 'is-error', 'thumb-search-hint');
+        el.classList.add('thumb-search-status');
+        if (variant === 'loading') el.classList.add('is-loading');
+        if (variant === 'error') el.classList.add('is-error');
+        if (!variant) el.classList.add('thumb-search-hint');
+    }
+
+    async function searchPixabayPhotos(query) {
+        const q = String(query || '').trim();
+        const grid = document.getElementById('thumbFreeGrid');
+        if (!q) {
+            setThumbSearchStatus('thumbFreeHint', '검색어를 입력해 주세요.', 'error');
+            return;
+        }
+        if (!PIXABAY_API_KEY || PIXABAY_API_KEY === 'YOUR_PIXABAY_KEY') {
+            setThumbSearchStatus('thumbFreeHint', 'Pixabay API 키를 설정해 주세요.', 'error');
+            return;
+        }
+        if (grid) grid.innerHTML = '';
+        setThumbSearchStatus('thumbFreeHint', '무료 사진 검색 중...', 'loading');
+        try {
+            const apiUrl =
+                'https://pixabay.com/api/?key=' + encodeURIComponent(PIXABAY_API_KEY) +
+                '&q=' + encodeURIComponent(q) +
+                '&image_type=photo&orientation=horizontal&per_page=20&safesearch=true';
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error('Pixabay API 오류 (' + res.status + ')');
+            const data = await res.json();
+            const urls = (data.hits || [])
+                .map(function (hit) { return hit.webformatURL || hit.largeImageURL || hit.previewURL; })
+                .filter(Boolean);
+            renderThumbSearchResults('thumbFreeGrid', urls);
+            if (!urls.length) {
+                setThumbSearchStatus('thumbFreeHint', '"' + q + '" 검색 결과가 없습니다.', 'error');
+                return;
+            }
+            setThumbSearchStatus('thumbFreeHint', urls.length + '개의 무료 사진을 찾았습니다.', null);
+        } catch (err) {
+            console.error('[create] Pixabay search failed:', err);
+            setThumbSearchStatus('thumbFreeHint', err.message || '무료 사진 검색에 실패했습니다.', 'error');
+        }
+    }
+
+    async function searchGiphyGifs(query) {
+        const q = String(query || '').trim();
+        const grid = document.getElementById('thumbGifGrid');
+        if (!q) {
+            setThumbSearchStatus('thumbGifHint', '검색어를 입력해 주세요.', 'error');
+            return;
+        }
+        if (!GIPHY_API_KEY || GIPHY_API_KEY === 'YOUR_GIPHY_KEY') {
+            setThumbSearchStatus('thumbGifHint', 'Giphy API 키를 설정해 주세요.', 'error');
+            return;
+        }
+        if (grid) grid.innerHTML = '';
+        setThumbSearchStatus('thumbGifHint', '움짤 검색 중...', 'loading');
+        try {
+            const apiUrl =
+                'https://api.giphy.com/v1/gifs/search?api_key=' + encodeURIComponent(GIPHY_API_KEY) +
+                '&q=' + encodeURIComponent(q) +
+                '&limit=20&rating=pg&lang=ko';
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error('Giphy API 오류 (' + res.status + ')');
+            const data = await res.json();
+            const urls = (data.data || [])
+                .map(function (gif) {
+                    return (gif.images && (gif.images.fixed_height_small?.url || gif.images.fixed_height?.url || gif.images.original?.url)) || '';
+                })
+                .filter(Boolean);
+            renderThumbSearchResults('thumbGifGrid', urls, 'GIF');
+            if (!urls.length) {
+                setThumbSearchStatus('thumbGifHint', '"' + q + '" 검색 결과가 없습니다.', 'error');
+                return;
+            }
+            setThumbSearchStatus('thumbGifHint', urls.length + '개의 움짤을 찾았습니다.', null);
+        } catch (err) {
+            console.error('[create] Giphy search failed:', err);
+            setThumbSearchStatus('thumbGifHint', err.message || '움짤 검색에 실패했습니다.', 'error');
+        }
+    }
+
+    function renderThumbSearchResults(gridId, urls, badge) {
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+        grid.innerHTML = '';
+        urls.forEach(function (url) {
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = 'thumb-grid-item';
+            cell.style.position = 'relative';
+            cell.innerHTML =
+                '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' +
+                (badge ? '<span style="position:absolute;bottom:6px;right:6px;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + badge + '</span>' : '');
+            cell.addEventListener('click', function () {
+                applyThumbPreviewImage(url);
+            });
+            grid.appendChild(cell);
+        });
+    }
+
     function renderThumbMockGrids() {
-        renderThumbImageGrid('thumbPanelAlbum', THUMB_MOCK.album, true);
-        renderThumbImageGrid('thumbPanelFree', THUMB_MOCK.free, false);
-        renderThumbImageGrid('thumbPanelGif', THUMB_MOCK.gif, false);
-        renderThumbColorGrid('thumbPanelColor', THUMB_MOCK.colors);
+        initThumbnailUi();
     }
 
     function renderThumbImageGrid(panelId, items, includePicker) {
@@ -761,10 +934,10 @@
             const swatch = document.createElement('button');
             swatch.type = 'button';
             swatch.className = 'thumb-color-item';
-            swatch.style.backgroundColor = color;
-            swatch.setAttribute('aria-label', '배경색 ' + color);
+            swatch.style.background = color;
+            swatch.setAttribute('aria-label', '배경 ' + color);
             swatch.addEventListener('click', function () {
-                applyThumbPreviewColor(color);
+                applyThumbPreviewCss(color);
             });
             grid.appendChild(swatch);
         });
@@ -773,49 +946,17 @@
     function applyThumbPreviewImage(url) {
         const box = document.getElementById('thumbPreviewBox');
         if (!box || !url) return;
-        createThumbnailFile = null;
-        createThumbnailPreviewUrl = url;
-        box.style.backgroundColor = '#0f0f11';
-        box.style.backgroundImage = 'url("' + url + '")';
-        box.classList.add('has-preview');
+        setCreateThumbnailState('url', url);
+        applyThumbPreviewToBox(box, 'url', url);
         closeThumbnailSheet();
     }
 
-    function applyThumbPreviewColor(color) {
+    function applyThumbPreviewCss(cssValue) {
         const box = document.getElementById('thumbPreviewBox');
-        if (!box || !color) return;
-        createThumbnailPreviewUrl = null;
-        box.style.backgroundImage = 'none';
-        box.style.backgroundColor = color;
-        box.classList.add('has-preview');
-        colorToThumbnailFile(color).then(function (file) {
-            createThumbnailFile = file;
-        }).catch(function () {
-            createThumbnailFile = null;
-        });
+        if (!box || !cssValue) return;
+        setCreateThumbnailState('css', cssValue);
+        applyThumbPreviewToBox(box, 'css', cssValue);
         closeThumbnailSheet();
-    }
-
-    function colorToThumbnailFile(hex) {
-        return new Promise(function (resolve, reject) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1280;
-            canvas.height = 720;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                reject(new Error('canvas unavailable'));
-                return;
-            }
-            ctx.fillStyle = hex;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            canvas.toBlob(function (blob) {
-                if (!blob) {
-                    reject(new Error('blob failed'));
-                    return;
-                }
-                resolve(new File([blob], 'thumb-color.jpg', { type: 'image/jpeg' }));
-            }, 'image/jpeg', 0.92);
-        });
     }
 
     const CREATE_THUMB_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -841,11 +982,8 @@
         const box = document.getElementById('thumbPreviewBox');
         if (!box || !file) return;
         const objectUrl = URL.createObjectURL(file);
-        createThumbnailPreviewUrl = null;
-        createThumbnailFile = file;
-        box.style.backgroundColor = '#0f0f11';
-        box.style.backgroundImage = 'url("' + objectUrl + '")';
-        box.classList.add('has-preview');
+        setCreateThumbnailState('file', file);
+        applyThumbPreviewToBox(box, 'url', objectUrl);
         closeThumbnailSheet();
     }
 
@@ -870,13 +1008,6 @@
         applyThumbPreviewFromFile(pickedThumbFile);
         input.value = '';
     }
-
-    window.getPickleCreateThumbnailFile = function () {
-        return createThumbnailFile || null;
-    };
-    window.getPickleCreateThumbnailUrl = function () {
-        return createThumbnailPreviewUrl || null;
-    };
 
     function resetUploadState() {
         uploadStatus = { single: false, vsA: false, vsB: false };
@@ -1114,63 +1245,7 @@
         let submitSucceeded = false;
 
         try {
-            let createThumbnailUrl = window.getPickleCreateThumbnailUrl?.() || createThumbnailPreviewUrl || null;
-            const createThumbFileForUpload = createThumbnailFile || null;
-
-            if (!createThumbnailUrl && createThumbFileForUpload) {
-                const createThumbValidationError = validateCreateThumbnailFile(createThumbFileForUpload);
-                if (createThumbValidationError) {
-                    alert(createThumbValidationError);
-                    return false;
-                }
-
-                let createAuthUser = null;
-                if (window.PickleAuth?.ensureAuthenticated) {
-                    const auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
-                    createAuthUser = auth?.user ?? null;
-                } else {
-                    if (window.PickleAuth?.waitForSessionReady) {
-                        await window.PickleAuth.waitForSessionReady();
-                    } else if (window.PickleAuth?.init) {
-                        await window.PickleAuth.init();
-                    }
-                    const supabase = window.PickleSupabase.getClient();
-                    const sessionResult = await supabase.auth.getSession();
-                    createAuthUser = sessionResult.data?.session?.user ?? null;
-                }
-                if (!createAuthUser) {
-                    if (
-                        window.location.hash.includes('access_token=') ||
-                        window.location.hash.includes('type=recovery') ||
-                        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
-                    ) {
-                        return false;
-                    }
-                    if (window.PickleAuth?.alertLoginRequired) {
-                        window.PickleAuth.alertLoginRequired('로그인 후 불판을 지필 수 있습니다.', function () {
-                            location.href = 'login.html?redirect=create.html&from=create';
-                        });
-                    } else {
-                        alert('로그인 후 불판을 지필 수 있습니다.');
-                        location.href = 'login.html?redirect=create.html&from=create';
-                    }
-                    return false;
-                }
-
-                createThumbnailUrl = await window.PickleMedia.uploadPostImage(
-                    createThumbFileForUpload,
-                    createAuthUser.id,
-                    { aspectRatio: 16 / 9 }
-                );
-            }
-
-            const result = await window.PickleCreatePage.submitPost(
-                buildMediaPayload,
-                function () {
-                    return createThumbFileForUpload || null;
-                },
-                createThumbnailUrl || null
-            );
+            const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
             if (result?.cancelled) return false;
 
             if (result?.ok) {

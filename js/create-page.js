@@ -192,6 +192,48 @@
     }
   }
 
+  function isCssThumbnailValue(value) {
+    if (value == null || value === '') return false;
+    var s = String(value).trim();
+    return (
+      /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s) ||
+      /^linear-gradient\(/i.test(s) ||
+      /^radial-gradient\(/i.test(s) ||
+      /^rgba?\(/i.test(s) ||
+      /^hsla?\(/i.test(s)
+    );
+  }
+
+  async function resolveThumbnailForInsert(userId) {
+    if (typeof window.getPickleCreateThumbnailState !== 'function') {
+      return null;
+    }
+
+    var state = window.getPickleCreateThumbnailState();
+    if (!state || !state.type || state.type === 'none') {
+      return null;
+    }
+
+    if (state.type === 'file') {
+      if (!(state.file instanceof File)) return null;
+      return uploadThumbnailIfAny(userId, function () {
+        return state.file;
+      });
+    }
+
+    if (state.type === 'url' && state.url) {
+      console.info('[P!CKLE Create] 썸네일 URL 직접 저장 →', state.url);
+      return normalizeThumbnailUrlForDb(state.url);
+    }
+
+    if (state.type === 'css' && state.css) {
+      console.info('[P!CKLE Create] 썸네일 CSS 배경 직접 저장 →', state.css);
+      return normalizeThumbnailUrlForDb(state.css);
+    }
+
+    return null;
+  }
+
   function resolveExpiresAtFields() {
     var getDuration = window.getPickleCreateDuration;
     var durationKey = getDuration ? getDuration() : '24h';
@@ -435,9 +477,11 @@
     }
 
     var thumbnailUrl = null;
-    if (typeof preloadedThumbnailUrl !== 'undefined') {
+    if (typeof window.getPickleCreateThumbnailState === 'function') {
+      thumbnailUrl = await resolveThumbnailForInsert(user.id);
+    } else if (preloadedThumbnailUrl) {
       thumbnailUrl = normalizeThumbnailUrlForDb(preloadedThumbnailUrl);
-    } else {
+    } else if (typeof getThumbnailFile === 'function') {
       thumbnailUrl = await uploadThumbnailIfAny(user.id, getThumbnailFile);
       thumbnailUrl = normalizeThumbnailUrlForDb(thumbnailUrl);
     }
@@ -478,5 +522,7 @@
     resolveCategorySlug: resolveCategorySlug,
     handleInsertError: handleInsertError,
     validateCustomEndDate: validateCustomEndDate,
+    isCssThumbnailValue: isCssThumbnailValue,
+    resolveThumbnailForInsert: resolveThumbnailForInsert,
   };
 })();
