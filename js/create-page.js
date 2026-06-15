@@ -373,7 +373,9 @@
    * @param {string|null} [preloadedThumbnailUrl] — create.html에서 선업로드한 URL
    */
   async function submitPost(buildMediaPayload, getThumbnailFile, preloadedThumbnailUrl) {
-    if (window.PickleAuth?.init) {
+    if (window.PickleAuth?.waitForSessionReady) {
+      await window.PickleAuth.waitForSessionReady();
+    } else if (window.PickleAuth?.init) {
       await window.PickleAuth.init();
     }
 
@@ -385,8 +387,12 @@
 
     var user = authResult.data?.user;
     if (!user) {
-      alert('로그인 후 불판을 지필 수 있습니다.');
-      goLogin();
+      if (window.PickleAuth?.alertLoginRequired) {
+        window.PickleAuth.alertLoginRequired('로그인 후 불판을 지필 수 있습니다.', goLogin);
+      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        alert('로그인 후 불판을 지필 수 있습니다.');
+        goLogin();
+      }
       return { cancelled: true };
     }
 

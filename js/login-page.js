@@ -515,12 +515,21 @@
     if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
       console.log('[P!CKLE Login] OAuth 토큰 처리 대기 — 리다이렉트 보류');
       try {
-        var sbPending = getSupabaseClient();
-        sbPending.auth.onAuthStateChange(function (event, session) {
-          if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-            window.location.replace(getRedirectAfterLogin());
-          }
-        });
+        if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+          await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+        } else {
+          var sbPending = getSupabaseClient();
+          sbPending.auth.onAuthStateChange(function (event, session) {
+            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+              window.location.replace(getRedirectAfterLogin());
+            }
+          });
+        }
+        var sbAfter = getSupabaseClient();
+        var sessionAfter = await sbAfter.auth.getSession();
+        if (sessionAfter.data && sessionAfter.data.session) {
+          window.location.replace(getRedirectAfterLogin());
+        }
       } catch (err) {
         console.warn('[P!CKLE Login] OAuth 대기 중 오류', err);
       }

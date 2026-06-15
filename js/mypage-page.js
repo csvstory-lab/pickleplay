@@ -235,12 +235,22 @@
   }
 
   async function requireAuth() {
+    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      await window.PickleAuth.waitForSessionReady();
+    } else if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+    }
+
     var sb = getSupabaseClient();
     var result = await sb.auth.getUser();
     if (result.error) throw result.error;
     if (!result.data.user) {
-      alert('로그인이 필요한 페이지입니다.');
-      redirectToLogin();
+      if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+        window.PickleAuth.alertLoginRequired('로그인이 필요한 페이지입니다.', redirectToLogin);
+      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        alert('로그인이 필요한 페이지입니다.');
+        redirectToLogin();
+      }
       return null;
     }
     return result.data.user;
@@ -515,6 +525,12 @@
   }
 
   async function waitForSupabaseSession(sb, maxAttempts) {
+    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      await window.PickleAuth.waitForSessionReady();
+    } else if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+    }
+
     var attempts = maxAttempts || 10;
     for (var i = 0; i < attempts; i++) {
       var sessionResult = await sb.auth.getSession();
@@ -945,8 +961,12 @@
     } catch (err) {
       console.error('[P!CKLE Mypage] 쿠폰 상태 변경 실패', err);
       if (String(err.message || err) === 'LOGIN_REQUIRED') {
-        alert('로그인이 필요합니다.');
-        redirectToLogin();
+        if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+          window.PickleAuth.alertLoginRequired('로그인이 필요합니다.', redirectToLogin);
+        } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          alert('로그인이 필요합니다.');
+          redirectToLogin();
+        }
         return;
       }
       if (isCouponsPermissionError(err)) {
@@ -1103,10 +1123,17 @@
 
     try {
       var sb = getSupabaseClient();
+      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+        await window.PickleAuth.waitForSessionReady();
+      }
       var authResult = await sb.auth.getUser();
       if (authResult.error || !authResult.data?.user) {
-        alert('로그인이 필요합니다.');
-        redirectToLogin();
+        if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+          window.PickleAuth.alertLoginRequired('로그인이 필요합니다.', redirectToLogin);
+        } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          alert('로그인이 필요합니다.');
+          redirectToLogin();
+        }
         return;
       }
 
@@ -1170,11 +1197,18 @@
     var description = descEl ? descEl.value.trim() : '';
 
     var sb = getSupabaseClient();
+    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      await window.PickleAuth.waitForSessionReady();
+    }
     var authResult = await sb.auth.getUser();
 
     if (authResult.error || !authResult.data?.user) {
-      alert('로그인이 필요합니다.');
-      redirectToLogin();
+      if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+        window.PickleAuth.alertLoginRequired('로그인이 필요합니다.', redirectToLogin);
+      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        alert('로그인이 필요합니다.');
+        redirectToLogin();
+      }
       return;
     }
 
@@ -1448,6 +1482,11 @@
       console.error('[P!CKLE Mypage] 보관함 로드 실패', err);
       container.dataset.loadState = 'error';
       if (String(err.message || err) === 'LOGIN_REQUIRED') {
+        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          container.innerHTML =
+            '<div class="empty-state" id="savedEmpty">보관함 불러오는 중…</div>';
+          return;
+        }
         container.innerHTML =
           '<div class="empty-state" id="savedEmpty">로그인이 필요합니다.</div>';
         return;
@@ -1480,6 +1519,12 @@
 
   async function initMypage() {
     try {
+      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+        await window.PickleAuth.waitForSessionReady();
+      } else if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+        await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+      }
+
       if (window.PickleCategories && window.PickleCategories.load) {
         await window.PickleCategories.load();
       }
@@ -1487,8 +1532,12 @@
       var b = window.PickleSupabaseBootstrap;
       if (!b || !b.isReady()) {
         console.warn('[P!CKLE Mypage]', b ? b.getErrorMessage() : 'bootstrap missing');
-        alert('로그인이 필요한 페이지입니다.');
-        redirectToLogin();
+        if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+          window.PickleAuth.alertLoginRequired('로그인이 필요한 페이지입니다.', redirectToLogin);
+        } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          alert('로그인이 필요한 페이지입니다.');
+          redirectToLogin();
+        }
         return;
       }
 
@@ -1507,8 +1556,12 @@
       mypageTabLoaded.voted = true;
     } catch (err) {
       console.error('[P!CKLE Mypage]', err);
-      alert('로그인이 필요한 페이지입니다.');
-      redirectToLogin();
+      if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+        window.PickleAuth.alertLoginRequired('로그인이 필요한 페이지입니다.', redirectToLogin);
+      } else if (!window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        alert('로그인이 필요한 페이지입니다.');
+        redirectToLogin();
+      }
     }
   }
 
@@ -1533,6 +1586,14 @@
   };
 
   window.saveProfile = saveProfile;
+
+  window.addEventListener('pickle-auth-changed', function (ev) {
+    var session = ev.detail && ev.detail.session;
+    if (!session || !session.user || currentUser) return;
+    renderProfile(session.user).catch(function (err) {
+      console.warn('[P!CKLE Mypage] OAuth 후 프로필 렌더', err);
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', initMypage);
 })();

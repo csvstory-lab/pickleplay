@@ -1002,7 +1002,14 @@
       document.getElementById('hotFeedList') ||
       document.getElementById('aiCurationContainer')
     ) {
-      loadPickleFeed();
+      var startFeed = function () {
+        loadPickleFeed();
+      };
+      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+        window.PickleAuth.waitForSessionReady().then(startFeed).catch(startFeed);
+      } else {
+        startFeed();
+      }
     }
   });
 })();

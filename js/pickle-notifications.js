@@ -64,6 +64,9 @@
   }
 
   async function ensureAuthReady() {
+    if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
+      return window.PickleAuth.getUserWhenReady();
+    }
     if (window.PickleAuth && window.PickleAuth.init) {
       await window.PickleAuth.init();
       if (window.PickleAuth.isLoggedIn()) {
@@ -73,6 +76,10 @@
 
     var sb = getClient();
     if (!sb) return null;
+
+    if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+    }
 
     var result = await sb.auth.getUser();
     return result.data && result.data.user ? result.data.user : null;
@@ -192,6 +199,9 @@
 
     ensureAuthReady().then(function (user) {
       if (!user) {
+        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return;
+        }
         if (window.PickleAuth && window.PickleAuth.goToLogin) {
           window.PickleAuth.goToLogin({ redirect: 'notifications.html' });
         } else {

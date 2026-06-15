@@ -30,6 +30,13 @@
   }
 
   async function getCurrentUserId() {
+    if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
+      var readyUser = await window.PickleAuth.getUserWhenReady();
+      return readyUser ? readyUser.id : null;
+    }
+    if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+    }
     var sb = getSupabaseClient();
     if (!sb) return null;
     try {
@@ -39,6 +46,15 @@
     } catch (e) {
       return null;
     }
+  }
+
+  function showLoginRequiredAlert() {
+    if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+      window.PickleAuth.alertLoginRequired('로그인이 필요합니다.');
+      return;
+    }
+    if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) return;
+    alert('로그인이 필요합니다.');
   }
 
   async function countFollowers(userId) {
@@ -586,7 +602,7 @@
 
     var myId = await getCurrentUserId();
     if (!myId) {
-      alert('로그인이 필요합니다.');
+      showLoginRequiredAlert();
       return false;
     }
     if (!targetUserId || myId === targetUserId) return false;
@@ -611,7 +627,7 @@
 
     var myId = await getCurrentUserId();
     if (!myId) {
-      alert('로그인이 필요합니다.');
+      showLoginRequiredAlert();
       return false;
     }
     if (!targetUserId || myId === targetUserId) return false;
@@ -629,7 +645,7 @@
   async function toggleFollow(targetUserId) {
     var myId = await getCurrentUserId();
     if (!myId) {
-      alert('로그인이 필요합니다.');
+      showLoginRequiredAlert();
       return null;
     }
     if (!targetUserId || myId === targetUserId) return null;
@@ -655,7 +671,7 @@
         : await getCurrentUserId();
 
     if (!userId) {
-      alert('로그인이 필요합니다.');
+      showLoginRequiredAlert();
       return;
     }
 

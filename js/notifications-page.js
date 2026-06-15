@@ -16,18 +16,40 @@
   }
 
   async function requireUser() {
+    if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
+      var user = await window.PickleAuth.getUserWhenReady();
+      if (!user) {
+        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return null;
+        }
+        window.PickleAuth.goToLogin({ redirect: 'notifications.html' });
+        return null;
+      }
+      return user;
+    }
+
     if (window.PickleAuth && window.PickleAuth.init) {
       await window.PickleAuth.init();
       if (!window.PickleAuth.isLoggedIn()) {
+        if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+          return null;
+        }
         window.PickleAuth.goToLogin({ redirect: 'notifications.html' });
         return null;
       }
       return window.PickleAuth.getUser();
     }
 
+    if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+    }
+
     var sb = window.PickleSupabase.getClient();
     var result = await sb.auth.getUser();
     if (!result.data || !result.data.user) {
+      if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        return null;
+      }
       window.location.href = 'login.html?redirect=notifications.html';
       return null;
     }

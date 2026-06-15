@@ -131,6 +131,34 @@
     return currentSession;
   }
 
+  async function waitForSessionReady() {
+    await init();
+    return currentSession;
+  }
+
+  async function getUserWhenReady() {
+    await waitForSessionReady();
+    if (getUser()) return getUser();
+    const sb = getClient();
+    const { data, error } = await sb.auth.getUser();
+    if (error) throw error;
+    if (data.user && !currentSession) {
+      await refreshSession();
+    }
+    return data.user ?? null;
+  }
+
+  function alertLoginRequired(message, onRedirect) {
+    if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return false;
+    }
+    alert(message || '로그인이 필요합니다.');
+    if (typeof onRedirect === 'function') {
+      onRedirect();
+    }
+    return true;
+  }
+
   /**
    * SNS OAuth 로그인 뼈대 (Supabase 대시보드에서 Provider 활성화 필요)
    * @param {'kakao'|'naver'|'google'} providerKey
@@ -446,24 +474,18 @@
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
-      if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
-        console.log('[P!CKLE Auth] OAuth 토큰 처리 대기 — 리다이렉트 보류');
-        const sb = getClient();
-        await refreshSession();
-        updateNav();
-        bindNavActions();
-        bindLoginPage();
-        sb.auth.onAuthStateChange((_event, session) => {
-          currentSession = session;
-          updateNav();
-          window.dispatchEvent(
-            new CustomEvent('pickle-auth-changed', { detail: { session } })
-          );
-        });
-        return;
+      const sb = getClient();
+      const isOAuthCallback =
+        window.location.hash.includes('access_token') ||
+        window.location.hash.includes('type=recovery');
+
+      if (isOAuthCallback) {
+        console.log('[P!CKLE Auth] OAuth 토큰 처리 대기 — 세션 파싱까지 보류');
+        if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+          await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+        }
       }
 
-      const sb = getClient();
       await refreshSession();
 
       if (window.location.pathname.endsWith('login.html') && isLoggedIn()) {
@@ -487,8 +509,23 @@
     return initPromise;
   }
 
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      init().catch(function (err) {
+        console.warn('[P!CKLE Auth] init failed', err);
+      });
+    });
+  } else {
+    init().catch(function (err) {
+      console.warn('[P!CKLE Auth] init failed', err);
+    });
+  }
+
   window.PickleAuth = {
     init,
+    waitForSessionReady,
+    getUserWhenReady,
+    alertLoginRequired,
     isLoggedIn,
     getSession,
     getUser,

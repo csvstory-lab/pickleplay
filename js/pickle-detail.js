@@ -34,6 +34,35 @@
       : String(str ?? '');
   }
 
+  async function getAuthUserForAction() {
+    if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
+      return window.PickleAuth.getUserWhenReady();
+    }
+    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.waitForOAuthSession) {
+      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+    }
+    var sb = window.PickleSupabase.getClient();
+    var authResult = await sb.auth.getUser();
+    if (authResult.error || !authResult.data || !authResult.data.user) {
+      return null;
+    }
+    return authResult.data.user;
+  }
+
+  function alertLoginRequired(message, onRedirect) {
+    if (window.PickleAuth && window.PickleAuth.alertLoginRequired) {
+      return window.PickleAuth.alertLoginRequired(message, onRedirect);
+    }
+    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.shouldSuppressLoginAlert()) {
+      return false;
+    }
+    alert(message);
+    if (typeof onRedirect === 'function') {
+      onRedirect();
+    }
+    return true;
+  }
+
   function getPostIdFromUrl() {
     return new URLSearchParams(window.location.search).get('id');
   }
@@ -562,13 +591,13 @@
     if (btnEl && btnEl.dataset.likePending === '1') return;
 
     var sb = window.PickleSupabase.getClient();
-    var authResult = await sb.auth.getUser();
-    if (authResult.error || !authResult.data || !authResult.data.user) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
+    var user = await getAuthUserForAction();
+    if (!user) {
+      alertLoginRequired('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
 
-    var userId = authResult.data.user.id;
+    var userId = user.id;
     var currentlyLiked = isCommentLiked(commentId);
     var countEl = btnEl ? btnEl.querySelector('.comment-like-count') : null;
     var currentCount = countEl ? Number(String(countEl.textContent || '0').replace(/,/g, '')) : 0;
@@ -817,14 +846,13 @@
 
     try {
       var sb = window.PickleSupabase.getClient();
-      var authResult = await sb.auth.getUser();
+      var user = await getAuthUserForAction();
 
-      if (authResult.error || !authResult.data || !authResult.data.user) {
-        alert('답글을 남기려면 로그인이 필요합니다.');
+      if (!user) {
+        alertLoginRequired('답글을 남기려면 로그인이 필요합니다.');
         return;
       }
 
-      var user = authResult.data.user;
       var authorSnapshot = extractCommentAuthorSnapshot(user);
       var insertPayload = {
         user_id: user.id,
@@ -1048,22 +1076,16 @@
 
     try {
       var sb = window.PickleSupabase.getClient();
-      var authResult = await sb.auth.getUser();
+      var user = await getAuthUserForAction();
 
-      if (authResult.error) {
-        console.error('[P!CKLE Detail] auth', authResult.error);
-        alert('로그인 상태를 확인할 수 없습니다. 다시 로그인해 주세요.');
-        return;
-      }
-
-      var user = authResult.data && authResult.data.user;
       if (!user) {
-        alert('댓글을 남기려면 로그인이 필요합니다.');
-        window.location.href =
-          'login.html?redirect=' +
-          encodeURIComponent(
-            'detail.html?id=' + encodeURIComponent(currentPostId)
-          );
+        alertLoginRequired('댓글을 남기려면 로그인이 필요합니다.', function () {
+          window.location.href =
+            'login.html?redirect=' +
+            encodeURIComponent(
+              'detail.html?id=' + encodeURIComponent(currentPostId)
+            );
+        });
         return;
       }
 
@@ -1683,13 +1705,13 @@
 
   async function submitVoteToSupabase(postId, choice) {
     var sb = window.PickleSupabase.getClient();
-    var authResult = await sb.auth.getUser();
-    if (authResult.error || !authResult.data?.user) {
+    var user = await getAuthUserForAction();
+    if (!user) {
       throw new Error('LOGIN_REQUIRED');
     }
 
     var insertResult = await sb.from('votes').insert({
-      user_id: authResult.data.user.id,
+      user_id: user.id,
       post_id: postId,
       choice: choice,
     });
@@ -1782,10 +1804,11 @@
 
       var msg = String(err.message || err || '');
       if (msg === 'LOGIN_REQUIRED') {
-        alert('투표하려면 로그인이 필요합니다.');
-        window.location.href =
-          'login.html?redirect=' +
-          encodeURIComponent('detail.html?id=' + encodeURIComponent(currentPostId));
+        alertLoginRequired('투표하려면 로그인이 필요합니다.', function () {
+          window.location.href =
+            'login.html?redirect=' +
+            encodeURIComponent('detail.html?id=' + encodeURIComponent(currentPostId));
+        });
         return;
       }
       if (
@@ -1895,6 +1918,10 @@
     }
 
     try {
+      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+        await window.PickleAuth.waitForSessionReady().catch(function () {});
+      }
+
       if (window.PickleCategories && window.PickleCategories.load) {
         await window.PickleCategories.load();
       }
@@ -1936,6 +1963,13 @@
   document.addEventListener('DOMContentLoaded', function () {
     bindCommentListDelegationOnce();
     bindCommentFormOnce();
-    loadDetail();
+    var startDetail = function () {
+      loadDetail();
+    };
+    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      window.PickleAuth.waitForSessionReady().then(startDetail).catch(startDetail);
+    } else {
+      startDetail();
+    }
   });
 })();
