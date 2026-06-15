@@ -46,6 +46,8 @@
   }
 
   /** OAuth 콜백 — Supabase 대시보드 Redirect URL과 일치해야 함 */
+  var KAKAO_OAUTH_REDIRECT_TO = 'https://pickleplay.kr/index.html';
+
   function getOAuthRedirectTo() {
     return window.location.origin + '/index.html';
   }
@@ -430,9 +432,17 @@
       redirectTo: getOAuthRedirectTo(),
     };
     if (provider === 'kakao') {
-      oauthOptions.redirectTo = window.location.origin + '/index.html';
-      oauthOptions.queryParams = { prompt: 'login' };
+      var result = await sb.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: KAKAO_OAUTH_REDIRECT_TO,
+          queryParams: { prompt: 'login' },
+        },
+      });
+      if (result.error) throw result.error;
+      return result.data;
     }
+
     var result = await sb.auth.signInWithOAuth({
       provider: provider,
       options: oauthOptions,

@@ -49,6 +49,8 @@
     return params.get('redirect') || 'index.html';
   }
 
+  const KAKAO_OAUTH_REDIRECT_TO = 'https://pickleplay.kr/index.html';
+
   function getOAuthRedirectTo() {
     return window.location.origin + '/index.html';
   }
@@ -143,13 +145,22 @@
     }
 
     const sb = getClient();
+    if (providerKey === 'kakao') {
+      const { data, error } = await sb.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: KAKAO_OAUTH_REDIRECT_TO,
+          queryParams: { prompt: 'login' },
+        },
+      });
+      if (error) throw error;
+      return data;
+    }
+
     const oauthOptions = {
       redirectTo: getOAuthRedirectTo(),
     };
-    if (providerKey === 'kakao') {
-      oauthOptions.redirectTo = window.location.origin + '/index.html';
-      oauthOptions.queryParams = { prompt: 'login' };
-    } else if (providerKey !== 'kakao' && getRedirectPath() !== 'index.html') {
+    if (getRedirectPath() !== 'index.html') {
       oauthOptions.redirectTo = new URL(getRedirectPath(), window.location.href).href;
     }
 
