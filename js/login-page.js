@@ -46,10 +46,15 @@
   }
 
   /** OAuth 콜백 — Supabase 대시보드 Redirect URL과 일치해야 함 */
-  var KAKAO_OAUTH_REDIRECT_TO = 'https://pickleplay.kr/index.html';
+  function getKakaoOAuthRedirectTo() {
+    if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.getKakaoOAuthRedirectTo) {
+      return window.PickleOAuthCallbackGuard.getKakaoOAuthRedirectTo();
+    }
+    return window.location.origin + '/user_app/index.html';
+  }
 
   function getOAuthRedirectTo() {
-    return window.location.origin + '/index.html';
+    return window.location.origin + '/user_app/index.html';
   }
 
   function getResetPasswordRedirectTo() {
@@ -435,7 +440,7 @@
       var result = await sb.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: KAKAO_OAUTH_REDIRECT_TO,
+          redirectTo: getKakaoOAuthRedirectTo(),
           queryParams: { prompt: 'login' },
         },
       });
@@ -507,6 +512,21 @@
   }
 
   async function initLoginPage() {
+    if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+      console.log('[P!CKLE Login] OAuth 토큰 처리 대기 — 리다이렉트 보류');
+      try {
+        var sbPending = getSupabaseClient();
+        sbPending.auth.onAuthStateChange(function (event, session) {
+          if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+            window.location.replace(getRedirectAfterLogin());
+          }
+        });
+      } catch (err) {
+        console.warn('[P!CKLE Login] OAuth 대기 중 오류', err);
+      }
+      return;
+    }
+
     var screenApi = bindAuthScreens();
     bindLoginForm();
     bindForgotPassword();

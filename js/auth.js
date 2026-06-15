@@ -49,10 +49,15 @@
     return params.get('redirect') || 'index.html';
   }
 
-  const KAKAO_OAUTH_REDIRECT_TO = 'https://pickleplay.kr/index.html';
+  function getKakaoOAuthRedirectTo() {
+    if (window.PickleOAuthCallbackGuard?.getKakaoOAuthRedirectTo) {
+      return window.PickleOAuthCallbackGuard.getKakaoOAuthRedirectTo();
+    }
+    return window.location.origin + '/user_app/index.html';
+  }
 
   function getOAuthRedirectTo() {
-    return window.location.origin + '/index.html';
+    return window.location.origin + '/user_app/index.html';
   }
 
   function getResetPasswordRedirectTo() {
@@ -149,7 +154,7 @@
       const { data, error } = await sb.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: KAKAO_OAUTH_REDIRECT_TO,
+          redirectTo: getKakaoOAuthRedirectTo(),
           queryParams: { prompt: 'login' },
         },
       });
@@ -441,6 +446,23 @@
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
+      if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+        console.log('[P!CKLE Auth] OAuth 토큰 처리 대기 — 리다이렉트 보류');
+        const sb = getClient();
+        await refreshSession();
+        updateNav();
+        bindNavActions();
+        bindLoginPage();
+        sb.auth.onAuthStateChange((_event, session) => {
+          currentSession = session;
+          updateNav();
+          window.dispatchEvent(
+            new CustomEvent('pickle-auth-changed', { detail: { session } })
+          );
+        });
+        return;
+      }
+
       const sb = getClient();
       await refreshSession();
 

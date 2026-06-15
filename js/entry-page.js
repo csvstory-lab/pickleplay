@@ -8,6 +8,12 @@
   var LOGIN_URL = 'user_app/login.html';
 
   function routeByAuth() {
+    if (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery')) {
+      console.log('[P!CKLE Entry] OAuth hash 감지 — user_app/index.html로 hash 유지 이동');
+      window.location.href = FEED_URL + window.location.hash;
+      return;
+    }
+
     var b = window.PickleSupabaseBootstrap;
     if (!b || !b.isReady()) {
       console.warn('[P!CKLE Entry]', b ? b.getErrorMessage() : 'bootstrap missing');
