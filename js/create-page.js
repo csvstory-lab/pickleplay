@@ -365,12 +365,6 @@
       var fromGlobal = window.getPickleCreateThumbnailFile();
       if (fromGlobal) return fromGlobal;
     }
-    var input =
-      document.getElementById('thumbnailInput') ||
-      document.getElementById('fileThumbnail');
-    if (input && input.files && input.files[0]) {
-      return input.files[0];
-    }
     return null;
   }
 

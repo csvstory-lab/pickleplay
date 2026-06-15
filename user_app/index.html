@@ -76,13 +76,12 @@
     .noti-overlay.open { opacity: 1; pointer-events: auto; }
 
     /* === 카테고리 바텀 시트 === */
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: #121214; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px 20px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: #121214; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px 20px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); height: auto; max-height: 85vh; overflow-y: auto; }
     .bottom-sheet.open { transform: translateY(0); }
     .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .sheet-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: var(--neon-green); }
     .btn-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding-bottom: 20px; scrollbar-width: none; }
-    .category-grid::-webkit-scrollbar { display: none; }
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 4px; }
     .grid-item { background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
     .grid-item:active { background-color: var(--neon-green); color: #000; transform: scale(0.95); }
     .grid-item.highlight { border: 1px solid var(--neon-pink); color: var(--neon-pink); }
