@@ -455,7 +455,6 @@
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
-<script src="../js/mobile-touch-guard.js"></script>
 <link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
 <body>
@@ -477,7 +476,6 @@
 <div class="category-nav-sticky-wrap" id="categoryNavSticky">
     <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 </div>
-<script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
 
@@ -570,33 +568,12 @@
     <div class="nav-btn" onclick="location.href='mypage.html'"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
 
+<!-- Supabase 로드 순서 필수: CDN → config → client → bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="../js/supabase-client.js"></script>
-<script>
-// [DEBUG] 세션 확인 — login.html 자동 이동 비활성화
-var supabase = window.PickleSupabase.getClient();
-
-function debugSession(label) {
-  console.log('[session ' + label + '] supabase.auth.getSession():', supabase.auth.getSession());
-  supabase.auth.getSession().then(function (result) {
-    console.log('[session ' + label + '] resolved:', result);
-    console.log('[session ' + label + '] session:', result.data && result.data.session);
-  });
-}
-
-debugSession('load-immediate');
-setTimeout(function () { debugSession('100ms'); }, 100);
-setTimeout(function () { debugSession('500ms'); }, 500);
-setTimeout(function () { debugSession('1500ms'); }, 1500);
-
-supabase.auth.onAuthStateChange(function (event, session) {
-  console.log('[session onAuthStateChange]', event, session);
-  console.log(supabase.auth.getSession());
-});
-
-// if (!session) { window.location.href = 'login.html'; }
-</script>
+<script src="../js/supabase-bootstrap.js"></script>
+<!-- 앱 기능 스크립트 -->
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/pickle-notifications.js"></script>
@@ -604,6 +581,8 @@ supabase.auth.onAuthStateChange(function (event, session) {
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-feed.js"></script>
+<script src="../js/mobile-touch-guard.js"></script>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
     function syncIndexHeaderTopHeight() {
         var row = document.getElementById('headerTopRow');

@@ -425,7 +425,6 @@
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
-<script src="../js/mobile-touch-guard.js"></script>
 </head>
 <body>
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
@@ -537,10 +536,14 @@
         </div>
     </div>
 
+<!-- Supabase 로드 순서 필수: CDN → config → client → bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.__PICKLE_CONFIG_SCRIPT_OK = null;</script>
 <script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="../js/supabase-bootstrap.js"></script>
+<!-- 앱 기능 스크립트 -->
+<script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/login-page.js"></script>
 
