@@ -212,17 +212,15 @@
    * getSession() + localStorage persist 확인까지 대기 (OAuth commit 보장)
    */
   async function waitForSessionPersisted(sb, options) {
-    const timeoutMs = (options && options.timeoutMs) || 8000;
+    const timeoutMs = (options && options.timeoutMs) || 12000;
     const pollMs = (options && options.pollMs) || 100;
     const started = Date.now();
 
     while (Date.now() - started < timeoutMs) {
       const { data, error } = await sb.auth.getSession();
       if (!error && data?.session?.access_token) {
-        if (isSessionStoredInLocalStorage()) {
-          currentSession = data.session;
-          return data.session;
-        }
+        currentSession = data.session;
+        return data.session;
       }
       await new Promise(function (resolve) {
         setTimeout(resolve, pollMs);
@@ -234,6 +232,40 @@
       currentSession = data.session;
     }
     return data?.session ?? null;
+  }
+
+  /**
+   * OAuth / localStorage hydration 포함 — 세션 확정까지 단일 진입점
+   */
+  async function resolveSessionFromClient(sb, options) {
+    const timeoutMs = (options && options.timeoutMs) || 12000;
+    const isOAuthCallback =
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery');
+
+    if (isOAuthCallback && window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+      const oauthSession = await window.PickleOAuthCallbackGuard.waitForOAuthSession({
+        timeoutMs,
+      });
+      if (oauthSession?.access_token) {
+        currentSession = oauthSession;
+        return oauthSession;
+      }
+    }
+
+    const persisted = await waitForSessionPersisted(sb, { timeoutMs, pollMs: 80 });
+    if (persisted?.access_token) {
+      return persisted;
+    }
+
+    const hydrated = await waitForAuthHydration(sb, { timeoutMs, pollMs: 80 });
+    if (hydrated?.access_token) {
+      currentSession = hydrated;
+      return hydrated;
+    }
+
+    await refreshSession();
+    return currentSession;
   }
 
   /**
@@ -292,37 +324,26 @@
     try {
       await init();
       const sb = getClient();
-
-      const isOAuthCallback =
-        window.location.hash.includes('access_token=') ||
-        window.location.hash.includes('type=recovery');
-
-      if (isOAuthCallback && window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-        await window.PickleOAuthCallbackGuard.waitForOAuthSession({
-          timeoutMs: opts.timeoutMs || 8000,
-        });
-      }
-
-      await waitForSessionPersisted(sb, { timeoutMs: opts.timeoutMs || 8000 });
+      await resolveSessionFromClient(sb, { timeoutMs: opts.timeoutMs || 12000 });
 
       const needsAuth =
         opts.requireAuth === true ||
         (opts.requireAuth !== false && isAuthRequiredPage(targetUrl));
 
       if (needsAuth) {
-        const auth = await ensureAuthenticated({ timeoutMs: opts.timeoutMs || 8000 });
+        const auth = await ensureAuthenticated({ timeoutMs: opts.timeoutMs || 12000 });
         if (!auth?.user) {
           if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
             return;
           }
-          await requireAuth({
+          const retried = await requireAuth({
             redirect: parsePageFromUrl(targetUrl),
             message: opts.message || '로그인이 필요한 페이지입니다.',
+            timeoutMs: 12000,
+            maxAttempts: 2,
           });
-          return;
+          if (!retried) return;
         }
-      } else {
-        await waitForAuthHydration(sb, { timeoutMs: 3000, pollMs: 80 });
       }
 
       window.location.href = targetUrl;
@@ -337,8 +358,10 @@
   function extractNavHrefFromOnclick(el) {
     if (!el) return null;
     const onclick = el.getAttribute('onclick') || '';
-    const match = onclick.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
-    return match ? match[1] : null;
+    var navMatch = onclick.match(/navigateWhenAuthReady\s*\(\s*['"]([^'"]+)['"]/);
+    if (navMatch) return navMatch[1];
+    const locMatch = onclick.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+    return locMatch ? locMatch[1] : null;
   }
 
   function bindGlobalNavGuard() {
@@ -368,7 +391,9 @@
 
   function upgradeInlineNavHandlers() {
     document
-      .querySelectorAll('.bottom-nav .nav-btn[onclick*="location.href"], .logo[onclick*="location.href"]')
+      .querySelectorAll(
+        '.bottom-nav .nav-btn[onclick], .logo[onclick*="navigateWhenAuthReady"], .logo[onclick*="location.href"]'
+      )
       .forEach(function (el) {
         const href = extractNavHrefFromOnclick(el);
         if (!href || !/\.html/.test(href)) return;
@@ -389,7 +414,7 @@
    */
   async function ensureAuthenticated(options) {
     const opts = options || {};
-    const timeoutMs = opts.timeoutMs || 5000;
+    const timeoutMs = opts.timeoutMs || 12000;
     const skipProfile = opts.skipProfile === true;
     const forceRefresh = opts.forceRefresh === true;
 
@@ -406,34 +431,9 @@
     ensureAuthInflight = (async () => {
       await init();
 
-      const isOAuthCallback =
-        window.location.hash.includes('access_token=') ||
-        window.location.hash.includes('type=recovery');
-
-      if (isOAuthCallback && window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-        const oauthSession = await window.PickleOAuthCallbackGuard.waitForOAuthSession({
-          timeoutMs,
-        });
-        if (oauthSession) {
-          currentSession = oauthSession;
-        }
-      }
-
       const sb = getClient();
+      const session = await resolveSessionFromClient(sb, { timeoutMs: Math.max(timeoutMs, 12000) });
 
-      if (isOAuthCallback) {
-        await waitForSessionPersisted(sb, { timeoutMs: Math.max(timeoutMs, 8000) });
-      }
-
-      const hydrated = await waitForAuthHydration(sb, { timeoutMs, pollMs: 80 });
-
-      if (hydrated) {
-        currentSession = hydrated;
-      } else {
-        await refreshSession();
-      }
-
-      const session = currentSession;
       const rawUser = session?.user ?? null;
 
       if (!rawUser) {
@@ -497,18 +497,33 @@
    */
   async function requireAuth(options) {
     const opts = options || {};
-    const auth = await ensureAuthenticated(opts);
-    if (auth?.user) return auth.user;
+    const maxAttempts = opts.maxAttempts || 3;
+    const delayMs = opts.retryDelayMs || 400;
 
-    const isOAuthCallback =
-      window.location.hash.includes('access_token=') ||
-      window.location.hash.includes('type=recovery');
-    if (
-      isOAuthCallback ||
-      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.() ||
-      opts.silent
-    ) {
-      return null;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const auth = await ensureAuthenticated({
+        ...opts,
+        timeoutMs: opts.timeoutMs || 12000,
+        forceRefresh: attempt > 0,
+      });
+      if (auth?.user) return auth.user;
+
+      const isOAuthCallback =
+        window.location.hash.includes('access_token=') ||
+        window.location.hash.includes('type=recovery');
+      if (
+        isOAuthCallback ||
+        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.() ||
+        opts.silent
+      ) {
+        return null;
+      }
+
+      if (attempt < maxAttempts - 1) {
+        await new Promise(function (resolve) {
+          setTimeout(resolve, delayMs);
+        });
+      }
     }
 
     alertLoginRequired(
@@ -570,15 +585,48 @@
     return params.get('redirect') || 'index.html';
   }
 
+  let authListenerRegistered = false;
+
+  function registerAuthStateListener(sb) {
+    if (authListenerRegistered || !sb?.auth) return;
+    authListenerRegistered = true;
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        currentSession = session;
+        authContextCache = null;
+        updateNav();
+        window.dispatchEvent(
+          new CustomEvent('pickle-auth-changed', { detail: { session } })
+        );
+        ensureAuthenticated({ forceRefresh: true, skipProfile: false, timeoutMs: 12000 }).catch(
+          function (err) {
+            console.warn('[P!CKLE Auth] profile refresh after auth change', err);
+          }
+        );
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        currentSession = null;
+        clearAuthContext();
+        updateNav();
+        window.dispatchEvent(
+          new CustomEvent('pickle-auth-changed', { detail: { session: null } })
+        );
+      }
+    });
+  }
+
   function getKakaoOAuthRedirectTo() {
     if (window.PickleOAuthCallbackGuard?.getKakaoOAuthRedirectTo) {
       return window.PickleOAuthCallbackGuard.getKakaoOAuthRedirectTo();
     }
-    return window.location.origin + '/user_app/index.html';
+    return new URL('index.html', window.location.href).href;
   }
 
   function getOAuthRedirectTo() {
-    return window.location.origin + '/user_app/index.html';
+    return new URL('index.html', window.location.href).href;
   }
 
   function getResetPasswordRedirectTo() {
@@ -1001,28 +1049,23 @@
 
     initPromise = (async () => {
       const sb = getClient();
+      registerAuthStateListener(sb);
+
       const isOAuthCallback =
         window.location.hash.includes('access_token') ||
         window.location.hash.includes('type=recovery');
 
       if (isOAuthCallback) {
-        console.log('[P!CKLE Auth] OAuth 토큰 처리 대기 — 세션 파싱까지 보류');
-        if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-          const oauthSession = await window.PickleOAuthCallbackGuard.waitForOAuthSession({
-            timeoutMs: 5000,
-          });
-          if (oauthSession) {
-            currentSession = oauthSession;
+        console.log('[P!CKLE Auth] OAuth hash 감지 — 세션 확정 대기');
+        await resolveSessionFromClient(sb, { timeoutMs: 12000 });
+      } else {
+        await waitForAuthHydration(sb, { timeoutMs: 4000, pollMs: 80 }).then(function (session) {
+          if (session && !currentSession) {
+            currentSession = session;
           }
-        }
+        });
+        await refreshSession();
       }
-
-      const hydrated = await waitForAuthHydration(sb, { timeoutMs: isOAuthCallback ? 4000 : 3000 });
-      if (hydrated && !currentSession) {
-        currentSession = hydrated;
-      }
-
-      await refreshSession();
 
       if (window.location.pathname.endsWith('login.html') && isLoggedIn()) {
         window.location.replace(getRedirectPath());
@@ -1033,34 +1076,6 @@
       bindNavActions();
       bindLoginPage();
       bindGlobalNavGuard();
-
-      sb.auth.onAuthStateChange((_event, session) => {
-        currentSession = session;
-        if (!session) {
-          clearAuthContext();
-        } else {
-          authContextCache = null;
-        }
-        updateNav();
-        window.dispatchEvent(
-          new CustomEvent('pickle-auth-changed', { detail: { session } })
-        );
-        if (session?.user) {
-          ensureAuthenticated({ forceRefresh: true, skipProfile: false })
-            .then(function (auth) {
-              if (auth?.user && auth?.profile) {
-                syncProfileNicknameFromMetadata(getClient(), auth.user, auth.profile).catch(
-                  function (syncErr) {
-                    console.warn('[P!CKLE Auth] nickname sync after auth change', syncErr);
-                  }
-                );
-              }
-            })
-            .catch(function (err) {
-              console.warn('[P!CKLE Auth] profile refresh after auth change', err);
-            });
-        }
-      });
     })();
 
     return initPromise;
@@ -1085,6 +1100,7 @@
     ensureAuthenticated,
     requireAuth,
     navigateWhenAuthReady,
+    resolveSessionFromClient,
     waitForSessionPersisted,
     isAuthRequiredPage,
     syncProfileNicknameFromMetadata,

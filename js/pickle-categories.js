@@ -379,6 +379,7 @@
 
   function bindCategoryGridItems(root) {
     var scope = root || document;
+    var isCreatePage = document.body.getAttribute('data-page') === 'create';
     var selector =
       '.category-grid .grid-item, .category-grid > div, #categoryGrid .grid-item, #categoryGrid > div';
 
@@ -390,6 +391,16 @@
       item.addEventListener('click', function () {
         var slugAttr = item.getAttribute('data-cat-slug');
         var label = item.getAttribute('data-cat-label') || item.textContent.trim();
+
+        if (isCreatePage) {
+          selectCreateCategoryFromSheet(slugAttr, label);
+          var sheet = document.getElementById('categorySheet');
+          if (sheet && sheet.classList.contains('open') && typeof window.toggleCategorySheet === 'function') {
+            window.toggleCategorySheet();
+          }
+          return;
+        }
+
         if (typeof window.closeAllDrawers === 'function') window.closeAllDrawers();
         if (typeof window.closeAllSheets === 'function') window.closeAllSheets();
         if (typeof window.closeAllModals === 'function') window.closeAllModals();
@@ -401,6 +412,69 @@
         }
       });
     });
+  }
+
+  function selectCreateCategoryFromSheet(slug, label) {
+    var slider = document.getElementById('chipSlider');
+    if (!slider) return;
+
+    var normalized = slug ? String(slug).trim().toLowerCase() : '';
+    var chip = null;
+
+    if (normalized) {
+      slider.querySelectorAll('.cat-chip').forEach(function (node) {
+        if (!chip && (node.getAttribute('data-category-slug') || '').trim().toLowerCase() === normalized) {
+          chip = node;
+        }
+      });
+    }
+
+    if (!chip && label) {
+      slider.querySelectorAll('.cat-chip').forEach(function (node) {
+        if (!chip && (node.getAttribute('data-category-label') || node.textContent.trim()) === label) {
+          chip = node;
+        }
+      });
+    }
+
+    if (!chip) return;
+
+    slider.querySelectorAll('.cat-chip').forEach(function (node) {
+      node.classList.remove('selected');
+    });
+    chip.classList.add('selected');
+    if (chip.scrollIntoView) {
+      chip.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  async function resolveIsSuperAdmin() {
+    try {
+      var currentUser = null;
+      if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+        var auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+        currentUser = (auth && auth.user) || null;
+      } else if (window.PickleAuth && window.PickleAuth.init) {
+        await window.PickleAuth.init();
+        currentUser = (window.PickleAuth.getUser && window.PickleAuth.getUser()) || null;
+      }
+      if (!currentUser || !currentUser.email || !window.PickleSupabase || !window.PickleSupabase.getClient) {
+        return false;
+      }
+
+      var sb = window.PickleSupabase.getClient();
+      var res = await sb
+        .from('user_roles')
+        .select('role')
+        .eq('email', String(currentUser.email).trim().toLowerCase())
+        .single();
+
+      if (res.error || !res.data) return false;
+      return res.data.role === 'super';
+    } catch (err) {
+      console.warn('[P!CKLE Categories] user_roles 조회 실패 — 픽클 오피셜 숨김', err);
+      return false;
+    }
   }
 
   function bindAllBoardButtons(root) {
@@ -495,11 +569,11 @@
     });
   }
 
-  function filterCategoriesForCreate(rawCategories, isOfficialCreator) {
+  function filterCategoriesForCreate(rawCategories, isSuperAdmin) {
     return (rawCategories || []).filter(function (cat) {
       if (!cat || !cat.slug) return false;
       if (cat.slug === 'c_hall') return false;
-      if (cat.slug === 'c_official') return isOfficialCreator === true;
+      if (cat.slug === 'c_official') return isSuperAdmin === true;
       return true;
     });
   }
@@ -519,17 +593,18 @@
     renderCategoryGrids(scope, { categories: cache.list });
   }
 
-  async function loadCategoriesForCreate(isOfficialCreator) {
+  async function loadCategoriesForCreate(isSuperAdmin) {
     await loadCategories(true);
-    var filteredCategories = filterCategoriesForCreate(getCategories(), isOfficialCreator);
+    var filteredCategories = filterCategoriesForCreate(getCategories(), isSuperAdmin);
     applyCreateCategoryList(filteredCategories, document);
     return filteredCategories;
   }
 
-  function mountAllCategoryUi(root) {
+  function mountAllCategoryUi(root, options) {
     var scope = root || document;
+    options = options || {};
     removeLegacyAppNav(scope);
-    renderCategoryGrids(scope);
+    renderCategoryGrids(scope, options.sheetCategories ? { categories: options.sheetCategories } : undefined);
     bindAllBoardButtons(scope);
 
     if (document.getElementById('chipSlider')) {
@@ -588,6 +663,8 @@
     renderCreateChips: renderCreateChips,
     scrollCategoryNavIntoView: scrollCategoryNavIntoView,
     filterCategoriesForCreate: filterCategoriesForCreate,
+    resolveIsSuperAdmin: resolveIsSuperAdmin,
+    selectCreateCategoryFromSheet: selectCreateCategoryFromSheet,
     applyCreateCategoryList: applyCreateCategoryList,
     loadCategoriesForCreate: loadCategoriesForCreate,
     mountAllCategoryUi: mountAllCategoryUi,
@@ -635,8 +712,11 @@
         notifyReady();
         return;
       }
-      mountAllCategoryUi(document);
-      notifyReady();
+      return resolveIsSuperAdmin().then(function (isSuperAdmin) {
+        var sheetCategories = filterCategoriesForCreate(getCategories(), isSuperAdmin);
+        mountAllCategoryUi(document, { sheetCategories: sheetCategories });
+        notifyReady();
+      });
     });
   });
 })();

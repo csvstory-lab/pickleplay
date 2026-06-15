@@ -50,11 +50,11 @@
     if (window.PickleOAuthCallbackGuard && window.PickleOAuthCallbackGuard.getKakaoOAuthRedirectTo) {
       return window.PickleOAuthCallbackGuard.getKakaoOAuthRedirectTo();
     }
-    return window.location.origin + '/user_app/index.html';
+    return new URL('index.html', window.location.href).href;
   }
 
   function getOAuthRedirectTo() {
-    return window.location.origin + '/user_app/index.html';
+    return new URL('index.html', window.location.href).href;
   }
 
   function getResetPasswordRedirectTo() {
@@ -516,7 +516,7 @@
       console.log('[P!CKLE Login] OAuth 토큰 처리 대기 — 리다이렉트 보류');
       try {
         if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-          await window.PickleOAuthCallbackGuard.waitForOAuthSession();
+          await window.PickleOAuthCallbackGuard.waitForOAuthSession({ timeoutMs: 12000 });
         } else {
           var sbPending = getSupabaseClient();
           sbPending.auth.onAuthStateChange(function (event, session) {

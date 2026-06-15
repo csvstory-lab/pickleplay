@@ -74,6 +74,15 @@
     .cat-chip--seasonal { border-color: rgba(57, 255, 20, 0.5); box-shadow: 0 0 12px rgba(57, 255, 20, 0.18); }
     .cat-chip--seasonal.selected { box-shadow: 0 0 14px rgba(57, 255, 20, 0.35); }
 
+    .btn-open-category {
+        width: 100%; box-sizing: border-box;
+        background-color: rgba(39, 39, 42, 0.85); color: #fff; border: 1px solid #3f3f46;
+        padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; font-weight: 800;
+        cursor: pointer; transition: 0.2s; font-family: inherit; margin-bottom: 12px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-open-category:active { transform: scale(0.98); background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
+
     /* 공통 입력 박스 */
     .input-box {
         width: 100%; box-sizing: border-box; background-color: var(--card-bg); border: 1px solid var(--border-color);
@@ -253,7 +262,8 @@
     .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .sheet-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: var(--neon-green); }
     .btn-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding-bottom: 20px; }
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 50vh; overflow-y: auto; padding-bottom: 20px; scrollbar-width: none; }
+    .category-grid::-webkit-scrollbar { display: none; }
     .grid-item { background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
     .grid-item:active { background-color: var(--neon-green); color: #000; transform: scale(0.95); }
     .grid-item.highlight { border: 1px solid var(--neon-pink); color: var(--neon-pink); }
@@ -294,6 +304,7 @@
     <form id="createPostForm" novalidate>
     <div class="form-group">
         <label class="form-label">어떤 전장으로 갈까요?</label>
+        <button type="button" class="btn-open-category" onclick="toggleCategorySheet()">📂 카테고리 선택</button>
         <div class="chip-scroll" id="chipSlider" aria-label="카테고리 선택"></div>
     </div>
 
@@ -416,49 +427,18 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
-    /** 불판 생성 — 픽클 오피셜 카테고리 노출 권한 (user_roles 연동) */
-    async function resolveOfficialCreatorStatus() {
-        let isOfficialCreator = false;
-
-        try {
-            let currentUser = null;
-            if (window.PickleAuth?.ensureAuthenticated) {
-                const auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
-                currentUser = auth?.user ?? null;
-            } else if (window.PickleAuth?.init) {
-                await window.PickleAuth.init();
-                currentUser = window.PickleAuth?.getUser?.() ?? null;
-            }
-            if (!currentUser?.email || !window.PickleSupabase?.getClient) {
-                return false;
-            }
-
-            const sb = window.PickleSupabase.getClient();
-            const { data, error } = await sb
-                .from('user_roles')
-                .select('role')
-                .eq('email', String(currentUser.email).trim().toLowerCase())
-                .single();
-
-            if (error || !data) return false;
-            isOfficialCreator = data.role === 'super' || data.role === 'marketer';
-        } catch (err) {
-            console.warn('[create] user_roles 조회 실패 — 픽클 오피셜 숨김', err);
-        }
-
-        return isOfficialCreator;
-    }
-
     async function loadCategories() {
         if (!window.PickleCategories || !window.PickleCategories.loadCategoriesForCreate) {
             console.warn('[create] PickleCategories 모듈 없음');
             return;
         }
 
-        const isOfficialCreator = await resolveOfficialCreatorStatus();
+        const isSuperAdmin = window.PickleCategories.resolveIsSuperAdmin
+            ? await window.PickleCategories.resolveIsSuperAdmin()
+            : false;
 
         try {
-            await window.PickleCategories.loadCategoriesForCreate(isOfficialCreator);
+            await window.PickleCategories.loadCategoriesForCreate(isSuperAdmin);
         } catch (err) {
             console.error('[create] loadCategories failed:', err);
         }

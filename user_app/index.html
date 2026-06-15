@@ -54,6 +54,14 @@
     }
     .header-actions { display: flex; align-items: center; gap: 15px; }
 
+    .btn-category {
+        background-color: #27272a; color: #fff; border: 1px solid #3f3f46;
+        padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+        font-family: inherit;
+    }
+    .btn-category:active { transform: scale(0.95); background-color: var(--neon-green); color: #000; }
+
     /* 메인 — 스티키 카테고리 칩 바 (로고 바로 아래) */
     .category-nav-sticky-sentinel {
         height: 0;
@@ -472,6 +480,9 @@
     <div class="top-row" id="headerTopRow">
         <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
         <div class="header-actions">
+            <button type="button" class="btn-category" onclick="toggleCategorySheet()">
+                <span>≡</span> 전체 불판
+            </button>
             <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
         </div>
     </div>

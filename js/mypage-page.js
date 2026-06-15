@@ -1662,12 +1662,8 @@
     var startMypage = function () {
       initMypage();
     };
-    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
-      window.PickleAuth.ensureAuthenticated({ silent: true })
-        .then(startMypage)
-        .catch(startMypage);
-    } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
-      window.PickleAuth.waitForSessionReady().then(startMypage).catch(startMypage);
+    if (window.PickleAuth && window.PickleAuth.init) {
+      window.PickleAuth.init().then(startMypage).catch(startMypage);
     } else {
       startMypage();
     }
