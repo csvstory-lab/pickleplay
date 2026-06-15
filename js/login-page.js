@@ -7,6 +7,9 @@
 
   var FEED_PATH = 'index.html';
   var PASSWORD_RULE_MSG = '비밀번호는 8자 이상, 영문/숫자/특수문자를 포함해야 합니다.';
+  var SIGNUP_SUCCESS_MSG =
+    '가입하신 이메일로 인증 링크가 발송되었습니다. 메일함에서 인증을 완료한 후 로그인해 주세요.';
+  var FORGOT_PW_SUCCESS_MSG = '비밀번호 재설정 링크가 이메일로 발송되었습니다.';
   var STRONG_PASSWORD_RE =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -48,7 +51,7 @@
   }
 
   function getResetPasswordRedirectTo() {
-    return window.location.origin + '/reset_password.html';
+    return new URL('reset_password.html', window.location.href).href;
   }
 
   function formatLoginError(err) {
@@ -58,15 +61,12 @@
     if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) {
       return '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
     }
-    if (code === 'user_not_found' || /user not found/i.test(msg)) {
-      return '가입되지 않은 이메일입니다.';
-    }
     if (
       code === 'invalid_credentials' ||
       /invalid login credentials/i.test(msg) ||
       /invalid email or password/i.test(msg)
     ) {
-      return '비밀번호가 일치하지 않습니다.';
+      return '아이디 또는 비밀번호가 일치하지 않습니다.';
     }
     if (/user already registered/i.test(msg)) {
       return '이미 가입된 이메일입니다. 로그인해 주세요.';
@@ -141,7 +141,7 @@
       try {
         await resetPasswordForEmail(email);
         closeModal();
-        alert('입력하신 이메일로 비밀번호 재설정 링크를 발송했습니다.');
+        alert(FORGOT_PW_SUCCESS_MSG);
       } catch (err) {
         alert(formatLoginError(err));
       } finally {
@@ -386,7 +386,7 @@
           age_group: payload.ageGroup,
           marketing_consent: payload.marketingConsent,
         });
-        alert('가입 완료! 로그인해주세요.');
+        alert(SIGNUP_SUCCESS_MSG);
         resetSignupFields();
         if (screenApi && screenApi.showLoginView) {
           screenApi.showLoginView();
@@ -468,6 +468,9 @@
       },
     });
     if (result.error) throw result.error;
+    if (result.data && result.data.session) {
+      await sb.auth.signOut();
+    }
     return result.data;
   }
 

@@ -54,8 +54,12 @@
   }
 
   function getResetPasswordRedirectTo() {
-    return window.location.origin + '/reset_password.html';
+    return new URL('reset_password.html', window.location.href).href;
   }
+
+  const SIGNUP_SUCCESS_MSG =
+    '가입하신 이메일로 인증 링크가 발송되었습니다. 메일함에서 인증을 완료한 후 로그인해 주세요.';
+  const FORGOT_PW_SUCCESS_MSG = '비밀번호 재설정 링크가 이메일로 발송되었습니다.';
 
   function formatLoginError(err) {
     const code = err?.code ? String(err.code) : '';
@@ -64,15 +68,12 @@
     if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) {
       return '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
     }
-    if (code === 'user_not_found' || /user not found/i.test(msg)) {
-      return '가입되지 않은 이메일입니다.';
-    }
     if (
       code === 'invalid_credentials' ||
       /invalid login credentials/i.test(msg) ||
       /invalid email or password/i.test(msg)
     ) {
-      return '비밀번호가 일치하지 않습니다.';
+      return '아이디 또는 비밀번호가 일치하지 않습니다.';
     }
     if (/user already registered/i.test(msg)) {
       return '이미 가입된 이메일입니다. 로그인해 주세요.';
@@ -184,6 +185,9 @@
       },
     });
     if (error) throw error;
+    if (data.session) {
+      await signOut();
+    }
     return data;
   }
 
@@ -383,7 +387,7 @@
         try {
           await resetPasswordForEmail(email);
           closeForgotModal();
-          alert('입력하신 이메일로 비밀번호 재설정 링크를 발송했습니다.');
+          alert(FORGOT_PW_SUCCESS_MSG);
         } catch (err) {
           alert(formatLoginError(err));
         } finally {
@@ -408,22 +412,15 @@
         }
 
         try {
-          const data = await signUp(
+          await signUp(
             formSignup.email.value,
             password,
             formSignup.nickname?.value
           );
-          if (data.session) {
-            showAuthMessage('가입 완료! 이동합니다…', false);
-            setTimeout(redirectAfterAuth, 500);
-          } else {
-            showAuthMessage(
-              '가입 완료! 이메일 인증을 켜 두었다면 메일 확인 후 로그인해 주세요.',
-              false
-            );
-          }
+          formSignup.reset();
+          alert(SIGNUP_SUCCESS_MSG);
         } catch (err) {
-          showAuthMessage(err.message || '회원가입에 실패했습니다.', true);
+          alert(formatLoginError(err));
         }
       });
     }
