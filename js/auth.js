@@ -216,7 +216,7 @@
     const pollMs = (options && options.pollMs) || 100;
     const started = Date.now();
 
-    while Date.now() - started < timeoutMs) {
+    while (Date.now() - started < timeoutMs) {
       const { data, error } = await sb.auth.getSession();
       if (!error && data?.session?.access_token) {
         if (isSessionStoredInLocalStorage()) {
