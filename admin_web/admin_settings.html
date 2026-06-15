@@ -124,6 +124,11 @@
     .status-active { color: var(--neon-green); }
     .btn-outline { background: transparent; border: 1px solid #52525b; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: bold; }
     .btn-outline:hover { background: #27272a; border-color: #fff; }
+    .btn-revoke { border-color: rgba(255, 0, 127, 0.45); color: var(--neon-pink); margin-left: 6px; }
+    .btn-revoke:hover { background: rgba(255, 0, 127, 0.1); border-color: var(--neon-pink); }
+    .btn-revoke:disabled { opacity: 0.35; cursor: not-allowed; }
+    .admin-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .admin-table-empty td { text-align: center; color: var(--text-sub); padding: 28px 15px; }
 
     /* === 모달 === */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -171,10 +176,10 @@
     .btn-restore:hover { background: #3f3f46; }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
 </head>
-<body data-firebase-page="system_settings" data-firebase-doc="global">
+<body>
 
     <aside class="sidebar">
         <div class="logo-area">
@@ -481,38 +486,7 @@
                             <th>관리</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>대표이사</strong></td><td>ceo@pickle.com</td><td>경영진</td>
-                            <td><span class="role-badge role-super">👑 최고 관리자</span></td>
-                            <td class="status-active">정상 (Active)</td>
-                            <td><button class="btn-outline" onclick="openAdminModal('edit', '대표이사')">설정</button></td>
-                        </tr>
-                        <tr>
-                            <td>김마켓 과장</td><td>mkt_kim@pickle.com</td><td>마케팅팀</td>
-                            <td><span class="role-badge role-manager">📈 마케터</span></td>
-                            <td class="status-active">정상 (Active)</td>
-                            <td><button class="btn-outline" onclick="openAdminModal('edit', '김마켓 과장')">설정</button></td>
-                        </tr>
-                        <tr>
-                            <td>박씨에스 대리</td><td>cs_park@pickle.com</td><td>운영(CS)팀</td>
-                            <td><span class="role-badge role-cs">🎧 CS 매니저</span></td>
-                            <td class="status-active">정상 (Active)</td>
-                            <td><button class="btn-outline" onclick="openAdminModal('edit', '박씨에스 대리')">설정</button></td>
-                        </tr>
-                        <tr>
-                            <td>최재무 팀장</td><td>tax_choi@pickle.com</td><td>재무회계팀</td>
-                            <td><span class="role-badge role-acc">💳 재무/정산 담당</span></td>
-                            <td class="status-active">정상 (Active)</td>
-                            <td><button class="btn-outline" onclick="openAdminModal('edit', '최재무 팀장')">설정</button></td>
-                        </tr>
-                        <tr style="background: rgba(255,255,255,0.02);">
-                            <td>[스폰서] BBQ치킨</td><td>bbq_ad@bbq.co.kr</td><td>외부 제휴사</td>
-                            <td><span class="role-badge role-adv">💼 광고주 (통계 조회)</span></td>
-                            <td class="status-active">정상 (Active)</td>
-                            <td><button class="btn-outline" onclick="openAdminModal('edit', '[스폰서] BBQ치킨')">설정</button></td>
-                        </tr>
-                    </tbody>
+                    <tbody id="adminListBody"></tbody>
                 </table>
             </div>
         </div>
@@ -690,6 +664,106 @@
   </div>
 
   <script>
+    let adminRolesCache = [];
+    let editingAdminEmail = null;
+
+    function getRoleBadgeHtml(role) {
+        const badges = {
+            super:      '<span class="role-badge role-super">👑 최고 관리자</span>',
+            marketer:   '<span class="role-badge role-manager">📈 마케터</span>',
+            cs:         '<span class="role-badge role-cs">🎧 CS 매니저</span>',
+            account:    '<span class="role-badge role-acc">💳 재무/정산 담당</span>',
+            advertiser: '<span class="role-badge role-adv">💼 외부 광고주</span>',
+        };
+        return badges[role] || ('<span class="role-badge role-cs">' + escapeHtml(role || '—') + '</span>');
+    }
+
+    function getSupabaseClient() {
+        const cfg = window.PICKLE_SUPABASE_CONFIG;
+        if (!cfg || !cfg.url || !cfg.anonKey) {
+            throw new Error('Supabase 접속 정보가 없습니다. js/supabase-config.js 를 확인해 주세요.');
+        }
+        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+            throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
+        }
+        return window.supabase.createClient(cfg.url.trim(), cfg.anonKey.trim());
+    }
+
+    function escapeHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatAdminStatus(status) {
+        if (status === 'suspend') {
+            return '<span style="color:var(--neon-pink);">정지 (Suspended)</span>';
+        }
+        return '<span class="status-active">정상 (Active)</span>';
+    }
+
+    async function loadAdmins() {
+        const tbody = document.getElementById('adminListBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        try {
+            const sb = getSupabaseClient();
+            const { data, error } = await sb
+                .from('user_roles')
+                .select('*')
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            adminRolesCache = data || [];
+
+            if (!adminRolesCache.length) {
+                tbody.innerHTML = '<tr class="admin-table-empty"><td colspan="6">등록된 관리자 계정이 없습니다.</td></tr>';
+                return;
+            }
+
+            adminRolesCache.forEach(function (row) {
+                const tr = document.createElement('tr');
+                if (row.role === 'advertiser') {
+                    tr.style.background = 'rgba(255,255,255,0.02)';
+                }
+                tr.dataset.adminEmail = row.email;
+
+                const isProtected = row.is_protected === true;
+                const revokeDisabled = isProtected ? ' disabled title="최고 관리자 계정은 권한 회수할 수 없습니다."' : '';
+                const name = row.display_name || '—';
+
+                tr.innerHTML = ''
+                    + '<td><strong>' + escapeHtml(name) + '</strong></td>'
+                    + '<td>' + escapeHtml(row.email) + '</td>'
+                    + '<td>' + escapeHtml(row.department || '—') + '</td>'
+                    + '<td>' + getRoleBadgeHtml(row.role) + '</td>'
+                    + '<td>' + formatAdminStatus(row.status) + '</td>'
+                    + '<td><div class="admin-actions">'
+                    + '<button type="button" class="btn-outline btn-admin-edit" data-email="' + escapeHtml(row.email) + '">설정</button>'
+                    + '<button type="button" class="btn-outline btn-revoke btn-admin-revoke" data-email="' + escapeHtml(row.email) + '"' + revokeDisabled + '>권한 회수 (삭제)</button>'
+                    + '</div></td>';
+
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error('[admin_settings] loadAdmins failed:', err);
+            tbody.innerHTML = '<tr class="admin-table-empty"><td colspan="6" style="color:var(--neon-pink);">관리자 목록을 불러오지 못했습니다.<br>' + escapeHtml(err.message || String(err)) + '</td></tr>';
+        }
+    }
+
+    function findAdminRoleByEmail(email) {
+        const key = String(email || '').trim().toLowerCase();
+        return adminRolesCache.find(function (row) {
+            return String(row.email || '').trim().toLowerCase() === key;
+        }) || null;
+    }
+
     // 탭 전환 로직
     function switchTab(tabId, element) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -697,6 +771,10 @@
 
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
+
+        if (tabId === 'admin') {
+            loadAdmins();
+        }
     }
 
     // 포인트 엔진 마스터 스위치
@@ -723,33 +801,79 @@
     }
 
     // 관리자 추가/수정 모달 분기 (비밀번호 UI 전환)
-    function openAdminModal(mode, name = '') {
+    function openAdminModal(mode, rowOrName) {
         const modal = document.getElementById('adminModal');
         const title = document.getElementById('adminModalTitle');
         const pwCreate = document.getElementById('pwCreateSection');
         const pwReset = document.getElementById('pwResetSection');
+        const emailInput = document.getElementById('admEmail');
+
+        editingAdminEmail = null;
 
         if (mode === 'new') {
             title.innerHTML = '➕ 신규 관리자(파트너) 등록';
             document.getElementById('admName').value = '';
             document.getElementById('admDept').value = '';
-            document.getElementById('admEmail').value = '';
+            emailInput.value = '';
+            emailInput.readOnly = false;
+            document.getElementById('admRole').value = 'marketer';
             document.getElementById('admStatus').value = 'active';
-            
+
             pwCreate.style.display = 'flex';
             pwReset.style.display = 'none';
         } else {
-            title.innerHTML = '✏️ 계정 설정 (' + name + ')';
-            document.getElementById('admName').value = name;
-            
+            const row = typeof rowOrName === 'object' && rowOrName
+                ? rowOrName
+                : findAdminRoleByEmail(rowOrName) || { display_name: rowOrName || '' };
+
+            editingAdminEmail = row.email || null;
+            title.innerHTML = '✏️ 계정 설정 (' + escapeHtml(row.display_name || row.email || '') + ')';
+            document.getElementById('admName').value = row.display_name || '';
+            document.getElementById('admDept').value = row.department || '';
+            emailInput.value = row.email || '';
+            emailInput.readOnly = true;
+            document.getElementById('admRole').value = row.role || 'marketer';
+            document.getElementById('admStatus').value = row.status || 'active';
+
             pwCreate.style.display = 'none';
-            pwReset.style.display = 'flex'; 
+            pwReset.style.display = 'flex';
         }
         modal.style.display = 'flex';
     }
-    
+
     function closeAdminModal() {
         document.getElementById('adminModal').style.display = 'none';
+        editingAdminEmail = null;
+        const emailInput = document.getElementById('admEmail');
+        if (emailInput) emailInput.readOnly = false;
+    }
+
+    async function revokeAdminRole(email) {
+        const row = findAdminRoleByEmail(email);
+        if (!row) return;
+
+        if (row.is_protected === true) {
+            alert('최고 관리자 계정은 권한을 회수할 수 없습니다.');
+            return;
+        }
+
+        if (!confirm('[' + (row.display_name || row.email) + '] 계정의 관리자 권한을 회수(삭제)하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+            return;
+        }
+
+        try {
+            const sb = getSupabaseClient();
+            const { error } = await sb
+                .from('user_roles')
+                .delete()
+                .eq('email', row.email);
+
+            if (error) throw error;
+            alert('권한 회수가 완료되었습니다.');
+            await loadAdmins();
+        } catch (err) {
+            alert('권한 회수 실패: ' + (err.message || String(err)));
+        }
     }
 
     // 💡 약관/정책 에디터 로직 (2가지로 통합된 텍스트 관리)
@@ -771,34 +895,44 @@
     }
 
     async function saveAllSettings() {
-        const FB = window.PickleAdminFirebase;
-        const form = FB.collectForm(document.querySelector('.content-container'));
-        const activeTab = document.querySelector('.tab-content.active')?.id || 'tab-general';
-        const res = await FB.persist('system_settings', 'global', {
-            activeTab,
-            fields: form.fields,
-            toggles: form.checkboxes,
-        }, {
-            page: 'admin_settings',
-            successMessage: '시스템 전체 설정이 Firebase에 안전하게 저장되었습니다.',
-        });
-        return res;
+        alert('시스템 일반 설정 저장은 추후 Supabase 연동 예정입니다.\n(관리자 권한 탭은 user_roles 테이블과 연동되어 있습니다.)');
     }
 
     async function saveAdminAccount() {
-        const FB = window.PickleAdminFirebase;
-        const email = document.getElementById('admEmail')?.value?.trim() || 'unknown';
-        const res = await FB.persist('admin_accounts', FB.slugify(email), {
-            name: document.getElementById('admName')?.value || '',
-            dept: document.getElementById('admDept')?.value || '',
-            email,
-            status: document.getElementById('admStatus')?.value || 'active',
-        }, {
-            page: 'admin_settings',
-            action: 'save_admin_account',
-            successMessage: '관리자/파트너 계정 정보가 Firebase에 저장되었습니다.',
-        });
-        if (res.ok) closeAdminModal();
+        const name = document.getElementById('admName')?.value?.trim() || '';
+        const dept = document.getElementById('admDept')?.value?.trim() || '';
+        const email = document.getElementById('admEmail')?.value?.trim().toLowerCase() || '';
+        const role = document.getElementById('admRole')?.value || 'marketer';
+        const status = document.getElementById('admStatus')?.value || 'active';
+
+        if (!name || !dept || !email) {
+            alert('담당자 이름, 소속, 이메일은 필수 입력 사항입니다.');
+            return;
+        }
+
+        const payload = {
+            email: email,
+            display_name: name,
+            department: dept,
+            role: role,
+            status: status,
+            is_protected: role === 'super',
+        };
+
+        try {
+            const sb = getSupabaseClient();
+            const { error } = await sb
+                .from('user_roles')
+                .upsert(payload, { onConflict: 'email' });
+
+            if (error) throw error;
+
+            alert('관리자/파트너 계정 정보가 저장되었습니다.');
+            closeAdminModal();
+            await loadAdmins();
+        } catch (err) {
+            alert('저장 실패: ' + (err.message || String(err)));
+        }
     }
 
     async function publishPolicy() {
@@ -806,20 +940,32 @@
         const version = document.getElementById('versionInput').value;
         const policyKey = document.getElementById('policySelect').value;
         const content = document.getElementById('editorContent').value;
-        
+
         if(!confirm(`[${policyName}]\n해당 정책을 ${version} 버전으로 유저 앱에 즉시 배포하시겠습니까?\n\n※ 권리침해 면책 조항 등이 즉시 반영되어 법적 방어망이 업데이트됩니다.`)) return;
-        const FB = window.PickleAdminFirebase;
-        await FB.persist('policies', policyKey, {
-            name: policyName,
-            version,
-            content,
-            published: true,
-        }, {
-            page: 'admin_settings',
-            action: 'publish_policy',
-            successMessage: '🚀 정책이 Firebase에 배포되었습니다.',
-        });
+
+        policies[policyKey] = content;
+        alert('[' + policyName + '] ' + version + ' — 에디터 내용이 로컬에 반영되었습니다.\n(Supabase 정책 배포 연동은 추후 적용 예정)');
     }
+
+    document.getElementById('adminListBody')?.addEventListener('click', function (e) {
+        const editBtn = e.target.closest('.btn-admin-edit');
+        if (editBtn) {
+            const row = findAdminRoleByEmail(editBtn.dataset.email);
+            if (row) openAdminModal('edit', row);
+            return;
+        }
+
+        const revokeBtn = e.target.closest('.btn-admin-revoke');
+        if (revokeBtn && !revokeBtn.disabled) {
+            revokeAdminRole(revokeBtn.dataset.email);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('tab-admin')?.classList.contains('active')) {
+            loadAdmins();
+        }
+    });
   </script>
 </body>
 </html>

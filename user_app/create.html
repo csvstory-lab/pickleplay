@@ -261,7 +261,7 @@
 <script src="../js/mobile-touch-guard.js"></script>
 <link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
-<body>
+<body data-page="create">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
     <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
     <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
@@ -412,7 +412,59 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
-    // 마우스 드래그 스크롤 (카테고리 칩은 PickleCategories.load → renderCreateChips)
+    /** 불판 생성 — 픽클 오피셜 카테고리 노출 권한 (user_roles 연동) */
+    const OFFICIAL_CREATOR_ROLES = ['super', 'marketer', 'admin'];
+
+    async function fetchCanCreateOfficial(userEmail) {
+        const email = String(userEmail || '').trim().toLowerCase();
+        if (!email || !window.PickleSupabase?.getClient) return false;
+
+        try {
+            const sb = window.PickleSupabase.getClient();
+            const { data, error } = await sb
+                .from('user_roles')
+                .select('role, status')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (error || !data) return false;
+            if (data.status === 'suspend') return false;
+            return OFFICIAL_CREATOR_ROLES.indexOf(data.role) !== -1;
+        } catch (err) {
+            console.warn('[create] user_roles 조회 실패 — 픽클 오피셜 숨김', err);
+            return false;
+        }
+    }
+
+    async function loadCategories() {
+        if (!window.PickleCategories || !window.PickleCategories.loadCategoriesForCreate) {
+            console.warn('[create] PickleCategories 모듈 없음');
+            return;
+        }
+
+        let currentUserEmail = '';
+        try {
+            if (window.PickleAuth?.init) {
+                await window.PickleAuth.init();
+            }
+            const user = window.PickleAuth?.getUser?.();
+            if (user?.email) {
+                currentUserEmail = String(user.email).trim();
+            }
+        } catch (err) {
+            console.warn('[create] 로그인 정보 확인 실패 — 일반 카테고리만 표시', err);
+        }
+
+        const canCreateOfficial = await fetchCanCreateOfficial(currentUserEmail);
+
+        try {
+            await window.PickleCategories.loadCategoriesForCreate(canCreateOfficial);
+        } catch (err) {
+            console.error('[create] loadCategories failed:', err);
+        }
+    }
+
+    // 마우스 드래그 스크롤 (카테고리 칩은 loadCategories → renderCreateChips)
     const slider = document.getElementById('chipSlider');
     let isDown = false; let startX; let scrollLeft;
     window.__pickleChipDragged = false;
@@ -518,6 +570,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         refreshEndDateMin();
+        loadCategories();
         const endInput = document.getElementById('inputEndDate');
         if (endInput) {
             endInput.addEventListener('change', resetCustomEndDateIfInvalid);

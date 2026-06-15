@@ -315,10 +315,12 @@
       .join('');
   }
 
-  function renderCategoryGrids(root) {
+  function renderCategoryGrids(root, options) {
     var scope = root || document;
+    options = options || {};
+    var list = options.categories || cache.list;
     scope.querySelectorAll('#categoryGrid').forEach(function (grid) {
-      grid.innerHTML = cache.list
+      grid.innerHTML = list
         .map(function (c) {
           var hl = c.seasonal ? ' highlight' : '';
           return (
@@ -344,8 +346,9 @@
 
     options = options || {};
     var onSelect = options.onSelect;
+    var list = options.categories || cache.list;
 
-    el.innerHTML = cache.list
+    el.innerHTML = list
       .map(function (c) {
         var seasonalClass = c.seasonal ? ' cat-chip--seasonal' : '';
         return (
@@ -492,6 +495,39 @@
     });
   }
 
+  function filterCategoriesForCreate(rawCategories, canCreateOfficial) {
+    var allowOfficial = canCreateOfficial === true;
+
+    return (rawCategories || []).filter(function (cat) {
+      if (!cat || !cat.slug) return false;
+      if (cat.slug === 'c_hall') return false;
+      if (cat.slug === 'c_official') return allowOfficial;
+      return true;
+    });
+  }
+
+  function applyCreateCategoryList(list, root) {
+    cache.list = (list || []).slice();
+    rebuildIndexes(cache.list);
+    cache.loaded = true;
+
+    var scope = root || document;
+    renderCreateChips(document.getElementById('chipSlider'), {
+      categories: cache.list,
+      isDragged: function () {
+        return window.__pickleChipDragged === true;
+      },
+    });
+    renderCategoryGrids(scope, { categories: cache.list });
+  }
+
+  async function loadCategoriesForCreate(canCreateOfficial) {
+    await loadCategories(true);
+    var filtered = filterCategoriesForCreate(getCategories(), canCreateOfficial);
+    applyCreateCategoryList(filtered, document);
+    return filtered;
+  }
+
   function mountAllCategoryUi(root) {
     var scope = root || document;
     removeLegacyAppNav(scope);
@@ -553,6 +589,9 @@
     renderCategoryGrids: renderCategoryGrids,
     renderCreateChips: renderCreateChips,
     scrollCategoryNavIntoView: scrollCategoryNavIntoView,
+    filterCategoriesForCreate: filterCategoriesForCreate,
+    applyCreateCategoryList: applyCreateCategoryList,
+    loadCategoriesForCreate: loadCategoriesForCreate,
     mountAllCategoryUi: mountAllCategoryUi,
     bindAppCategoryNav: bindAppCategoryNav,
     buildLabel: buildLabel,
@@ -594,6 +633,10 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     loadCategories().then(function () {
+      if (document.body.getAttribute('data-page') === 'create') {
+        notifyReady();
+        return;
+      }
       mountAllCategoryUi(document);
       notifyReady();
     });
