@@ -28,7 +28,6 @@
         --text-main: #ffffff;
         --text-sub: #a1a1aa;
         --border-color: #27272a;
-        --header-top-h: 56px;
     }
 
     body {
@@ -42,6 +41,7 @@
         position: sticky; top: 0;
         background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
         z-index: 120;
+        border-bottom: 1px solid var(--border-color);
     }
     .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
     .logo {
@@ -61,54 +61,6 @@
         font-family: inherit;
     }
     .btn-category:active { transform: scale(0.95); background-color: var(--neon-green); color: #000; }
-
-    /* 메인 — 스티키 카테고리 칩 바 (로고 바로 아래) */
-    .category-nav-sticky-sentinel {
-        height: 0;
-        margin: 0;
-        pointer-events: none;
-    }
-    .category-nav-sticky-wrap {
-        position: sticky;
-        top: var(--header-top-h, 56px);
-        z-index: 110;
-        background-color: var(--bg-color);
-        padding: 0;
-        box-shadow: none;
-        transition: box-shadow 0.22s ease;
-    }
-    .category-nav-sticky-wrap.is-stuck {
-        box-shadow: 0 4px 0 0 #000;
-    }
-
-    .category-nav-scroll {
-        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
-        scrollbar-width: none; -webkit-overflow-scrolling: touch;
-    }
-    .category-nav-scroll::-webkit-scrollbar { display: none; }
-    .category-nav-tab {
-        flex-shrink: 0; border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
-        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
-        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
-        font-family: inherit; white-space: nowrap;
-    }
-    .category-nav-tab.active {
-        border-color: var(--neon-green); color: #000; background: var(--neon-green);
-        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
-    }
-    .category-nav-tab:active { transform: scale(0.96); }
-    .category-nav-tab--seasonal {
-        border-color: rgba(57, 255, 20, 0.55);
-        box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
-    }
-    .category-nav-tab--seasonal.active {
-        box-shadow: 0 0 16px rgba(57, 255, 20, 0.45);
-    }
-    a.category-nav-tab {
-        text-decoration: none; color: var(--text-sub);
-        display: inline-flex; align-items: center;
-    }
-    a.category-nav-tab.active { color: #000; }
 
     /* 💡 알림 종 아이콘 (data-count로 제어) */
     .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
@@ -487,10 +439,6 @@
         </div>
     </div>
 </header>
-<div class="category-nav-sticky-sentinel" id="categoryNavStickySentinel" aria-hidden="true"></div>
-<div class="category-nav-sticky-wrap" id="categoryNavSticky">
-    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
-</div>
 
 <div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
 
@@ -608,27 +556,6 @@
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
-    function syncIndexHeaderTopHeight() {
-        var row = document.getElementById('headerTopRow');
-        if (!row) return;
-        document.documentElement.style.setProperty('--header-top-h', row.offsetHeight + 'px');
-        updateCategoryNavStuckState();
-    }
-    syncIndexHeaderTopHeight();
-    window.addEventListener('resize', syncIndexHeaderTopHeight);
-
-    function updateCategoryNavStuckState() {
-        var wrap = document.getElementById('categoryNavSticky');
-        var sentinel = document.getElementById('categoryNavStickySentinel');
-        if (!wrap || !sentinel) return;
-        var stickyTop = parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue('--header-top-h')
-        ) || 56;
-        wrap.classList.toggle('is-stuck', sentinel.getBoundingClientRect().top < stickyTop - 1);
-    }
-    window.addEventListener('scroll', updateCategoryNavStuckState, { passive: true });
-    updateCategoryNavStuckState();
-
     // 모든 드로어/시트 닫기 (통합 제어)
     function closeAllDrawers() {
         document.getElementById('commonOverlay').classList.remove('open');

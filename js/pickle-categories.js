@@ -415,36 +415,21 @@
   }
 
   function selectCreateCategoryFromSheet(slug, label) {
-    var slider = document.getElementById('chipSlider');
-    if (!slider) return;
-
     var normalized = slug ? String(slug).trim().toLowerCase() : '';
-    var chip = null;
+    if (!normalized) return;
 
-    if (normalized) {
-      slider.querySelectorAll('.cat-chip').forEach(function (node) {
-        if (!chip && (node.getAttribute('data-category-slug') || '').trim().toLowerCase() === normalized) {
-          chip = node;
-        }
-      });
-    }
+    var resolvedLabel = String(label || LABEL_BY_SLUG[normalized] || '').trim();
 
-    if (!chip && label) {
-      slider.querySelectorAll('.cat-chip').forEach(function (node) {
-        if (!chip && (node.getAttribute('data-category-label') || node.textContent.trim()) === label) {
-          chip = node;
-        }
-      });
-    }
+    window.__pickleSelectedCategorySlug = normalized;
+    window.__pickleSelectedCategoryLabel = resolvedLabel;
 
-    if (!chip) return;
+    var hidden = document.getElementById('selectedCategorySlug');
+    if (hidden) hidden.value = normalized;
 
-    slider.querySelectorAll('.cat-chip').forEach(function (node) {
-      node.classList.remove('selected');
-    });
-    chip.classList.add('selected');
-    if (chip.scrollIntoView) {
-      chip.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    var btn = document.getElementById('btnOpenCategory');
+    if (btn) {
+      btn.textContent = resolvedLabel || '📂 카테고리 선택';
+      btn.classList.add('selected');
     }
   }
 
@@ -584,12 +569,6 @@
     cache.loaded = true;
 
     var scope = root || document;
-    renderCreateChips(document.getElementById('chipSlider'), {
-      categories: cache.list,
-      isDragged: function () {
-        return window.__pickleChipDragged === true;
-      },
-    });
     renderCategoryGrids(scope, { categories: cache.list });
   }
 
@@ -606,19 +585,6 @@
     removeLegacyAppNav(scope);
     renderCategoryGrids(scope, options.sheetCategories ? { categories: options.sheetCategories } : undefined);
     bindAllBoardButtons(scope);
-
-    if (document.getElementById('chipSlider')) {
-      renderCreateChips(document.getElementById('chipSlider'), {
-        isDragged: function () {
-          return window.__pickleChipDragged === true;
-        },
-      });
-    }
-
-    if (document.getElementById('categoryNav') && !document.getElementById('categoryFeedList')) {
-      initStandaloneCategoryNav();
-    }
-
     bindCategoryNavTabs(scope);
   }
 

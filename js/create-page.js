@@ -114,23 +114,23 @@
   }
 
   function collectFormData() {
-    var selectedCategory = document.querySelector('.cat-chip.selected');
     var layoutEl = document.querySelector('input[name="media_layout"]:checked');
     var mediaLayout =
       layoutEl && layoutEl.value === 'vertical' ? 'vertical' : 'horizontal';
 
     var categorySlug = '';
     var categoryLabel = '';
-    if (selectedCategory) {
-      categorySlug = (selectedCategory.getAttribute('data-category-slug') || '').trim();
-      categoryLabel = (
-        selectedCategory.getAttribute('data-category-label') ||
-        selectedCategory.textContent ||
-        ''
-      ).trim();
-      if (!categorySlug && categoryLabel) {
-        categorySlug = resolveCategorySlug(categoryLabel);
-      }
+    if (typeof window.getSelectedCategorySlug === 'function') {
+      categorySlug = window.getSelectedCategorySlug();
+    } else {
+      categorySlug = (window.__pickleSelectedCategorySlug || '').trim();
+    }
+    categoryLabel = (window.__pickleSelectedCategoryLabel || '').trim();
+    if (!categoryLabel && categorySlug && window.PickleCategories) {
+      categoryLabel = window.PickleCategories.resolveCategoryLabel(categorySlug) || '';
+    }
+    if (!categorySlug && categoryLabel) {
+      categorySlug = resolveCategorySlug(categoryLabel);
     }
 
     return {

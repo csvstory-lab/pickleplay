@@ -62,26 +62,18 @@
     .form-label { font-size: 0.9rem; font-weight: 800; margin-bottom: 10px; display: block; color: #d4d4d8; }
     .form-hint { font-size: 0.75rem; color: var(--neon-pink); font-weight: 600; margin-left: 5px; }
     
-    .chip-scroll { 
-        display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; 
-        cursor: grab; 
-    }
-    .chip-scroll:active { cursor: grabbing; } 
-    .chip-scroll::-webkit-scrollbar { display: none; }
-    .cat-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; background-color: var(--card-bg); border: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; user-select: none;}
-    button.cat-chip { font-family: inherit; color: inherit; appearance: none; -webkit-appearance: none; margin: 0; line-height: inherit; }
-    .cat-chip.selected { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
-    .cat-chip--seasonal { border-color: rgba(57, 255, 20, 0.5); box-shadow: 0 0 12px rgba(57, 255, 20, 0.18); }
-    .cat-chip--seasonal.selected { box-shadow: 0 0 14px rgba(57, 255, 20, 0.35); }
-
     .btn-open-category {
         width: 100%; box-sizing: border-box;
         background-color: rgba(39, 39, 42, 0.85); color: #fff; border: 1px solid #3f3f46;
         padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; font-weight: 800;
-        cursor: pointer; transition: 0.2s; font-family: inherit; margin-bottom: 12px;
+        cursor: pointer; transition: 0.2s; font-family: inherit;
         display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .btn-open-category:active { transform: scale(0.98); background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
+    .btn-open-category.selected {
+        background-color: rgba(57, 255, 20, 0.12); color: var(--neon-green);
+        border-color: var(--neon-green);
+    }
 
     /* 공통 입력 박스 */
     .input-box {
@@ -304,8 +296,8 @@
     <form id="createPostForm" novalidate>
     <div class="form-group">
         <label class="form-label">어떤 전장으로 갈까요?</label>
-        <button type="button" class="btn-open-category" onclick="toggleCategorySheet()">📂 카테고리 선택</button>
-        <div class="chip-scroll" id="chipSlider" aria-label="카테고리 선택"></div>
+        <button type="button" class="btn-open-category" id="btnOpenCategory" onclick="toggleCategorySheet()">📂 카테고리 선택</button>
+        <input type="hidden" id="selectedCategorySlug" value="">
     </div>
 
     <div class="form-group">
@@ -444,27 +436,13 @@
         }
     }
 
-    // 마우스 드래그 스크롤 (카테고리 칩은 loadCategories → renderCreateChips)
-    const slider = document.getElementById('chipSlider');
-    let isDown = false; let startX; let scrollLeft;
-    window.__pickleChipDragged = false;
-
-    if (slider) {
-    slider.addEventListener('mousedown', (e) => { isDown = true; window.__pickleChipDragged = false; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
-    slider.addEventListener('mouseleave', () => { isDown = false; });
-    slider.addEventListener('mouseup', () => { isDown = false; });
-    slider.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault(); window.__pickleChipDragged = true;
-        const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk;
-    });
-    }
+    window.__pickleSelectedCategorySlug = '';
+    window.__pickleSelectedCategoryLabel = '';
 
     function getSelectedCategorySlug() {
-        const chip = document.querySelector('.cat-chip.selected');
-        if (!chip) return '';
-        return (chip.getAttribute('data-category-slug') || '').trim();
+        return (window.__pickleSelectedCategorySlug || document.getElementById('selectedCategorySlug')?.value || '').trim();
     }
+    window.getSelectedCategorySlug = getSelectedCategorySlug;
 
     let lastScrollTop = 0;
     window.addEventListener('scroll', function() {
@@ -813,9 +791,8 @@
         }
         if (isSubmitting) return false;
 
-        const selectedCategory = document.querySelector('.cat-chip.selected');
         const categorySlug = getSelectedCategorySlug();
-        if (!selectedCategory || !categorySlug) {
+        if (!categorySlug) {
             alert('"어느 전장으로 갈까요?"를 선택해주세요.');
             return;
         }
