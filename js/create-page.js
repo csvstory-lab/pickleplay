@@ -380,19 +380,16 @@
    * @param {string|null} [preloadedThumbnailUrl] — create.html에서 선업로드한 URL
    */
   async function submitPost(buildMediaPayload, getThumbnailFile, preloadedThumbnailUrl) {
-    if (window.PickleAuth?.waitForSessionReady) {
+    var auth = null;
+    if (window.PickleAuth?.ensureAuthenticated) {
+      auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+    } else if (window.PickleAuth?.waitForSessionReady) {
       await window.PickleAuth.waitForSessionReady();
     } else if (window.PickleAuth?.init) {
       await window.PickleAuth.init();
     }
 
-    var sb = getClient();
-    var authResult = await sb.auth.getUser();
-    if (authResult.error) {
-      throw authResult.error;
-    }
-
-    var user = authResult.data?.user;
+    var user = auth?.user || window.PickleAuth?.getEnrichedUser?.() || window.PickleAuth?.getUser?.();
     if (!user) {
       if (
         window.location.hash.includes('access_token=') ||
@@ -408,6 +405,8 @@
       }
       return { cancelled: true };
     }
+
+    var sb = getClient();
 
     var formData = collectFormData();
     if (!formData.categoryLabel || !formData.categorySlug) {

@@ -6,6 +6,10 @@
 
   let currentSession = null;
   let initPromise = null;
+  let enrichedUser = null;
+  let enrichedProfile = null;
+  let ensureAuthInflight = null;
+  let authContextCache = null;
 
   const OAUTH_PROVIDER_MAP = {
     kakao: 'kakao',
@@ -95,20 +99,224 @@
     return data.session.user;
   }
 
-  async function resolveAuthUser(options) {
-    await waitForSessionReady();
+  function clearAuthContext() {
+    enrichedUser = null;
+    enrichedProfile = null;
+    authContextCache = null;
+    ensureAuthInflight = null;
+  }
 
-    if (getUser()) return getUser();
+  function extractNicknameFromMeta(meta) {
+    if (!meta) return '';
+    const candidates = [
+      meta.nickname,
+      meta.full_name,
+      meta.name,
+      meta.preferred_username,
+      meta.user_name,
+      meta.kakao_account?.profile?.nickname,
+      meta.kakao_account?.profile?.nickName,
+    ];
+    for (let i = 0; i < candidates.length; i++) {
+      const nick = String(candidates[i] || '').trim();
+      if (nick && nick !== '픽클러') return nick;
+    }
+    for (let j = 0; j < candidates.length; j++) {
+      const fallback = String(candidates[j] || '').trim();
+      if (fallback) return fallback;
+    }
+    return '';
+  }
 
-    const sb = getClient();
-    const session = await waitForAuthHydration(sb, options);
-    if (session?.user) {
-      currentSession = session;
-      updateNav();
-      return session.user;
+  async function fetchUserProfile(sb, userId) {
+    if (!sb || !userId) return null;
+    const { data, error } = await sb
+      .from('users')
+      .select('id, nickname, avatar_html, avatar_url, bio, signup_platform, points')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) {
+      console.warn('[P!CKLE Auth] public.users profile fetch failed', error);
+      return null;
+    }
+    return data || null;
+  }
+
+  function mergeUserWithProfile(user, profile) {
+    if (!user) return null;
+    const meta = { ...(user.user_metadata || {}) };
+    const metaNick = extractNicknameFromMeta(meta);
+
+    if (profile) {
+      const dbNick = profile.nickname ? String(profile.nickname).trim() : '';
+      if (dbNick && dbNick !== '픽클러') {
+        meta.nickname = dbNick;
+      } else if (!metaNick && dbNick) {
+        meta.nickname = dbNick;
+      } else if (metaNick) {
+        meta.nickname = metaNick;
+      }
+      if (profile.avatar_html && String(profile.avatar_html).trim()) {
+        meta.avatar_html = String(profile.avatar_html).trim();
+      }
+      if (profile.avatar_url && String(profile.avatar_url).trim()) {
+        meta.avatar_url = String(profile.avatar_url).trim();
+      }
+      if (profile.bio != null && profile.bio !== '') {
+        meta.bio = profile.bio;
+      }
+    } else if (metaNick) {
+      meta.nickname = metaNick;
     }
 
+    return Object.assign({}, user, {
+      user_metadata: meta,
+      _profile: profile || null,
+    });
+  }
+
+  /**
+   * 세션 hydration 완료까지 대기 후 { session, user, profile } 반환.
+   * 로그인하지 않았으면 user/profile은 null (알림·리다이렉트 없음).
+   */
+  async function ensureAuthenticated(options) {
+    const opts = options || {};
+    const timeoutMs = opts.timeoutMs || 5000;
+    const skipProfile = opts.skipProfile === true;
+    const forceRefresh = opts.forceRefresh === true;
+
+    if (!forceRefresh && authContextCache?.user) {
+      if (!skipProfile || authContextCache._profileLoaded) {
+        return authContextCache;
+      }
+    }
+
+    if (ensureAuthInflight) {
+      return ensureAuthInflight;
+    }
+
+    ensureAuthInflight = (async () => {
+      await init();
+
+      const isOAuthCallback =
+        window.location.hash.includes('access_token=') ||
+        window.location.hash.includes('type=recovery');
+
+      if (isOAuthCallback && window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
+        const oauthSession = await window.PickleOAuthCallbackGuard.waitForOAuthSession({
+          timeoutMs,
+        });
+        if (oauthSession) {
+          currentSession = oauthSession;
+        }
+      }
+
+      const sb = getClient();
+      const hydrated = await waitForAuthHydration(sb, { timeoutMs, pollMs: 80 });
+
+      if (hydrated) {
+        currentSession = hydrated;
+      } else {
+        await refreshSession();
+      }
+
+      const session = currentSession;
+      const rawUser = session?.user ?? null;
+
+      if (!rawUser) {
+        authContextCache = { session: null, user: null, profile: null };
+        enrichedUser = null;
+        enrichedProfile = null;
+        return authContextCache;
+      }
+
+      let profile = enrichedProfile;
+      let user = rawUser;
+
+      if (!skipProfile) {
+        profile = await fetchUserProfile(sb, rawUser.id);
+        user = mergeUserWithProfile(rawUser, profile);
+        enrichedUser = user;
+        enrichedProfile = profile;
+        updateNav();
+        window.dispatchEvent(
+          new CustomEvent('pickle-auth-ready', {
+            detail: { session, user, profile },
+          })
+        );
+        authContextCache = {
+          session,
+          user,
+          profile: profile || null,
+          _profileLoaded: true,
+        };
+      } else {
+        if (enrichedProfile && enrichedProfile.id === rawUser.id) {
+          user = mergeUserWithProfile(rawUser, enrichedProfile);
+        } else {
+          user = rawUser;
+        }
+        enrichedUser = user;
+        if (!authContextCache || !authContextCache._profileLoaded) {
+          authContextCache = {
+            session,
+            user,
+            profile: enrichedProfile || null,
+            _profileLoaded: false,
+          };
+        }
+      }
+
+      return authContextCache;
+    })();
+
+    try {
+      return await ensureAuthInflight;
+    } finally {
+      ensureAuthInflight = null;
+    }
+  }
+
+  /**
+   * ensureAuthenticated + 미로그인 시 (OAuth 콜백 제외) 알림·로그인 이동
+   * @returns {Promise<object|null>} user 또는 null
+   */
+  async function requireAuth(options) {
+    const opts = options || {};
+    const auth = await ensureAuthenticated(opts);
+    if (auth?.user) return auth.user;
+
+    const isOAuthCallback =
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery');
+    if (
+      isOAuthCallback ||
+      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.() ||
+      opts.silent
+    ) {
+      return null;
+    }
+
+    alertLoginRequired(
+      opts.message || '로그인이 필요한 페이지입니다.',
+      () => goToLogin({ redirect: opts.redirect || getPageRedirectPath() })
+    );
     return null;
+  }
+
+  function getPageRedirectPath() {
+    const path = window.location.pathname || '';
+    const file = path.split('/').pop();
+    return file || 'index.html';
+  }
+
+  function getEnrichedUser() {
+    return enrichedUser || getUser();
+  }
+
+  async function resolveAuthUser(options) {
+    const auth = await ensureAuthenticated(options);
+    return auth?.user ?? null;
   }
 
   function emailLocalPart(email) {
@@ -117,13 +325,18 @@
   }
 
   function getDisplayName(user) {
-    if (!user) return '회원';
-    const meta = user.user_metadata || {};
-    if (meta.nickname) return meta.nickname;
-    if (meta.full_name) return meta.full_name;
-    if (meta.name) return meta.name;
-    if (user.email) return emailLocalPart(user.email);
-    return '회원';
+    const u = user || enrichedUser || getUser();
+    if (!u) return '회원';
+    const meta = u.user_metadata || {};
+    const profile = u._profile;
+    const fromMeta = extractNicknameFromMeta(meta);
+    const fromDb =
+      profile && profile.nickname ? String(profile.nickname).trim() : '';
+
+    if (fromDb && fromDb !== '픽클러') return fromDb;
+    if (fromMeta) return fromMeta;
+    if (u.email) return emailLocalPart(u.email);
+    return '픽클러';
   }
 
   function isLoggedIn() {
@@ -211,7 +424,7 @@
       btnLogin.hidden = true;
       menuUser.hidden = false;
       if (label) {
-        label.textContent = getDisplayName(getUser());
+        label.textContent = getDisplayName();
       }
     } else {
       btnLogin.hidden = false;
@@ -353,6 +566,7 @@
     const { error } = await sb.auth.signOut();
     if (error) throw error;
     currentSession = null;
+    clearAuthContext();
     updateNav();
     window.dispatchEvent(
       new CustomEvent('pickle-auth-changed', { detail: { session: null } })
@@ -607,10 +821,20 @@
 
       sb.auth.onAuthStateChange((_event, session) => {
         currentSession = session;
+        if (!session) {
+          clearAuthContext();
+        } else {
+          authContextCache = null;
+        }
         updateNav();
         window.dispatchEvent(
           new CustomEvent('pickle-auth-changed', { detail: { session } })
         );
+        if (session?.user) {
+          ensureAuthenticated({ forceRefresh: true, skipProfile: false }).catch(function (err) {
+            console.warn('[P!CKLE Auth] profile refresh after auth change', err);
+          });
+        }
       });
     })();
 
@@ -633,9 +857,14 @@
     init,
     waitForSessionReady,
     waitForAuthHydration,
+    ensureAuthenticated,
+    requireAuth,
     getUserWhenReady,
     resolveAuthUser,
     safeGetSessionUser,
+    getEnrichedUser,
+    fetchUserProfile,
+    mergeUserWithProfile,
     alertLoginRequired,
     getClient,
     isSessionMissingError,

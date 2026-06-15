@@ -53,29 +53,16 @@
 
   async function getAuthUserForAction() {
     try {
+      if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+        var auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+        return auth && auth.user ? auth.user : null;
+      }
       if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
         return await window.PickleAuth.resolveAuthUser();
       }
     } catch (err) {
       console.warn('[P!CKLE Detail] auth resolve failed', err);
     }
-
-    var sb = getSharedSupabaseClient();
-
-    if (window.PickleAuth && window.PickleAuth.waitForAuthHydration) {
-      var session = await window.PickleAuth.waitForAuthHydration(sb);
-      if (session && session.user) return session.user;
-    }
-
-    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
-      return window.PickleAuth.safeGetSessionUser(sb);
-    }
-
-    var sessionResult = await sb.auth.getSession();
-    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
-      return sessionResult.data.session.user;
-    }
-
     return null;
   }
 
@@ -1082,9 +1069,11 @@
     try {
       var sb = window.PickleSupabase.getClient();
       var comments = await fetchCommentsList(sb, postId);
-      var authResult = await sb.auth.getUser();
-      var userId =
-        authResult.data && authResult.data.user ? authResult.data.user.id : null;
+      var auth = null;
+      if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+        auth = await window.PickleAuth.ensureAuthenticated({ skipProfile: true });
+      }
+      var userId = auth && auth.user ? auth.user.id : null;
 
       await fetchMyLikedCommentIds(
         sb,
@@ -2025,7 +2014,9 @@
     }
 
     try {
-      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+        await window.PickleAuth.ensureAuthenticated({ skipProfile: true }).catch(function () {});
+      } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
         await window.PickleAuth.waitForSessionReady().catch(function () {});
       }
 
@@ -2073,7 +2064,11 @@
     var startDetail = function () {
       loadDetail();
     };
-    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+      window.PickleAuth.ensureAuthenticated({ skipProfile: true })
+        .then(startDetail)
+        .catch(startDetail);
+    } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
       window.PickleAuth.waitForSessionReady().then(startDetail).catch(startDetail);
     } else {
       startDetail();

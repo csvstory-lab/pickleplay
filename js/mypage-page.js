@@ -82,6 +82,9 @@
   }
 
   function getDisplayName(user) {
+    if (window.PickleAuth && window.PickleAuth.getDisplayName) {
+      return window.PickleAuth.getDisplayName(user);
+    }
     if (!user) return '픽클러';
     var meta = user.user_metadata || {};
     if (meta.nickname && String(meta.nickname).trim()) {
@@ -258,38 +261,31 @@
   }
 
   async function resolveAuthUserOnly() {
-    if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
+    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+      try {
+        var auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+        if (auth && auth.user) return auth.user;
+      } catch (err) {
+        console.warn('[P!CKLE Mypage] ensureAuthenticated', err);
+      }
+    } else if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
       try {
         var readyUser = await window.PickleAuth.resolveAuthUser({ timeoutMs: 5000 });
         if (readyUser) return readyUser;
-      } catch (err) {
-        console.warn('[P!CKLE Mypage] resolveAuthUser', err);
+      } catch (err2) {
+        console.warn('[P!CKLE Mypage] resolveAuthUser', err2);
       }
-    } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
-      await window.PickleAuth.waitForSessionReady();
     }
-
-    var sb = getSupabaseClient();
-
-    if (window.PickleAuth && window.PickleAuth.waitForAuthHydration) {
-      var hydrated = await window.PickleAuth.waitForAuthHydration(sb, { timeoutMs: 5000 });
-      if (hydrated && hydrated.user) return hydrated.user;
-    }
-
-    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
-      var sessionUser = await window.PickleAuth.safeGetSessionUser(sb);
-      if (sessionUser) return sessionUser;
-    }
-
-    var sessionResult = await sb.auth.getSession();
-    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
-      return sessionResult.data.session.user;
-    }
-
     return null;
   }
 
   async function requireAuth() {
+    if (window.PickleAuth && window.PickleAuth.requireAuth) {
+      return window.PickleAuth.requireAuth({
+        message: '로그인이 필요한 페이지입니다.',
+        redirect: 'mypage.html',
+      });
+    }
     var user = await resolveAuthUserOnly();
     if (user) return user;
 
@@ -596,6 +592,11 @@
   }
 
   async function ensureAuthenticatedSession(sb) {
+    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+      var auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+      if (auth && auth.user) return auth.user;
+      throw new Error('LOGIN_REQUIRED');
+    }
     var session = await waitForSupabaseSession(sb);
     if (session && session.user) {
       return session.user;
@@ -1172,17 +1173,8 @@
 
     try {
       var sb = getSupabaseClient();
-      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
-        await window.PickleAuth.waitForSessionReady();
-      }
-      var authResult = await sb.auth.getUser();
-      if (authResult.error || !authResult.data?.user) {
-        if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-          return;
-        }
-        promptLoginRequired('로그인이 필요합니다.');
-        return;
-      }
+      var user = await requireAuth();
+      if (!user) return;
 
       var result = await sb
         .from('posts')
@@ -1198,7 +1190,7 @@
         return;
       }
 
-      if (result.data.author_id !== authResult.data.user.id) {
+      if (result.data.author_id !== user.id) {
         alert('본인이 작성한 불판만 수정할 수 있습니다.');
         return;
       }
@@ -1244,20 +1236,8 @@
     var description = descEl ? descEl.value.trim() : '';
 
     var sb = getSupabaseClient();
-    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
-      await window.PickleAuth.waitForSessionReady();
-    }
-    var authResult = await sb.auth.getUser();
-
-    if (authResult.error || !authResult.data?.user) {
-      if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-        return;
-      }
-      promptLoginRequired('로그인이 필요합니다.');
-      return;
-    }
-
-    var user = authResult.data.user;
+    var user = await requireAuth();
+    if (!user) return;
 
     if (saveBtn) {
       saveBtn.disabled = true;
@@ -1564,16 +1544,6 @@
 
   async function initMypage() {
     try {
-      if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-        await window.PickleOAuthCallbackGuard.waitForOAuthSession({ timeoutMs: 5000 });
-      } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
-        await window.PickleAuth.waitForSessionReady();
-      }
-
-      if (window.PickleCategories && window.PickleCategories.load) {
-        await window.PickleCategories.load();
-      }
-
       var b = window.PickleSupabaseBootstrap;
       if (!b || !b.isReady()) {
         console.warn('[P!CKLE Mypage]', b ? b.getErrorMessage() : 'bootstrap missing');
@@ -1584,31 +1554,15 @@
         return;
       }
 
-      var user = await resolveAuthUserOnly();
-      if (!user) {
-        await new Promise(function (resolve) {
-          var settled = false;
-          function finish() {
-            if (settled) return;
-            settled = true;
-            resolve();
-          }
-          window.addEventListener('pickle-auth-changed', function onAuthChanged(ev) {
-            if (ev.detail && ev.detail.session && ev.detail.session.user) {
-              window.removeEventListener('pickle-auth-changed', onAuthChanged);
-              finish();
-            }
-          });
-          setTimeout(finish, 3000);
-        });
-        user = await resolveAuthUserOnly();
+      if (window.PickleCategories && window.PickleCategories.load) {
+        await window.PickleCategories.load();
       }
 
+      var user = await requireAuth();
       if (!user) {
         if (isOAuthCallback() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
           return;
         }
-        promptLoginRequired('로그인이 필요한 페이지입니다.');
         return;
       }
 
@@ -1656,8 +1610,25 @@
   window.addEventListener('pickle-auth-changed', function (ev) {
     var session = ev.detail && ev.detail.session;
     if (!session || !session.user || currentUser) return;
+    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+      window.PickleAuth.ensureAuthenticated({ forceRefresh: true })
+        .then(function (auth) {
+          if (auth && auth.user) return renderProfile(auth.user);
+        })
+        .catch(function (err) {
+          console.warn('[P!CKLE Mypage] OAuth 후 프로필 렌더', err);
+        });
+      return;
+    }
     renderProfile(session.user).catch(function (err) {
       console.warn('[P!CKLE Mypage] OAuth 후 프로필 렌더', err);
+    });
+  });
+
+  window.addEventListener('pickle-auth-ready', function (ev) {
+    if (currentUser || !ev.detail || !ev.detail.user) return;
+    renderProfile(ev.detail.user).catch(function (err) {
+      console.warn('[P!CKLE Mypage] auth-ready 프로필 렌더', err);
     });
   });
 
@@ -1665,7 +1636,11 @@
     var startMypage = function () {
       initMypage();
     };
-    if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+      window.PickleAuth.ensureAuthenticated({ silent: true })
+        .then(startMypage)
+        .catch(startMypage);
+    } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
       window.PickleAuth.waitForSessionReady().then(startMypage).catch(startMypage);
     } else {
       startMypage();

@@ -27,7 +27,12 @@
     if (snsEl) snsEl.textContent = getProviderLabel(user);
 
     var meta = user.user_metadata || {};
-    var name = meta.nickname || (user.email ? user.email.split('@')[0] : '픽클러');
+    var name =
+      (window.PickleAuth && window.PickleAuth.getDisplayName
+        ? window.PickleAuth.getDisplayName(user)
+        : null) ||
+      meta.nickname ||
+      (user.email ? user.email.split('@')[0] : '픽클러');
     var nickInput = document.getElementById('nicknameInput');
     if (nickInput) nickInput.value = name;
 
@@ -44,6 +49,12 @@
   }
 
   async function requireAuth() {
+    if (window.PickleAuth && window.PickleAuth.requireAuth) {
+      return window.PickleAuth.requireAuth({
+        redirect: 'settings.html',
+        message: '로그인이 필요한 페이지입니다.',
+      });
+    }
     if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
       var readyUser = await window.PickleAuth.resolveAuthUser();
       if (readyUser) return readyUser;

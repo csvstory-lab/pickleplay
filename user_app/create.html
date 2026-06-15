@@ -421,10 +421,14 @@
         let isOfficialCreator = false;
 
         try {
-            if (window.PickleAuth?.init) {
+            let currentUser = null;
+            if (window.PickleAuth?.ensureAuthenticated) {
+                const auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+                currentUser = auth?.user ?? null;
+            } else if (window.PickleAuth?.init) {
                 await window.PickleAuth.init();
+                currentUser = window.PickleAuth?.getUser?.() ?? null;
             }
-            const currentUser = window.PickleAuth?.getUser?.();
             if (!currentUser?.email || !window.PickleSupabase?.getClient) {
                 return false;
             }
@@ -883,15 +887,20 @@
                     return false;
                 }
 
-                if (window.PickleAuth?.waitForSessionReady) {
-                    await window.PickleAuth.waitForSessionReady();
-                } else if (window.PickleAuth?.init) {
-                    await window.PickleAuth.init();
+                let createAuthUser = null;
+                if (window.PickleAuth?.ensureAuthenticated) {
+                    const auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
+                    createAuthUser = auth?.user ?? null;
+                } else {
+                    if (window.PickleAuth?.waitForSessionReady) {
+                        await window.PickleAuth.waitForSessionReady();
+                    } else if (window.PickleAuth?.init) {
+                        await window.PickleAuth.init();
+                    }
+                    const supabase = window.PickleSupabase.getClient();
+                    const sessionResult = await supabase.auth.getSession();
+                    createAuthUser = sessionResult.data?.session?.user ?? null;
                 }
-
-                const supabase = window.PickleSupabase.getClient();
-                const authResult = await supabase.auth.getUser();
-                const createAuthUser = authResult.data?.user;
                 if (!createAuthUser) {
                     if (
                         window.location.hash.includes('access_token=') ||

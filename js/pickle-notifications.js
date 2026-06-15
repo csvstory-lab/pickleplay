@@ -64,6 +64,10 @@
   }
 
   async function ensureAuthReady() {
+    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+      var auth = await window.PickleAuth.ensureAuthenticated({ skipProfile: true });
+      return auth && auth.user ? auth.user : null;
+    }
     if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
       return window.PickleAuth.getUserWhenReady();
     }
@@ -81,8 +85,12 @@
       await window.PickleOAuthCallbackGuard.waitForOAuthSession();
     }
 
-    var result = await sb.auth.getUser();
-    return result.data && result.data.user ? result.data.user : null;
+    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
+      return window.PickleAuth.safeGetSessionUser(sb);
+    }
+
+    var sessionResult = await sb.auth.getSession();
+    return sessionResult.data?.session?.user ?? null;
   }
 
   async function fetchUnreadCount(userId) {

@@ -1005,7 +1005,11 @@
       var startFeed = function () {
         loadPickleFeed();
       };
-      if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
+      if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+        window.PickleAuth.ensureAuthenticated({ skipProfile: true })
+          .then(startFeed)
+          .catch(startFeed);
+      } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
         window.PickleAuth.waitForSessionReady().then(startFeed).catch(startFeed);
       } else {
         startFeed();

@@ -26,6 +26,12 @@
   }
 
   async function requireUser() {
+    if (window.PickleAuth && window.PickleAuth.requireAuth) {
+      return window.PickleAuth.requireAuth({
+        redirect: 'notifications.html',
+        message: '로그인이 필요한 페이지입니다.',
+      });
+    }
     if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
       var user = await window.PickleAuth.getUserWhenReady();
       if (!user) {
