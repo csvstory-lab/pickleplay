@@ -229,6 +229,9 @@
     .hi-date { font-size: 0.75rem; color: var(--text-sub); }
     .hi-badge { font-size: 0.75rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(255, 204, 0, 0.1); color: var(--alert-yellow); }
     .hi-badge.red { background: rgba(255, 51, 51, 0.1); color: var(--alert-red); }
+    .hi-badge.green { background: rgba(57, 255, 20, 0.1); color: var(--neon-green); }
+    .hi-badge.blue { background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); }
+    .hi-type { font-size: 0.7rem; color: var(--neon-blue); font-weight: 800; margin-bottom: 2px; }
 
 </style>
 <!-- Firebase (App + Analytics + Firestore) -->
@@ -505,28 +508,13 @@
                 </div>
             </div>
 
-            <div class="m-tabs">
-                <div class="m-tab active">🚨 제재 및 신고 내역</div>
-                <div class="m-tab">📝 작성한 불판/댓글</div>
-                <div class="m-tab">💰 포인트 내역</div>
+            <div class="m-tabs" id="modalTabs">
+                <div class="m-tab active" data-tab="sanctions" role="button" tabindex="0">🚨 제재 및 신고 내역</div>
+                <div class="m-tab" data-tab="activity" role="button" tabindex="0">📝 작성한 불판/댓글</div>
+                <div class="m-tab" data-tab="points" role="button" tabindex="0">💰 포인트 내역</div>
             </div>
 
-            <div class="history-list">
-                <div class="history-item">
-                    <div>
-                        <div class="hi-title">타인 비방 및 심한 욕설 (댓글)</div>
-                        <div class="hi-date">2026.05.28 14:30</div>
-                    </div>
-                    <span class="hi-badge red">+50점 (레드카드 경고)</span>
-                </div>
-                <div class="history-item">
-                    <div>
-                        <div class="hi-title">광고성(외부 링크) 게시물 작성 반복</div>
-                        <div class="hi-date">2026.05.10 09:15</div>
-                    </div>
-                    <span class="hi-badge">+20점 (옐로카드 누적)</span>
-                </div>
-            </div>
+            <div class="history-list" id="modalHistoryList"></div>
 
         </div>
     </div>

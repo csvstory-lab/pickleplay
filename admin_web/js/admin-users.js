@@ -7,6 +7,9 @@
   var usersCache = [];
   var filteredUsers = [];
   var currentPage = 1;
+  var modalCurrentUserId = null;
+  var modalActiveTab = 'sanctions';
+  var modalTabCache = {};
 
   var GENDER_LABELS = { male: '남성', female: '여성' };
   var AGE_LABELS = {
@@ -529,6 +532,346 @@
     });
   }
 
+  function formatDateTime(value) {
+    if (!value) return '—';
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  function emptyStateHtml() {
+    return (
+      '<div class="empty-state" style="text-align: center; color: var(--text-sub); padding: 20px;">내역이 없습니다.</div>'
+    );
+  }
+
+  function loadingHistoryHtml() {
+    return (
+      '<div class="empty-state" style="text-align: center; color: var(--text-sub); padding: 20px;">불러오는 중…</div>'
+    );
+  }
+
+  function penaltyBadgeHtml(points) {
+    var pts = Number(points) || 0;
+    var cls = pts >= 50 ? ' red' : '';
+    var label =
+      pts >= 100
+        ? '+100점 (영구 차단)'
+        : pts >= 50
+          ? '+' + pts + '점 (레드카드 경고)'
+          : '+' + pts + '점 (옐로카드 누적)';
+    return '<span class="hi-badge' + cls + '">' + escapeHtml(label) + '</span>';
+  }
+
+  function pointBadgeHtml(amount) {
+    var amt = Number(amount) || 0;
+    if (amt > 0) {
+      return '<span class="hi-badge green">+' + amt.toLocaleString() + ' P</span>';
+    }
+    if (amt < 0) {
+      return '<span class="hi-badge red">' + amt.toLocaleString() + ' P</span>';
+    }
+    return '<span class="hi-badge">0 P</span>';
+  }
+
+  function renderSanctionsList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var kindLabel = row.kind === 'report' ? '신고 접수' : '제재 부과';
+        var statusText =
+          row.kind === 'report' && row.status
+            ? ' · ' + String(row.status)
+            : row.source_type
+              ? ' · ' + String(row.source_type)
+              : '';
+        return (
+          '<div class="history-item">' +
+          '<div>' +
+          '<div class="hi-type">' +
+          escapeHtml(kindLabel + statusText) +
+          '</div>' +
+          '<div class="hi-title">' +
+          escapeHtml(row.reason || '사유 미기록') +
+          '</div>' +
+          '<div class="hi-date">' +
+          escapeHtml(formatDateTime(row.created_at)) +
+          '</div>' +
+          '</div>' +
+          penaltyBadgeHtml(row.penalty_points) +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderActivityList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var isPost = row.kind === 'post';
+        var typeLabel = isPost ? '📝 불판' : '💬 댓글';
+        var title = isPost
+          ? row.title || '제목 없음'
+          : row.content || '내용 없음';
+        if (!isPost && title.length > 80) {
+          title = title.slice(0, 80) + '…';
+        }
+        return (
+          '<div class="history-item">' +
+          '<div>' +
+          '<div class="hi-type">' +
+          escapeHtml(typeLabel) +
+          '</div>' +
+          '<div class="hi-title">' +
+          escapeHtml(title) +
+          '</div>' +
+          '<div class="hi-date">' +
+          escapeHtml(formatDateTime(row.created_at)) +
+          '</div>' +
+          '</div>' +
+          '<span class="hi-badge blue">' +
+          escapeHtml(isPost ? '불판' : '댓글') +
+          '</span>' +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderPointsList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var balanceText =
+          row.balance_after != null
+            ? ' · 잔액 ' + Number(row.balance_after).toLocaleString() + ' P'
+            : '';
+        return (
+          '<div class="history-item">' +
+          '<div>' +
+          '<div class="hi-title">' +
+          escapeHtml(row.reason || '포인트 변동') +
+          '</div>' +
+          '<div class="hi-date">' +
+          escapeHtml(formatDateTime(row.created_at) + balanceText) +
+          '</div>' +
+          '</div>' +
+          pointBadgeHtml(row.amount) +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderModalTabContent(tab, rows) {
+    if (tab === 'sanctions') return renderSanctionsList(rows);
+    if (tab === 'activity') return renderActivityList(rows);
+    if (tab === 'points') return renderPointsList(rows);
+    return emptyStateHtml();
+  }
+
+  async function fetchModalTabDataFallback(sb, userId, tab) {
+    if (tab === 'sanctions') {
+      var penalties = [];
+      var reports = [];
+      try {
+        var pRes = await sb
+          .from('user_penalties')
+          .select('id, reason, penalty_points, source_type, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!pRes.error && pRes.data) {
+          penalties = pRes.data.map(function (row) {
+            return {
+              kind: 'penalty',
+              id: row.id,
+              reason: row.reason,
+              penalty_points: row.penalty_points,
+              source_type: row.source_type,
+              status: null,
+              created_at: row.created_at,
+            };
+          });
+        }
+      } catch (e1) {
+        console.warn('[Admin Users] user_penalties fallback', e1);
+      }
+      try {
+        var rRes = await sb
+          .from('reports')
+          .select('id, reason, penalty_points, status, target_type, created_at')
+          .eq('reported_user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!rRes.error && rRes.data) {
+          reports = rRes.data.map(function (row) {
+            return {
+              kind: 'report',
+              id: row.id,
+              reason: row.reason,
+              penalty_points: row.penalty_points,
+              source_type: row.target_type,
+              status: row.status,
+              created_at: row.created_at,
+            };
+          });
+        }
+      } catch (e2) {
+        console.warn('[Admin Users] reports fallback', e2);
+      }
+      return penalties
+        .concat(reports)
+        .sort(function (a, b) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        })
+        .slice(0, 50);
+    }
+
+    if (tab === 'activity') {
+      var posts = [];
+      var comments = [];
+      try {
+        var postRes = await sb
+          .from('posts')
+          .select('id, title, option_a_name, option_b_name, created_at')
+          .eq('author_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!postRes.error && postRes.data) {
+          posts = postRes.data.map(function (row) {
+            return {
+              kind: 'post',
+              id: row.id,
+              title:
+                row.title ||
+                String(row.option_a_name || '') + ' vs ' + String(row.option_b_name || ''),
+              content: null,
+              created_at: row.created_at,
+            };
+          });
+        }
+      } catch (e3) {
+        console.warn('[Admin Users] posts activity fallback', e3);
+      }
+      try {
+        var cRes = await sb
+          .from('comments')
+          .select('id, content, filtered_content, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!cRes.error && cRes.data) {
+          comments = cRes.data.map(function (row) {
+            return {
+              kind: 'comment',
+              id: row.id,
+              title: null,
+              content: row.filtered_content || row.content,
+              created_at: row.created_at,
+            };
+          });
+        }
+      } catch (e4) {
+        console.warn('[Admin Users] comments activity fallback', e4);
+      }
+      return posts
+        .concat(comments)
+        .sort(function (a, b) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        })
+        .slice(0, 50);
+    }
+
+    if (tab === 'points') {
+      try {
+        var plRes = await sb
+          .from('point_logs')
+          .select('id, amount, reason, balance_after, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!plRes.error && plRes.data) return plRes.data;
+      } catch (e5) {
+        console.warn('[Admin Users] point_logs fallback', e5);
+      }
+    }
+
+    return [];
+  }
+
+  async function fetchModalTabData(userId, tab) {
+    var sb = getSupabaseClient();
+    var rpcResult = await sb.rpc('admin_user_modal_tab', {
+      p_user_id: userId,
+      p_tab: tab,
+    });
+    if (!rpcResult.error && rpcResult.data != null) {
+      return Array.isArray(rpcResult.data) ? rpcResult.data : [];
+    }
+    if (rpcResult.error) {
+      console.warn('[Admin Users] admin_user_modal_tab RPC fallback', rpcResult.error);
+    }
+    return fetchModalTabDataFallback(sb, userId, tab);
+  }
+
+  async function loadModalTab(tab, forceRefresh) {
+    var listEl = $('modalHistoryList');
+    if (!listEl || !modalCurrentUserId) return;
+
+    if (!forceRefresh && modalTabCache[tab]) {
+      listEl.innerHTML = renderModalTabContent(tab, modalTabCache[tab]);
+      return;
+    }
+
+    listEl.innerHTML = loadingHistoryHtml();
+    try {
+      var rows = await fetchModalTabData(modalCurrentUserId, tab);
+      modalTabCache[tab] = rows;
+      listEl.innerHTML = renderModalTabContent(tab, rows);
+    } catch (err) {
+      console.error('[Admin Users] modal tab load failed', tab, err);
+      listEl.innerHTML = emptyStateHtml();
+    }
+  }
+
+  function switchModalTab(tab, forceRefresh) {
+    modalActiveTab = tab || 'sanctions';
+    document.querySelectorAll('#modalTabs .m-tab').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-tab') === modalActiveTab);
+    });
+    loadModalTab(modalActiveTab, forceRefresh);
+  }
+
+  function bindModalTabs() {
+    var tabsWrap = $('modalTabs');
+    if (!tabsWrap || tabsWrap.dataset.bound === '1') return;
+    tabsWrap.dataset.bound = '1';
+
+    tabsWrap.addEventListener('click', function (e) {
+      var tabEl = e.target.closest('.m-tab[data-tab]');
+      if (!tabEl) return;
+      var tab = tabEl.getAttribute('data-tab');
+      if (!tab || tab === modalActiveTab) return;
+      switchModalTab(tab, false);
+    });
+
+    tabsWrap.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var tabEl = e.target.closest('.m-tab[data-tab]');
+      if (!tabEl) return;
+      e.preventDefault();
+      switchModalTab(tabEl.getAttribute('data-tab'), false);
+    });
+  }
+
   async function countUserRows(sb, table, column, userId) {
     var result = await sb
       .from(table)
@@ -654,12 +997,18 @@
           : '✅ 활동중 (' + tier.label + ')';
 
     modal.style.display = 'flex';
+    modalCurrentUserId = user.id;
+    modalActiveTab = 'sanctions';
+    modalTabCache = {};
+    switchModalTab('sanctions', true);
     loadModalUserStats(user);
   }
 
   function closeUserModal() {
     var modal = $('userModal');
     if (modal) modal.style.display = 'none';
+    modalCurrentUserId = null;
+    modalTabCache = {};
   }
 
   async function fetchUsersFromSupabase() {
@@ -766,6 +1115,7 @@
 
   function bootstrap() {
     bindFilters();
+    bindModalTabs();
     loadUsers();
   }
 
