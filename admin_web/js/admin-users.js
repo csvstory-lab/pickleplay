@@ -518,6 +518,106 @@
     });
   }
 
+  function setModalStatsLoading(isLoading) {
+    ['modalPoints', 'modalPostCount', 'modalParticipationCount'].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.classList.toggle('is-loading', isLoading);
+      if (isLoading) {
+        el.textContent = '로딩 중…';
+      }
+    });
+  }
+
+  async function countUserRows(sb, table, column, userId) {
+    var result = await sb
+      .from(table)
+      .select('*', { count: 'exact', head: true })
+      .eq(column, userId);
+    if (result.error) throw result.error;
+    return result.count || 0;
+  }
+
+  async function fetchUserModalStats(userId, user) {
+    var sb = getSupabaseClient();
+    var fallbackPoints = Number(user && user.points != null ? user.points : 0) || 0;
+
+    var rpcResult = await sb.rpc('admin_user_stats', { p_user_id: userId });
+    if (!rpcResult.error && rpcResult.data) {
+      var data = rpcResult.data;
+      return {
+        points: Number(data.points != null ? data.points : fallbackPoints) || 0,
+        postCount: Number(data.post_count != null ? data.post_count : 0) || 0,
+        participationCount:
+          Number(data.participation_count != null ? data.participation_count : 0) || 0,
+      };
+    }
+    if (rpcResult.error) {
+      console.warn('[Admin Users] admin_user_stats RPC fallback', rpcResult.error);
+    }
+
+    var postCount = 0;
+    var commentCount = 0;
+    var voteCount = 0;
+    try {
+      postCount = await countUserRows(sb, 'posts', 'author_id', userId);
+    } catch (postErr) {
+      console.warn('[Admin Users] posts count', postErr);
+    }
+    try {
+      commentCount = await countUserRows(sb, 'comments', 'user_id', userId);
+    } catch (commentErr) {
+      console.warn('[Admin Users] comments count', commentErr);
+    }
+    try {
+      voteCount = await countUserRows(sb, 'votes', 'user_id', userId);
+    } catch (voteErr) {
+      console.warn('[Admin Users] votes count', voteErr);
+    }
+
+    return {
+      points: fallbackPoints,
+      postCount: postCount,
+      participationCount: commentCount + voteCount,
+    };
+  }
+
+  function renderModalStats(stats) {
+    var pointsEl = $('modalPoints');
+    var postEl = $('modalPostCount');
+    var partEl = $('modalParticipationCount');
+    if (pointsEl) {
+      pointsEl.textContent = Number(stats.points || 0).toLocaleString() + ' P';
+    }
+    if (postEl) {
+      postEl.textContent = Number(stats.postCount || 0).toLocaleString() + ' 개';
+    }
+    if (partEl) {
+      partEl.textContent = Number(stats.participationCount || 0).toLocaleString() + ' 회';
+    }
+  }
+
+  async function loadModalUserStats(user) {
+    if (!user || !user.id) return;
+    setModalStatsLoading(true);
+    try {
+      var stats = await fetchUserModalStats(user.id, user);
+      renderModalStats(stats);
+    } catch (err) {
+      console.error('[Admin Users] modal stats load failed', err);
+      renderModalStats({
+        points: Number(user.points || 0),
+        postCount: 0,
+        participationCount: 0,
+      });
+    } finally {
+      ['modalPoints', 'modalPostCount', 'modalParticipationCount'].forEach(function (id) {
+        var el = $(id);
+        if (el) el.classList.remove('is-loading');
+      });
+    }
+  }
+
   function openUserModal(userId) {
     var user = usersCache.find(function (u) {
       return u.id === userId;
@@ -552,9 +652,9 @@
         : tier.status === 'warning'
           ? '🟨 옐로카드 (' + tier.label + ')'
           : '✅ 활동중 (' + tier.label + ')';
-    $('modalPoints').textContent = Number(user.points || 0).toLocaleString() + ' P';
 
     modal.style.display = 'flex';
+    loadModalUserStats(user);
   }
 
   function closeUserModal() {
