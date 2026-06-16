@@ -24,7 +24,6 @@ AS $$
       COALESCE(NULLIF(trim(p.author_nickname), ''), u.nickname, '익명') AS author_nickname,
       p.visibility_status,
       p.created_at,
-      p.end_at,
       p.expires_at,
       COALESCE(p.vote_count, 0) AS vote_count,
       COALESCE(p.comment_count, 0) AS comment_count,

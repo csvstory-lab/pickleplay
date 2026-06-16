@@ -82,7 +82,13 @@
   }
 
   function resolveDeadline(post) {
-    return post.expires_at || post.end_at || null;
+    return post.expires_at || null;
+  }
+
+  function formatDeadlineDisplay(post) {
+    var deadline = resolveDeadline(post);
+    if (!deadline) return '마감일 미정';
+    return formatDeadline(deadline);
   }
 
   function resolvePostStatus(post) {
@@ -241,7 +247,7 @@
       '<td' +
       deadlineStyle +
       '>' +
-      escapeHtml(formatDeadline(resolveDeadline(post))) +
+      escapeHtml(formatDeadlineDisplay(post)) +
       '</td>' +
       '<td>' +
       statusBadgeHtml(status) +
@@ -335,7 +341,7 @@
     }
 
     var select =
-      'id, title, category, option_a_name, option_b_name, author_id, author_nickname, visibility_status, created_at, end_at, expires_at, vote_count, comment_count, share_count, users:author_id(nickname)';
+      'id, title, category, option_a_name, option_b_name, author_id, author_nickname, visibility_status, created_at, expires_at, vote_count, comment_count, share_count, users:author_id(nickname)';
 
     return sb
       .from('posts')
