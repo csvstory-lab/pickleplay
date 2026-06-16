@@ -5,7 +5,10 @@
   'use strict';
 
   var postsCache = [];
-  var categoriesMap = {};
+  /** @type {Record<string, string>} slug → 한글 카테고리명 */
+  var categoryMap = {};
+  /** @type {Record<string, string>} slug → 아이콘 */
+  var categoryIconMap = {};
   var voteStatsCache = new Map();
 
   function $(id) {
@@ -62,28 +65,66 @@
     return '제목 없음';
   }
 
+  function resolveCategorySlug(post) {
+    if (!post) return '';
+    var slug = post.category_slug != null ? post.category_slug : post.category;
+    return String(slug ?? '').trim();
+  }
+
+  function resolveCategoryDisplayName(slug) {
+    if (!slug) return '—';
+    return categoryMap[slug] || slug;
+  }
+
   function resolveCategoryBadge(post) {
-    var slug = post.category ? String(post.category).trim() : '';
-    var mapped = slug && categoriesMap[slug] ? categoriesMap[slug] : null;
-    var icon = post.category_icon
-      ? String(post.category_icon).trim()
-      : mapped && mapped.icon
-        ? String(mapped.icon).trim()
-        : '';
-    var name =
-      post.category_name ||
-      (mapped ? mapped.name : null) ||
-      slug ||
-      '—';
+    var slug = resolveCategorySlug(post);
+    var icon =
+      categoryIconMap[slug] ||
+      (post.category_icon ? String(post.category_icon).trim() : '');
+    var name = categoryMap[slug];
+    if (!name && post.category_name) {
+      var rpcName = String(post.category_name).trim();
+      if (rpcName && rpcName !== slug) name = rpcName;
+    }
+    if (!name) name = slug || '—';
     return (icon ? icon + ' ' : '') + name;
   }
 
-  function enrichPostCategory(post) {
-    if (!post || !post.category) return;
-    var mapped = categoriesMap[post.category];
-    if (!mapped) return;
-    if (!post.category_name) post.category_name = mapped.name;
-    if (!post.category_icon && mapped.icon) post.category_icon = mapped.icon;
+  function normalizePostCategoryFields(post) {
+    if (!post) return;
+    var slug = resolveCategorySlug(post);
+    post.category_slug = slug;
+    post.category = slug;
+  }
+
+  async function loadCategoryMap(sb) {
+    categoryMap = {};
+    categoryIconMap = {};
+
+    try {
+      var res = await sb
+        .from('categories')
+        .select('slug, name, icon, sort_order')
+        .order('sort_order', { ascending: true });
+
+      if (res.error) {
+        console.warn('[Admin Posts] categories load error', res.error);
+        return;
+      }
+      if (!Array.isArray(res.data)) return;
+
+      res.data.forEach(function (row) {
+        if (!row || !row.slug) return;
+        var slug = String(row.slug).trim();
+        var name = row.name ? String(row.name).trim() : slug;
+        categoryMap[slug] = name;
+        categoryIconMap[slug] = row.icon ? String(row.icon).trim() : '';
+      });
+
+      console.info('[Admin Posts] categoryMap loaded', Object.keys(categoryMap).length, 'items');
+    } catch (err) {
+      console.warn('[Admin Posts] loadCategoryMap failed', err);
+    }
   }
 
   function getTodayStartIso() {
@@ -130,21 +171,23 @@
   }
 
   function renderCategoryFilterOptions() {
-    var select = $('filterCategorySelect');
+    var select = $('filterCategorySelect') || document.querySelector('.cat-filter');
     if (!select) return;
 
-    var slugs = Object.keys(categoriesMap).sort(function (a, b) {
-      var nameA = categoriesMap[a].name || a;
-      var nameB = categoriesMap[b].name || b;
-      return nameA.localeCompare(nameB, 'ko');
+    var slugs = Object.keys(categoryMap).sort(function (a, b) {
+      return (categoryMap[a] || a).localeCompare(categoryMap[b] || b, 'ko');
     });
 
     var html = '<option value="all">전체 카테고리 보기</option>';
     slugs.forEach(function (slug) {
-      var cat = categoriesMap[slug];
-      var label = (cat.icon ? cat.icon + ' ' : '') + (cat.name || slug);
+      var koreanName = categoryMap[slug] || slug;
+      var icon = categoryIconMap[slug] ? categoryIconMap[slug] + ' ' : '';
       html +=
-        '<option value="' + escapeHtml(slug) + '">' + escapeHtml(label) + '</option>';
+        '<option value="' +
+        escapeHtml(slug) +
+        '">' +
+        escapeHtml(icon + koreanName) +
+        '</option>';
     });
     select.innerHTML = html;
   }
@@ -181,7 +224,10 @@
   function filterPosts(source) {
     var f = getFilterValues();
     var list = source.filter(function (post) {
-      if (f.category !== 'all' && post.category !== f.category) return false;
+      if (f.category !== 'all') {
+        var postSlug = resolveCategorySlug(post);
+        if (postSlug !== f.category) return false;
+      }
 
       var status = resolvePostStatus(post);
       if (f.status !== 'all' && status !== f.status) return false;
@@ -462,19 +508,6 @@
     if (el) el.textContent = String(count);
   }
 
-  async function loadCategoriesMap(sb) {
-    categoriesMap = {};
-    try {
-      var res = await sb.from('categories').select('slug, name, icon').order('name', { ascending: true });
-      if (res.error || !Array.isArray(res.data)) return;
-      res.data.forEach(function (row) {
-        if (row && row.slug) categoriesMap[row.slug] = row;
-      });
-    } catch (err) {
-      console.warn('[Admin Posts] categories load failed', err);
-    }
-  }
-
   async function fetchVoteStatsMap(sb, postIds) {
     var map = new Map();
     if (!postIds.length) return map;
@@ -520,7 +553,7 @@
     try {
       var sb = getSupabaseClient();
 
-      await loadCategoriesMap(sb);
+      await loadCategoryMap(sb);
       renderCategoryFilterOptions();
 
       var results = await Promise.all([fetchPostsFromSupabase(sb), loadKPIs(sb)]);
@@ -528,7 +561,21 @@
       if (result.error) throw result.error;
 
       postsCache = Array.isArray(result.data) ? result.data : [];
-      postsCache.forEach(enrichPostCategory);
+      postsCache.forEach(normalizePostCategoryFields);
+
+      if (Object.keys(categoryMap).length === 0) {
+        postsCache.forEach(function (post) {
+          var slug = resolveCategorySlug(post);
+          if (!slug || categoryMap[slug]) return;
+          if (post.category_name && String(post.category_name).trim() !== slug) {
+            categoryMap[slug] = String(post.category_name).trim();
+          }
+          if (post.category_icon && !categoryIconMap[slug]) {
+            categoryIconMap[slug] = String(post.category_icon).trim();
+          }
+        });
+        renderCategoryFilterOptions();
+      }
 
       var postIds = postsCache.map(function (p) {
         return p.id;
