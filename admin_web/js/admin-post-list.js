@@ -7,7 +7,7 @@
   var postsCache = [];
   /** 최초 로드 전체 불판 — [조회] 시 클라이언트 필터 소스 */
   var allPosts = [];
-  /** @type {Record<string, string>} slug → 한글 카테고리명 */
+  /** @type {Record<string, string>|Array<{slug:string,name:string}>} */
   var categoryMap = {};
   /** @type {Array<{slug:string,name:string}>} */
   var categoriesList = [];
@@ -127,6 +127,60 @@
     return normalizeSlug(post.category_slug || post.category || '');
   }
 
+  var EMOJI_STRIP_REGEX =
+    /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+
+  function stripEmojiFromName(text) {
+    return String(text ?? '').replace(EMOJI_STRIP_REGEX, '').trim();
+  }
+
+  function findCategoryInfo(slugFromPost) {
+    if (!slugFromPost) return null;
+
+    var categoryInfo = null;
+
+    if (Array.isArray(categoryMap)) {
+      categoryInfo =
+        categoryMap.find(function (c) {
+          return normalizeSlug(c.slug || c.category_slug || '') === slugFromPost;
+        }) || null;
+    } else if (categoryMap && typeof categoryMap === 'object') {
+      var hit = categoryMap[slugFromPost];
+      if (hit != null) {
+        categoryInfo = typeof hit === 'string' ? { slug: slugFromPost, name: hit } : hit;
+      }
+    }
+
+    if (!categoryInfo && Array.isArray(categoriesList)) {
+      categoryInfo =
+        categoriesList.find(function (c) {
+          return normalizeSlug(c.slug || '') === slugFromPost;
+        }) || null;
+    }
+
+    return categoryInfo;
+  }
+
+  function resolveCategoryDisplayName(slugFromPost, categoryInfo, post) {
+    if (categoryInfo) {
+      var rawName =
+        typeof categoryInfo === 'string' ? categoryInfo : categoryInfo.name || categoryInfo.label || '';
+      var cleaned = stripEmojiFromName(rawName);
+      if (cleaned) return cleaned;
+    }
+
+    if (post && post.category_name) {
+      var fromPost = stripEmojiFromName(String(post.category_name).trim());
+      if (fromPost && normalizeSlug(fromPost) !== slugFromPost) return fromPost;
+    }
+
+    return slugFromPost || '—';
+  }
+
+  function categoryMapHasSlug(slugFromPost) {
+    return !!findCategoryInfo(slugFromPost);
+  }
+
   function resolveCategoryName(name, slug) {
     return name ? String(name).trim() : slug;
   }
@@ -163,7 +217,7 @@
     if (!slug) return;
     var s = normalizeSlug(slug);
     if (!s) return;
-    var displayName = resolveCategoryName(name, s);
+    var displayName = stripEmojiFromName(resolveCategoryName(name, s)) || resolveCategoryName(name, s);
     categoryMap[s] = displayName;
     var exists = categoriesList.some(function (c) {
       return c.slug === s;
@@ -191,12 +245,13 @@
     posts.forEach(function (post) {
       normalizePostCategoryFields(post);
       var slug = getPostSlug(post);
-      if (!slug || categoryMap[slug]) return;
+      if (!slug || categoryMapHasSlug(slug)) return;
       if (post.category_name) {
         var rpcName = String(post.category_name).trim();
         if (rpcName && normalizeSlug(rpcName) !== slug) {
-          categoryMap[slug] = rpcName;
-          categoriesList.push({ slug: slug, name: rpcName });
+          var cleanRpcName = stripEmojiFromName(rpcName) || rpcName;
+          categoryMap[slug] = cleanRpcName;
+          categoriesList.push({ slug: slug, name: cleanRpcName });
         }
       }
     });
@@ -260,11 +315,12 @@
 
     var html = '<option value="all">전체 카테고리 보기</option>';
     sorted.forEach(function (cat) {
+      var cleanName = stripEmojiFromName(cat.name || cat.slug || '');
       html +=
         '<option value="' +
         escapeHtml(cat.slug) +
         '">' +
-        escapeHtml(cat.name) +
+        escapeHtml(cleanName || cat.slug) +
         '</option>';
     });
     select.innerHTML = html;
@@ -424,7 +480,18 @@
       alert('불판 데이터가 아직 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
-    renderFilteredPosts(getFilterValues());
+    var filters = getFilterValues();
+    var selectedValue = filters.category;
+    allPosts.forEach(function (post) {
+      console.log(
+        '[Filter] Selected: "' +
+          selectedValue +
+          '", Target field value: "' +
+          (post.category_slug || post.category || '') +
+          '"'
+      );
+    });
+    renderFilteredPosts(filters);
   }
 
   function resetFilters() {
@@ -619,11 +686,19 @@
       : '';
     var titleStyle = blinded ? ' style="text-decoration:line-through;"' : '';
     var deadlineStyle = ended && !blinded ? ' style="color:var(--text-sub);"' : '';
-    var rawSlug = normalizeSlug(post.category || post.category_slug || '');
-    post.category_slug = rawSlug;
-    post.category = rawSlug;
-    var displayCat = categoryMap[rawSlug] || rawSlug || '—';
-    var categoryBadgeStyle = getCategoryBadgeStyle(rawSlug);
+    var slugFromPost = (post.category_slug || post.category || '').toLowerCase().trim();
+    console.log(
+      '[Debugging] Row slug: "' +
+        slugFromPost +
+        '", Map keys includes: ' +
+        categoryMapHasSlug(slugFromPost)
+    );
+    post.category_slug = slugFromPost;
+    post.category = slugFromPost;
+
+    var categoryInfo = findCategoryInfo(slugFromPost);
+    var displayName = resolveCategoryDisplayName(slugFromPost, categoryInfo, post);
+    var categoryBadgeStyle = getCategoryBadgeStyle(slugFromPost);
 
     return (
       '<tr data-post-id="' +
@@ -639,7 +714,7 @@
       '<td><span class="cat-badge" style="' +
       categoryBadgeStyle +
       '">' +
-      escapeHtml(displayCat) +
+      escapeHtml(displayName) +
       '</span></td>' +
       '<td class="post-title-cell">' +
       '<span class="post-title"' +
