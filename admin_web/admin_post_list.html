@@ -127,8 +127,6 @@
     .page-btn.active { background-color: var(--neon-green); border-color: var(--neon-green); color: #000; }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
 </head>
 <body>
 
@@ -142,8 +140,8 @@
         <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
         <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
-        <li class="nav-item active" onclick="location.href='admin_board_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
-        <li class="nav-sub-item active" onclick="location.href='admin_board_list.html'">· 일반 불판 관리</li>
+        <li class="nav-item active" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item active" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 스폰(최애) 불판 설정</li>
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
@@ -225,7 +223,7 @@
         <div class="table-container">
             <!-- 💡 노출 개수 셀렉트박스 추가 -->
             <div class="table-control">
-                <span class="table-total">전체 <b>58,241</b>건 검색됨</span>
+                <span class="table-total">전체 <b id="postsTableTotal">—</b>건 검색됨</span>
                 <select class="admin-select" style="width:130px; padding:6px 12px; font-size:0.8rem; background:transparent;">
                     <option value="10">10개씩 보기</option>
                     <option value="50" selected>50개씩 보기</option>
@@ -245,65 +243,8 @@
                         <th>관리자 액션</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td class="post-id">#10425</td>
-                        <td><span class="cat-badge">💔 연애/썸</span></td>
-                        <td class="post-title-cell">
-                            <span class="post-title">10년지기 이성친구와 단둘이 1박 2일 여행가기 허용?</span>
-                            <!-- 💡 공유수(Share) 지표 추가 -->
-                            <span class="post-author">작성자: 프로불편러 <span style="margin:0 5px;">|</span> <span class="meta-stat">💬 참견 1,024</span> <span style="margin:0 5px;">|</span> <span class="meta-share">🔗 공유 156</span></span>
-                        </td>
-                        <td>
-                            <div class="vote-summary">
-                                <span class="vote-count">총 15,240명 투표</span>
-                                <div class="mini-bar-wrapper">
-                                    <div class="mini-bar-a" style="width: 15%;"></div>
-                                    <div class="mini-bar-b" style="width: 85%;"></div>
-                                </div>
-                                <div class="vote-pct">
-                                    <span class="pct-a">허용 (15%)</span><span class="pct-b">절대 불가 (85%)</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>26.05.30 18:00</td>
-                        <td><span class="status-badge status-active">진행 중</span></td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">상세/댓글</button>
-                                <button class="btn-sm btn-blind" onclick="blindPost(this, '#10425')">블라인드</button>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="post-id">#10382</td>
-                        <td><span class="cat-badge">🍕 먹잘알</span></td>
-                        <td class="post-title-cell">
-                            <span class="post-title">평생 라면 한 종류만 먹어야 한다면?</span>
-                            <span class="post-author">작성자: 쩝쩝박사 <span style="margin:0 5px;">|</span> <span class="meta-stat">💬 참견 842</span> <span style="margin:0 5px;">|</span> <span class="meta-share">🔗 공유 32</span></span>
-                        </td>
-                        <td>
-                            <div class="vote-summary">
-                                <span class="vote-count" style="color:var(--text-sub);">총 8,451명 투표</span>
-                                <div class="mini-bar-wrapper" style="opacity:0.6;">
-                                    <div class="mini-bar-a" style="width: 62%;"></div>
-                                    <div class="mini-bar-b" style="width: 38%;"></div>
-                                </div>
-                                <div class="vote-pct" style="opacity:0.6;">
-                                    <span class="pct-a">신라면 (62%)</span><span class="pct-b">진라면 (38%)</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td style="color:var(--text-sub);">26.05.19 12:00</td>
-                        <td><span class="status-badge status-ended">마감됨</span></td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">상세/댓글</button>
-                                <button class="btn-sm btn-blind" onclick="blindPost(this, '#10382')">블라인드</button>
-                            </div>
-                        </td>
-                    </tr>
+                <tbody id="postsTableBody">
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#71717a;">불판 데이터를 불러오는 중...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -319,63 +260,9 @@
     </div>
 </main>
 
-<script>
-    async function blindPost(btn, postId) {
-        if(!confirm(`해당 불판(${postId})을 강제 숨김 처리하시겠습니까?\n시스템 규정에 따라 작성자에게 제재가 가해질 수 있습니다.`)) return;
-        const FB = window.PickleAdminFirebase;
-        const saved = await FB.persist('posts', String(postId), { status: 'blinded', action: 'blind' }, {
-            page: 'admin_board_list',
-            action: 'blind',
-            successMessage: '블라인드 처리가 Firebase에 저장되었습니다.',
-        });
-        if (!saved.ok) return;
-        {
-            const row = btn.closest('tr');
-            const statusCell = row.cells[5];
-            const actionCell = row.cells[6];
-            
-            row.style.opacity = '0.6';
-            row.style.backgroundColor = 'rgba(255,0,127,0.02)';
-            row.querySelector('.post-title').style.textDecoration = 'line-through';
-            
-            statusCell.innerHTML = '<span class="status-badge status-blinded">블라인드됨</span>';
-            actionCell.innerHTML = `
-                <div class="action-btns">
-                    <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">사유 확인</button>
-                    <button class="btn-sm btn-unblind" onclick="unblindPost(this, '${postId}')">숨김 해제</button>
-                </div>
-            `;
-        }
-    }
-
-    async function unblindPost(btn, postId) {
-        if(!confirm(`해당 불판(${postId})의 블라인드 조치를 해제하시겠습니까?`)) return;
-        const FB = window.PickleAdminFirebase;
-        const saved = await FB.persist('posts', String(postId), { status: 'active', action: 'unblind' }, {
-            page: 'admin_board_list',
-            action: 'unblind',
-            successMessage: '블라인드 해제가 Firebase에 저장되었습니다.',
-        });
-        if (!saved.ok) return;
-        {
-            const row = btn.closest('tr');
-            const statusCell = row.cells[5];
-            const actionCell = row.cells[6];
-            
-            row.style.opacity = '1';
-            row.style.backgroundColor = 'transparent';
-            row.querySelector('.post-title').style.textDecoration = 'none';
-            
-            statusCell.innerHTML = '<span class="status-badge status-active">진행 중</span>';
-            actionCell.innerHTML = `
-                <div class="action-btns">
-                    <button class="btn-sm btn-detail" onclick="location.href='admin_post_detail.html'">상세/댓글</button>
-                    <button class="btn-sm btn-blind" onclick="blindPost(this, '${postId}')">블라인드</button>
-                </div>
-            `;
-        }
-    }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin-post-list.js"></script>
 
 </body>
 </html>
