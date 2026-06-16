@@ -6,6 +6,7 @@
 
   var postsCache = [];
   var categoriesMap = {};
+  var voteStatsCache = new Map();
 
   function $(id) {
     return document.getElementById(id);
@@ -91,8 +92,13 @@
     return formatDeadline(deadline);
   }
 
+  function isBlindedPost(post) {
+    if (!post) return false;
+    return post.visibility_status === 'blinded' || post.status === 'blinded';
+  }
+
   function resolvePostStatus(post) {
-    if (post.visibility_status === 'blinded') return 'blinded';
+    if (isBlindedPost(post)) return 'blinded';
     if (post.visibility_status === 'hidden' || post.visibility_status === 'draft') {
       return 'ended';
     }
@@ -371,6 +377,7 @@
         return p.id;
       });
       var voteStatsMap = await fetchVoteStatsMap(sb, postIds);
+      voteStatsCache = voteStatsMap;
 
       renderPostList(postsCache, voteStatsMap);
       updateTableTotal(postsCache.length);
@@ -381,34 +388,54 @@
     }
   }
 
-  async function setPostVisibility(postId, status) {
+  async function setPostVisibility(postId, visibilityStatus) {
     var sb = getSupabaseClient();
+
     var rpc = await sb.rpc('admin_set_post_visibility', {
       p_post_id: postId,
-      p_status: status,
+      p_status: visibilityStatus,
     });
-    if (!rpc.error && rpc.data === true) return true;
-    if (rpc.error) {
-      console.warn('[Admin Posts] admin_set_post_visibility fallback', rpc.error);
+
+    if (!rpc.error && rpc.data === true) {
+      return { error: null };
     }
-    var upd = await sb.from('posts').update({ visibility_status: status }).eq('id', postId);
-    if (upd.error) throw upd.error;
-    return true;
+
+    if (rpc.error) {
+      console.warn('[Admin Posts] admin_set_post_visibility RPC error', rpc.error);
+      var fallback = await sb
+        .from('posts')
+        .update({ visibility_status: visibilityStatus })
+        .eq('id', postId)
+        .select('id');
+      if (fallback.error) {
+        return { error: rpc.error };
+      }
+      if (!fallback.data || !fallback.data.length) {
+        return { error: { message: '업데이트 대상 불판을 찾을 수 없습니다.' } };
+      }
+      return { error: null };
+    }
+
+    if (rpc.data === false) {
+      return { error: { message: '업데이트 대상 불판을 찾을 수 없습니다.' } };
+    }
+
+    return { error: null };
   }
 
-  function refreshRowUI(btn, postId, status) {
-    var row = btn.closest('tr');
-    if (!row) return;
+  function applyRowVisibilityUI(btn, postId, visibilityStatus) {
     var post = postsCache.find(function (p) {
       return p.id === postId;
     });
     if (!post) return;
-    post.visibility_status = status === 'blinded' ? 'blinded' : 'visible';
 
-    var voteStatsMap = new Map();
-    fetchVoteStatsMap(getSupabaseClient(), [postId]).then(function (map) {
-      row.outerHTML = renderPostRow(post, map.get(postId));
-    });
+    post.visibility_status = visibilityStatus;
+    post.status = visibilityStatus;
+
+    var row = btn.closest('tr');
+    if (!row) return;
+
+    row.outerHTML = renderPostRow(post, voteStatsCache.get(postId));
   }
 
   async function blindPost(btn, postId) {
@@ -421,26 +448,29 @@
     ) {
       return;
     }
-    try {
-      await setPostVisibility(postId, 'blinded');
-      refreshRowUI(btn, postId, 'blinded');
-    } catch (err) {
-      console.error('[Admin Posts] blind failed', err);
-      alert('블라인드 처리에 실패했습니다.');
+
+    var result = await setPostVisibility(postId, 'blinded');
+    if (result.error) {
+      alert('상태 변경에 실패했습니다: ' + (result.error.message || '알 수 없는 오류'));
+      return;
     }
+
+    applyRowVisibilityUI(btn, postId, 'blinded');
   }
 
   async function unblindPost(btn, postId) {
     if (!confirm('해당 불판(' + formatPostId(postId) + ')의 블라인드 조치를 해제하시겠습니까?')) {
       return;
     }
-    try {
-      await setPostVisibility(postId, 'visible');
-      refreshRowUI(btn, postId, 'visible');
-    } catch (err) {
-      console.error('[Admin Posts] unblind failed', err);
-      alert('블라인드 해제에 실패했습니다.');
+
+    // DB 컬럼 visibility_status — 복구 값은 'visible' (UI 상태명 'active'와 동일 의미)
+    var result = await setPostVisibility(postId, 'visible');
+    if (result.error) {
+      alert('상태 변경에 실패했습니다: ' + (result.error.message || '알 수 없는 오류'));
+      return;
     }
+
+    applyRowVisibilityUI(btn, postId, 'visible');
   }
 
   window.blindPost = blindPost;
