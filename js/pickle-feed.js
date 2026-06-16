@@ -14,6 +14,9 @@
   var feedTimerInterval = null;
   var feedIsLoading = false;
 
+  var FEED_LOGIN_PROMPT =
+    '🔥 픽클의 뜨거운 불판 참여는 회원만 가능합니다!\n1초 만에 회원가입하고 진짜 취향을 저격해 볼까요?';
+
   /** 작성자 스냅샷 우선 — tags/end_date/users 조인 실패 시에도 author 컬럼 유지 */
   var POSTS_SELECT_VARIANTS = [
     [
@@ -241,16 +244,51 @@
     return 'detail.html?id=' + encodeURIComponent(id);
   }
 
-  function goDetail(id) {
+  async function hasActiveSession() {
+    try {
+      var sb = getClient();
+      var result = await sb.auth.getSession();
+      return !!(result.data && result.data.session && result.data.session.user);
+    } catch (err) {
+      console.warn('[P!CKLE Feed] session check failed', err);
+      return false;
+    }
+  }
+
+  function redirectToLoginForFeed(targetUrl) {
+    var redirect = targetUrl || 'index.html';
+    if (window.PickleAuth && window.PickleAuth.goToLogin) {
+      window.PickleAuth.goToLogin({ redirect: redirect, from: 'vote' });
+      return;
+    }
+    window.location.href =
+      'login.html?redirect=' + encodeURIComponent(redirect) + '&from=vote';
+  }
+
+  async function goDetail(id) {
     if (!id) return;
-    window.location.href = detailUrl(id);
+
+    var target = detailUrl(id);
+    var loggedIn = await hasActiveSession();
+
+    if (!loggedIn) {
+      if (confirm(FEED_LOGIN_PROMPT)) {
+        redirectToLoginForFeed(target);
+      }
+      return;
+    }
+
+    window.location.href = target;
   }
 
   function getClient() {
-    if (!window.PickleSupabase || !window.PickleSupabase.getClient) {
-      throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
+    if (window.PickleSupabaseBootstrap && window.PickleSupabaseBootstrap.isReady()) {
+      return window.PickleSupabaseBootstrap.getClient();
     }
-    return window.PickleSupabase.getClient();
+    if (window.PickleSupabase && window.PickleSupabase.getClient) {
+      return window.PickleSupabase.getClient();
+    }
+    throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
   }
 
   function showLoading(container) {
@@ -933,7 +971,9 @@
     root.querySelectorAll(selector).forEach(function (card) {
       var id = card.dataset.id;
       if (!id) return;
-      card.addEventListener('click', function () {
+      card.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
         goDetail(id);
       });
       card.addEventListener('keydown', function (e) {
@@ -1148,6 +1188,9 @@
     setFeedLoading: setFeedLoading,
     isAuthRelatedError: isAuthRelatedError,
     clearStaleSession: clearStaleSession,
+    hasActiveSession: hasActiveSession,
+    redirectToLoginForFeed: redirectToLoginForFeed,
+    FEED_LOGIN_PROMPT: FEED_LOGIN_PROMPT,
     goDetail: goDetail,
     categoryLabel: categoryLabel,
     resolvePostCategoryLabel: resolvePostCategoryLabel,
@@ -1155,12 +1198,33 @@
     LOADING_HTML: LOADING_HTML,
   };
 
+  function startMainFeedWhenReady() {
+    var bootstrap = window.PickleSupabaseBootstrap;
+    var attempts = 0;
+    var maxAttempts = 40;
+
+    function tryLoad() {
+      if (
+        (bootstrap && bootstrap.isReady()) ||
+        (window.PickleSupabase && window.PickleSupabase.getClient) ||
+        attempts >= maxAttempts
+      ) {
+        loadPickleFeed();
+        return;
+      }
+      attempts += 1;
+      setTimeout(tryLoad, 100);
+    }
+
+    tryLoad();
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     if (
       document.getElementById('hotFeedList') ||
       document.getElementById('aiCurationContainer')
     ) {
-      loadPickleFeed();
+      startMainFeedWhenReady();
 
       if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
         window.PickleAuth.ensureAuthenticated({ skipProfile: true }).catch(function (authErr) {
