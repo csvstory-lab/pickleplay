@@ -127,6 +127,10 @@
     .btn-blind:hover { background-color: var(--neon-pink); color: #fff; }
     .btn-restore { background-color: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); }
 
+    .summary-loading { width: 100%; padding: 40px; text-align: center; color: var(--text-sub); font-size: 0.95rem; font-weight: 600; }
+    .summary-content { width: 100%; display: flex; gap: 30px; }
+    .summary-content[hidden] { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -170,12 +174,55 @@
     <div class="content-container">
         
         <div class="post-summary-card" id="postSummaryCard">
-            <div style="width:100%;padding:40px;text-align:center;color:#71717a;">불판 정보를 불러오는 중...</div>
+            <div id="postSummaryLoading" class="summary-loading">데이터를 불러오는 중입니다...</div>
+            <div id="postSummaryContent" class="summary-content" hidden>
+                <div class="post-info-left">
+                    <div class="badge-wrap">
+                        <span class="cat-badge" id="postCategoryBadge"></span>
+                        <span id="postStatusBadge"></span>
+                        <span id="postIdLabel" style="font-size:0.8rem;color:var(--text-sub);align-self:center;"></span>
+                    </div>
+                    <h2 class="post-title" id="postTitle"></h2>
+                    <div class="post-meta">
+                        <span>👤 작성자: <strong id="postAuthorName"></strong> (UID: <span id="postAuthorUid"></span>)</span>
+                        <span>🕒 등록일: <span id="postCreatedAt"></span></span>
+                    </div>
+                    <div class="vote-board">
+                        <div class="vote-text-wrap">
+                            <div class="vote-a-text" id="voteOptionA"></div>
+                            <div class="vote-b-text" id="voteOptionB"></div>
+                        </div>
+                        <div class="vote-bar-bg" id="voteBarBg">
+                            <div class="vote-bar-a" id="voteBarA"></div>
+                            <div class="vote-bar-b" id="voteBarB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-info-right">
+                    <div class="stat-box">
+                        <span class="stat-label">누적 투표수</span>
+                        <span class="stat-val" id="statVoteCount" style="color:var(--theme-gold);"></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">누적 공유(Share)수</span>
+                        <span class="stat-val" id="statShareCount" style="color:var(--neon-blue);"></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">작성된 참견(댓글)</span>
+                        <span class="stat-val" id="statCommentCount"></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">누적 신고 접수</span>
+                        <span class="stat-val" id="statReportCount" style="color:var(--neon-pink);"></span>
+                    </div>
+                    <button type="button" class="btn-action-post btn-stop-post" id="postBlindBtn"></button>
+                </div>
+            </div>
         </div>
 
         <div class="comment-section">
             <div class="section-header">
-                <h3 class="section-title">💬 참견(댓글) 실시간 모니터링</h3>
+                <h3 class="section-title" id="commentSectionTitle">💬 참견(댓글) 실시간 모니터링</h3>
                 <div class="filter-group">
                     <select class="admin-select">
                         <option>진영 전체 보기</option>
@@ -202,9 +249,7 @@
                         <th style="width: 20%; text-align:right;">관리자 액션</th>
                     </tr>
                 </thead>
-                <tbody id="commentsTableBody">
-                    <tr><td colspan="4" style="text-align:center;padding:40px;color:#71717a;">참견 데이터를 불러오는 중...</td></tr>
-                </tbody>
+                <tbody id="commentsTableBody"></tbody>
             </table>
         </div>
 

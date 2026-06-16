@@ -8,6 +8,8 @@
   var postCache = null;
   var commentsCache = [];
   var categoriesMap = {};
+  var MIN_LOADING_MS = 500;
+  var loadStartedAt = 0;
 
   function $(id) {
     return document.getElementById(id);
@@ -109,14 +111,152 @@
     return 'active';
   }
 
-  function statusBadgeHtml(status) {
-    if (status === 'blinded') {
-      return '<span class="status-badge status-blinded">블라인드됨</span>';
+  function statusBadgeLabel(status) {
+    if (status === 'blinded') return '블라인드됨';
+    if (status === 'ended') return '마감됨';
+    return '진행 중';
+  }
+
+  function statusBadgeClass(status) {
+    if (status === 'blinded') return 'status-badge status-blinded';
+    if (status === 'ended') return 'status-badge status-ended';
+    return 'status-badge status-active';
+  }
+
+  function ensureMinLoadingTime() {
+    var elapsed = Date.now() - loadStartedAt;
+    var remain = MIN_LOADING_MS - elapsed;
+    if (remain <= 0) return Promise.resolve();
+    return new Promise(function (resolve) {
+      setTimeout(resolve, remain);
+    });
+  }
+
+  function showLoadingState() {
+    var loading = $('postSummaryLoading');
+    var content = $('postSummaryContent');
+    if (loading) {
+      loading.hidden = false;
+      loading.style.color = 'var(--text-sub)';
+      loading.textContent = '데이터를 불러오는 중입니다...';
     }
-    if (status === 'ended') {
-      return '<span class="status-badge status-ended">마감됨</span>';
+    if (content) content.hidden = true;
+    showCommentsLoading();
+  }
+
+  function showPostSummaryContent() {
+    var loading = $('postSummaryLoading');
+    var content = $('postSummaryContent');
+    if (loading) loading.hidden = true;
+    if (content) content.hidden = false;
+  }
+
+  function renderVoteBoard(post, stats) {
+    var optionA = $('voteOptionA');
+    var optionB = $('voteOptionB');
+    var barBg = $('voteBarBg');
+    var barA = $('voteBarA');
+    var barB = $('voteBarB');
+    if (!optionA || !optionB || !barA || !barB) return;
+
+    optionA.textContent = 'A. ' + (post.option_a_name || 'A');
+    optionB.textContent = 'B. ' + (post.option_b_name || 'B');
+
+    var votesA = stats ? Number(stats.votesA) || 0 : 0;
+    var votesB = stats ? Number(stats.votesB) || 0 : 0;
+    var total = votesA + votesB;
+    if (total <= 0) total = Number(post.vote_count) || 0;
+
+    if (total <= 0) {
+      if (barBg) barBg.style.opacity = '0.4';
+      barA.style.width = '50%';
+      barB.style.width = '50%';
+      barA.textContent = '—';
+      barB.textContent = '—';
+      return;
     }
-    return '<span class="status-badge status-active">진행 중</span>';
+
+    if (votesA + votesB <= 0 && total > 0) {
+      votesA = Math.floor(total / 2);
+      votesB = total - votesA;
+    }
+
+    var pctA = Math.round((votesA / total) * 100);
+    var pctB = 100 - pctA;
+    var widthA = pctA > 0 ? Math.max(pctA, 8) : 0;
+    var widthB = pctB > 0 ? Math.max(pctB, 8) : 0;
+
+    if (barBg) barBg.style.opacity = '1';
+    barA.style.width = widthA + '%';
+    barB.style.width = widthB + '%';
+    barA.textContent = pctA + '%';
+    barB.textContent = pctB + '%';
+  }
+
+  function bindPostBlindBtn() {
+    var btn = $('postBlindBtn');
+    if (!btn || btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', function () {
+      if (!postCache) return;
+      if (resolvePostStatus(postCache) === 'blinded') {
+        unblindPost(postCache.id);
+      } else {
+        blindPost(postCache.id);
+      }
+    });
+  }
+
+  function renderPostSummary(post, stats) {
+    if (!post) return;
+
+    var status = resolvePostStatus(post);
+    var blinded = status === 'blinded';
+    var authorUid = post.author_id ? String(post.author_id).slice(0, 8) : '—';
+
+    var catBadge = $('postCategoryBadge');
+    var statusBadge = $('postStatusBadge');
+    var idLabel = $('postIdLabel');
+    var titleEl = $('postTitle');
+    var authorName = $('postAuthorName');
+    var authorUidEl = $('postAuthorUid');
+    var createdAt = $('postCreatedAt');
+    var statVote = $('statVoteCount');
+    var statShare = $('statShareCount');
+    var statComment = $('statCommentCount');
+    var statReport = $('statReportCount');
+    var blindBtn = $('postBlindBtn');
+
+    if (catBadge) catBadge.textContent = resolveCategoryBadge(post);
+    if (statusBadge) {
+      statusBadge.className = statusBadgeClass(status);
+      statusBadge.textContent = statusBadgeLabel(status);
+    }
+    if (idLabel) idLabel.textContent = 'ID: ' + formatPostId(post.id);
+    if (titleEl) {
+      titleEl.textContent = resolvePostTitle(post);
+      titleEl.style.textDecoration = blinded ? 'line-through' : '';
+      titleEl.style.opacity = blinded ? '0.7' : '';
+    }
+    if (authorName) authorName.textContent = resolveAuthorName(post);
+    if (authorUidEl) authorUidEl.textContent = authorUid;
+    if (createdAt) createdAt.textContent = formatDateTime(post.created_at);
+
+    renderVoteBoard(post, stats);
+
+    if (statVote) statVote.textContent = formatNumber(stats && stats.total ? stats.total : post.vote_count);
+    if (statShare) statShare.textContent = formatNumber(post.share_count);
+    if (statComment) statComment.textContent = formatNumber(post.comment_count);
+    if (statReport) statReport.textContent = formatNumber(post.report_count);
+
+    if (blindBtn) {
+      blindBtn.textContent = blinded ? '👁️ 블라인드 해제' : '👁️ 이 불판 강제 블라인드(숨김)';
+      blindBtn.className = blinded
+        ? 'btn-action-post btn-restore-post'
+        : 'btn-action-post btn-stop-post';
+    }
+
+    showPostSummaryContent();
   }
 
   function resolveCommentText(comment) {
@@ -150,131 +290,6 @@
       escapeHtml(label) +
       '</span>'
     );
-  }
-
-  function voteBoardHtml(post, stats) {
-    var votesA = stats ? Number(stats.votesA) || 0 : 0;
-    var votesB = stats ? Number(stats.votesB) || 0 : 0;
-    var total = votesA + votesB;
-    if (total <= 0) total = Number(post.vote_count) || 0;
-    if (total <= 0) {
-      return (
-        '<div class="vote-board">' +
-        '<div class="vote-text-wrap">' +
-        '<div class="vote-a-text">A. ' +
-        escapeHtml(post.option_a_name || 'A') +
-        '</div>' +
-        '<div class="vote-b-text">B. ' +
-        escapeHtml(post.option_b_name || 'B') +
-        '</div>' +
-        '</div>' +
-        '<div class="vote-bar-bg" style="opacity:0.4;">' +
-        '<div class="vote-bar-a" style="width:50%;">—</div>' +
-        '<div class="vote-bar-b" style="width:50%;">—</div>' +
-        '</div></div>'
-      );
-    }
-    if (votesA + votesB <= 0 && total > 0) {
-      votesA = Math.floor(total / 2);
-      votesB = total - votesA;
-    }
-    var pctA = Math.round((votesA / total) * 100);
-    var pctB = 100 - pctA;
-    var widthA = pctA > 0 ? Math.max(pctA, 8) : 0;
-    var widthB = pctB > 0 ? Math.max(pctB, 8) : 0;
-    return (
-      '<div class="vote-board">' +
-      '<div class="vote-text-wrap">' +
-      '<div class="vote-a-text">A. ' +
-      escapeHtml(post.option_a_name || 'A') +
-      '</div>' +
-      '<div class="vote-b-text">B. ' +
-      escapeHtml(post.option_b_name || 'B') +
-      '</div>' +
-      '</div>' +
-      '<div class="vote-bar-bg">' +
-      '<div class="vote-bar-a" style="width:' +
-      widthA +
-      '%;">' +
-      pctA +
-      '%</div>' +
-      '<div class="vote-bar-b" style="width:' +
-      widthB +
-      '%;">' +
-      pctB +
-      '%</div>' +
-      '</div></div>'
-    );
-  }
-
-  function renderPostSummary(post, stats) {
-    var card = $('postSummaryCard');
-    if (!card || !post) return;
-
-    var status = resolvePostStatus(post);
-    var blinded = status === 'blinded';
-    var authorUid = post.author_id ? String(post.author_id).slice(0, 8) : '—';
-    var blindBtnLabel = blinded ? '👁️ 블라인드 해제' : '👁️ 이 불판 강제 블라인드(숨김)';
-    var blindBtnClass = blinded ? 'btn-action-post btn-restore-post' : 'btn-action-post btn-stop-post';
-
-    card.innerHTML =
-      '<div class="post-info-left">' +
-      '<div class="badge-wrap">' +
-      '<span class="cat-badge">' +
-      escapeHtml(resolveCategoryBadge(post)) +
-      '</span>' +
-      statusBadgeHtml(status) +
-      '<span style="font-size:0.8rem;color:var(--text-sub);align-self:center;">ID: ' +
-      escapeHtml(formatPostId(post.id)) +
-      '</span>' +
-      '</div>' +
-      '<h2 class="post-title"' +
-      (blinded ? ' style="text-decoration:line-through;opacity:0.7;"' : '') +
-      '>' +
-      escapeHtml(resolvePostTitle(post)) +
-      '</h2>' +
-      '<div class="post-meta">' +
-      '<span>👤 작성자: <strong>' +
-      escapeHtml(resolveAuthorName(post)) +
-      '</strong> (UID: ' +
-      escapeHtml(authorUid) +
-      ')</span>' +
-      '<span>🕒 등록일: ' +
-      escapeHtml(formatDateTime(post.created_at)) +
-      '</span>' +
-      '</div>' +
-      voteBoardHtml(post, stats) +
-      '</div>' +
-      '<div class="post-info-right">' +
-      '<div class="stat-box"><span class="stat-label">누적 투표수</span><span class="stat-val" style="color:var(--theme-gold);">' +
-      formatNumber(stats && stats.total ? stats.total : post.vote_count) +
-      '</span></div>' +
-      '<div class="stat-box"><span class="stat-label">누적 공유(Share)수</span><span class="stat-val" style="color:var(--neon-blue);">' +
-      formatNumber(post.share_count) +
-      '</span></div>' +
-      '<div class="stat-box"><span class="stat-label">작성된 참견(댓글)</span><span class="stat-val">' +
-      formatNumber(post.comment_count) +
-      '</span></div>' +
-      '<div class="stat-box"><span class="stat-label">누적 신고 접수</span><span class="stat-val" style="color:var(--neon-pink);">' +
-      formatNumber(post.report_count) +
-      '</span></div>' +
-      '<button type="button" class="' +
-      blindBtnClass +
-      '" id="postBlindBtn">' +
-      escapeHtml(blindBtnLabel) +
-      '</button>' +
-      '</div>';
-
-    var blindBtn = $('postBlindBtn');
-    if (blindBtn) {
-      blindBtn.addEventListener('click', function () {
-        if (blinded) {
-          unblindPost(post.id);
-        } else {
-          blindPost(post.id);
-        }
-      });
-    }
   }
 
   function renderCommentRow(comment, post) {
@@ -361,9 +376,11 @@
 
     if (!comments || !comments.length) {
       tbody.innerHTML =
-        '<tr><td colspan="4" style="text-align:center;padding:40px;color:#71717a;">등록된 참견이 없습니다.</td></tr>';
+        '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--text-sub);">등록된 참견이 없습니다.</td></tr>';
       return;
     }
+
+    if (!post) return;
 
     tbody.innerHTML = comments
       .map(function (comment) {
@@ -373,19 +390,28 @@
   }
 
   function showPostSummaryError(message) {
-    var card = $('postSummaryCard');
-    if (!card) return;
-    card.innerHTML =
-      '<div style="width:100%;padding:40px;text-align:center;color:#f87171;">' +
-      escapeHtml(message || '불판 정보를 불러오지 못했습니다.') +
-      '</div>';
+    var loading = $('postSummaryLoading');
+    var content = $('postSummaryContent');
+    if (content) content.hidden = true;
+    if (loading) {
+      loading.hidden = false;
+      loading.style.color = '#f87171';
+      loading.textContent = message || '불판 정보를 불러오지 못했습니다.';
+    }
   }
 
   function showCommentsLoading() {
     var tbody = $('commentsTableBody');
     if (!tbody) return;
     tbody.innerHTML =
-      '<tr><td colspan="4" style="text-align:center;padding:40px;color:#71717a;">참견 데이터를 불러오는 중...</td></tr>';
+      '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--text-sub);">데이터를 불러오는 중입니다...</td></tr>';
+  }
+
+  function updateCommentSectionTitle(count) {
+    var titleEl = $('commentSectionTitle');
+    if (titleEl) {
+      titleEl.textContent = '💬 참견(댓글) 실시간 모니터링 (' + formatNumber(count) + '건)';
+    }
   }
 
   async function loadCategoriesMap(sb) {
@@ -452,14 +478,16 @@
   }
 
   async function loadPostDetail() {
+    loadStartedAt = Date.now();
+    showLoadingState();
+
     postId = getPostIdFromUrl();
     if (!postId) {
+      await ensureMinLoadingTime();
       showPostSummaryError('불판 ID가 없습니다. 목록에서 다시 접속해 주세요.');
       renderCommentList([], null);
       return;
     }
-
-    showCommentsLoading();
 
     try {
       var sb = getSupabaseClient();
@@ -468,6 +496,7 @@
       var postResult = await fetchPost(sb, postId);
       if (postResult.error) throw postResult.error;
       if (!postResult.data) {
+        await ensureMinLoadingTime();
         showPostSummaryError('해당 불판을 찾을 수 없습니다.');
         renderCommentList([], null);
         return;
@@ -481,7 +510,6 @@
       if (postCache.report_count == null) postCache.report_count = 0;
 
       var stats = await fetchVoteStats(sb, postId);
-      renderPostSummary(postCache, stats);
 
       var commentsResult = await fetchComments(sb, postId);
       if (commentsResult.error) throw commentsResult.error;
@@ -497,14 +525,14 @@
         if (c.report_count == null) c.report_count = 0;
       });
 
-      renderCommentList(commentsCache, postCache);
+      await ensureMinLoadingTime();
 
-      var titleEl = document.querySelector('.section-title');
-      if (titleEl) {
-        titleEl.textContent = '💬 참견(댓글) 실시간 모니터링 (' + formatNumber(commentsCache.length) + '건)';
-      }
+      renderPostSummary(postCache, stats);
+      renderCommentList(commentsCache, postCache);
+      updateCommentSectionTitle(commentsCache.length);
     } catch (err) {
       console.error('[Admin Post Detail] load failed', err);
+      await ensureMinLoadingTime();
       showPostSummaryError(err && err.message ? err.message : '불판 정보를 불러오지 못했습니다.');
       renderCommentList([], null);
     }
@@ -654,6 +682,7 @@
   window.loadPostDetail = loadPostDetail;
 
   document.addEventListener('DOMContentLoaded', function () {
+    bindPostBlindBtn();
     loadPostDetail();
   });
 })();
