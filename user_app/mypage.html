@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <!-- Google tag (gtag.js) -->
@@ -950,7 +950,7 @@
         <!-- 💡 로그아웃, 회원탈퇴 그룹 -->
         <div class="settings-group">
             <div class="settings-item text-danger" id="btnLogout">로그아웃</div>
-            <div class="settings-item text-danger" style="font-size: 0.9rem;" onclick="if(confirm('탈퇴 시 모든 기록이 삭제됩니다. 진행하시겠습니까?')){alert('탈퇴 처리되었습니다.');}">회원 탈퇴</div>
+            <div class="settings-item text-danger" id="btnWithdraw">회원 탈퇴</div>
         </div>
 
         <footer class="settings-company-footer">
@@ -1419,6 +1419,8 @@
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
+<script src="../js/user-info-modal.js"></script>
+<script src="../js/pickle-account.js"></script>
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-profile.js"></script>

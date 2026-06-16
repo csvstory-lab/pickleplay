@@ -132,7 +132,9 @@
     if (!sb || !userId) return null;
     const { data, error } = await sb
       .from('users')
-      .select('id, nickname, avatar_html, avatar_url, bio, signup_platform, points')
+      .select(
+        'id, nickname, avatar_html, avatar_url, bio, signup_platform, points, gender, age_group, region, marketing_agreed, is_info_collected'
+      )
       .eq('id', userId)
       .maybeSingle();
     if (error) {
@@ -291,7 +293,9 @@
       .from('users')
       .update({ nickname: derivedNick })
       .eq('id', user.id)
-      .select('id, nickname, avatar_html, avatar_url, bio, signup_platform, points')
+      .select(
+        'id, nickname, avatar_html, avatar_url, bio, signup_platform, points, gender, age_group, region, marketing_agreed, is_info_collected'
+      )
       .maybeSingle();
 
     if (error) {

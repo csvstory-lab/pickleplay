@@ -111,6 +111,20 @@
 
     .mkt-agree { color: #fff; font-weight: 800; background: #3f3f46; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
     .mkt-deny { color: #71717a; font-weight: 700; background: transparent; border: 1px solid #3f3f46; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+    .region-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background: rgba(0, 240, 255, 0.08); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.25); }
+    .text-muted-cell { color: #52525b; font-weight: 700; }
+
+    /* 빠른 필터 (마케팅·연령대) */
+    .quick-filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+    .quick-filter-label { font-size: 0.78rem; font-weight: 800; color: var(--text-sub); margin-right: 4px; }
+    .filter-chip {
+        background: #27272a; border: 1px solid #3f3f46; color: #e4e4e7;
+        font-family: 'Pentabreed', 'Pretendard', sans-serif; font-size: 0.82rem; font-weight: 800;
+        padding: 8px 14px; border-radius: 999px; cursor: pointer; transition: 0.2s;
+    }
+    .filter-chip:hover { border-color: var(--neon-green); color: #fff; }
+    .filter-chip.is-active { background: rgba(57, 255, 20, 0.12); border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 12px rgba(57, 255, 20, 0.15); }
+    .quick-age-select { min-width: 130px; }
 
     .status-badge { padding: 4px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-block; text-align: center; }
     .status-active { background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
@@ -191,7 +205,10 @@
 
 <!-- 좌측 사이드바 -->
 <aside class="sidebar">
-    <div class="logo-area"><h1 class="logo" onclick="location.href='admin_dashboard.html'">P!CKLE</h1><div class="logo-sub">ADMINISTRATOR 2.6</div></div>
+    <div class="logo-area">
+        <h1 class="logo" onclick="location.href='admin_dashboard.html'">P!CKLE</h1>
+        <div class="logo-sub">ADMINISTRATOR 2.6</div>
+    </div>
     <ul class="nav-menu">
         <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
         <li class="nav-item active" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
@@ -226,34 +243,45 @@
         <!-- KPI 요약 -->
         <div class="mini-kpi-row">
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">전체 회원</span><span class="mini-kpi-val">142,890</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">전체 회원</span><span class="mini-kpi-val" id="kpiTotalUsers">—</span></div>
                 <div class="mini-kpi-icon">🌍</div>
             </div>
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">신규 가입 (이번주)</span><span class="mini-kpi-val" style="color: var(--neon-green);">+3,241</span></div>
-                <div class="mini-kpi-icon">🚀</div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">마케팅 동의</span><span class="mini-kpi-val" style="color: var(--neon-green);" id="kpiMarketingUsers">—</span></div>
+                <div class="mini-kpi-icon">📣</div>
             </div>
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">옐로카드 🟨 (70점 이상)</span><span class="mini-kpi-val" style="color: var(--alert-yellow);">128</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">옐로카드 🟨 (70점 이상)</span><span class="mini-kpi-val" style="color: var(--alert-yellow);" id="kpiWarningUsers">—</span></div>
                 <div class="mini-kpi-icon">⚠️</div>
             </div>
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">영구 차단 🟥 (100점)</span><span class="mini-kpi-val" style="color: var(--alert-red);">412</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">영구 차단 🟥 (100점)</span><span class="mini-kpi-val" style="color: var(--alert-red);" id="kpiBannedUsers">—</span></div>
                 <div class="mini-kpi-icon">🚨</div>
             </div>
         </div>
 
-        <!-- 💡 모든 필터가 완벽하게 복구된 검색 바 -->
+        <!-- 빠른 필터 (마케팅 명단 추출용) -->
+        <div class="quick-filter-row">
+            <span class="quick-filter-label">⚡ 빠른 필터</span>
+            <button type="button" class="filter-chip" id="filterMarketingOnly">📣 마케팅 동의 유저만</button>
+            <select class="admin-select quick-age-select" id="filterAgeQuick" aria-label="연령대 빠른 필터">
+                <option value="all">연령대: 전체</option>
+                <option value="10s">10대만</option>
+                <option value="20s">20대만</option>
+                <option value="30s">30대만</option>
+                <option value="40s">40대만</option>
+                <option value="50plus">50대+만</option>
+            </select>
+        </div>
+
         <div class="filter-bar">
-            <!-- 1. 검색어 -->
             <div class="input-group">
                 <span class="input-label">검색어</span>
-                <input type="text" class="admin-input" placeholder="닉네임, 이메일, UID">
+                <input type="text" class="admin-input" id="filterSearch" placeholder="닉네임, UID">
             </div>
-            <!-- 2. 가입 플랫폼 -->
             <div class="input-group">
                 <span class="input-label">가입 플랫폼</span>
-                <select class="admin-select" style="width: 120px;">
+                <select class="admin-select" id="filterPlatform" style="width: 120px;">
                     <option value="all">전체보기</option>
                     <option value="kakao">카카오톡</option>
                     <option value="naver">네이버</option>
@@ -261,208 +289,89 @@
                     <option value="email">이메일</option>
                 </select>
             </div>
-            <!-- 3. 성별 필터 -->
             <div class="input-group">
                 <span class="input-label">성별</span>
-                <select class="admin-select" style="width: 90px;">
+                <select class="admin-select" id="filterGender" style="width: 90px;">
                     <option value="all">전체</option>
-                    <option value="m">남성</option>
-                    <option value="f">여성</option>
+                    <option value="male">남성</option>
+                    <option value="female">여성</option>
                 </select>
             </div>
-            <!-- 4. 연령대 필터 -->
             <div class="input-group">
                 <span class="input-label">연령대</span>
-                <select class="admin-select" style="width: 110px;">
+                <select class="admin-select" id="filterAgeGroup" style="width: 110px;">
                     <option value="all">전체</option>
                     <option value="10s">10대</option>
                     <option value="20s">20대</option>
                     <option value="30s">30대</option>
-                    <option value="40s">40대 이상</option>
+                    <option value="40s">40대</option>
+                    <option value="50plus">50대+</option>
                 </select>
             </div>
-            <!-- 💡 5. 회원 등급 (신규 복구) -->
-            <div class="input-group">
-                <span class="input-label">회원 등급</span>
-                <select class="admin-select" style="width: 130px;">
-                    <option value="all">전체 등급</option>
-                    <option value="lv1">Lv.1 눈팅러</option>
-                    <option value="lv2">Lv.2 프로투표러</option>
-                    <option value="lv3">Lv.3 이슈메이커</option>
-                    <option value="lv4">Lv.4 트렌드세터</option>
-                    <option value="lvmax">Lv.MAX 갓픽클</option>
-                </select>
-            </div>
-            <!-- 6. 계정 상태 -->
             <div class="input-group">
                 <span class="input-label">계정 상태 (벌점)</span>
-                <select class="admin-select" style="width: 160px;">
+                <select class="admin-select" id="filterStatus" style="width: 160px;">
                     <option value="all">전체 상태</option>
                     <option value="active">클린 유저 (0~69점)</option>
                     <option value="warning">옐로카드 (70~99점)</option>
                     <option value="banned">영구 차단 (100점)</option>
                 </select>
             </div>
-            <!-- 7. 마케팅 동의 -->
             <div class="input-group">
                 <span class="input-label">마케팅 동의</span>
-                <select class="admin-select" style="width: 100px;">
+                <select class="admin-select" id="filterMarketing" style="width: 100px;">
                     <option value="all">전체</option>
                     <option value="y">동의 (Y)</option>
                     <option value="n">거부 (N)</option>
                 </select>
             </div>
-            <!-- 8. 정렬 기준 -->
             <div class="input-group">
                 <span class="input-label">정렬 기준</span>
-                <select class="admin-select" style="width: 140px;">
+                <select class="admin-select" id="filterSort" style="width: 140px;">
                     <option value="newest">최근 가입순</option>
                     <option value="points">보유 포인트순</option>
-                    <option value="penalty" selected>🔥 누적 벌점순</option>
+                    <option value="penalty">누적 벌점순</option>
                 </select>
             </div>
 
-            <button class="btn-search" onclick="alert('필터 조건에 맞게 리스트를 갱신합니다.')">조회</button>
+            <button type="button" class="btn-search" id="btnSearchUsers">조회</button>
         </div>
 
         <!-- 리스트 컨트롤 -->
         <div class="table-controls">
             <div style="font-size: 0.85rem; color: var(--text-sub);">
-                총 <span style="color:#fff; font-weight:800;">142,890</span>명의 회원이 검색되었습니다.
+                총 <span style="color:#fff; font-weight:800;" id="usersCountLabel">0</span>명의 회원이 검색되었습니다.
             </div>
-            <select class="list-count-select">
+            <select class="list-count-select" id="listPageSize">
                 <option value="10">10명씩 보기</option>
                 <option value="50" selected>50명씩 보기</option>
                 <option value="100">100명씩 보기</option>
             </select>
         </div>
 
-        <!-- 데이터 테이블 -->
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 25%;">유저 닉네임 / 등급</th>
-                        <th style="width: 15%;">가입 정보 (연령/성별)</th>
-                        <th style="width: 10%;">보유 포인트</th>
-                        <th style="width: 12%; text-align: center;">누적 벌점 (제재)</th>
-                        <th style="width: 8%; text-align: center;">MKT 동의</th>
-                        <th style="width: 10%; text-align: center;">계정 상태</th>
-                        <th style="width: 20%; text-align:right;">관리 액션</th>
+                        <th style="width: 18%;">유저 닉네임</th>
+                        <th style="width: 8%;">가입 플랫폼</th>
+                        <th style="width: 7%;">성별</th>
+                        <th style="width: 8%;">연령대</th>
+                        <th style="width: 8%;">지역</th>
+                        <th style="width: 8%; text-align: center;">마케팅 동의</th>
+                        <th style="width: 9%;">보유 포인트</th>
+                        <th style="width: 10%; text-align: center;">누적 벌점</th>
+                        <th style="width: 8%; text-align: center;">계정 상태</th>
+                        <th style="width: 16%; text-align:right;">관리 액션</th>
                     </tr>
                 </thead>
-                <tbody>
-                    
-                    <!-- 유저 1 (위험군 - 옐로카드) -->
-                    <tr>
-                        <td>
-                            <div class="user-profile-cell">
-                                <div class="avatar">🍕</div>
-                                <div class="user-info">
-                                    <span class="user-nickname">쩝쩝박사 <span class="tier-badge">Lv.3 이슈메이커</span></span>
-                                    <span class="user-uid">UID: 104289 | food@naver.com</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="badge-group">
-                                <span class="small-badge bg-kakao">Kakao</span>
-                                <span class="text-male">남성</span> <span class="text-age">(1995년생)</span>
-                            </div>
-                        </td>
-                        <td style="color: var(--theme-gold); font-weight: 700;">4,250 P</td>
-                        <td style="text-align: center;">
-                            <span class="pt-yellow"><span class="card-icon">🟨</span> 70 점</span>
-                        </td>
-                        <td style="text-align: center;"><span class="mkt-agree">Y</span></td>
-                        <td style="text-align: center;"><span class="status-badge status-warning">경고</span></td>
-                        <td>
-                            <!-- 💡 벌점 버튼 복구 완료 -->
-                            <div class="action-btns">
-                                <button class="btn-sm btn-detail" onclick="openUserModal()">상세</button>
-                                <button class="btn-sm btn-penalty" onclick="alert('벌점 부과 팝업이 뜹니다. (현재 70점)')">🔨 벌점</button>
-                                <button class="btn-sm btn-ban" onclick="banUser('쩝쩝박사')">영구 차단</button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 💡 유저 2 (영구 차단 - 해제 버튼 완전 삭제) -->
-                    <tr>
-                        <td>
-                            <div class="user-profile-cell">
-                                <div class="avatar">🤬</div>
-                                <div class="user-info">
-                                    <span class="user-nickname">악플러123 <span class="tier-badge" style="color:#a1a1aa; border:1px solid #3f3f46; background:transparent;">Lv.1 눈팅러</span></span>
-                                    <span class="user-uid">UID: 99421 | hater@gmail.com</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="badge-group">
-                                <span class="small-badge bg-google">Google</span>
-                                <span class="text-female">여성</span> <span class="text-age">(2002년생)</span>
-                            </div>
-                        </td>
-                        <td style="color: #fff;">0 P</td>
-                        <td style="text-align: center;">
-                            <span class="pt-red"><span class="card-icon">🟥</span> 100 점</span>
-                        </td>
-                        <td style="text-align: center;"><span class="mkt-deny">N</span></td>
-                        <td style="text-align: center;"><span class="status-badge status-banned">영구 차단</span></td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-sm btn-detail" onclick="openUserModal()">상세</button>
-                                <!-- 영구 차단 회원은 액션 불가 텍스트만 표시 -->
-                                <span class="text-banned">조치불가 (차단됨)</span>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 유저 3 (클린) -->
-                    <tr>
-                        <td>
-                            <div class="user-profile-cell">
-                                <div class="avatar">🍏</div>
-                                <div class="user-info">
-                                    <span class="user-nickname">트렌드사냥꾼 <span class="tier-badge" style="background:rgba(57, 255, 20, 0.1); color:var(--neon-green);">Lv.4 트렌드세터</span></span>
-                                    <span class="user-uid">UID: 125501 | hunter@apple.com</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="badge-group">
-                                <span class="small-badge bg-email">Email</span>
-                                <span class="text-male">남성</span> <span class="text-age">(1988년생)</span>
-                            </div>
-                        </td>
-                        <td style="color: var(--theme-gold); font-weight: 700;">85,000 P</td>
-                        <td style="text-align: center;">
-                            <span class="pt-clean">0 점</span>
-                        </td>
-                        <td style="text-align: center;"><span class="mkt-agree">Y</span></td>
-                        <td style="text-align: center;"><span class="status-badge status-active">활동중</span></td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-sm btn-detail" onclick="openUserModal()">상세</button>
-                                <button class="btn-sm btn-penalty" onclick="alert('벌점 부과 팝업이 뜹니다. (현재 0점)')">🔨 벌점</button>
-                                <button class="btn-sm btn-ban" onclick="banUser('트렌드사냥꾼')">영구 차단</button>
-                            </div>
-                        </td>
-                    </tr>
-
+                <tbody id="usersTableBody">
+                    <tr><td colspan="10" style="text-align:center;padding:40px;color:#71717a;">회원 목록 불러오는 중…</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="pagination">
-            <button class="page-btn">←</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn">4</button>
-            <button class="page-btn">5</button>
-            <button class="page-btn">→</button>
-        </div>
+        <div class="pagination" id="usersPagination"></div>
 
     </div>
 </main>
@@ -480,40 +389,51 @@
         <div class="modal-body">
             
             <div class="profile-summary">
-                <div class="ps-avatar">🍕</div>
+                <div class="ps-avatar" id="modalAvatar">👤</div>
                 <div class="ps-info">
                     <div class="ps-name-wrap">
-                        <span class="ps-name">쩝쩝박사</span>
-                        <span class="tier-badge" style="font-size: 0.75rem;">Lv.3 이슈메이커</span>
+                        <span class="ps-name" id="modalName">—</span>
                     </div>
-                    <div class="ps-uid">UID: 104289 | food@naver.com</div>
+                    <div class="ps-uid" id="modalUid">UID: —</div>
                     
                     <div class="meta-grid">
                         <div class="meta-col">
-                            <span class="meta-val" style="color: var(--neon-blue);">남성</span>
-                            <span class="meta-label">1995년생</span>
+                            <span class="meta-val" id="modalGender">—</span>
+                            <span class="meta-label">성별</span>
+                        </div>
+                        <div class="meta-col">
+                            <span class="meta-val" id="modalAge">—</span>
+                            <span class="meta-label">연령대</span>
+                        </div>
+                        <div class="meta-col">
+                            <span class="meta-val" id="modalRegion">—</span>
+                            <span class="meta-label">지역</span>
+                        </div>
+                        <div class="meta-col">
+                            <span class="meta-val" id="modalMarketing">—</span>
+                            <span class="meta-label">마케팅 동의</span>
                         </div>
                         <div class="meta-col">
                             <span class="meta-label">가입일</span>
-                            <span class="meta-val">2026.04.12</span>
+                            <span class="meta-val" id="modalJoined">—</span>
                         </div>
                         <div class="meta-col">
                             <span class="meta-label">가입채널</span>
-                            <span class="meta-val">카카오</span>
+                            <span class="meta-val" id="modalPlatform">—</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="status-wrap">
                     <div class="status-wrap-title">현재 계정 상태</div>
-                    <div class="status-wrap-val">🟨 옐로카드 (70점)</div>
+                    <div class="status-wrap-val" id="modalStatus">—</div>
                 </div>
             </div>
 
             <div class="stat-grid">
                 <div class="stat-box">
-                    <div class="stat-label">보유 포인트 (활성화 대기)</div>
-                    <div class="stat-val" style="color:var(--text-sub);">4,250 P</div>
+                    <div class="stat-label">보유 포인트</div>
+                    <div class="stat-val" id="modalPoints">—</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">생성한 불판 수</div>
@@ -552,14 +472,10 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin-users.js"></script>
 <script>
-    function openUserModal() {
-        document.getElementById('userModal').style.display = 'flex';
-    }
-    function closeUserModal() {
-        document.getElementById('userModal').style.display = 'none';
-    }
-
     async function banUser(nickname) {
         if(!confirm(`[${nickname}] 회원을 즉시 영구 차단하시겠습니까?\n사유: 사안이 중대하여 관리자 직권으로 차단함 (복구 불가)`)) return;
         const FB = window.PickleAdminFirebase;

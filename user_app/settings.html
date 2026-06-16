@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -619,12 +619,6 @@
             closeSubPanel('legalPanel');
         }
     }
-
-    document.getElementById('btnWithdraw').addEventListener('click', function() {
-        if (confirm('탈퇴 시 모든 기록이 삭제됩니다. 진행하시겠습니까?')) {
-            alert('회원탈퇴 기능은 준비 중입니다.');
-        }
-    });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -635,6 +629,8 @@
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
+<script src="../js/user-info-modal.js"></script>
+<script src="../js/pickle-account.js"></script>
 <script src="../js/settings-page.js"></script>
 </body>
 </html>

@@ -359,6 +359,12 @@
     });
   }
 
+  function bindWithdraw() {
+    if (window.PickleAccount && window.PickleAccount.bindWithdrawButton) {
+      window.PickleAccount.bindWithdrawButton('btnWithdraw');
+    }
+  }
+
   async function saveProfile() {
     var newNick = document.getElementById('nicknameInput').value.trim();
     if (newNick.length < 2) {
@@ -1599,6 +1605,7 @@
       await renderProfile(user);
       bindProfileEditOpen();
       bindLogout();
+      bindWithdraw();
       bindPostEditThumbInput();
       mypageTabLoaded.created = true;
       await Promise.all([

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <!-- Google tag (gtag.js) -->
@@ -158,6 +158,132 @@
     .icon-link { background-color: #27272a; color: #fff; border: 1px solid #3f3f46;}
     .icon-os { background-color: #fff; color: #000; } 
     .share-label { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); text-align: center; }
+
+    /* 8. 연령·성별 상세 통계 (취향 넛지) */
+    .taste-stats-wrap {
+        position: relative;
+        margin: 0 20px 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 18px;
+        background: var(--card-bg);
+        overflow: hidden;
+    }
+    .taste-stats-head {
+        padding: 16px 18px 10px;
+        border-bottom: 1px dashed #3f3f46;
+    }
+    .taste-stats-head h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 900;
+        color: #fff;
+    }
+    .taste-stats-head p {
+        margin: 6px 0 0;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-sub);
+    }
+    .taste-stats-content {
+        padding: 16px 18px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .taste-stats-wrap.is-locked .taste-stats-content {
+        pointer-events: none;
+        user-select: none;
+    }
+    .taste-stat-card {
+        background: #111;
+        border: 2px solid #27272a;
+        border-radius: 14px;
+        padding: 14px;
+    }
+    .taste-stat-card h4 {
+        margin: 0 0 10px;
+        font-size: 0.88rem;
+        font-weight: 900;
+        color: #fff;
+    }
+    .taste-stat-card h4 .tag-a { color: var(--theme-beer); }
+    .taste-stat-card h4 .tag-b { color: var(--theme-soju); }
+    .taste-gender-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--text-sub);
+        margin-bottom: 6px;
+    }
+    .gender-bar {
+        display: flex;
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #3f3f46;
+    }
+    .gb-f { background: var(--neon-pink); height: 100%; }
+    .gb-m { background: var(--neon-blue); height: 100%; }
+    .taste-age-bars { display: flex; flex-direction: column; gap: 8px; }
+    .taste-age-row {
+        display: grid;
+        grid-template-columns: 42px 1fr 36px;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #d4d4d8;
+    }
+    .taste-age-track {
+        height: 8px;
+        background: #27272a;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .taste-age-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, var(--neon-green), var(--theme-gold));
+    }
+    .taste-stats-lock {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 10, 10, 0.25);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        cursor: pointer;
+    }
+    .taste-stats-wrap.is-locked .taste-stats-lock { display: flex; }
+    .taste-unlock-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        max-width: 280px;
+        padding: 18px 20px;
+        border: 3px solid #00FFFF;
+        background: #111;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.92rem;
+        font-weight: 900;
+        line-height: 1.45;
+        text-align: center;
+        cursor: pointer;
+        box-shadow: 6px 6px 0 #FF00FF;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s;
+    }
+    .taste-unlock-btn .lock-icon { font-size: 1.8rem; line-height: 1; }
+    .taste-unlock-btn:hover { background: #1a1a1a; color: #FFFF00; }
+    .taste-unlock-btn:active { transform: translate(6px, 6px); box-shadow: none; }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
@@ -229,6 +355,41 @@
             <div class="gauge-fill-b" id="gaugeFillB"><span class="inner-pct" id="innerPctB">55%</span></div>
             <div class="food-icon icon-a" id="iconA">🍺</div>
             <div class="food-icon icon-b" id="iconB">🍶</div>
+        </div>
+    </div>
+
+    <div class="taste-stats-wrap is-locked" id="tasteStatsWrap">
+        <div class="taste-stats-head">
+            <h3>📊 연령·성별 상세 통계</h3>
+            <p>나와 비슷한 픽클러들은 어떻게 골랐을까?</p>
+        </div>
+        <div class="taste-stats-content" id="tasteStatsContent">
+            <div class="taste-stat-card">
+                <h4><span class="tag-a">A</span> 치맥 — 성별 분포</h4>
+                <div class="taste-gender-row"><span>여성 62%</span><span>남성 38%</span></div>
+                <div class="gender-bar"><div class="gb-f" style="width:62%;"></div><div class="gb-m" style="width:38%;"></div></div>
+            </div>
+            <div class="taste-stat-card">
+                <h4><span class="tag-b">B</span> 삼쏘 — 성별 분포</h4>
+                <div class="taste-gender-row"><span>여성 48%</span><span>남성 52%</span></div>
+                <div class="gender-bar"><div class="gb-f" style="width:48%;"></div><div class="gb-m" style="width:52%;"></div></div>
+            </div>
+            <div class="taste-stat-card">
+                <h4>연령대별 B(삼쏘) 선택 비율</h4>
+                <div class="taste-age-bars">
+                    <div class="taste-age-row"><span>10대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:35%;"></div></div><span>35%</span></div>
+                    <div class="taste-age-row"><span>20대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:58%;"></div></div><span>58%</span></div>
+                    <div class="taste-age-row"><span>30대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:61%;"></div></div><span>61%</span></div>
+                    <div class="taste-age-row"><span>40대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:72%;"></div></div><span>72%</span></div>
+                    <div class="taste-age-row"><span>50+</span><div class="taste-age-track"><div class="taste-age-fill" style="width:68%;"></div></div><span>68%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="taste-stats-lock" id="tasteStatsLock" role="presentation">
+            <button type="button" class="taste-unlock-btn" id="tasteUnlockBtn">
+                <span class="lock-icon" aria-hidden="true">🔒</span>
+                <span>나와 통하는 픽클러들은 뭘 골랐을까?<br>취향 통계 열어보기</span>
+            </button>
         </div>
     </div>
 
@@ -423,5 +584,8 @@
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
+<script src="../js/pickle-progressive-profiling.js"></script>
+<script src="../js/user-info-modal.js"></script>
+<script src="../js/result-page.js"></script>
 </body>
 </html>

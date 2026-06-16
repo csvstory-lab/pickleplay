@@ -93,6 +93,12 @@
     if (btn) btn.addEventListener('click', handleLogout);
   }
 
+  function bindWithdraw() {
+    if (window.PickleAccount && window.PickleAccount.bindWithdrawButton) {
+      window.PickleAccount.bindWithdrawButton('btnWithdraw');
+    }
+  }
+
   async function initSettings() {
     try {
       var b = window.PickleSupabaseBootstrap;
@@ -111,6 +117,7 @@
       if (!user) return;
       renderAccountInfo(user);
       bindLogout();
+      bindWithdraw();
     } catch (err) {
       console.error('[P!CKLE Settings]', err);
       if (

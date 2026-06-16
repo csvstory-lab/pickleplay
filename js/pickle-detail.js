@@ -1921,6 +1921,16 @@
 
     setTimeout(revealBlindVoteFeedback, 800);
     bindDetailMediaVoteHandlers();
+
+    if (window.PickleProgressiveProfiling && window.PickleAuth) {
+      window.PickleAuth.ensureAuthenticated()
+        .then(function (ctx) {
+          window.PickleProgressiveProfiling.promptAfterVote(ctx && ctx.profile, {
+            delayMs: 1100,
+          });
+        })
+        .catch(function () {});
+    }
   }
 
   function renderDetail(post, voteStats, commentCount) {
