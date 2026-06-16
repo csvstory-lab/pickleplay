@@ -5,6 +5,8 @@
   'use strict';
 
   var postsCache = [];
+  /** 최초 로드 전체 불판 — [조회] 시 클라이언트 필터 소스 */
+  var allPosts = [];
   /** @type {Record<string, string>} slug → 한글 카테고리명 */
   var categoryMap = {};
   /** @type {Array<{slug:string,name:string}>} */
@@ -114,6 +116,17 @@
     return '제목 없음';
   }
 
+  function normalizeSlug(value) {
+    return String(value ?? '')
+      .toLowerCase()
+      .trim();
+  }
+
+  function getPostSlug(post) {
+    if (!post) return '';
+    return normalizeSlug(post.category_slug || post.category || '');
+  }
+
   function resolveCategoryName(name, slug) {
     return name ? String(name).trim() : slug;
   }
@@ -127,7 +140,7 @@
   }
 
   function getCategoryBadgeStyle(slug) {
-    var key = slug ? String(slug).trim() : '';
+    var key = normalizeSlug(slug);
     var c = key ? CATEGORY_BADGE_COLORS[key] : null;
     if (!c && key) {
       c = BADGE_COLOR_PALETTE[hashSlug(key) % BADGE_COLOR_PALETTE.length];
@@ -148,7 +161,8 @@
 
   function registerCategory(slug, name) {
     if (!slug) return;
-    var s = String(slug).trim();
+    var s = normalizeSlug(slug);
+    if (!s) return;
     var displayName = resolveCategoryName(name, s);
     categoryMap[s] = displayName;
     var exists = categoriesList.some(function (c) {
@@ -167,9 +181,25 @@
 
   function normalizePostCategoryFields(post) {
     if (!post) return;
-    var slug = String(post.category_slug || post.category || '').trim();
+    var slug = normalizeSlug(post.category_slug || post.category || '');
     post.category_slug = slug;
     post.category = slug;
+  }
+
+  function augmentCategoryMapFromPosts(posts) {
+    if (!Array.isArray(posts)) return;
+    posts.forEach(function (post) {
+      normalizePostCategoryFields(post);
+      var slug = getPostSlug(post);
+      if (!slug || categoryMap[slug]) return;
+      if (post.category_name) {
+        var rpcName = String(post.category_name).trim();
+        if (rpcName && normalizeSlug(rpcName) !== slug) {
+          categoryMap[slug] = rpcName;
+          categoriesList.push({ slug: slug, name: rpcName });
+        }
+      }
+    });
   }
 
   async function loadCategories(sb) {
@@ -288,9 +318,10 @@
     var catEl = $('filterCategorySelect') || document.querySelector('.cat-filter');
     var statusEl = $('filterStatusSelect');
     var sortEl = $('filterSortSelect');
+    var rawCategory = catEl ? String(catEl.value || 'all').trim() : 'all';
     return {
       search: searchEl ? String(searchEl.value || '').trim().toLowerCase() : '',
-      category: catEl ? String(catEl.value || 'all').trim() : 'all',
+      category: rawCategory === 'all' ? 'all' : normalizeSlug(rawCategory),
       status: statusEl ? statusEl.value || 'all' : 'all',
       sort: sortEl ? sortEl.value || 'newest' : 'newest',
     };
@@ -312,9 +343,24 @@
     return sorted;
   }
 
-  function applyClientFilters(source, filters) {
+  function filterAllPosts(filters) {
     var f = filters || getFilterValues();
-    var list = source.filter(function (post) {
+    var selectedCat = f.category !== 'all' ? normalizeSlug(f.category) : '';
+
+    var list = allPosts.filter(function (post) {
+      if (selectedCat) {
+        var postSlug = getPostSlug(post);
+        var postCat = normalizeSlug(post.category || '');
+        var postCatSlug = normalizeSlug(post.category_slug || '');
+        if (
+          postSlug !== selectedCat &&
+          postCat !== selectedCat &&
+          postCatSlug !== selectedCat
+        ) {
+          return false;
+        }
+      }
+
       var status = resolvePostStatus(post);
       if (f.status !== 'all' && status !== f.status) return false;
 
@@ -327,49 +373,25 @@
       }
       return true;
     });
+
     return sortPosts(list, f.sort);
   }
 
-  async function fetchPostsFromSupabase(sb, queryFilters) {
-    queryFilters = queryFilters || {};
-    var categorySlug =
-      queryFilters.category && queryFilters.category !== 'all'
-        ? String(queryFilters.category).trim()
-        : '';
+  function renderFilteredPosts(filters) {
+    var filtered = filterAllPosts(filters);
+    postsCache = filtered;
+    renderPostList(filtered, voteStatsCache);
+    updateTableTotal(filtered.length);
+  }
 
-    if (categorySlug) {
-      var rpcCat = await sb.rpc('admin_list_posts', {
-        p_limit: 200,
-        p_offset: 0,
-        p_category: categorySlug,
-      });
-      if (!rpcCat.error && rpcCat.data != null) {
-        return { data: Array.isArray(rpcCat.data) ? rpcCat.data : [], error: null };
-      }
-      if (rpcCat.error) {
-        console.warn('[Admin Posts] admin_list_posts category RPC fallback', rpcCat.error);
-      }
-
-      return sb
-        .from('posts')
-        .select(POST_SELECT)
-        .eq('category', categorySlug)
-        .order('created_at', { ascending: false })
-        .limit(200);
-    }
-
-    var rpcArgs = { p_limit: 200, p_offset: 0, p_category: null };
-    var rpc = await sb.rpc('admin_list_posts', rpcArgs);
+  async function fetchPostsFromSupabase(sb) {
+    var rpc = await sb.rpc('admin_list_posts', { p_limit: 200, p_offset: 0 });
     if (!rpc.error && rpc.data != null) {
       return { data: Array.isArray(rpc.data) ? rpc.data : [], error: null };
     }
 
     if (rpc.error) {
-      console.warn('[Admin Posts] admin_list_posts(3) RPC fallback', rpc.error);
-      var rpc2 = await sb.rpc('admin_list_posts', { p_limit: 200, p_offset: 0 });
-      if (!rpc2.error && rpc2.data != null) {
-        return { data: Array.isArray(rpc2.data) ? rpc2.data : [], error: null };
-      }
+      console.warn('[Admin Posts] admin_list_posts RPC fallback', rpc.error);
     }
 
     return sb
@@ -379,44 +401,33 @@
       .limit(200);
   }
 
-  async function fetchAndRenderPosts(sb, queryFilters) {
-    var filters = queryFilters || getFilterValues();
-    var result = await fetchPostsFromSupabase(sb, filters);
+  async function loadAllPosts(sb) {
+    var result = await fetchPostsFromSupabase(sb);
     if (result.error) throw result.error;
 
-    var posts = Array.isArray(result.data) ? result.data : [];
-    posts.forEach(normalizePostCategoryFields);
+    allPosts = Array.isArray(result.data) ? result.data : [];
+    allPosts.forEach(normalizePostCategoryFields);
+    augmentCategoryMapFromPosts(allPosts);
+    renderCategoryFilterOptions();
 
-    postsCache = posts;
-    var filtered = applyClientFilters(posts, filters);
-
-    var postIds = filtered.map(function (p) {
+    var postIds = allPosts.map(function (p) {
       return p.id;
     });
-    var voteStatsMap = await fetchVoteStatsMap(sb, postIds);
-    voteStatsCache = voteStatsMap;
+    voteStatsCache = await fetchVoteStatsMap(sb, postIds);
 
-    renderPostList(filtered, voteStatsMap);
-    updateTableTotal(filtered.length);
+    renderFilteredPosts(getFilterValues());
+    window.allPosts = allPosts;
   }
 
-  async function applyFilters() {
-    if (!categoriesReady) {
-      alert('카테고리 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+  function applyFilters() {
+    if (!allPosts.length) {
+      alert('불판 데이터가 아직 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
-    showLoadingRow();
-    try {
-      var sb = getSupabaseClient();
-      await fetchAndRenderPosts(sb, getFilterValues());
-    } catch (err) {
-      console.error('[Admin Posts] applyFilters failed', err);
-      showErrorRow(err && err.message ? err.message : '조회에 실패했습니다.');
-      updateTableTotal(0);
-    }
+    renderFilteredPosts(getFilterValues());
   }
 
-  async function resetFilters() {
+  function resetFilters() {
     var searchEl = $('filterSearchInput');
     var catEl = $('filterCategorySelect') || document.querySelector('.cat-filter');
     var statusEl = $('filterStatusSelect');
@@ -425,28 +436,38 @@
     if (catEl) catEl.value = 'all';
     if (statusEl) statusEl.value = 'all';
     if (sortEl) sortEl.value = 'newest';
-
-    showLoadingRow();
-    try {
-      var sb = getSupabaseClient();
-      await fetchAndRenderPosts(sb, getFilterValues());
-    } catch (err) {
-      console.error('[Admin Posts] resetFilters failed', err);
-      showErrorRow(err && err.message ? err.message : '목록을 불러오지 못했습니다.');
-      updateTableTotal(0);
-    }
+    renderFilteredPosts(getFilterValues());
   }
 
   function bindFilterEvents() {
-    var searchBtn = $('btnSearchFilter');
-    var resetBtn = $('btnResetFilter');
+    var searchBtns = document.querySelectorAll('#btnSearchFilter, .btn-search');
+    var resetBtns = document.querySelectorAll('#btnResetFilter, .btn-reset');
     var searchInput = $('filterSearchInput');
 
-    if (searchBtn) searchBtn.addEventListener('click', applyFilters);
-    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+    searchBtns.forEach(function (btn) {
+      var fresh = btn.cloneNode(true);
+      btn.parentNode.replaceChild(fresh, btn);
+      fresh.addEventListener('click', function (e) {
+        e.preventDefault();
+        applyFilters();
+      });
+    });
+
+    resetBtns.forEach(function (btn) {
+      var fresh = btn.cloneNode(true);
+      btn.parentNode.replaceChild(fresh, btn);
+      fresh.addEventListener('click', function (e) {
+        e.preventDefault();
+        resetFilters();
+      });
+    });
+
     if (searchInput) {
       searchInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') applyFilters();
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyFilters();
+        }
       });
     }
   }
@@ -598,8 +619,11 @@
       : '';
     var titleStyle = blinded ? ' style="text-decoration:line-through;"' : '';
     var deadlineStyle = ended && !blinded ? ' style="color:var(--text-sub);"' : '';
-    var categoryLabel = categoryMap[post.category_slug] || post.category_slug || '—';
-    var categoryBadgeStyle = getCategoryBadgeStyle(post.category_slug);
+    var rawSlug = normalizeSlug(post.category || post.category_slug || '');
+    post.category_slug = rawSlug;
+    post.category = rawSlug;
+    var displayCat = categoryMap[rawSlug] || rawSlug || '—';
+    var categoryBadgeStyle = getCategoryBadgeStyle(rawSlug);
 
     return (
       '<tr data-post-id="' +
@@ -615,7 +639,7 @@
       '<td><span class="cat-badge" style="' +
       categoryBadgeStyle +
       '">' +
-      escapeHtml(categoryLabel) +
+      escapeHtml(displayCat) +
       '</span></td>' +
       '<td class="post-title-cell">' +
       '<span class="post-title"' +
@@ -719,7 +743,7 @@
       await loadCategories(sb);
       renderCategoryFilterOptions();
 
-      await Promise.all([fetchAndRenderPosts(sb, getFilterValues()), loadKPIs(sb)]);
+      await Promise.all([loadAllPosts(sb), loadKPIs(sb)]);
     } catch (err) {
       console.error('[Admin Posts] loadPosts failed', err);
       showErrorRow(err && err.message ? err.message : '불판 목록을 불러오지 못했습니다.');
@@ -763,9 +787,14 @@
   }
 
   function applyRowVisibilityUI(btn, postId, visibilityStatus) {
-    var post = postsCache.find(function (p) {
+    var post = allPosts.find(function (p) {
       return p.id === postId;
     });
+    if (!post) {
+      post = postsCache.find(function (p) {
+        return p.id === postId;
+      });
+    }
     if (!post) return;
 
     post.visibility_status = visibilityStatus;
