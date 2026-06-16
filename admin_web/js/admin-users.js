@@ -111,6 +111,40 @@
     );
   }
 
+  /** row.category_slug / row.category → slug + categoryMap 한글명 */
+  function resolveCategoryDisplay(row) {
+    var slug = normalizeSlug(row && (row.category_slug || row.category));
+    if (row) {
+      row.category_slug = slug;
+    }
+    return {
+      slug: slug,
+      label: slug ? categoryMap[slug] || slug : '—',
+    };
+  }
+
+  function categoryBadgeHtml(slug, label) {
+    var display = label != null && label !== '' ? label : slug ? categoryMap[slug] || slug : '—';
+    return (
+      '<span class="cat-badge category-badge" style="' +
+      getCategoryBadgeStyle(slug) +
+      '">' +
+      escapeHtml(display) +
+      '</span>'
+    );
+  }
+
+  function postInfoHtml(slug, label, title) {
+    return (
+      '<div class="post-info">' +
+      categoryBadgeHtml(slug, label) +
+      '<span class="post-title">' +
+      escapeHtml(title || '—') +
+      '</span>' +
+      '</div>'
+    );
+  }
+
   async function loadCategories() {
     categoryMap = {};
     categoriesReady = false;
@@ -740,21 +774,10 @@
     return rows
       .map(function (row) {
         var href = postDetailHref(row.id || row.post_id);
-        var slug = normalizeSlug(row.category_slug || row.category || '');
-        row.category_slug = slug;
-        var cat = categoryMap[slug] || slug || '—';
+        var cat = resolveCategoryDisplay(row);
         return (
-          '<div class="list-item list-item--posts">' +
-          '<div class="list-item-post-main">' +
-          '<span class="cat-badge" style="' +
-          getCategoryBadgeStyle(slug) +
-          '">' +
-          escapeHtml(cat) +
-          '</span>' +
-          '<span class="li-col li-col-grow">' +
-          escapeHtml(row.title || '제목 없음') +
-          '</span>' +
-          '</div>' +
+          '<div class="list-item list-item--activity list-item--posts">' +
+          postInfoHtml(cat.slug, cat.label, row.title || '제목 없음') +
           '<span class="li-col li-col-date">' +
           escapeHtml(formatListDateTime(row.created_at)) +
           '</span>' +
@@ -769,14 +792,10 @@
     if (!rows.length) return emptyStateHtml();
     return rows
       .map(function (row) {
+        var cat = resolveCategoryDisplay(row);
         return (
-          '<div class="list-item">' +
-          '<span class="li-col li-col-cat">' +
-          escapeHtml(resolveRowCategoryName(row)) +
-          '</span>' +
-          '<span class="li-col li-col-title">' +
-          escapeHtml(row.post_title || '불판') +
-          '</span>' +
+          '<div class="list-item list-item--activity list-item--votes">' +
+          postInfoHtml(cat.slug, cat.label, row.post_title || '불판') +
           '<span class="li-col li-col-vote">' +
           escapeHtml(formatVoteResult(row)) +
           '</span>' +
@@ -794,15 +813,11 @@
     return rows
       .map(function (row) {
         var href = postDetailHref(row.post_id);
+        var cat = resolveCategoryDisplay(row);
         return (
-          '<div class="list-item">' +
-          '<span class="li-col li-col-cat">' +
-          escapeHtml(resolveRowCategoryName(row)) +
-          '</span>' +
-          '<span class="li-col li-col-title">' +
-          escapeHtml(row.post_title || '불판') +
-          '</span>' +
-          '<span class="li-col li-col-grow">' +
+          '<div class="list-item list-item--activity list-item--comments">' +
+          postInfoHtml(cat.slug, cat.label, row.post_title || '불판') +
+          '<span class="li-col li-col-grow comment-content">' +
           escapeHtml(row.content || '') +
           '</span>' +
           '<span class="li-col li-col-date">' +
