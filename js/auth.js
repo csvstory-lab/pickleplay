@@ -214,21 +214,16 @@
     const message = opts.message || ACTION_LOGIN_MESSAGE;
     const redirect = opts.redirect || buildRedirectPath();
 
-    try {
-      const auth = await ensureAuthenticated({
-        skipProfile: true,
-        timeoutMs: opts.timeoutMs || 5000,
-      });
-      if (auth?.user) return auth.user;
-    } catch (err) {
-      console.warn('[P!CKLE Auth] promptAuthForAction session check', err);
+    if (hasLocalSessionHint()) {
+      try {
+        const user = await getSessionUserFast({ timeoutMs: opts.timeoutMs || 1500 });
+        if (user) return user;
+      } catch (err) {
+        console.warn('[P!CKLE Auth] promptAuthForAction session check', err);
+      }
     }
 
-    if (
-      window.location.hash.includes('access_token=') ||
-      window.location.hash.includes('type=recovery') ||
-      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
-    ) {
+    if (isOAuthCallbackInUrl() || window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
       return null;
     }
 
@@ -254,25 +249,27 @@
     const page = getPageRedirectPath();
     if (!isAuthRequiredPage(page)) return;
 
-    if (
-      window.location.hash.includes('access_token=') ||
-      window.location.hash.includes('type=recovery')
-    ) {
+    if (isOAuthCallbackInUrl()) {
       return;
-    }
-
-    try {
-      const auth = await ensureAuthenticated({
-        skipProfile: true,
-        timeoutMs: 8000,
-      });
-      if (auth?.user) return;
-    } catch (err) {
-      console.warn('[P!CKLE Auth] private route guard', err);
     }
 
     if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
       return;
+    }
+
+    if (!hasLocalSessionHint()) {
+      goToLogin({
+        redirect: buildRedirectPath(page),
+        from: page.replace('.html', ''),
+      });
+      return;
+    }
+
+    try {
+      const user = await getSessionUserFast({ timeoutMs: 2000 });
+      if (user) return;
+    } catch (err) {
+      console.warn('[P!CKLE Auth] private route guard', err);
     }
 
     goToLogin({
@@ -296,6 +293,55 @@
       /* ignore */
     }
     return false;
+  }
+
+  function isOAuthCallbackInUrl() {
+    return (
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery')
+    );
+  }
+
+  /** 메모리·localStorage에 로그인 흔적이 있는지 (네트워크 대기 없음) */
+  function hasLocalSessionHint() {
+    if (currentSession?.user) return true;
+    if (authContextCache?.user) return true;
+    if (enrichedUser?.id) return true;
+    return isSessionStoredInLocalStorage();
+  }
+
+  /**
+   * hydration 대기 없이 getSession()만 짧게 시도 (게스트는 즉시 null)
+   */
+  async function getSessionFast(options) {
+    const timeoutMs = (options && options.timeoutMs) || 800;
+    if (!hasLocalSessionHint()) return null;
+    if (currentSession?.access_token) return currentSession;
+
+    const sb = getClient();
+    try {
+      const res = await Promise.race([
+        sb.auth.getSession(),
+        new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve({ data: { session: null } });
+          }, timeoutMs);
+        }),
+      ]);
+      const session = res?.data?.session ?? null;
+      if (session?.user) {
+        currentSession = session;
+      }
+      return session;
+    } catch (err) {
+      console.warn('[P!CKLE Auth] getSessionFast', err);
+      return null;
+    }
+  }
+
+  async function getSessionUserFast(options) {
+    const session = await getSessionFast(options);
+    return session?.user ?? null;
   }
 
   /**
@@ -329,9 +375,12 @@
    */
   async function resolveSessionFromClient(sb, options) {
     const timeoutMs = (options && options.timeoutMs) || 12000;
-    const isOAuthCallback =
-      window.location.hash.includes('access_token=') ||
-      window.location.hash.includes('type=recovery');
+    const isOAuthCallback = isOAuthCallbackInUrl();
+
+    if (!isOAuthCallback && !hasLocalSessionHint()) {
+      currentSession = null;
+      return null;
+    }
 
     if (isOAuthCallback && window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
       const oauthSession = await window.PickleOAuthCallbackGuard.waitForOAuthSession({
@@ -413,36 +462,46 @@
     const targetUrl = String(url || '').trim();
     if (!targetUrl) return;
 
-    try {
-      await init();
-      const sb = getClient();
-      await resolveSessionFromClient(sb, { timeoutMs: opts.timeoutMs || 12000 });
+    const needsAuth =
+      opts.requireAuth === true ||
+      (opts.requireAuth !== false && isAuthRequiredPage(targetUrl));
 
-      const needsAuth =
-        opts.requireAuth === true ||
-        (opts.requireAuth !== false && isAuthRequiredPage(targetUrl));
-
-      if (needsAuth) {
-        const auth = await ensureAuthenticated({ timeoutMs: opts.timeoutMs || 12000 });
-        if (!auth?.user) {
-          if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
-            return;
-          }
-          await promptAuthForAction({
-            message: opts.message || '로그인이 필요한 서비스입니다.',
-            redirect: parsePageFromUrl(targetUrl),
-            from: parsePageFromUrl(targetUrl).replace('.html', ''),
-          });
-          return;
-        }
-      }
-
+    if (!needsAuth) {
       window.location.href = targetUrl;
+      return;
+    }
+
+    if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return;
+    }
+
+    if (!hasLocalSessionHint()) {
+      await promptAuthForAction({
+        message: opts.message || ACTION_LOGIN_MESSAGE,
+        redirect: parsePageFromUrl(targetUrl),
+        from: parsePageFromUrl(targetUrl).replace('.html', ''),
+      });
+      return;
+    }
+
+    try {
+      const user = await getSessionUserFast({ timeoutMs: opts.timeoutMs || 2000 });
+      if (user) {
+        window.location.href = targetUrl;
+        return;
+      }
+      await promptAuthForAction({
+        message: opts.message || ACTION_LOGIN_MESSAGE,
+        redirect: parsePageFromUrl(targetUrl),
+        from: parsePageFromUrl(targetUrl).replace('.html', ''),
+      });
     } catch (err) {
       console.error('[P!CKLE Auth] navigateWhenAuthReady failed', err);
-      if (opts.fallbackNavigate !== false && !isAuthRequiredPage(targetUrl)) {
-        window.location.href = targetUrl;
-      }
+      await promptAuthForAction({
+        message: opts.message || ACTION_LOGIN_MESSAGE,
+        redirect: parsePageFromUrl(targetUrl),
+        from: parsePageFromUrl(targetUrl).replace('.html', ''),
+      });
     }
   }
 
@@ -520,10 +579,22 @@
     }
 
     ensureAuthInflight = (async () => {
+      const isOAuthCallback = isOAuthCallbackInUrl();
+
+      if (!forceRefresh && !isOAuthCallback && !hasLocalSessionHint()) {
+        authContextCache = { session: null, user: null, profile: null };
+        enrichedUser = null;
+        enrichedProfile = null;
+        return authContextCache;
+      }
+
       await init();
 
       const sb = getClient();
-      const session = await resolveSessionFromClient(sb, { timeoutMs: Math.max(timeoutMs, 12000) });
+      const resolveTimeout = isOAuthCallback
+        ? Math.max(timeoutMs, 12000)
+        : Math.min(timeoutMs, 3000);
+      const session = await resolveSessionFromClient(sb, { timeoutMs: resolveTimeout });
 
       const rawUser = session?.user ?? null;
 
@@ -588,33 +659,34 @@
    */
   async function requireAuth(options) {
     const opts = options || {};
-    const maxAttempts = opts.maxAttempts || 3;
-    const delayMs = opts.retryDelayMs || 400;
+    const isOAuthCallback = isOAuthCallbackInUrl();
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const auth = await ensureAuthenticated({
-        ...opts,
-        timeoutMs: opts.timeoutMs || 12000,
-        forceRefresh: attempt > 0,
-      });
-      if (auth?.user) return auth.user;
+    if (
+      !isOAuthCallback &&
+      !opts.silent &&
+      !hasLocalSessionHint() &&
+      !window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+    ) {
+      alertLoginRequired(
+        opts.message || '로그인이 필요한 페이지입니다.',
+        () => goToLogin({ redirect: opts.redirect || getPageRedirectPath() })
+      );
+      return null;
+    }
 
-      const isOAuthCallback =
-        window.location.hash.includes('access_token=') ||
-        window.location.hash.includes('type=recovery');
-      if (
-        isOAuthCallback ||
-        window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.() ||
-        opts.silent
-      ) {
-        return null;
-      }
+    const auth = await ensureAuthenticated({
+      ...opts,
+      timeoutMs: opts.timeoutMs || (hasLocalSessionHint() ? 3000 : 500),
+      forceRefresh: opts.forceRefresh === true,
+    });
+    if (auth?.user) return auth.user;
 
-      if (attempt < maxAttempts - 1) {
-        await new Promise(function (resolve) {
-          setTimeout(resolve, delayMs);
-        });
-      }
+    if (
+      isOAuthCallback ||
+      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.() ||
+      opts.silent
+    ) {
+      return null;
     }
 
     alertLoginRequired(
@@ -1142,20 +1214,28 @@
       const sb = getClient();
       registerAuthStateListener(sb);
 
-      const isOAuthCallback =
-        window.location.hash.includes('access_token') ||
-        window.location.hash.includes('type=recovery');
+      const isOAuthCallback = isOAuthCallbackInUrl();
 
       if (isOAuthCallback) {
         console.log('[P!CKLE Auth] OAuth hash 감지 — 세션 확정 대기');
         await resolveSessionFromClient(sb, { timeoutMs: 12000 });
-      } else {
-        await waitForAuthHydration(sb, { timeoutMs: 4000, pollMs: 80 }).then(function (session) {
+      } else if (hasLocalSessionHint()) {
+        await waitForAuthHydration(sb, { timeoutMs: 2000, pollMs: 80 }).then(function (session) {
           if (session && !currentSession) {
             currentSession = session;
           }
         });
-        await refreshSession();
+        try {
+          await refreshSession();
+        } catch (refreshErr) {
+          console.warn('[P!CKLE Auth] refreshSession', refreshErr);
+        }
+      } else {
+        try {
+          await refreshSession();
+        } catch (guestRefreshErr) {
+          /* guest — no session */
+        }
       }
 
       if (window.location.pathname.endsWith('login.html') && isLoggedIn()) {
@@ -1207,6 +1287,10 @@
     fetchUserProfile,
     mergeUserWithProfile,
     isSessionStoredInLocalStorage,
+    hasLocalSessionHint,
+    getSessionFast,
+    getSessionUserFast,
+    isOAuthCallbackInUrl,
     alertLoginRequired,
     getClient,
     isSessionMissingError,

@@ -468,61 +468,28 @@
     });
   }
 
-  async function ensureAuthReady() {
-    if (window.PickleAuth && window.PickleAuth.init) {
-      try {
-        await window.PickleAuth.init();
-      } catch (err) {
-        console.warn('[P!CKLE Events] auth init skipped', err);
-      }
-    }
-  }
-
   function normalizeUid(value) {
     return value == null ? '' : String(value).trim().toLowerCase();
   }
 
   async function resolveAuthUid() {
-    var sb = getClient();
-
-    try {
-      var userResult = await sb.auth.getUser();
-      if (userResult.data && userResult.data.user && userResult.data.user.id) {
-        return String(userResult.data.user.id);
+    if (window.PickleAuth) {
+      if (window.PickleAuth.hasLocalSessionHint && !window.PickleAuth.hasLocalSessionHint()) {
+        return null;
       }
-    } catch (err) {
-      console.warn('[P!CKLE Events] getUser failed', err);
-    }
-
-    try {
-      var sessionResult = await sb.auth.getSession();
-      if (
-        sessionResult.data &&
-        sessionResult.data.session &&
-        sessionResult.data.session.user &&
-        sessionResult.data.session.user.id
-      ) {
-        return String(sessionResult.data.session.user.id);
+      if (window.PickleAuth.getUser) {
+        var cachedUser = window.PickleAuth.getUser();
+        if (cachedUser && cachedUser.id) return String(cachedUser.id);
       }
-    } catch (err) {
-      console.warn('[P!CKLE Events] getSession failed', err);
-    }
-
-    await ensureAuthReady();
-
-    if (window.PickleAuth && window.PickleAuth.refreshSession) {
-      try {
-        await window.PickleAuth.refreshSession();
-      } catch (err) {
-        console.warn('[P!CKLE Events] refreshSession failed', err);
+      if (window.PickleAuth.getSessionUserFast) {
+        try {
+          var fastUser = await window.PickleAuth.getSessionUserFast({ timeoutMs: 500 });
+          if (fastUser && fastUser.id) return String(fastUser.id);
+        } catch (err) {
+          console.warn('[P!CKLE Events] getSessionUserFast failed', err);
+        }
       }
     }
-
-    if (window.PickleAuth && window.PickleAuth.getUser) {
-      var cachedUser = window.PickleAuth.getUser();
-      if (cachedUser && cachedUser.id) return String(cachedUser.id);
-    }
-
     return null;
   }
 

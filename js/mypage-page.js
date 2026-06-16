@@ -293,20 +293,17 @@
   }
 
   async function resolveAuthUserOnly() {
-    if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
+    if (window.PickleAuth && window.PickleAuth.getSessionUserFast) {
       try {
-        var auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
-        if (auth && auth.user) return auth.user;
-      } catch (err) {
-        console.warn('[P!CKLE Mypage] ensureAuthenticated', err);
+        var fastUser = await window.PickleAuth.getSessionUserFast({ timeoutMs: 800 });
+        if (fastUser) return fastUser;
+      } catch (fastErr) {
+        console.warn('[P!CKLE Mypage] getSessionUserFast', fastErr);
       }
-    } else if (window.PickleAuth && window.PickleAuth.resolveAuthUser) {
-      try {
-        var readyUser = await window.PickleAuth.resolveAuthUser({ timeoutMs: 5000 });
-        if (readyUser) return readyUser;
-      } catch (err2) {
-        console.warn('[P!CKLE Mypage] resolveAuthUser', err2);
-      }
+    }
+    if (window.PickleAuth && window.PickleAuth.getUser) {
+      var cached = window.PickleAuth.getUser();
+      if (cached) return cached;
     }
     return null;
   }
@@ -1590,8 +1587,11 @@
         return;
       }
 
-      if (window.PickleCategories && window.PickleCategories.load) {
-        await window.PickleCategories.load();
+      if (!isOAuthCallback() && !window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+        if (window.PickleAuth && window.PickleAuth.hasLocalSessionHint && !window.PickleAuth.hasLocalSessionHint()) {
+          promptLoginRequired('로그인이 필요한 페이지입니다.');
+          return;
+        }
       }
 
       var user = await requireAuth();
@@ -1600,6 +1600,10 @@
           return;
         }
         return;
+      }
+
+      if (window.PickleCategories && window.PickleCategories.load) {
+        await window.PickleCategories.load();
       }
 
       await renderProfile(user);
@@ -1666,13 +1670,6 @@
   });
 
   document.addEventListener('DOMContentLoaded', function () {
-    var startMypage = function () {
-      initMypage();
-    };
-    if (window.PickleAuth && window.PickleAuth.init) {
-      window.PickleAuth.init().then(startMypage).catch(startMypage);
-    } else {
-      startMypage();
-    }
+    initMypage();
   });
 })();
