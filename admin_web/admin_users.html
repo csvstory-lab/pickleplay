@@ -167,7 +167,7 @@
         flex: 1 1 auto;
         min-height: 0;
         overflow-x: hidden;
-        overflow-y: auto;
+        overflow-y: hidden;
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -221,7 +221,7 @@
         gap: 0;
         border-bottom: 1px solid #3f3f46;
         margin-top: 0;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
         padding-bottom: 8px;
         overflow-x: auto;
         scrollbar-width: thin;
@@ -256,25 +256,42 @@
     }
     .modal-container .m-tab-count { color: inherit; opacity: 0.7; font-weight: 600; font-size: 0.7rem; }
 
+    /* 탭 리스트 영역 — 10행 + 페이지네이션 고정 (탭 전환·스크롤 없음) */
+    .modal-container {
+        --modal-list-rows: 10;
+        --modal-list-row-h: 34px;
+        --modal-list-gap: 8px;
+        --modal-list-block-h: calc(var(--modal-list-row-h) * var(--modal-list-rows) + var(--modal-list-gap) * (var(--modal-list-rows) - 1));
+        --modal-pag-margin-top: 20px;
+        --modal-pag-block-h: 32px;
+        --modal-tab-panel-h: 580px;
+    }
     .modal-container .modal-tab-panel {
         display: flex;
         flex-direction: column;
-        flex: 0 0 auto;
-        min-height: 460px;
+        flex: 0 0 var(--modal-tab-panel-h);
+        height: var(--modal-tab-panel-h);
+        min-height: var(--modal-tab-panel-h);
+        max-height: var(--modal-tab-panel-h);
         gap: 0;
+        overflow: hidden;
+        padding-bottom: 16px;
+        box-sizing: border-box;
     }
     .modal-container .history-list {
         display: flex;
         flex-direction: column;
-        gap: 5px;
-        min-height: 420px;
-        flex: 1 1 auto;
+        gap: var(--modal-list-gap);
+        flex: 0 0 var(--modal-list-block-h);
+        height: var(--modal-list-block-h);
+        min-height: var(--modal-list-block-h);
+        max-height: var(--modal-list-block-h);
         overflow: hidden;
     }
     .modal-container .list-item {
         background: #0f0f11;
         border: 1px solid #27272a;
-        padding: 6px 15px;
+        padding: 5px 15px;
         border-radius: 4px;
         display: flex;
         align-items: center;
@@ -282,25 +299,37 @@
         gap: 12px;
         font-size: 0.8125rem;
         color: #e4e4e7;
-        min-height: 0;
-        line-height: 1.2;
+        height: var(--modal-list-row-h);
+        min-height: var(--modal-list-row-h);
+        max-height: var(--modal-list-row-h);
+        flex-shrink: 0;
+        box-sizing: border-box;
+        line-height: 1.15;
+        overflow: hidden;
     }
+    /* 고정 컬럼 — 말줄임 없음 */
     .modal-container .li-col {
         flex-shrink: 0;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
         font-size: 0.8125rem;
-        line-height: 1.2;
+        line-height: 1.15;
     }
-    .modal-container .li-col-grow {
+    /* 유연 컬럼 — 말줄임 적용 (제목·내용·사유) */
+    .modal-container .li-col-grow,
+    .modal-container .li-col-reason {
         flex: 1 1 auto;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    .modal-container .li-col-grow {
         font-weight: 600;
         color: #f4f4f5;
+    }
+    .modal-container .li-col-reason {
+        color: #e4e4e7;
+        font-size: 0.8125rem;
     }
     .modal-container .li-col-cat {
         width: 56px;
@@ -312,6 +341,7 @@
     .modal-container .li-col-title {
         width: 140px;
         flex-shrink: 0;
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -325,20 +355,15 @@
         font-size: 0.8125rem;
     }
     .modal-container .li-col-date {
-        width: 120px;
         flex-shrink: 0;
+        white-space: nowrap;
+        overflow: visible;
+        text-overflow: clip;
+        width: auto;
+        min-width: max-content;
         text-align: right;
         color: #71717a;
         font-size: 0.75rem;
-    }
-    .modal-container .li-col-reason {
-        flex: 1 1 auto;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: #e4e4e7;
-        font-size: 0.8125rem;
     }
     .modal-container .li-amount {
         width: 76px;
@@ -361,10 +386,10 @@
     .modal-container .li-penalty.penalty-sub { color: var(--neon-blue); font-weight: 800; }
     .modal-container .li-btn {
         flex-shrink: 0;
-        padding: 4px 8px;
+        padding: 3px 8px;
         font-size: 0.75rem;
         font-weight: 600;
-        line-height: 1.2;
+        line-height: 1.1;
         color: #e4e4e7;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid #3f3f46;
@@ -393,18 +418,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 120px;
+        height: 100%;
+        min-height: 0;
     }
 
-    /* 모달 페이지네이션 — 한 줄 고정 (전역 .pagination / .page-btn 충돌 방지) */
+    /* 모달 페이지네이션 — 리스트와 20px 이상 분리, 한 줄 고정 */
     .modal-container .modal-pagination {
-        flex-shrink: 0;
+        flex: 0 0 auto;
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: nowrap;
         gap: 5px;
-        margin-top: 12px;
+        margin-top: var(--modal-pag-margin-top);
+        min-height: var(--modal-pag-block-h);
         padding: 6px 0 0;
         text-align: center;
         border-top: 1px solid #27272a;
@@ -412,7 +439,7 @@
         z-index: 1;
         background: var(--bg-color);
         overflow-x: auto;
-        overflow-y: visible;
+        overflow-y: hidden;
         scrollbar-width: none;
     }
     .modal-container .modal-pagination::-webkit-scrollbar { display: none; }
