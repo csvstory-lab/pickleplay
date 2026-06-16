@@ -353,8 +353,17 @@
       ) {
         return;
       }
-      alert('댓글을 남기려면 로그인이 필요합니다');
-      window.location.href = 'login.html?redirect=index.html';
+      if (window.PickleAuth?.promptAuthForAction) {
+        await window.PickleAuth.promptAuthForAction({
+          message: '로그인이 필요한 서비스입니다.',
+          redirect: 'index.html',
+          from: 'comment',
+        });
+        return;
+      }
+      if (confirm('로그인이 필요한 서비스입니다.\n\n로그인 페이지로 이동할까요?')) {
+        window.location.href = 'login.html?redirect=index.html&from=comment';
+      }
       return;
     }
 

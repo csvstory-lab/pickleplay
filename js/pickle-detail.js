@@ -1137,13 +1137,20 @@
       var user = await getAuthUserForAction();
 
       if (!user) {
-        alertLoginRequired('댓글을 남기려면 로그인이 필요합니다.', function () {
-          window.location.href =
-            'login.html?redirect=' +
-            encodeURIComponent(
-              'detail.html?id=' + encodeURIComponent(currentPostId)
-            );
-        });
+        var detailRedirect =
+          'detail.html?id=' + encodeURIComponent(currentPostId);
+        if (window.PickleAuth && window.PickleAuth.promptAuthForAction) {
+          await window.PickleAuth.promptAuthForAction({
+            message: '로그인이 필요한 서비스입니다.',
+            redirect: detailRedirect,
+            from: 'comment',
+          });
+        } else {
+          alertLoginRequired('댓글을 남기려면 로그인이 필요합니다.', function () {
+            window.location.href =
+              'login.html?redirect=' + encodeURIComponent(detailRedirect);
+          });
+        }
         return;
       }
 
@@ -1869,6 +1876,25 @@
 
     if (currentPost._voteTable === 'pickle_posts') {
       alert('이 불판은 구버전 데이터라 투표 저장을 지원하지 않습니다.');
+      return;
+    }
+
+    var user = await getAuthUserForAction();
+    if (!user) {
+      var detailRedirect =
+        'detail.html?id=' + encodeURIComponent(currentPostId);
+      if (window.PickleAuth && window.PickleAuth.promptAuthForAction) {
+        await window.PickleAuth.promptAuthForAction({
+          message: '로그인이 필요한 서비스입니다.',
+          redirect: detailRedirect,
+          from: 'vote',
+        });
+      } else {
+        alertLoginRequired('투표하려면 로그인이 필요합니다.', function () {
+          window.location.href =
+            'login.html?redirect=' + encodeURIComponent(detailRedirect);
+        });
+      }
       return;
     }
 

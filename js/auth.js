@@ -177,12 +177,15 @@
     });
   }
 
+  /** 로그인 없이 URL 직접 접근 허용 (그 외 페이지는 공개 열람 가능) */
   const AUTH_REQUIRED_PAGES = new Set([
     'mypage.html',
     'create.html',
     'settings.html',
     'notifications.html',
   ]);
+
+  const ACTION_LOGIN_MESSAGE = '로그인이 필요한 서비스입니다.';
 
   function parsePageFromUrl(url) {
     const s = String(url || '').split('?')[0].split('#')[0];
@@ -191,6 +194,91 @@
 
   function isAuthRequiredPage(url) {
     return AUTH_REQUIRED_PAGES.has(parsePageFromUrl(url));
+  }
+
+  function isPublicPage(url) {
+    return !isAuthRequiredPage(url);
+  }
+
+  function buildRedirectPath(page, search) {
+    const file = page || getPageRedirectPath();
+    const qs = search != null ? search : window.location.search || '';
+    return file + qs;
+  }
+
+  /**
+   * 투표·댓글·생성 등 액션 시 confirm 후 로그인 이동
+   */
+  async function promptAuthForAction(options) {
+    const opts = options || {};
+    const message = opts.message || ACTION_LOGIN_MESSAGE;
+    const redirect = opts.redirect || buildRedirectPath();
+
+    try {
+      const auth = await ensureAuthenticated({
+        skipProfile: true,
+        timeoutMs: opts.timeoutMs || 5000,
+      });
+      if (auth?.user) return auth.user;
+    } catch (err) {
+      console.warn('[P!CKLE Auth] promptAuthForAction session check', err);
+    }
+
+    if (
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery') ||
+      window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
+    ) {
+      return null;
+    }
+
+    const confirmMsg =
+      opts.confirmMessage ||
+      message + '\n\n로그인 페이지로 이동할까요?';
+
+    if (!confirm(confirmMsg)) {
+      return null;
+    }
+
+    goToLogin({
+      redirect: redirect,
+      from: opts.from || '',
+    });
+    return null;
+  }
+
+  /**
+   * 프라이빗 페이지 URL 직접 접근 시 로그인으로 이동 (confirm 없음)
+   */
+  async function guardPrivateRouteOnLoad() {
+    const page = getPageRedirectPath();
+    if (!isAuthRequiredPage(page)) return;
+
+    if (
+      window.location.hash.includes('access_token=') ||
+      window.location.hash.includes('type=recovery')
+    ) {
+      return;
+    }
+
+    try {
+      const auth = await ensureAuthenticated({
+        skipProfile: true,
+        timeoutMs: 8000,
+      });
+      if (auth?.user) return;
+    } catch (err) {
+      console.warn('[P!CKLE Auth] private route guard', err);
+    }
+
+    if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
+      return;
+    }
+
+    goToLogin({
+      redirect: buildRedirectPath(page),
+      from: page.replace('.html', ''),
+    });
   }
 
   function isSessionStoredInLocalStorage() {
@@ -340,13 +428,12 @@
           if (window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()) {
             return;
           }
-          const retried = await requireAuth({
+          await promptAuthForAction({
+            message: opts.message || '로그인이 필요한 서비스입니다.',
             redirect: parsePageFromUrl(targetUrl),
-            message: opts.message || '로그인이 필요한 페이지입니다.',
-            timeoutMs: 12000,
-            maxAttempts: 2,
+            from: parsePageFromUrl(targetUrl).replace('.html', ''),
           });
-          if (!retried) return;
+          return;
         }
       }
 
@@ -1080,6 +1167,7 @@
       bindNavActions();
       bindLoginPage();
       bindGlobalNavGuard();
+      await guardPrivateRouteOnLoad();
     })();
 
     return initPromise;
@@ -1107,6 +1195,10 @@
     resolveSessionFromClient,
     waitForSessionPersisted,
     isAuthRequiredPage,
+    isPublicPage,
+    promptAuthForAction,
+    guardPrivateRouteOnLoad,
+    ACTION_LOGIN_MESSAGE,
     syncProfileNicknameFromMetadata,
     getUserWhenReady,
     resolveAuthUser,
