@@ -17,6 +17,7 @@ RETURNS TABLE (
   marketing_consent boolean,
   is_info_collected boolean,
   avatar_html text,
+  avatar_url text,
   created_at timestamptz
 )
 LANGUAGE sql
@@ -39,6 +40,7 @@ AS $$
     u.marketing_consent,
     u.is_info_collected,
     u.avatar_html,
+    u.avatar_url,
     u.created_at
   FROM public.users u
   LEFT JOIN auth.users au ON au.id = u.id

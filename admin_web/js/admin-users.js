@@ -136,6 +136,33 @@
     return platformInfo(userOrPlatform).label;
   }
 
+  function getUserAvatarUrl(user) {
+    if (!user || !user.avatar_url) return '';
+    return String(user.avatar_url).trim();
+  }
+
+  function getDefaultAvatarEmoji(user) {
+    var html = user && user.avatar_html ? String(user.avatar_html).trim() : '';
+    if (!html) return '👤';
+    if (html.indexOf('<') === 0) {
+      var text = html.replace(/<[^>]+>/g, '').trim();
+      return text || '👤';
+    }
+    return html;
+  }
+
+  function buildListAvatarHtml(user) {
+    var avatarUrl = getUserAvatarUrl(user);
+    if (avatarUrl) {
+      return (
+        '<img src="' +
+        escapeHtml(avatarUrl) +
+        '" alt="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">'
+      );
+    }
+    return escapeHtml(getDefaultAvatarEmoji(user));
+  }
+
   function isMarketingAgreed(user) {
     if (user.marketing_agreed === true) return true;
     if (user.marketing_consent === true) return true;
@@ -283,7 +310,7 @@
       .map(function (user) {
         var tier = penaltyTier(user);
         var shortId = String(user.id || '').slice(0, 8);
-        var avatar = user.avatar_html ? String(user.avatar_html).trim().slice(0, 2) : '👤';
+        var avatarHtml = buildListAvatarHtml(user);
         var isBanned = tier.status === 'banned';
 
         var actions =
@@ -309,7 +336,7 @@
           '<tr>' +
           '<td><div class="user-profile-cell">' +
           '<div class="avatar">' +
-          escapeHtml(avatar) +
+          avatarHtml +
           '</div>' +
           '<div class="user-info">' +
           '<span class="user-nickname">' +
@@ -497,9 +524,9 @@
     }
 
     var selectWithEmail =
-      'id, nickname, email, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, created_at';
+      'id, nickname, email, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, avatar_url, created_at';
     var selectBase =
-      'id, nickname, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, created_at';
+      'id, nickname, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, avatar_url, created_at';
 
     var result = await sb.from('users').select(selectWithEmail).order('created_at', { ascending: false });
     if (result.error && /email/i.test(result.error.message || '')) {
