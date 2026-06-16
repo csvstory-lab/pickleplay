@@ -19,6 +19,10 @@
     points_balance: 0,
   };
   var MODAL_PAGE_SIZE = 10;
+  /** 더미 UI 미리보기 (기본 ON). 실데이터 사용 시 URL에 ?modalDummy=0 */
+  var MODAL_DUMMY_PREVIEW = !/(?:^|[?&])modalDummy=0(?:&|$)/.test(
+    typeof window !== 'undefined' && window.location ? window.location.search : ''
+  );
 
   var GENDER_LABELS = { male: '남성', female: '여성' };
   var AGE_LABELS = {
@@ -555,103 +559,299 @@
     );
   }
 
-  function penaltyBadgeHtml(points) {
-    var pts = Number(points) || 0;
-    var cls = pts >= 50 ? ' red' : '';
-    var label =
-      pts >= 100
-        ? '+100점 (영구 차단)'
-        : pts >= 50
-          ? '+' + pts + '점 (레드카드 경고)'
-          : '+' + pts + '점 (옐로카드 누적)';
-    return '<span class="hi-badge' + cls + '">' + escapeHtml(label) + '</span>';
+  function truncateText(value, maxLen) {
+    var text = value != null ? String(value) : '';
+    if (!text) return '—';
+    if (text.length <= maxLen) return text;
+    return text.slice(0, maxLen) + '…';
   }
 
-  function pointBadgeHtml(amount) {
+  function formatListDateTime(value) {
+    if (!value) return '—';
+    if (typeof value === 'string' && /^\d{4}\.\d{2}\.\d{2}/.test(value)) return value;
+    return formatDateTime(value);
+  }
+
+  function liBtnHtml(label, href) {
+    if (href) {
+      return (
+        '<a class="li-btn" href="' +
+        escapeHtml(href) +
+        '" target="_blank" rel="noopener">' +
+        escapeHtml(label) +
+        '</a>'
+      );
+    }
+    return '<button type="button" class="li-btn">' + escapeHtml(label) + '</button>';
+  }
+
+  function amountClass(amount) {
     var amt = Number(amount) || 0;
-    if (amt > 0) {
-      return '<span class="hi-badge green">+' + amt.toLocaleString() + ' P</span>';
-    }
-    if (amt < 0) {
-      return '<span class="hi-badge red">' + amt.toLocaleString() + ' P</span>';
-    }
-    return '<span class="hi-badge">0 P</span>';
+    if (amt > 0) return 'positive';
+    if (amt < 0) return 'negative';
+    return 'neutral';
   }
 
-  function renderSanctionsList(rows) {
-    if (!rows.length) return emptyStateHtml();
-    return rows
-      .map(function (row) {
-        var kindLabel = row.kind === 'report' ? '신고 접수' : '제재 부과';
-        var statusText =
-          row.kind === 'report' && row.status
-            ? ' · ' + String(row.status)
-            : row.source_type
-              ? ' · ' + String(row.source_type)
-              : '';
-        return (
-          '<div class="history-item">' +
-          '<div>' +
-          '<div class="hi-type">' +
-          escapeHtml(kindLabel + statusText) +
-          '</div>' +
-          '<div class="hi-title">' +
-          escapeHtml(row.reason || '사유 미기록') +
-          '</div>' +
-          '<div class="hi-date">' +
-          escapeHtml(formatDateTime(row.created_at)) +
-          '</div>' +
-          '</div>' +
-          penaltyBadgeHtml(row.penalty_points) +
-          '</div>'
-        );
-      })
-      .join('');
+  function formatAmountLabel(amount) {
+    var amt = Number(amount) || 0;
+    if (amt > 0) return '+' + amt.toLocaleString() + ' P';
+    if (amt < 0) return amt.toLocaleString() + ' P';
+    return '0 P';
   }
 
-  function renderPointsList(rows) {
-    if (!rows.length) return emptyStateHtml();
-    return rows
-      .map(function (row) {
-        var balanceText =
-          row.balance_after != null
-            ? ' · 잔액 ' + Number(row.balance_after).toLocaleString() + ' P'
-            : '';
-        return (
-          '<div class="history-item">' +
-          '<div>' +
-          '<div class="hi-title">' +
-          escapeHtml(row.reason || '포인트 변동') +
-          '</div>' +
-          '<div class="hi-date">' +
-          escapeHtml(formatDateTime(row.created_at) + balanceText) +
-          '</div>' +
-          '</div>' +
-          pointBadgeHtml(row.amount) +
-          '</div>'
-        );
-      })
-      .join('');
+  function formatVoteResult(row) {
+    if (row.vote_result) return String(row.vote_result);
+    var choice = row.choice ? String(row.choice).toUpperCase() : '';
+    if (row.choice_label) return choice + ': ' + row.choice_label;
+    if (choice === 'A' && row.option_a_name) return 'A: ' + row.option_a_name;
+    if (choice === 'B' && row.option_b_name) return 'B: ' + row.option_b_name;
+    if (choice) return choice + ' 선택';
+    return '—';
+  }
+
+  function postDetailHref(postId) {
+    if (!postId) return '';
+    return '../user_app/detail.html?id=' + encodeURIComponent(String(postId));
+  }
+
+  var MODAL_DUMMY_BY_TAB = {
+    posts: [
+      { id: 'dummy-post-1', title: '오늘 날씨에 옷 뭐입을까', created_at: '2026-06-14T18:33:00' },
+      { id: 'dummy-post-2', title: '점심 메뉴 추천 받습니다', created_at: '2026-06-13T12:10:00' },
+      { id: 'dummy-post-3', title: '주말 국내 여행 vs 해외 여행', created_at: '2026-06-12T09:45:00' },
+      { id: 'dummy-post-4', title: '재택근무 vs 출근', created_at: '2026-06-11T20:02:00' },
+      { id: 'dummy-post-5', title: '아이폰 vs 갤럭시', created_at: '2026-06-10T16:28:00' },
+      { id: 'dummy-post-6', title: '커피 브랜드 고르기', created_at: '2026-06-09T11:05:00' },
+      { id: 'dummy-post-7', title: '운동 루틴 공유', created_at: '2026-06-08T07:40:00' },
+      { id: 'dummy-post-8', title: 'Netflix vs Watcha', created_at: '2026-06-07T22:15:00' },
+      { id: 'dummy-post-9', title: '반려동물 키울까 말까', created_at: '2026-06-06T14:50:00' },
+      { id: 'dummy-post-10', title: '이직 타이밍 상담', created_at: '2026-06-05T19:33:00' },
+      { id: 'dummy-post-11', title: 'MBTI 믿을 만한가', created_at: '2026-06-04T10:20:00' },
+      { id: 'dummy-post-12', title: '새벽형 vs 올빼미형', created_at: '2026-06-03T08:00:00' },
+    ],
+    votes: [
+      {
+        category_name: '음식',
+        post_title: '평생 라면 한종류만 먹어야 한다면',
+        vote_result: 'A: 신라면',
+        created_at: '2026-06-14T15:20:00',
+      },
+      {
+        category_name: '직장',
+        post_title: '야근 식대 만원 vs 퇴근',
+        vote_result: 'B: 퇴근',
+        created_at: '2026-06-13T21:10:00',
+      },
+      {
+        category_name: '연애',
+        post_title: '첫 데이트 카페 vs 식당',
+        vote_result: 'A: 카페',
+        created_at: '2026-06-12T18:40:00',
+      },
+      {
+        category_name: '음식',
+        post_title: '피자 vs 치킨',
+        vote_result: 'A: 피자',
+        created_at: '2026-06-11T12:30:00',
+      },
+      {
+        category_name: '취미',
+        post_title: '게임 vs 독서',
+        vote_result: 'B: 독서',
+        created_at: '2026-06-10T23:05:00',
+      },
+      {
+        category_name: '생활',
+        post_title: '빨래 바로 vs 모아서',
+        vote_result: 'A: 바로',
+        created_at: '2026-06-09T16:18:00',
+      },
+      {
+        category_name: '음식',
+        post_title: '빙수 vs 아이스크림',
+        vote_result: 'B: 아이스크림',
+        created_at: '2026-06-08T14:22:00',
+      },
+      {
+        category_name: '직장',
+        post_title: '회의 줄이기',
+        vote_result: 'A: 15분 제한',
+        created_at: '2026-06-07T11:00:00',
+      },
+      {
+        category_name: '여행',
+        post_title: '계획형 vs 즉흥형',
+        vote_result: 'B: 즉흥형',
+        created_at: '2026-06-06T09:35:00',
+      },
+      {
+        category_name: '음식',
+        post_title: '매운 것 vs 순한 것',
+        vote_result: 'A: 매운 것',
+        created_at: '2026-06-05T19:50:00',
+      },
+      {
+        category_name: '취미',
+        post_title: '넷플릭스 vs 유튜브',
+        vote_result: 'B: 유튜브',
+        created_at: '2026-06-04T22:12:00',
+      },
+      {
+        category_name: '생활',
+        post_title: '아침형 vs 저녁형',
+        vote_result: 'A: 아침형',
+        created_at: '2026-06-03T07:55:00',
+      },
+    ],
+    comments: [
+      {
+        category_name: '직장',
+        post_title: '야근 식대 만원 vs...',
+        content: '만원으로 요즘 먹을게 있나요?',
+        post_id: 'dummy-post-c1',
+        created_at: '2026-06-14T10:11:00',
+      },
+      {
+        category_name: '음식',
+        post_title: '평생 라면 한종류만...',
+        content: '저는 진라면 순한맛 파입니다',
+        post_id: 'dummy-post-c2',
+        created_at: '2026-06-13T19:40:00',
+      },
+      {
+        category_name: '연애',
+        post_title: '연락 빈도',
+        content: '하루에 한 번은 너무 많은 것 같아요',
+        post_id: 'dummy-post-c3',
+        created_at: '2026-06-12T13:25:00',
+      },
+      {
+        category_name: '취미',
+        post_title: '주말 뭐하세요',
+        content: '집에서 쉬는 게 최고',
+        post_id: 'dummy-post-c4',
+        created_at: '2026-06-11T16:08:00',
+      },
+      {
+        category_name: '직장',
+        post_title: '재택 vs 출근',
+        content: '협업 많으면 출근이 나은 듯',
+        post_id: 'dummy-post-c5',
+        created_at: '2026-06-10T11:44:00',
+      },
+      {
+        category_name: '생활',
+        post_title: '아침 루틴',
+        content: '물 한 잔부터 시작합니다',
+        post_id: 'dummy-post-c6',
+        created_at: '2026-06-09T08:30:00',
+      },
+      {
+        category_name: '음식',
+        post_title: '치킨 브랜드',
+        content: 'BBQ 마법사가 최고',
+        post_id: 'dummy-post-c7',
+        created_at: '2026-06-08T21:15:00',
+      },
+      {
+        category_name: '여행',
+        post_title: '국내 1박2일',
+        content: '강릉 추천합니다',
+        post_id: 'dummy-post-c8',
+        created_at: '2026-06-07T15:02:00',
+      },
+      {
+        category_name: '직장',
+        post_title: '점심시간',
+        content: '1시간은 꼭 필요해요',
+        post_id: 'dummy-post-c9',
+        created_at: '2026-06-06T12:33:00',
+      },
+      {
+        category_name: '취미',
+        post_title: '운동 종목',
+        content: '헬스 vs 러닝 고민 중',
+        post_id: 'dummy-post-c10',
+        created_at: '2026-06-05T18:20:00',
+      },
+      {
+        category_name: '생활',
+        post_title: '정리정돈',
+        content: '미니멀리즘 도전 중',
+        post_id: 'dummy-post-c11',
+        created_at: '2026-06-04T10:05:00',
+      },
+      {
+        category_name: '음식',
+        post_title: '배달 vs 직접',
+        content: '요즘 배달비가 부담',
+        post_id: 'dummy-post-c12',
+        created_at: '2026-06-03T20:48:00',
+      },
+    ],
+    points: [
+      { amount: 50, reason: '투표 참여 보상', created_at: '2026-06-14T09:00:00' },
+      { amount: -100, reason: '포인트 상품 교환', created_at: '2026-06-13T17:30:00' },
+      { amount: 30, reason: '댓글 작성 보상', created_at: '2026-06-12T14:15:00' },
+      { amount: 100, reason: '불판 생성 보상', created_at: '2026-06-11T11:00:00' },
+      { amount: -50, reason: '관리자 차감', created_at: '2026-06-10T09:40:00' },
+      { amount: 20, reason: '출석 체크', created_at: '2026-06-09T08:05:00' },
+      { amount: 50, reason: '투표 참여 보상', created_at: '2026-06-08T19:22:00' },
+      { amount: -30, reason: '이벤트 참여', created_at: '2026-06-07T16:10:00' },
+      { amount: 10, reason: '프로필 완성', created_at: '2026-06-06T13:00:00' },
+      { amount: 50, reason: '투표 참여 보상', created_at: '2026-06-05T21:45:00' },
+      { amount: -200, reason: '포인트 상품 교환', created_at: '2026-06-04T12:20:00' },
+      { amount: 30, reason: '댓글 작성 보상', created_at: '2026-06-03T10:33:00' },
+    ],
+    sanctions: [
+      { penalty_points: 30, reason: '타인 비방 및 욕설', created_at: '2026-05-28T14:30:00' },
+      { penalty_points: 10, reason: '스팸성 댓글 반복', created_at: '2026-05-20T11:15:00' },
+      { penalty_points: 50, reason: '허위 신고 누적', created_at: '2026-05-12T09:00:00' },
+      { penalty_points: 20, reason: '불쾌한 표현 사용', created_at: '2026-05-05T18:40:00' },
+      { penalty_points: 30, reason: '타인 비방 및 욕설', created_at: '2026-04-28T14:30:00' },
+      { penalty_points: 10, reason: '광고성 게시물', created_at: '2026-04-15T10:05:00' },
+      { penalty_points: 50, reason: '커뮤니티 가이드 위반', created_at: '2026-04-01T16:22:00' },
+      { penalty_points: 20, reason: '분란 조장', created_at: '2026-03-22T13:18:00' },
+      { penalty_points: 30, reason: '욕설 및 비하', created_at: '2026-03-10T08:50:00' },
+      { penalty_points: 10, reason: '도배 행위', created_at: '2026-02-28T20:11:00' },
+      { penalty_points: 50, reason: '반복 신고 대상', created_at: '2026-02-14T15:33:00' },
+      { penalty_points: 20, reason: '부적절한 닉네임', created_at: '2026-02-01T12:00:00' },
+    ],
+  };
+
+  function getModalDummyPage(tab, page) {
+    var all = MODAL_DUMMY_BY_TAB[tab] || [];
+    var from = (page - 1) * MODAL_PAGE_SIZE;
+    return {
+      items: all.slice(from, from + MODAL_PAGE_SIZE),
+      total: all.length,
+    };
+  }
+
+  function applyModalDummyCounts() {
+    modalTabTotals.posts = MODAL_DUMMY_BY_TAB.posts.length;
+    modalTabTotals.votes = MODAL_DUMMY_BY_TAB.votes.length;
+    modalTabTotals.comments = MODAL_DUMMY_BY_TAB.comments.length;
+    modalTabTotals.points = MODAL_DUMMY_BY_TAB.points.length;
+    modalTabTotals.sanctions = MODAL_DUMMY_BY_TAB.sanctions.length;
+    modalTabTotals.points_balance = 1250;
+    updateModalTabLabels();
   }
 
   function renderPostsList(rows) {
     if (!rows.length) return emptyStateHtml();
     return rows
       .map(function (row) {
-        var vis = row.visibility_status ? String(row.visibility_status) : '';
+        var href = postDetailHref(row.id || row.post_id);
         return (
-          '<div class="history-item">' +
-          '<div>' +
-          '<div class="hi-type">🔥 생성 불판</div>' +
-          '<div class="hi-title">' +
+          '<div class="list-item">' +
+          '<span class="li-col li-col-grow">' +
           escapeHtml(row.title || '제목 없음') +
-          '</div>' +
-          '<div class="hi-date">' +
-          escapeHtml(formatDateTime(row.created_at)) +
-          (vis ? ' · ' + escapeHtml(vis) : '') +
-          '</div>' +
-          '</div>' +
-          '<span class="hi-badge blue">불판</span>' +
+          '</span>' +
+          '<span class="li-col li-col-date">' +
+          escapeHtml(formatListDateTime(row.created_at)) +
+          '</span>' +
+          liBtnHtml('보기', href) +
           '</div>'
         );
       })
@@ -662,22 +862,19 @@
     if (!rows.length) return emptyStateHtml();
     return rows
       .map(function (row) {
-        var choice = row.choice ? String(row.choice) : '?';
         return (
-          '<div class="history-item">' +
-          '<div>' +
-          '<div class="hi-type">🗳️ 투표 참여 · ' +
-          escapeHtml(choice) +
-          ' 선택</div>' +
-          '<div class="hi-title">' +
+          '<div class="list-item">' +
+          '<span class="li-col li-col-cat">' +
+          escapeHtml(row.category_name || '—') +
+          '</span>' +
+          '<span class="li-col li-col-title">' +
           escapeHtml(row.post_title || '불판') +
-          '</div>' +
-          '<div class="hi-date">' +
-          escapeHtml(formatDateTime(row.created_at)) +
-          '</div>' +
-          '</div>' +
-          '<span class="hi-badge green">' +
-          escapeHtml(choice) +
+          '</span>' +
+          '<span class="li-col li-col-vote">' +
+          escapeHtml(formatVoteResult(row)) +
+          '</span>' +
+          '<span class="li-col li-col-date">' +
+          escapeHtml(formatListDateTime(row.created_at)) +
           '</span>' +
           '</div>'
         );
@@ -689,22 +886,67 @@
     if (!rows.length) return emptyStateHtml();
     return rows
       .map(function (row) {
-        var text = row.content ? String(row.content) : '';
-        if (text.length > 100) text = text.slice(0, 100) + '…';
+        var href = postDetailHref(row.post_id);
         return (
-          '<div class="history-item">' +
-          '<div>' +
-          '<div class="hi-type">💬 댓글 · ' +
-          escapeHtml(row.post_title || '불판') +
-          '</div>' +
-          '<div class="hi-title">' +
-          escapeHtml(text || '내용 없음') +
-          '</div>' +
-          '<div class="hi-date">' +
-          escapeHtml(formatDateTime(row.created_at)) +
-          '</div>' +
-          '</div>' +
-          '<span class="hi-badge blue">댓글</span>' +
+          '<div class="list-item">' +
+          '<span class="li-col li-col-cat">' +
+          escapeHtml(row.category_name || '—') +
+          '</span>' +
+          '<span class="li-col li-col-title">' +
+          escapeHtml(truncateText(row.post_title || '불판', 18)) +
+          '</span>' +
+          '<span class="li-col li-col-grow">' +
+          escapeHtml(truncateText(row.content, 28)) +
+          '</span>' +
+          '<span class="li-col li-col-date">' +
+          escapeHtml(formatListDateTime(row.created_at)) +
+          '</span>' +
+          liBtnHtml('보기', href) +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderPointsList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        return (
+          '<div class="list-item">' +
+          '<span class="li-col li-amount ' +
+          amountClass(row.amount) +
+          '">' +
+          escapeHtml(formatAmountLabel(row.amount)) +
+          '</span>' +
+          '<span class="li-col li-col-reason">' +
+          escapeHtml(row.reason || '포인트 변동') +
+          '</span>' +
+          '<span class="li-col li-col-date">' +
+          escapeHtml(formatListDateTime(row.created_at)) +
+          '</span>' +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderSanctionsList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var pts = Number(row.penalty_points) || 0;
+        return (
+          '<div class="list-item">' +
+          '<span class="li-col li-penalty">+' +
+          escapeHtml(String(pts)) +
+          '점</span>' +
+          '<span class="li-col li-col-reason">' +
+          escapeHtml(row.reason || '사유 미기록') +
+          '</span>' +
+          '<span class="li-col li-col-date">' +
+          escapeHtml(formatListDateTime(row.created_at)) +
+          '</span>' +
           '</div>'
         );
       })
@@ -750,6 +992,11 @@
   }
 
   async function loadModalTabCounts(userId, user) {
+    if (MODAL_DUMMY_PREVIEW) {
+      applyModalDummyCounts();
+      return;
+    }
+
     var sb = getSupabaseClient();
     var rpc = await sb.rpc('admin_user_tab_counts', { p_user_id: userId });
     if (!rpc.error && rpc.data) {
@@ -969,7 +1216,12 @@
     $('modalPagination').innerHTML = '';
 
     try {
-      var result = await fetchModalTabPage(modalCurrentUserId, modalActiveTab, modalCurrentPage);
+      var result;
+      if (MODAL_DUMMY_PREVIEW) {
+        result = getModalDummyPage(modalActiveTab, modalCurrentPage);
+      } else {
+        result = await fetchModalTabPage(modalCurrentUserId, modalActiveTab, modalCurrentPage);
+      }
       var items = result.items || [];
       var total = Number(result.total) || 0;
 

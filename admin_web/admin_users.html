@@ -205,19 +205,21 @@
 
     .stat-grid { display: none; }
 
-    /* 텍스트 탭 — 밑줄 강조 */
+    /* 텍스트 탭 — 1줄 가로 압축 */
     .modal-container .m-tabs {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0;
         border-bottom: 1px solid #3f3f46;
         margin-top: 2px;
+        overflow-x: auto;
+        scrollbar-width: thin;
     }
     .modal-container .m-tab {
-        flex: 1 1 auto;
+        flex: 1 0 auto;
         min-width: 0;
-        padding: 10px 14px 11px;
-        font-size: 0.8125rem;
+        padding: 8px 10px 9px;
+        font-size: 0.75rem;
         font-weight: 600;
         color: var(--text-sub);
         cursor: pointer;
@@ -229,6 +231,7 @@
         transition: color 0.15s, border-color 0.15s;
         user-select: none;
         margin-bottom: -1px;
+        white-space: nowrap;
     }
     .modal-container .m-tab:hover { color: #d4d4d8; }
     .modal-container .m-tab.active {
@@ -238,49 +241,148 @@
         border-bottom-color: #fff;
         box-shadow: none;
     }
-    .modal-container .m-tab-count { color: inherit; opacity: 0.75; font-weight: 600; font-size: 0.75rem; }
+    .modal-container .m-tab-count { color: inherit; opacity: 0.7; font-weight: 600; font-size: 0.7rem; }
 
-    .modal-container .modal-tab-panel { display: flex; flex-direction: column; gap: 8px; min-height: 200px; }
-    .modal-container .history-list { display: flex; flex-direction: column; gap: 4px; min-height: 160px; }
-    .modal-container .history-item {
+    .modal-container .modal-tab-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 200px;
+        flex: 1 1 auto;
+    }
+    .modal-container .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-height: 120px;
+        flex: 1 1 auto;
+    }
+    .modal-container .list-item {
         background: #0f0f11;
         border: 1px solid #27272a;
-        padding: 12px 16px;
+        padding: 10px 15px;
         border-radius: 6px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
+        gap: 15px;
+        font-size: 0.85rem;
+        color: #e4e4e7;
+        min-height: 38px;
     }
-    .modal-container .hi-title { font-size: 0.8125rem; color: #e4e4e7; font-weight: 600; line-height: 1.35; }
-    .modal-container .hi-date { font-size: 0.6875rem; color: #71717a; margin-top: 2px; line-height: 1.3; }
-    .modal-container .hi-type { font-size: 0.6875rem; color: #a1a1aa; font-weight: 600; margin-bottom: 1px; letter-spacing: 0.01em; }
-    .modal-container .hi-badge {
+    .modal-container .li-col {
         flex-shrink: 0;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.06);
-        color: #d4d4d8;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        white-space: nowrap;
+        font-size: 0.85rem;
+        line-height: 1.3;
     }
-    .modal-container .hi-badge.red { background: rgba(255, 255, 255, 0.05); color: #d4d4d8; border-color: rgba(255, 255, 255, 0.1); }
-    .modal-container .hi-badge.green { background: rgba(255, 255, 255, 0.06); color: #d4d4d8; border-color: rgba(255, 255, 255, 0.08); }
-    .modal-container .hi-badge.blue { background: rgba(255, 255, 255, 0.06); color: #d4d4d8; border-color: rgba(255, 255, 255, 0.08); }
+    .modal-container .li-col-grow {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+        color: #f4f4f5;
+    }
+    .modal-container .li-col-cat {
+        width: 52px;
+        flex-shrink: 0;
+        color: #a1a1aa;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .modal-container .li-col-title {
+        width: 140px;
+        flex-shrink: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #d4d4d8;
+        font-size: 0.8125rem;
+    }
+    .modal-container .li-col-vote {
+        width: 96px;
+        flex-shrink: 0;
+        color: #d4d4d8;
+        font-size: 0.8125rem;
+    }
+    .modal-container .li-col-date {
+        width: 128px;
+        flex-shrink: 0;
+        text-align: right;
+        color: #71717a;
+        font-size: 0.75rem;
+    }
+    .modal-container .li-col-reason {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #e4e4e7;
+        font-size: 0.85rem;
+    }
+    .modal-container .li-amount {
+        width: 72px;
+        flex-shrink: 0;
+        font-weight: 700;
+        font-size: 0.8125rem;
+        text-align: right;
+    }
+    .modal-container .li-amount.positive { color: #86efac; }
+    .modal-container .li-amount.negative { color: #f87171; }
+    .modal-container .li-amount.neutral { color: #d4d4d8; }
+    .modal-container .li-penalty {
+        width: 56px;
+        flex-shrink: 0;
+        font-weight: 700;
+        font-size: 0.8125rem;
+        color: #fca5a5;
+        text-align: right;
+    }
+    .modal-container .li-btn {
+        flex-shrink: 0;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.2;
+        color: #e4e4e7;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid #3f3f46;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .modal-container .li-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #52525b;
+        color: #fff;
+    }
+    .modal-container .li-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
 
     .modal-container .empty-state { font-size: 0.8125rem !important; padding: 24px 16px !important; color: #71717a !important; }
 
-    /* 모달 페이지네이션 — 심플 텍스트형 */
+    /* 모달 페이지네이션 — 리스트와 분리 */
     .modal-container .modal-pagination {
+        flex-shrink: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
         gap: 4px;
-        padding: 12px 0 2px;
-        margin-top: 2px;
+        margin-top: 20px;
+        padding: 12px 0 4px;
+        text-align: center;
         border-top: 1px solid #27272a;
+        position: relative;
+        z-index: 1;
+        background: var(--bg-color);
     }
     .modal-container .modal-pagination .page-btn {
         min-width: 30px;
