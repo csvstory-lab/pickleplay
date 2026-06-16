@@ -53,6 +53,8 @@ BEGIN
       SELECT
         p.id,
         COALESCE(NULLIF(trim(p.title), ''), trim(p.option_a_name) || ' vs ' || trim(p.option_b_name)) AS title,
+        p.category,
+        p.category AS category_slug,
         p.visibility_status,
         p.created_at
       FROM public.posts p
@@ -73,6 +75,10 @@ BEGIN
         v.choice,
         v.post_id,
         v.created_at,
+        p.category,
+        p.category AS category_slug,
+        p.option_a_name,
+        p.option_b_name,
         COALESCE(
           NULLIF(trim(p.title), ''),
           trim(p.option_a_name) || ' vs ' || trim(p.option_b_name),
@@ -97,6 +103,8 @@ BEGIN
         COALESCE(NULLIF(trim(c.filtered_content), ''), trim(c.content)) AS content,
         c.post_id,
         c.created_at,
+        p.category,
+        p.category AS category_slug,
         COALESCE(NULLIF(trim(p.title), ''), '불판 #' || LEFT(c.post_id::text, 8)) AS post_title
       FROM public.comments c
       LEFT JOIN public.posts p ON p.id = c.post_id

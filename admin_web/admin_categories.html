@@ -152,8 +152,6 @@
     .btn-modal-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(57,255,20,0.3); }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
 </head>
 <body>
 
@@ -315,13 +313,16 @@
               .replace(/'/g, '&#39;');
       }
 
-      /** Slug 정규화 — 소문자 + trim */
-      function normalizeSlugInput(raw) {
-          return String(raw ?? '').toLowerCase().trim().replace(/\s+/g, '_');
+      /** 신규 생성 시 #categorySlug 입력값만 사용 (자동 생성 금지) */
+      function readAdminSlugInput() {
+          const slugInput = document.getElementById('categorySlug');
+          const raw = slugInput ? String(slugInput.value || '').trim() : '';
+          if (!raw) return '';
+          return raw.toLowerCase().replace(/\s+/g, '_');
       }
 
       function validateSlug(slug) {
-          if (!slug) return 'Slug(영어 고유값)은 필수 입력 사항입니다.';
+          if (!slug) return 'Slug(영어 고유값)를 입력해주세요.';
           if (!/^[a-z0-9_]+$/.test(slug)) {
               return 'Slug는 영문 소문자, 숫자, 밑줄(_)만 사용할 수 있습니다.';
           }
@@ -584,8 +585,6 @@
 
       async function saveCategory() {
           const name = document.getElementById('catNameInput').value.trim();
-          const slugRaw = document.getElementById('categorySlug').value;
-          const slug = normalizeSlugInput(slugRaw);
           const icon = document.getElementById('catIconInput').innerText.trim() || '📁';
           const desc = document.getElementById('catDescInput').value.trim();
           const isActive = document.getElementById('catStatusInput').checked;
@@ -596,17 +595,32 @@
               return;
           }
 
+          /** 관리자가 직접 입력한 Slug만 DB에 저장 (Date.now / random / uuid 자동 생성 없음) */
+          let finalSlug = '';
+
           if (currentEditMode === 'new') {
-              const slugError = validateSlug(slug);
+              const slugRaw = document.getElementById('categorySlug')
+                  ? document.getElementById('categorySlug').value.trim()
+                  : '';
+
+              if (!slugRaw) {
+                  alert('Slug(영어 고유값)를 입력해주세요.');
+                  return;
+              }
+
+              finalSlug = readAdminSlugInput();
+
+              const slugError = validateSlug(finalSlug);
               if (slugError) {
                   alert(slugError);
                   return;
               }
+
               const duplicate = categoriesCache.some(function (cat) {
-                  return normalizeSlugInput(cat.slug) === slug;
+                  return String(cat.slug || '').trim().toLowerCase() === finalSlug;
               });
               if (duplicate) {
-                  alert('이미 사용 중인 Slug입니다: ' + slug);
+                  alert('이미 사용 중인 Slug입니다: ' + finalSlug);
                   return;
               }
           }
@@ -623,7 +637,7 @@
                   }, 0);
 
                   const row = {
-                      slug: slug,
+                      slug: finalSlug,
                       name: name,
                       icon: icon,
                       description: desc || null,
@@ -634,7 +648,7 @@
 
                   const { error } = await sb.from('categories').insert(row);
                   if (error) throw error;
-                  alert('[' + name + '] 카테고리가 추가되었습니다. (Slug: ' + slug + ')');
+                  alert('[' + name + '] 카테고리가 추가되었습니다. (Slug: ' + finalSlug + ')');
               } else {
                   if (!editingSlug) {
                       throw new Error('수정할 카테고리(slug)를 찾을 수 없습니다.');
