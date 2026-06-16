@@ -12,6 +12,7 @@
     '</div>';
 
   var feedTimerInterval = null;
+  var feedIsLoading = false;
 
   /** 작성자 스냅샷 우선 — tags/end_date/users 조인 실패 시에도 author 컬럼 유지 */
   var POSTS_SELECT_VARIANTS = [
@@ -254,6 +255,78 @@
 
   function showLoading(container) {
     if (container) container.innerHTML = LOADING_HTML;
+  }
+
+  function setFeedLoading(isLoading) {
+    feedIsLoading = !!isLoading;
+  }
+
+  function isAuthRelatedError(err) {
+    if (!err) return false;
+    var code = String(err.code || err.status || err.statusCode || '').toLowerCase();
+    var msg = String(err.message || err || '').toLowerCase();
+
+    if (
+      code === '401' ||
+      code === '403' ||
+      code === 'pgrst301' ||
+      code === '42501'
+    ) {
+      return true;
+    }
+
+    return (
+      /jwt|expired|invalid.*token|refresh token|session|not authenticated|auth session missing|user not found|invalid claim/i.test(
+        msg
+      ) || /unauthorized|forbidden/.test(msg)
+    );
+  }
+
+  async function clearStaleSession() {
+    try {
+      var sb = getClient();
+      await sb.auth.signOut();
+    } catch (signOutErr) {
+      console.warn('[P!CKLE Feed] stale session signOut failed', signOutErr);
+    }
+
+    if (window.PickleAuth && typeof window.PickleAuth.init === 'function') {
+      try {
+        await window.PickleAuth.init();
+      } catch (_) {}
+    }
+  }
+
+  /** 스피너만 남아 있으면 빈 상태로 전환 (무한 로딩 방지) */
+  function clearLoadingIfStuck(container, emptyHtml) {
+    if (!container) return;
+    var hasContent = container.querySelector(
+      '.king-card, .list-card, .feed-empty, .feed-error'
+    );
+    if (hasContent) return;
+    if (container.querySelector('.feed-loading') || !container.innerHTML.trim()) {
+      if (emptyHtml) {
+        container.innerHTML = emptyHtml;
+      } else {
+        renderEmptyState(container);
+      }
+    }
+  }
+
+  function ensureFeedLoadingStopped(king, list) {
+    clearLoadingIfStuck(king);
+    clearLoadingIfStuck(
+      list,
+      '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">더 많은 불판이 곧 올라옵니다 🔥</p></div>'
+    );
+  }
+
+  function renderGuestSafeEmptyFeed(king, list) {
+    renderEmptyState(king);
+    if (list) {
+      list.innerHTML =
+        '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">더 많은 불판이 곧 올라옵니다 🔥</p></div>';
+    }
   }
 
   function calcPercent(votesA, votesB) {
@@ -715,14 +788,36 @@
 
   /**
    * Supabase posts 테이블에서 최신 불판 + 투표·댓글 집계
+   * 인증 만료/탈퇴 잔여 세션 시 signOut 후 1회 재시도
    * @returns {Promise<Array>}
    */
   async function fetchPicklePosts() {
-    var result = await fetchPostRows();
-    if (result.error) {
-      throw new Error(result.error.message || String(result.error));
+    var attempt = 0;
+    var lastError = null;
+
+    while (attempt < 2) {
+      attempt += 1;
+      try {
+        var result = await fetchPostRows();
+        if (result.error) {
+          if (isAuthRelatedError(result.error) && attempt === 1) {
+            await clearStaleSession();
+            continue;
+          }
+          throw result.error;
+        }
+        return enrichRowsToPosts(result.rows, result.source);
+      } catch (err) {
+        lastError = err;
+        if (isAuthRelatedError(err) && attempt === 1) {
+          await clearStaleSession();
+          continue;
+        }
+        throw err;
+      }
     }
-    return enrichRowsToPosts(result.rows, result.source);
+
+    throw lastError || new Error('불판 데이터를 불러오지 못했습니다.');
   }
 
   async function hydrateThumbnailUrls(sb, posts) {
@@ -960,58 +1055,84 @@
     return parts.length ? parts.join(' | ') : String(err);
   }
 
+  function renderFeedFromPosts(all, king, list) {
+    if (!all || !all.length) {
+      renderEmptyState(king);
+      if (list) {
+        list.innerHTML =
+          '<div class="feed-empty"><p class="feed-empty-title" style="margin:0;font-size:0.85rem;">더 많은 불판이 곧 올라옵니다 🔥</p></div>';
+      }
+      return;
+    }
+
+    var kingPosts = all.slice(0, 3);
+    var listPosts = all.slice(3);
+
+    try {
+      renderKingCards(kingPosts);
+    } catch (kingErr) {
+      console.error('[P!CKLE Feed] 킹왕짱 렌더 실패', kingErr);
+      if (king) {
+        king.innerHTML =
+          '<div class="feed-empty feed-error">킹왕짱 영역을 그리지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;">' +
+          escapeHtml(formatErrorDetail(kingErr)) +
+          '</p></div>';
+      }
+    }
+
+    try {
+      renderFeedList(listPosts);
+    } catch (listErr) {
+      console.error('[P!CKLE Feed] 리스트 렌더 실패', listErr);
+      if (list) {
+        list.innerHTML =
+          '<div class="feed-empty feed-error">리스트를 그리지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;">' +
+          escapeHtml(formatErrorDetail(listErr)) +
+          '</p></div>';
+      }
+    }
+  }
+
   async function loadPickleFeed() {
     if (window.PickleCategories && window.PickleCategories.load) {
-      await window.PickleCategories.load();
+      try {
+        await window.PickleCategories.load();
+      } catch (catErr) {
+        console.warn('[P!CKLE Feed] categories load failed', catErr);
+      }
     }
 
     var king = document.getElementById('aiCurationContainer');
     var list = document.getElementById('hotFeedList');
 
     stopFeedTimerRefresh();
+    setFeedLoading(true);
     showLoading(king);
     showLoading(list);
 
     try {
       var all = await fetchPicklePosts();
-
-      if (!all.length) {
-        renderEmptyState(king);
-        renderEmptyState(list);
-        return;
-      }
-
-      var kingPosts = all.slice(0, 3);
-      var listPosts = all.slice(3);
-
-      try {
-        renderKingCards(kingPosts);
-      } catch (kingErr) {
-        console.error('[P!CKLE Feed] 킹왕짱 렌더 실패', kingErr);
-        if (king) {
-          king.innerHTML =
-            '<div class="feed-empty feed-error">킹왕짱 영역을 그리지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;">' +
-            escapeHtml(formatErrorDetail(kingErr)) +
-            '</p></div>';
-        }
-      }
-
-      try {
-        renderFeedList(listPosts);
-      } catch (listErr) {
-        console.error('[P!CKLE Feed] 리스트 렌더 실패', listErr);
-        if (list) {
-          list.innerHTML =
-            '<div class="feed-empty feed-error">리스트를 그리지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;">' +
-            escapeHtml(formatErrorDetail(listErr)) +
-            '</p></div>';
-        }
-      }
+      renderFeedFromPosts(all, king, list);
     } catch (err) {
       var detail = formatErrorDetail(err);
       console.error('[P!CKLE Feed] loadPickleFeed 실패', err);
-      alert('불판을 불러오지 못했습니다.\n\n' + detail);
-      showFeedError('불판을 불러오지 못했습니다.', detail);
+
+      if (isAuthRelatedError(err)) {
+        await clearStaleSession();
+        try {
+          var allRetry = await fetchPicklePosts();
+          renderFeedFromPosts(allRetry, king, list);
+          return;
+        } catch (retryErr) {
+          console.error('[P!CKLE Feed] auth recovery retry failed', retryErr);
+          renderGuestSafeEmptyFeed(king, list);
+        }
+      } else {
+        showFeedError('불판을 불러오지 못했습니다.', detail);
+      }
+    } finally {
+      setFeedLoading(false);
+      ensureFeedLoadingStopped(king, list);
     }
   }
 
@@ -1024,6 +1145,9 @@
     enrichRowsToPosts: enrichRowsToPosts,
     renderListToContainer: renderListToContainer,
     showLoading: showLoading,
+    setFeedLoading: setFeedLoading,
+    isAuthRelatedError: isAuthRelatedError,
+    clearStaleSession: clearStaleSession,
     goDetail: goDetail,
     categoryLabel: categoryLabel,
     resolvePostCategoryLabel: resolvePostCategoryLabel,
@@ -1036,17 +1160,14 @@
       document.getElementById('hotFeedList') ||
       document.getElementById('aiCurationContainer')
     ) {
-      var startFeed = function () {
-        loadPickleFeed();
-      };
+      loadPickleFeed();
+
       if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
-        window.PickleAuth.ensureAuthenticated({ skipProfile: true })
-          .then(startFeed)
-          .catch(startFeed);
-      } else if (window.PickleAuth && window.PickleAuth.waitForSessionReady) {
-        window.PickleAuth.waitForSessionReady().then(startFeed).catch(startFeed);
-      } else {
-        startFeed();
+        window.PickleAuth.ensureAuthenticated({ skipProfile: true }).catch(function (authErr) {
+          if (window.PickleFeed.isAuthRelatedError(authErr)) {
+            window.PickleFeed.clearStaleSession();
+          }
+        });
       }
     }
   });
