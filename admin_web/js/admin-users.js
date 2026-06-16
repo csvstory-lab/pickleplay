@@ -559,13 +559,6 @@
     );
   }
 
-  function truncateText(value, maxLen) {
-    var text = value != null ? String(value) : '';
-    if (!text) return '—';
-    if (text.length <= maxLen) return text;
-    return text.slice(0, maxLen) + '…';
-  }
-
   function formatListDateTime(value) {
     if (!value) return '—';
     if (typeof value === 'string' && /^\d{4}\.\d{2}\.\d{2}/.test(value)) return value;
@@ -583,13 +576,6 @@
       );
     }
     return '<button type="button" class="li-btn">' + escapeHtml(label) + '</button>';
-  }
-
-  function amountClass(amount) {
-    var amt = Number(amount) || 0;
-    if (amt > 0) return 'positive';
-    if (amt < 0) return 'negative';
-    return 'neutral';
   }
 
   function formatAmountLabel(amount) {
@@ -614,20 +600,163 @@
     return '../user_app/detail.html?id=' + encodeURIComponent(String(postId));
   }
 
+  var POST_CATEGORY_LABELS = {
+    driving: '운전',
+    food: '음식',
+    love: '연애',
+    balance: '밸런스',
+    fashion: '패션',
+    drama: '드라마',
+    fandom: '덕질',
+    games: '게임',
+    pets: '반려',
+    sports: '스포츠',
+    worldcup: '월드컵',
+    spending: '소비',
+    mind: '마인드',
+    kpop: 'K-POP',
+    mystery: '미스터리',
+  };
+
+  function formatCategoryLabel(value) {
+    if (!value) return '—';
+    var key = String(value).trim().toLowerCase();
+    if (POST_CATEGORY_LABELS[key]) return POST_CATEGORY_LABELS[key];
+    return String(value);
+  }
+
+  function formatSanctionReason(row) {
+    if (row.reason_detail) return String(row.reason_detail);
+    var base = row.reason ? String(row.reason) : '사유 미기록';
+    if (row.context_label && row.context_content) {
+      return base + ' (' + row.context_label + ': "' + row.context_content + '")';
+    }
+    if (row.context_content) {
+      return base + ' (' + row.context_content + ')';
+    }
+    return base;
+  }
+
+  function formatPointSource(row) {
+    if (row.source_detail) return String(row.source_detail);
+    if (row.reason_detail) return String(row.reason_detail);
+    return row.reason ? String(row.reason) : '포인트 변동';
+  }
+
+  function penaltyPointsHtml(row) {
+    var pts = Number(row.penalty_points) || 0;
+    if (pts < 0) {
+      return (
+        '<span class="li-col li-penalty penalty-sub">' +
+        escapeHtml(String(pts) + '점') +
+        '</span>'
+      );
+    }
+    return (
+      '<span class="li-col li-penalty penalty-add">+' +
+      escapeHtml(String(Math.abs(pts)) + '점') +
+      '</span>'
+    );
+  }
+
+  function pointAmountHtml(amount) {
+    var amt = Number(amount) || 0;
+    var cls = amt > 0 ? 'amount-gain' : amt < 0 ? 'amount-spend' : 'neutral';
+    return (
+      '<span class="li-col li-amount ' +
+      cls +
+      '">' +
+      escapeHtml(formatAmountLabel(amt)) +
+      '</span>'
+    );
+  }
+
   var MODAL_DUMMY_BY_TAB = {
     posts: [
-      { id: 'dummy-post-1', title: '오늘 날씨에 옷 뭐입을까', created_at: '2026-06-14T18:33:00' },
-      { id: 'dummy-post-2', title: '점심 메뉴 추천 받습니다', created_at: '2026-06-13T12:10:00' },
-      { id: 'dummy-post-3', title: '주말 국내 여행 vs 해외 여행', created_at: '2026-06-12T09:45:00' },
-      { id: 'dummy-post-4', title: '재택근무 vs 출근', created_at: '2026-06-11T20:02:00' },
-      { id: 'dummy-post-5', title: '아이폰 vs 갤럭시', created_at: '2026-06-10T16:28:00' },
-      { id: 'dummy-post-6', title: '커피 브랜드 고르기', created_at: '2026-06-09T11:05:00' },
-      { id: 'dummy-post-7', title: '운동 루틴 공유', created_at: '2026-06-08T07:40:00' },
-      { id: 'dummy-post-8', title: 'Netflix vs Watcha', created_at: '2026-06-07T22:15:00' },
-      { id: 'dummy-post-9', title: '반려동물 키울까 말까', created_at: '2026-06-06T14:50:00' },
-      { id: 'dummy-post-10', title: '이직 타이밍 상담', created_at: '2026-06-05T19:33:00' },
-      { id: 'dummy-post-11', title: 'MBTI 믿을 만한가', created_at: '2026-06-04T10:20:00' },
-      { id: 'dummy-post-12', title: '새벽형 vs 올빼미형', created_at: '2026-06-03T08:00:00' },
+      {
+        id: 'dummy-post-1',
+        category_name: '패션',
+        category: 'fashion',
+        title: '오늘 날씨에 옷 뭐입을까',
+        created_at: '2026-06-14T18:33:00',
+      },
+      {
+        id: 'dummy-post-2',
+        category_name: '음식',
+        category: 'food',
+        title: '점심 메뉴 추천 받습니다',
+        created_at: '2026-06-13T12:10:00',
+      },
+      {
+        id: 'dummy-post-3',
+        category_name: '여행',
+        category: 'balance',
+        title: '주말 국내 여행 vs 해외 여행',
+        created_at: '2026-06-12T09:45:00',
+      },
+      {
+        id: 'dummy-post-4',
+        category_name: '직장',
+        category: 'balance',
+        title: '재택근무 vs 출근',
+        created_at: '2026-06-11T20:02:00',
+      },
+      {
+        id: 'dummy-post-5',
+        category_name: 'IT',
+        category: 'games',
+        title: '아이폰 vs 갤럭시',
+        created_at: '2026-06-10T16:28:00',
+      },
+      {
+        id: 'dummy-post-6',
+        category_name: '음식',
+        category: 'food',
+        title: '커피 브랜드 고르기',
+        created_at: '2026-06-09T11:05:00',
+      },
+      {
+        id: 'dummy-post-7',
+        category_name: '운동',
+        category: 'sports',
+        title: '운동 루틴 공유',
+        created_at: '2026-06-08T07:40:00',
+      },
+      {
+        id: 'dummy-post-8',
+        category_name: '취미',
+        category: 'drama',
+        title: 'Netflix vs Watcha',
+        created_at: '2026-06-07T22:15:00',
+      },
+      {
+        id: 'dummy-post-9',
+        category_name: '반려',
+        category: 'pets',
+        title: '반려동물 키울까 말까',
+        created_at: '2026-06-06T14:50:00',
+      },
+      {
+        id: 'dummy-post-10',
+        category_name: '직장',
+        category: 'balance',
+        title: '이직 타이밍 상담',
+        created_at: '2026-06-05T19:33:00',
+      },
+      {
+        id: 'dummy-post-11',
+        category_name: '마인드',
+        category: 'mind',
+        title: 'MBTI 믿을 만한가',
+        created_at: '2026-06-04T10:20:00',
+      },
+      {
+        id: 'dummy-post-12',
+        category_name: '생활',
+        category: 'balance',
+        title: '새벽형 vs 올빼미형',
+        created_at: '2026-06-03T08:00:00',
+      },
     ],
     votes: [
       {
@@ -790,32 +919,146 @@
       },
     ],
     points: [
-      { amount: 50, reason: '투표 참여 보상', created_at: '2026-06-14T09:00:00' },
-      { amount: -100, reason: '포인트 상품 교환', created_at: '2026-06-13T17:30:00' },
-      { amount: 30, reason: '댓글 작성 보상', created_at: '2026-06-12T14:15:00' },
-      { amount: 100, reason: '불판 생성 보상', created_at: '2026-06-11T11:00:00' },
-      { amount: -50, reason: '관리자 차감', created_at: '2026-06-10T09:40:00' },
-      { amount: 20, reason: '출석 체크', created_at: '2026-06-09T08:05:00' },
-      { amount: 50, reason: '투표 참여 보상', created_at: '2026-06-08T19:22:00' },
-      { amount: -30, reason: '이벤트 참여', created_at: '2026-06-07T16:10:00' },
-      { amount: 10, reason: '프로필 완성', created_at: '2026-06-06T13:00:00' },
-      { amount: 50, reason: '투표 참여 보상', created_at: '2026-06-05T21:45:00' },
-      { amount: -200, reason: '포인트 상품 교환', created_at: '2026-06-04T12:20:00' },
-      { amount: 30, reason: '댓글 작성 보상', created_at: '2026-06-03T10:33:00' },
+      {
+        amount: 50,
+        source_detail: '투표 참여 (평생 라면 한종류만...)',
+        created_at: '2026-06-14T15:20:00',
+      },
+      {
+        amount: -500,
+        source_detail: '이벤트 응모 (스타벅스 아메리카노)',
+        created_at: '2026-06-10T12:00:00',
+      },
+      {
+        amount: 30,
+        source_detail: '댓글 작성 (야근 식대 만원 vs...)',
+        created_at: '2026-06-12T14:15:00',
+      },
+      {
+        amount: 100,
+        source_detail: '불판 생성 (주말 국내 여행 vs...)',
+        created_at: '2026-06-11T11:00:00',
+      },
+      {
+        amount: -50,
+        source_detail: '관리자 차감 (정책 위반)',
+        created_at: '2026-06-10T09:40:00',
+      },
+      {
+        amount: 20,
+        source_detail: '출석 체크 (일일 보상)',
+        created_at: '2026-06-09T08:05:00',
+      },
+      {
+        amount: 50,
+        source_detail: '투표 참여 (피자 vs 치킨)',
+        created_at: '2026-06-08T19:22:00',
+      },
+      {
+        amount: -30,
+        source_detail: '이벤트 응모 (문화상품권)',
+        created_at: '2026-06-07T16:10:00',
+      },
+      {
+        amount: 10,
+        source_detail: '프로필 완성 (최초 1회)',
+        created_at: '2026-06-06T13:00:00',
+      },
+      {
+        amount: 50,
+        source_detail: '투표 참여 (게임 vs 독서)',
+        created_at: '2026-06-05T21:45:00',
+      },
+      {
+        amount: -200,
+        source_detail: '포인트 상품 교환 (기프티콘)',
+        created_at: '2026-06-04T12:20:00',
+      },
+      {
+        amount: 30,
+        source_detail: '댓글 작성 (치킨 브랜드)',
+        created_at: '2026-06-03T10:33:00',
+      },
     ],
     sanctions: [
-      { penalty_points: 30, reason: '타인 비방 및 욕설', created_at: '2026-05-28T14:30:00' },
-      { penalty_points: 10, reason: '스팸성 댓글 반복', created_at: '2026-05-20T11:15:00' },
-      { penalty_points: 50, reason: '허위 신고 누적', created_at: '2026-05-12T09:00:00' },
-      { penalty_points: 20, reason: '불쾌한 표현 사용', created_at: '2026-05-05T18:40:00' },
-      { penalty_points: 30, reason: '타인 비방 및 욕설', created_at: '2026-04-28T14:30:00' },
-      { penalty_points: 10, reason: '광고성 게시물', created_at: '2026-04-15T10:05:00' },
-      { penalty_points: 50, reason: '커뮤니티 가이드 위반', created_at: '2026-04-01T16:22:00' },
-      { penalty_points: 20, reason: '분란 조장', created_at: '2026-03-22T13:18:00' },
-      { penalty_points: 30, reason: '욕설 및 비하', created_at: '2026-03-10T08:50:00' },
-      { penalty_points: 10, reason: '도배 행위', created_at: '2026-02-28T20:11:00' },
-      { penalty_points: 50, reason: '반복 신고 대상', created_at: '2026-02-14T15:33:00' },
-      { penalty_points: 20, reason: '부적절한 닉네임', created_at: '2026-02-01T12:00:00' },
+      {
+        penalty_points: 30,
+        reason: '타인 비방',
+        context_label: '댓글',
+        context_content: '이딴 글 왜 씀?',
+        created_at: '2026.06.14',
+      },
+      {
+        penalty_points: -10,
+        reason: '30일 무사고 (자동 회복)',
+        created_at: '2026.06.15',
+      },
+      {
+        penalty_points: 10,
+        reason: '스팸성 댓글',
+        context_label: '댓글',
+        context_content: '광고 링크 반복 게시',
+        created_at: '2026.06.10',
+      },
+      {
+        penalty_points: 50,
+        reason: '허위 신고 누적',
+        context_label: '신고',
+        context_content: '근거 없는 반복 신고',
+        created_at: '2026.06.05',
+      },
+      {
+        penalty_points: -10,
+        reason: '30일 무사고 (자동 회복)',
+        created_at: '2026.05.28',
+      },
+      {
+        penalty_points: 20,
+        reason: '불쾌한 표현',
+        context_label: '불판',
+        context_content: '선정적 표현 포함',
+        created_at: '2026.05.20',
+      },
+      {
+        penalty_points: 30,
+        reason: '욕설 및 비하',
+        context_label: '댓글',
+        context_content: '상대방 인신공격',
+        created_at: '2026.05.12',
+      },
+      {
+        penalty_points: 10,
+        reason: '광고성 게시물',
+        context_label: '불판',
+        context_content: '외부 판매 유도',
+        created_at: '2026.05.05',
+      },
+      {
+        penalty_points: -10,
+        reason: '30일 무사고 (자동 회복)',
+        created_at: '2026.04.28',
+      },
+      {
+        penalty_points: 50,
+        reason: '커뮤니티 가이드 위반',
+        context_label: '불판',
+        context_content: '혐오 표현 게시',
+        created_at: '2026.04.15',
+      },
+      {
+        penalty_points: 20,
+        reason: '분란 조장',
+        context_label: '댓글',
+        context_content: '의도적 논쟁 유발',
+        created_at: '2026.04.01',
+      },
+      {
+        penalty_points: 30,
+        reason: '타인 비방',
+        context_label: '댓글',
+        context_content: '특정 사용자 조롱',
+        created_at: '2026.03.22',
+      },
     ],
   };
 
@@ -843,8 +1086,12 @@
     return rows
       .map(function (row) {
         var href = postDetailHref(row.id || row.post_id);
+        var cat = row.category_name || formatCategoryLabel(row.category);
         return (
           '<div class="list-item">' +
+          '<span class="li-col li-col-cat">' +
+          escapeHtml(cat) +
+          '</span>' +
           '<span class="li-col li-col-grow">' +
           escapeHtml(row.title || '제목 없음') +
           '</span>' +
@@ -893,10 +1140,10 @@
           escapeHtml(row.category_name || '—') +
           '</span>' +
           '<span class="li-col li-col-title">' +
-          escapeHtml(truncateText(row.post_title || '불판', 18)) +
+          escapeHtml(row.post_title || '불판') +
           '</span>' +
           '<span class="li-col li-col-grow">' +
-          escapeHtml(truncateText(row.content, 28)) +
+          escapeHtml(row.content || '') +
           '</span>' +
           '<span class="li-col li-col-date">' +
           escapeHtml(formatListDateTime(row.created_at)) +
@@ -914,13 +1161,9 @@
       .map(function (row) {
         return (
           '<div class="list-item">' +
-          '<span class="li-col li-amount ' +
-          amountClass(row.amount) +
-          '">' +
-          escapeHtml(formatAmountLabel(row.amount)) +
-          '</span>' +
+          pointAmountHtml(row.amount) +
           '<span class="li-col li-col-reason">' +
-          escapeHtml(row.reason || '포인트 변동') +
+          escapeHtml(formatPointSource(row)) +
           '</span>' +
           '<span class="li-col li-col-date">' +
           escapeHtml(formatListDateTime(row.created_at)) +
@@ -935,14 +1178,11 @@
     if (!rows.length) return emptyStateHtml();
     return rows
       .map(function (row) {
-        var pts = Number(row.penalty_points) || 0;
         return (
           '<div class="list-item">' +
-          '<span class="li-col li-penalty">+' +
-          escapeHtml(String(pts)) +
-          '점</span>' +
+          penaltyPointsHtml(row) +
           '<span class="li-col li-col-reason">' +
-          escapeHtml(row.reason || '사유 미기록') +
+          escapeHtml(formatSanctionReason(row)) +
           '</span>' +
           '<span class="li-col li-col-date">' +
           escapeHtml(formatListDateTime(row.created_at)) +
@@ -1045,7 +1285,7 @@
     if (tab === 'posts') {
       var postRes = await sb
         .from('posts')
-        .select('id, title, option_a_name, option_b_name, visibility_status, created_at', {
+        .select('id, title, category, option_a_name, option_b_name, visibility_status, created_at', {
           count: 'exact',
         })
         .eq('author_id', userId)
@@ -1058,6 +1298,8 @@
           title:
             row.title ||
             String(row.option_a_name || '') + ' vs ' + String(row.option_b_name || ''),
+          category: row.category,
+          category_name: formatCategoryLabel(row.category),
           visibility_status: row.visibility_status,
           created_at: row.created_at,
         };

@@ -260,15 +260,16 @@
         display: flex;
         flex-direction: column;
         flex: 0 0 auto;
-        min-height: 0;
+        min-height: 460px;
         gap: 0;
     }
     .modal-container .history-list {
         display: flex;
         flex-direction: column;
         gap: 5px;
-        min-height: 0;
-        overflow: visible;
+        min-height: 420px;
+        flex: 1 1 auto;
+        overflow: hidden;
     }
     .modal-container .list-item {
         background: #0f0f11;
@@ -287,6 +288,8 @@
     .modal-container .li-col {
         flex-shrink: 0;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         font-size: 0.8125rem;
         line-height: 1.2;
     }
@@ -300,7 +303,7 @@
         color: #f4f4f5;
     }
     .modal-container .li-col-cat {
-        width: 52px;
+        width: 56px;
         flex-shrink: 0;
         color: #a1a1aa;
         font-size: 0.8rem;
@@ -322,7 +325,7 @@
         font-size: 0.8125rem;
     }
     .modal-container .li-col-date {
-        width: 128px;
+        width: 120px;
         flex-shrink: 0;
         text-align: right;
         color: #71717a;
@@ -335,26 +338,27 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         color: #e4e4e7;
-        font-size: 0.85rem;
+        font-size: 0.8125rem;
     }
     .modal-container .li-amount {
-        width: 72px;
+        width: 76px;
         flex-shrink: 0;
         font-weight: 700;
         font-size: 0.8125rem;
         text-align: right;
     }
-    .modal-container .li-amount.positive { color: #86efac; }
-    .modal-container .li-amount.negative { color: #f87171; }
+    .modal-container .li-amount.amount-gain { color: var(--neon-green); }
+    .modal-container .li-amount.amount-spend { color: #a1a1aa; }
     .modal-container .li-amount.neutral { color: #d4d4d8; }
     .modal-container .li-penalty {
-        width: 56px;
+        width: 64px;
         flex-shrink: 0;
         font-weight: 700;
         font-size: 0.8125rem;
-        color: #fca5a5;
         text-align: right;
     }
+    .modal-container .li-penalty.penalty-add { color: var(--neon-pink); }
+    .modal-container .li-penalty.penalty-sub { color: var(--neon-blue); font-weight: 800; }
     .modal-container .li-btn {
         flex-shrink: 0;
         padding: 4px 8px;
@@ -381,7 +385,16 @@
         cursor: default;
     }
 
-    .modal-container .empty-state { font-size: 0.8125rem !important; padding: 14px 16px !important; color: #71717a !important; }
+    .modal-container .empty-state {
+        font-size: 0.8125rem !important;
+        padding: 14px 16px !important;
+        color: #71717a !important;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 120px;
+    }
 
     /* 모달 페이지네이션 — 한 줄 고정 (전역 .pagination / .page-btn 충돌 방지) */
     .modal-container .modal-pagination {
