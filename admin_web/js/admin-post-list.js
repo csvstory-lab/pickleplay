@@ -5,9 +5,9 @@
   'use strict';
 
   var postsCache = [];
-  /** @type {Record<string, string>} slug → "emoji name" 표시 라벨 */
+  /** @type {Record<string, string>} slug → 한글 카테고리명 */
   var categoryMap = {};
-  /** @type {Array<{slug:string,name:string,emoji:string}>} */
+  /** @type {Array<{slug:string,name:string}>} */
   var categoriesList = [];
   var voteStatsCache = new Map();
   var categoriesReady = false;
@@ -16,21 +16,48 @@
     'id, title, category, option_a_name, option_b_name, author_id, author_nickname, visibility_status, created_at, expires_at, vote_count, comment_count, share_count, users:author_id(nickname)';
 
   var FALLBACK_CATEGORIES = [
-    ['worldcup', '북중미 월드컵', '⚽'],
-    ['food', '먹잘알/푸파', '🍕'],
-    ['love', '연애/과몰입', '💖'],
-    ['balance', '뇌정지 밸런스', '⚖️'],
-    ['fashion', 'OOTD/스타일', '👗'],
-    ['drama', '빌런/썰', '🤬'],
-    ['fandom', '덕질/서브컬처', '🍿'],
-    ['games', '겜심/이스포츠', '🎮'],
-    ['pets', '힐링/동물', '🐾'],
-    ['sports', '스포츠/매치업', '🏟️'],
-    ['spending', '텅장/소비', '💸'],
-    ['mind', 'MBTI/심리', '🧠'],
-    ['kpop', '돌판/K-POP', '🎤'],
-    ['mystery', '미스터리', '👻'],
-    ['driving', '블박/과실', '🚗'],
+    ['worldcup', '북중미 월드컵'],
+    ['food', '먹잘알/푸파'],
+    ['love', '연애/과몰입'],
+    ['balance', '뇌정지 밸런스'],
+    ['fashion', 'OOTD/스타일'],
+    ['drama', '빌런/썰'],
+    ['fandom', '덕질/서브컬처'],
+    ['games', '겜심/이스포츠'],
+    ['pets', '힐링/동물'],
+    ['sports', '스포츠/매치업'],
+    ['spending', '텅장/소비'],
+    ['mind', 'MBTI/심리'],
+    ['kpop', '돌판/K-POP'],
+    ['mystery', '미스터리'],
+    ['driving', '블박/과실'],
+  ];
+
+  var CATEGORY_BADGE_COLORS = {
+    worldcup: { bg: 'rgba(0, 240, 255, 0.12)', border: 'rgba(0, 240, 255, 0.4)', color: '#7dd3fc' },
+    food: { bg: 'rgba(251, 146, 60, 0.14)', border: 'rgba(251, 146, 60, 0.45)', color: '#fdba74' },
+    love: { bg: 'rgba(255, 0, 127, 0.12)', border: 'rgba(255, 0, 127, 0.38)', color: '#f472b6' },
+    balance: { bg: 'rgba(161, 161, 170, 0.16)', border: 'rgba(161, 161, 170, 0.42)', color: '#d4d4d8' },
+    fashion: { bg: 'rgba(255, 204, 0, 0.12)', border: 'rgba(255, 204, 0, 0.42)', color: '#fde047' },
+    drama: { bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5' },
+    fandom: { bg: 'rgba(168, 85, 247, 0.12)', border: 'rgba(168, 85, 247, 0.4)', color: '#c4b5fd' },
+    games: { bg: 'rgba(57, 255, 20, 0.1)', border: 'rgba(57, 255, 20, 0.35)', color: '#86efac' },
+    pets: { bg: 'rgba(52, 211, 153, 0.12)', border: 'rgba(52, 211, 153, 0.4)', color: '#6ee7b7' },
+    sports: { bg: 'rgba(34, 197, 94, 0.12)', border: 'rgba(34, 197, 94, 0.4)', color: '#86efac' },
+    spending: { bg: 'rgba(250, 204, 21, 0.12)', border: 'rgba(250, 204, 21, 0.42)', color: '#fcd34d' },
+    mind: { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' },
+    kpop: { bg: 'rgba(236, 72, 153, 0.12)', border: 'rgba(236, 72, 153, 0.4)', color: '#f9a8d4' },
+    mystery: { bg: 'rgba(100, 116, 139, 0.18)', border: 'rgba(100, 116, 139, 0.45)', color: '#cbd5e1' },
+    driving: { bg: 'rgba(14, 165, 233, 0.12)', border: 'rgba(14, 165, 233, 0.4)', color: '#7dd3fc' },
+  };
+
+  var BADGE_COLOR_PALETTE = [
+    { bg: 'rgba(0, 240, 255, 0.12)', border: 'rgba(0, 240, 255, 0.4)', color: '#7dd3fc' },
+    { bg: 'rgba(255, 0, 127, 0.12)', border: 'rgba(255, 0, 127, 0.38)', color: '#f472b6' },
+    { bg: 'rgba(57, 255, 20, 0.1)', border: 'rgba(57, 255, 20, 0.35)', color: '#86efac' },
+    { bg: 'rgba(255, 204, 0, 0.12)', border: 'rgba(255, 204, 0, 0.42)', color: '#fde047' },
+    { bg: 'rgba(168, 85, 247, 0.12)', border: 'rgba(168, 85, 247, 0.4)', color: '#c4b5fd' },
+    { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' },
   ];
 
   function $(id) {
@@ -87,31 +114,54 @@
     return '제목 없음';
   }
 
-  function buildCategoryLabel(emoji, name, slug) {
-    var n = name ? String(name).trim() : slug;
-    var e = emoji ? String(emoji).trim() : '';
-    return e ? e + ' ' + n : n;
+  function resolveCategoryName(name, slug) {
+    return name ? String(name).trim() : slug;
   }
 
-  function registerCategory(slug, name, emoji) {
+  function hashSlug(slug) {
+    var h = 0;
+    for (var i = 0; i < slug.length; i++) {
+      h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+    }
+    return h;
+  }
+
+  function getCategoryBadgeStyle(slug) {
+    var key = slug ? String(slug).trim() : '';
+    var c = key ? CATEGORY_BADGE_COLORS[key] : null;
+    if (!c && key) {
+      c = BADGE_COLOR_PALETTE[hashSlug(key) % BADGE_COLOR_PALETTE.length];
+    }
+    if (!c) {
+      c = { bg: '#27272a', border: '#3f3f46', color: '#e4e4e7' };
+    }
+    return (
+      'background-color:' +
+      c.bg +
+      ';border:1px solid ' +
+      c.border +
+      ';color:' +
+      c.color +
+      ';'
+    );
+  }
+
+  function registerCategory(slug, name) {
     if (!slug) return;
     var s = String(slug).trim();
-    categoryMap[s] = buildCategoryLabel(emoji, name, s);
+    var displayName = resolveCategoryName(name, s);
+    categoryMap[s] = displayName;
     var exists = categoriesList.some(function (c) {
       return c.slug === s;
     });
     if (!exists) {
-      categoriesList.push({
-        slug: s,
-        name: name ? String(name).trim() : s,
-        emoji: emoji ? String(emoji).trim() : '',
-      });
+      categoriesList.push({ slug: s, name: displayName });
     }
   }
 
   function applyFallbackCategories() {
     FALLBACK_CATEGORIES.forEach(function (row) {
-      registerCategory(row[0], row[1], row[2]);
+      registerCategory(row[0], row[1]);
     });
   }
 
@@ -120,12 +170,6 @@
     var slug = String(post.category_slug || post.category || '').trim();
     post.category_slug = slug;
     post.category = slug;
-  }
-
-  function getCategoryBadgeLabel(post) {
-    normalizePostCategoryFields(post);
-    var slug = post.category_slug || '';
-    return categoryMap[slug] || slug || '—';
   }
 
   async function loadCategories(sb) {
@@ -164,7 +208,7 @@
 
     rows.forEach(function (row) {
       if (!row || !row.slug) return;
-      registerCategory(row.slug, row.name, row.icon);
+      registerCategory(row.slug, row.name);
     });
 
     if (!Object.keys(categoryMap).length) {
@@ -186,12 +230,11 @@
 
     var html = '<option value="all">전체 카테고리 보기</option>';
     sorted.forEach(function (cat) {
-      var label = buildCategoryLabel(cat.emoji, cat.name, cat.slug);
       html +=
         '<option value="' +
         escapeHtml(cat.slug) +
         '">' +
-        escapeHtml(label) +
+        escapeHtml(cat.name) +
         '</option>';
     });
     select.innerHTML = html;
@@ -556,6 +599,7 @@
     var titleStyle = blinded ? ' style="text-decoration:line-through;"' : '';
     var deadlineStyle = ended && !blinded ? ' style="color:var(--text-sub);"' : '';
     var categoryLabel = categoryMap[post.category_slug] || post.category_slug || '—';
+    var categoryBadgeStyle = getCategoryBadgeStyle(post.category_slug);
 
     return (
       '<tr data-post-id="' +
@@ -568,7 +612,9 @@
       '<td class="post-id">' +
       escapeHtml(formatPostId(post.id)) +
       '</td>' +
-      '<td><span class="cat-badge">' +
+      '<td><span class="cat-badge" style="' +
+      categoryBadgeStyle +
+      '">' +
       escapeHtml(categoryLabel) +
       '</span></td>' +
       '<td class="post-title-cell">' +
