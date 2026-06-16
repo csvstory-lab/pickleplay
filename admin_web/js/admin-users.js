@@ -63,13 +63,66 @@
   }
 
   function formatModalUidLine(user) {
-    var rawId = String(user && user.id ? user.id : '').replace(/-/g, '');
-    var shortId = rawId ? rawId.slice(0, 6) : '—';
+    var fullId = user && user.id ? String(user.id) : '—';
     var email = formatUserEmail(user);
     if (!email || email === '이메일 미등록') {
-      return 'UID: ' + shortId;
+      return 'UID: ' + fullId;
     }
-    return 'UID: ' + shortId + ' | ' + email;
+    return 'UID: ' + fullId + ' | ' + email;
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  function showUidCopyToast(anchorEl) {
+    if (!anchorEl) return;
+    var prev = anchorEl.querySelector('.uid-copy-toast');
+    if (prev) prev.remove();
+    var toast = document.createElement('span');
+    toast.className = 'uid-copy-toast';
+    toast.setAttribute('role', 'status');
+    toast.textContent = '복사되었습니다';
+    anchorEl.appendChild(toast);
+    setTimeout(function () {
+      if (toast.parentNode) toast.remove();
+    }, 1800);
+  }
+
+  function bindModalUidCopy(user) {
+    var el = $('modalUid');
+    if (!el) return;
+    var uid = user && user.id ? String(user.id) : '';
+    el.classList.toggle('is-copyable', !!uid);
+    el.title = uid ? '클릭하여 UID 복사' : '';
+    el.onclick = uid
+      ? function () {
+          copyTextToClipboard(uid)
+            .then(function () {
+              showUidCopyToast(el);
+            })
+            .catch(function () {
+              alert('복사에 실패했습니다.');
+            });
+        }
+      : null;
   }
 
   function getWeekStartMonday() {
@@ -309,7 +362,6 @@
     tbody.innerHTML = rows
       .map(function (user) {
         var tier = penaltyTier(user);
-        var shortId = String(user.id || '').slice(0, 8);
         var avatarHtml = buildListAvatarHtml(user);
         var isBanned = tier.status === 'banned';
 
@@ -345,9 +397,6 @@
           '<div style="font-size: 0.8rem; color: var(--text-sub); margin-top: 2px;">' +
           escapeHtml(formatUserEmail(user)) +
           '</div>' +
-          '<span class="user-uid">UID: ' +
-          escapeHtml(shortId) +
-          '…</span>' +
           '</div></div></td>' +
           '<td><span class="small-badge ' +
           platformBadgeClass(user) +
@@ -484,6 +533,7 @@
     $('modalAvatar').textContent = avatar;
     $('modalName').textContent = user.nickname || '픽클러';
     $('modalUid').textContent = formatModalUidLine(user);
+    bindModalUidCopy(user);
     var genderEl = $('modalGender');
     genderEl.textContent = formatGender(user.gender);
     genderEl.className =
