@@ -63,14 +63,172 @@
   }
 
   function resolveCategoryBadge(post) {
-    var icon = post.category_icon ? String(post.category_icon).trim() : '';
+    var slug = post.category ? String(post.category).trim() : '';
+    var mapped = slug && categoriesMap[slug] ? categoriesMap[slug] : null;
+    var icon = post.category_icon
+      ? String(post.category_icon).trim()
+      : mapped && mapped.icon
+        ? String(mapped.icon).trim()
+        : '';
     var name =
       post.category_name ||
-      (post.category && categoriesMap[post.category]
-        ? categoriesMap[post.category].name
-        : post.category) ||
+      (mapped ? mapped.name : null) ||
+      slug ||
       '—';
     return (icon ? icon + ' ' : '') + name;
+  }
+
+  function enrichPostCategory(post) {
+    if (!post || !post.category) return;
+    var mapped = categoriesMap[post.category];
+    if (!mapped) return;
+    if (!post.category_name) post.category_name = mapped.name;
+    if (!post.category_icon && mapped.icon) post.category_icon = mapped.icon;
+  }
+
+  function getTodayStartIso() {
+    var d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
+
+  function setKpiValue(id, value) {
+    var el = $(id);
+    if (el) el.textContent = formatNumber(value ?? 0);
+  }
+
+  async function loadKPIs(sb) {
+    var todayStart = getTodayStartIso();
+    var nowIso = new Date().toISOString();
+
+    try {
+      var results = await Promise.all([
+        sb.from('posts').select('*', { count: 'exact', head: true }),
+        sb
+          .from('posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('visibility_status', 'visible')
+          .or('expires_at.is.null,expires_at.gt.' + JSON.stringify(nowIso)),
+        sb.from('posts').select('*', { count: 'exact', head: true }).eq('visibility_status', 'blinded'),
+        sb
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', todayStart),
+      ]);
+
+      setKpiValue('kpiTotalPosts', results[0].count ?? 0);
+      setKpiValue('kpiActivePosts', results[1].count ?? 0);
+      setKpiValue('kpiBlindedPosts', results[2].count ?? 0);
+      setKpiValue('kpiTodayComments', results[3].count ?? 0);
+    } catch (err) {
+      console.warn('[Admin Posts] loadKPIs failed', err);
+      setKpiValue('kpiTotalPosts', 0);
+      setKpiValue('kpiActivePosts', 0);
+      setKpiValue('kpiBlindedPosts', 0);
+      setKpiValue('kpiTodayComments', 0);
+    }
+  }
+
+  function renderCategoryFilterOptions() {
+    var select = $('filterCategorySelect');
+    if (!select) return;
+
+    var slugs = Object.keys(categoriesMap).sort(function (a, b) {
+      var nameA = categoriesMap[a].name || a;
+      var nameB = categoriesMap[b].name || b;
+      return nameA.localeCompare(nameB, 'ko');
+    });
+
+    var html = '<option value="all">전체 카테고리 보기</option>';
+    slugs.forEach(function (slug) {
+      var cat = categoriesMap[slug];
+      var label = (cat.icon ? cat.icon + ' ' : '') + (cat.name || slug);
+      html +=
+        '<option value="' + escapeHtml(slug) + '">' + escapeHtml(label) + '</option>';
+    });
+    select.innerHTML = html;
+  }
+
+  function getFilterValues() {
+    var searchEl = $('filterSearchInput');
+    var catEl = $('filterCategorySelect');
+    var statusEl = $('filterStatusSelect');
+    var sortEl = $('filterSortSelect');
+    return {
+      search: searchEl ? String(searchEl.value || '').trim().toLowerCase() : '',
+      category: catEl ? catEl.value || 'all' : 'all',
+      status: statusEl ? statusEl.value || 'all' : 'all',
+      sort: sortEl ? sortEl.value || 'newest' : 'newest',
+    };
+  }
+
+  function sortPosts(list, sortKey) {
+    var sorted = list.slice();
+    sorted.sort(function (a, b) {
+      if (sortKey === 'votes') {
+        return (Number(b.vote_count) || 0) - (Number(a.vote_count) || 0);
+      }
+      if (sortKey === 'comments') {
+        return (Number(b.comment_count) || 0) - (Number(a.comment_count) || 0);
+      }
+      var dateA = new Date(a.created_at || 0).getTime();
+      var dateB = new Date(b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    return sorted;
+  }
+
+  function filterPosts(source) {
+    var f = getFilterValues();
+    var list = source.filter(function (post) {
+      if (f.category !== 'all' && post.category !== f.category) return false;
+
+      var status = resolvePostStatus(post);
+      if (f.status !== 'all' && status !== f.status) return false;
+
+      if (f.search) {
+        var title = resolvePostTitle(post).toLowerCase();
+        var author = resolveAuthorName(post).toLowerCase();
+        if (title.indexOf(f.search) === -1 && author.indexOf(f.search) === -1) {
+          return false;
+        }
+      }
+      return true;
+    });
+    return sortPosts(list, f.sort);
+  }
+
+  function applyFilters() {
+    var filtered = filterPosts(postsCache);
+    renderPostList(filtered, voteStatsCache);
+    updateTableTotal(filtered.length);
+  }
+
+  function resetFilters() {
+    var searchEl = $('filterSearchInput');
+    var catEl = $('filterCategorySelect');
+    var statusEl = $('filterStatusSelect');
+    var sortEl = $('filterSortSelect');
+    if (searchEl) searchEl.value = '';
+    if (catEl) catEl.value = 'all';
+    if (statusEl) statusEl.value = 'all';
+    if (sortEl) sortEl.value = 'newest';
+    renderPostList(postsCache, voteStatsCache);
+    updateTableTotal(postsCache.length);
+  }
+
+  function bindFilterEvents() {
+    var searchBtn = $('btnSearchFilter');
+    var resetBtn = $('btnResetFilter');
+    var searchInput = $('filterSearchInput');
+
+    if (searchBtn) searchBtn.addEventListener('click', applyFilters);
+    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+    if (searchInput) {
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') applyFilters();
+      });
+    }
   }
 
   function resolveAuthorName(post) {
@@ -272,7 +430,7 @@
 
     if (!posts.length) {
       tbody.innerHTML =
-        '<tr><td colspan="7" style="text-align:center;padding:40px;color:#71717a;">등록된 불판이 없습니다.</td></tr>';
+        '<tr><td colspan="7" style="text-align:center;padding:40px;color:#71717a;">조건에 맞는 불판이 없습니다.</td></tr>';
       return;
     }
 
@@ -307,7 +465,7 @@
   async function loadCategoriesMap(sb) {
     categoriesMap = {};
     try {
-      var res = await sb.from('categories').select('slug, name, icon');
+      var res = await sb.from('categories').select('slug, name, icon').order('name', { ascending: true });
       if (res.error || !Array.isArray(res.data)) return;
       res.data.forEach(function (row) {
         if (row && row.slug) categoriesMap[row.slug] = row;
@@ -361,22 +519,21 @@
     showLoadingRow();
     try {
       var sb = getSupabaseClient();
-      await loadCategoriesMap(sb);
 
-      var result = await fetchPostsFromSupabase(sb);
+      await loadCategoriesMap(sb);
+      renderCategoryFilterOptions();
+
+      var results = await Promise.all([fetchPostsFromSupabase(sb), loadKPIs(sb)]);
+      var result = results[0];
       if (result.error) throw result.error;
 
       postsCache = Array.isArray(result.data) ? result.data : [];
-      postsCache.forEach(function (post) {
-        if (post.category && !post.category_name && categoriesMap[post.category]) {
-          post.category_name = categoriesMap[post.category].name;
-          post.category_icon = categoriesMap[post.category].icon;
-        }
-      });
+      postsCache.forEach(enrichPostCategory);
 
       var postIds = postsCache.map(function (p) {
         return p.id;
       });
+
       var voteStatsMap = await fetchVoteStatsMap(sb, postIds);
       voteStatsCache = voteStatsMap;
 
@@ -457,6 +614,7 @@
     }
 
     applyRowVisibilityUI(btn, postId, 'blinded');
+    loadKPIs(getSupabaseClient());
   }
 
   async function unblindPost(btn, postId) {
@@ -472,13 +630,18 @@
     }
 
     applyRowVisibilityUI(btn, postId, 'visible');
+    loadKPIs(getSupabaseClient());
   }
+
+  window.applyFilters = applyFilters;
+  window.resetFilters = resetFilters;
 
   window.blindPost = blindPost;
   window.unblindPost = unblindPost;
   window.loadPosts = loadPosts;
 
   document.addEventListener('DOMContentLoaded', function () {
+    bindFilterEvents();
     loadPosts();
   });
 })();

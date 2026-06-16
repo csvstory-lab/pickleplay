@@ -168,19 +168,19 @@
         
         <div class="mini-kpi-row">
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">누적 생성된 불판</span><span class="mini-kpi-val">58,241</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">누적 생성된 불판</span><span class="mini-kpi-val" id="kpiTotalPosts">—</span></div>
                 <div class="mini-kpi-icon">📚</div>
             </div>
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">진행 중 (Active)</span><span class="mini-kpi-val" style="color: var(--neon-blue);">1,245</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">진행 중 (Active)</span><span class="mini-kpi-val" id="kpiActivePosts" style="color: var(--neon-blue);">—</span></div>
                 <div class="mini-kpi-icon">🔥</div>
             </div>
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">블라인드 조치</span><span class="mini-kpi-val" style="color: var(--neon-pink);">342</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">블라인드 조치</span><span class="mini-kpi-val" id="kpiBlindedPosts" style="color: var(--neon-pink);">—</span></div>
                 <div class="mini-kpi-icon">👁️</div>
             </div>
             <div class="mini-kpi-card">
-                <div class="mini-kpi-info"><span class="mini-kpi-title">오늘 올라온 참견(댓글)</span><span class="mini-kpi-val" style="color: var(--neon-green);">14,890</span></div>
+                <div class="mini-kpi-info"><span class="mini-kpi-title">오늘 올라온 참견(댓글)</span><span class="mini-kpi-val" id="kpiTodayComments" style="color: var(--neon-green);">—</span></div>
                 <div class="mini-kpi-icon">💬</div>
             </div>
         </div>
@@ -188,36 +188,33 @@
         <div class="filter-bar">
             <div class="input-group">
                 <span class="input-label">검색어</span>
-                <input type="text" class="admin-input" placeholder="불판 제목 또는 작성자(닉네임)">
+                <input type="text" class="admin-input" id="filterSearchInput" placeholder="불판 제목 또는 작성자(닉네임)">
             </div>
             <div class="input-group">
                 <span class="input-label">카테고리 연동 필터</span>
-                <select class="admin-select cat-filter">
-                    <option value="all" style="font-weight:bold;">전체 카테고리 보기</option>
-                    <optgroup label="[메인 도파민 카테고리]">
-                        <option value="c_love">💔 연애 / 썸 / 이별</option>
-                        <option value="c_brain">🤯 뇌정지 밸런스</option>
-                        <option value="c_food">🍕 먹잘알 / 푸파</option>
-                    </optgroup>
+                <select class="admin-select cat-filter" id="filterCategorySelect">
+                    <option value="all">전체 카테고리 보기</option>
                 </select>
             </div>
             <div class="input-group">
                 <span class="input-label">진행 상태</span>
-                <select class="admin-select" style="width: 120px;">
-                    <option value="all">전체</option><option value="active">진행 중</option><option value="ended">마감됨</option><option value="blinded">블라인드</option>
+                <select class="admin-select" id="filterStatusSelect" style="width: 120px;">
+                    <option value="all">전체</option>
+                    <option value="active">진행 중</option>
+                    <option value="ended">마감됨</option>
+                    <option value="blinded">블라인드</option>
                 </select>
             </div>
             <div class="input-group">
                 <span class="input-label">정렬 기준</span>
-                <select class="admin-select" style="width: 140px;">
+                <select class="admin-select" id="filterSortSelect" style="width: 140px;">
                     <option value="newest">최신 등록순</option>
                     <option value="votes">투표 많은순</option>
                     <option value="comments">댓글 많은순</option>
-                    <option value="reports">신고 누적순</option>
                 </select>
             </div>
-            <button class="btn-search">조회</button>
-            <button class="btn-reset">초기화</button>
+            <button type="button" class="btn-search" id="btnSearchFilter">조회</button>
+            <button type="button" class="btn-reset" id="btnResetFilter">초기화</button>
         </div>
 
         <div class="table-container">
