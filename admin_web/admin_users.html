@@ -338,6 +338,30 @@
         font-size: 0.8rem;
         font-weight: 600;
     }
+    /* 생성 불판 탭 — 불판 리스트와 동일 cat-badge + 제목 간격 */
+    .modal-container .cat-badge {
+        display: inline-block;
+        flex-shrink: 0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .modal-container .list-item-post-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        margin-right: 8px;
+    }
+    .modal-container .list-item--posts .list-item-post-main .li-col-grow {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
     .modal-container .li-col-title {
         width: 140px;
         flex-shrink: 0;

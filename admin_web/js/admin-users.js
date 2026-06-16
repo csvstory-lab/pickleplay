@@ -23,6 +23,15 @@
   var categoryMap = {};
   var categoriesReady = false;
 
+  var BADGE_COLOR_PALETTE = [
+    { bg: 'rgba(0, 240, 255, 0.12)', border: 'rgba(0, 240, 255, 0.4)', color: '#7dd3fc' },
+    { bg: 'rgba(255, 0, 127, 0.12)', border: 'rgba(255, 0, 127, 0.38)', color: '#f472b6' },
+    { bg: 'rgba(57, 255, 20, 0.1)', border: 'rgba(57, 255, 20, 0.35)', color: '#86efac' },
+    { bg: 'rgba(255, 204, 0, 0.12)', border: 'rgba(255, 204, 0, 0.42)', color: '#fde047' },
+    { bg: 'rgba(168, 85, 247, 0.12)', border: 'rgba(168, 85, 247, 0.4)', color: '#c4b5fd' },
+    { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' },
+  ];
+
   var GENDER_LABELS = { male: '남성', female: '여성' };
   var AGE_LABELS = {
     '10s': '10대',
@@ -73,6 +82,33 @@
     var slug = normalizeSlug(row.category_slug || row.category || '');
     if (!slug) return '—';
     return categoryMap[slug] || slug;
+  }
+
+  function hashSlug(slug) {
+    var h = 0;
+    for (var i = 0; i < slug.length; i++) {
+      h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+    }
+    return h;
+  }
+
+  function getCategoryBadgeStyle(slug) {
+    var key = normalizeSlug(slug);
+    var c = key
+      ? BADGE_COLOR_PALETTE[hashSlug(key) % BADGE_COLOR_PALETTE.length]
+      : null;
+    if (!c) {
+      c = { bg: '#27272a', border: '#3f3f46', color: '#e4e4e7' };
+    }
+    return (
+      'background-color:' +
+      c.bg +
+      ';border:1px solid ' +
+      c.border +
+      ';color:' +
+      c.color +
+      ';'
+    );
   }
 
   async function loadCategories() {
@@ -708,13 +744,17 @@
         row.category_slug = slug;
         var cat = categoryMap[slug] || slug || '—';
         return (
-          '<div class="list-item">' +
-          '<span class="li-col li-col-cat">' +
+          '<div class="list-item list-item--posts">' +
+          '<div class="list-item-post-main">' +
+          '<span class="cat-badge" style="' +
+          getCategoryBadgeStyle(slug) +
+          '">' +
           escapeHtml(cat) +
           '</span>' +
           '<span class="li-col li-col-grow">' +
           escapeHtml(row.title || '제목 없음') +
           '</span>' +
+          '</div>' +
           '<span class="li-col li-col-date">' +
           escapeHtml(formatListDateTime(row.created_at)) +
           '</span>' +
