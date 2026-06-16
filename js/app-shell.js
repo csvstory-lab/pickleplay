@@ -98,9 +98,8 @@
 
   function resolveCategoryLabel(categoryId) {
     if (categoryId === 'all') return '전체';
-    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
-      var label = window.PickleCategories.resolveCategoryLabel(categoryId);
-      if (label) return label.replace(/^[^\s]+\s/, '');
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryName) {
+      return window.PickleCategories.resolveCategoryName(categoryId) || '전체';
     }
     return '전체';
   }

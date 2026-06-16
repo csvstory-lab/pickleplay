@@ -7,51 +7,14 @@
   var postsCache = [];
   /** 최초 로드 전체 불판 — [조회] 시 클라이언트 필터 소스 */
   var allPosts = [];
-  /** @type {Record<string, string>|Array<{slug:string,name:string}>} */
+  /** @type {Record<string, string>} slug → 한글명 (categories 테이블) */
   var categoryMap = {};
   /** @type {Array<{slug:string,name:string}>} */
   var categoriesList = [];
   var voteStatsCache = new Map();
-  var categoriesReady = false;
 
   var POST_SELECT =
     'id, title, category, option_a_name, option_b_name, author_id, author_nickname, visibility_status, created_at, expires_at, vote_count, comment_count, share_count, users:author_id(nickname)';
-
-  var FALLBACK_CATEGORIES = [
-    ['worldcup', '북중미 월드컵'],
-    ['food', '먹잘알/푸파'],
-    ['love', '연애/과몰입'],
-    ['balance', '뇌정지 밸런스'],
-    ['fashion', 'OOTD/스타일'],
-    ['drama', '빌런/썰'],
-    ['fandom', '덕질/서브컬처'],
-    ['games', '겜심/이스포츠'],
-    ['pets', '힐링/동물'],
-    ['sports', '스포츠/매치업'],
-    ['spending', '텅장/소비'],
-    ['mind', 'MBTI/심리'],
-    ['kpop', '돌판/K-POP'],
-    ['mystery', '미스터리'],
-    ['driving', '블박/과실'],
-  ];
-
-  var CATEGORY_BADGE_COLORS = {
-    worldcup: { bg: 'rgba(0, 240, 255, 0.12)', border: 'rgba(0, 240, 255, 0.4)', color: '#7dd3fc' },
-    food: { bg: 'rgba(251, 146, 60, 0.14)', border: 'rgba(251, 146, 60, 0.45)', color: '#fdba74' },
-    love: { bg: 'rgba(255, 0, 127, 0.12)', border: 'rgba(255, 0, 127, 0.38)', color: '#f472b6' },
-    balance: { bg: 'rgba(161, 161, 170, 0.16)', border: 'rgba(161, 161, 170, 0.42)', color: '#d4d4d8' },
-    fashion: { bg: 'rgba(255, 204, 0, 0.12)', border: 'rgba(255, 204, 0, 0.42)', color: '#fde047' },
-    drama: { bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5' },
-    fandom: { bg: 'rgba(168, 85, 247, 0.12)', border: 'rgba(168, 85, 247, 0.4)', color: '#c4b5fd' },
-    games: { bg: 'rgba(57, 255, 20, 0.1)', border: 'rgba(57, 255, 20, 0.35)', color: '#86efac' },
-    pets: { bg: 'rgba(52, 211, 153, 0.12)', border: 'rgba(52, 211, 153, 0.4)', color: '#6ee7b7' },
-    sports: { bg: 'rgba(34, 197, 94, 0.12)', border: 'rgba(34, 197, 94, 0.4)', color: '#86efac' },
-    spending: { bg: 'rgba(250, 204, 21, 0.12)', border: 'rgba(250, 204, 21, 0.42)', color: '#fcd34d' },
-    mind: { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' },
-    kpop: { bg: 'rgba(236, 72, 153, 0.12)', border: 'rgba(236, 72, 153, 0.4)', color: '#f9a8d4' },
-    mystery: { bg: 'rgba(100, 116, 139, 0.18)', border: 'rgba(100, 116, 139, 0.45)', color: '#cbd5e1' },
-    driving: { bg: 'rgba(14, 165, 233, 0.12)', border: 'rgba(14, 165, 233, 0.4)', color: '#7dd3fc' },
-  };
 
   var BADGE_COLOR_PALETTE = [
     { bg: 'rgba(0, 240, 255, 0.12)', border: 'rgba(0, 240, 255, 0.4)', color: '#7dd3fc' },
@@ -127,64 +90,6 @@
     return normalizeSlug(post.category_slug || post.category || '');
   }
 
-  var EMOJI_STRIP_REGEX =
-    /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
-
-  function stripEmojiFromName(text) {
-    return String(text ?? '').replace(EMOJI_STRIP_REGEX, '').trim();
-  }
-
-  function findCategoryInfo(slugFromPost) {
-    if (!slugFromPost) return null;
-
-    var categoryInfo = null;
-
-    if (Array.isArray(categoryMap)) {
-      categoryInfo =
-        categoryMap.find(function (c) {
-          return normalizeSlug(c.slug || c.category_slug || '') === slugFromPost;
-        }) || null;
-    } else if (categoryMap && typeof categoryMap === 'object') {
-      var hit = categoryMap[slugFromPost];
-      if (hit != null) {
-        categoryInfo = typeof hit === 'string' ? { slug: slugFromPost, name: hit } : hit;
-      }
-    }
-
-    if (!categoryInfo && Array.isArray(categoriesList)) {
-      categoryInfo =
-        categoriesList.find(function (c) {
-          return normalizeSlug(c.slug || '') === slugFromPost;
-        }) || null;
-    }
-
-    return categoryInfo;
-  }
-
-  function resolveCategoryDisplayName(slugFromPost, categoryInfo, post) {
-    if (categoryInfo) {
-      var rawName =
-        typeof categoryInfo === 'string' ? categoryInfo : categoryInfo.name || categoryInfo.label || '';
-      var cleaned = stripEmojiFromName(rawName);
-      if (cleaned) return cleaned;
-    }
-
-    if (post && post.category_name) {
-      var fromPost = stripEmojiFromName(String(post.category_name).trim());
-      if (fromPost && normalizeSlug(fromPost) !== slugFromPost) return fromPost;
-    }
-
-    return slugFromPost || '—';
-  }
-
-  function categoryMapHasSlug(slugFromPost) {
-    return !!findCategoryInfo(slugFromPost);
-  }
-
-  function resolveCategoryName(name, slug) {
-    return name ? String(name).trim() : slug;
-  }
-
   function hashSlug(slug) {
     var h = 0;
     for (var i = 0; i < slug.length; i++) {
@@ -195,10 +100,9 @@
 
   function getCategoryBadgeStyle(slug) {
     var key = normalizeSlug(slug);
-    var c = key ? CATEGORY_BADGE_COLORS[key] : null;
-    if (!c && key) {
-      c = BADGE_COLOR_PALETTE[hashSlug(key) % BADGE_COLOR_PALETTE.length];
-    }
+    var c = key
+      ? BADGE_COLOR_PALETTE[hashSlug(key) % BADGE_COLOR_PALETTE.length]
+      : null;
     if (!c) {
       c = { bg: '#27272a', border: '#3f3f46', color: '#e4e4e7' };
     }
@@ -213,26 +117,6 @@
     );
   }
 
-  function registerCategory(slug, name) {
-    if (!slug) return;
-    var s = normalizeSlug(slug);
-    if (!s) return;
-    var displayName = stripEmojiFromName(resolveCategoryName(name, s)) || resolveCategoryName(name, s);
-    categoryMap[s] = displayName;
-    var exists = categoriesList.some(function (c) {
-      return c.slug === s;
-    });
-    if (!exists) {
-      categoriesList.push({ slug: s, name: displayName });
-    }
-  }
-
-  function applyFallbackCategories() {
-    FALLBACK_CATEGORIES.forEach(function (row) {
-      registerCategory(row[0], row[1]);
-    });
-  }
-
   function normalizePostCategoryFields(post) {
     if (!post) return;
     var slug = normalizeSlug(post.category_slug || post.category || '');
@@ -240,69 +124,30 @@
     post.category = slug;
   }
 
-  function augmentCategoryMapFromPosts(posts) {
-    if (!Array.isArray(posts)) return;
-    posts.forEach(function (post) {
-      normalizePostCategoryFields(post);
-      var slug = getPostSlug(post);
-      if (!slug || categoryMapHasSlug(slug)) return;
-      if (post.category_name) {
-        var rpcName = String(post.category_name).trim();
-        if (rpcName && normalizeSlug(rpcName) !== slug) {
-          var cleanRpcName = stripEmojiFromName(rpcName) || rpcName;
-          categoryMap[slug] = cleanRpcName;
-          categoriesList.push({ slug: slug, name: cleanRpcName });
-        }
-      }
-    });
-  }
-
   async function loadCategories(sb) {
     categoryMap = {};
     categoriesList = [];
-    categoriesReady = false;
-
-    var rows = [];
 
     try {
-      var rpc = await sb.rpc('admin_list_categories');
-      if (!rpc.error && Array.isArray(rpc.data)) {
-        rows = rpc.data;
-      } else if (rpc.error) {
-        console.warn('[Admin Posts] admin_list_categories RPC fallback', rpc.error);
+      var res = await sb
+        .from('categories')
+        .select('slug, name')
+        .order('sort_order', { ascending: true });
+
+      if (res.error) {
+        console.warn('[Admin Posts] categories load error', res.error);
+      } else {
+        (res.data || []).forEach(function (row) {
+          if (!row || !row.slug) return;
+          var slug = normalizeSlug(row.slug);
+          var name = String(row.name || '').trim() || slug;
+          categoryMap[slug] = name;
+          categoriesList.push({ slug: slug, name: name });
+        });
       }
     } catch (err) {
-      console.warn('[Admin Posts] admin_list_categories failed', err);
+      console.warn('[Admin Posts] categories load failed', err);
     }
-
-    if (!rows.length) {
-      try {
-        var res = await sb
-          .from('categories')
-          .select('slug, name, icon, sort_order')
-          .order('sort_order', { ascending: true });
-        if (!res.error && Array.isArray(res.data)) {
-          rows = res.data;
-        } else if (res.error) {
-          console.warn('[Admin Posts] categories table load error', res.error);
-        }
-      } catch (err2) {
-        console.warn('[Admin Posts] categories table load failed', err2);
-      }
-    }
-
-    rows.forEach(function (row) {
-      if (!row || !row.slug) return;
-      registerCategory(row.slug, row.name);
-    });
-
-    if (!Object.keys(categoryMap).length) {
-      console.warn('[Admin Posts] categoryMap empty — using fallback seed');
-      applyFallbackCategories();
-    }
-
-    categoriesReady = true;
-    console.info('[Admin Posts] categoryMap ready:', Object.keys(categoryMap).length);
   }
 
   function renderCategoryFilterOptions() {
@@ -315,12 +160,11 @@
 
     var html = '<option value="all">전체 카테고리 보기</option>';
     sorted.forEach(function (cat) {
-      var cleanName = stripEmojiFromName(cat.name || cat.slug || '');
       html +=
         '<option value="' +
         escapeHtml(cat.slug) +
         '">' +
-        escapeHtml(cleanName || cat.slug) +
+        escapeHtml(cat.name || cat.slug) +
         '</option>';
     });
     select.innerHTML = html;
@@ -463,7 +307,6 @@
 
     allPosts = Array.isArray(result.data) ? result.data : [];
     allPosts.forEach(normalizePostCategoryFields);
-    augmentCategoryMapFromPosts(allPosts);
     renderCategoryFilterOptions();
 
     var postIds = allPosts.map(function (p) {
@@ -480,18 +323,7 @@
       alert('불판 데이터가 아직 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
-    var filters = getFilterValues();
-    var selectedValue = filters.category;
-    allPosts.forEach(function (post) {
-      console.log(
-        '[Filter] Selected: "' +
-          selectedValue +
-          '", Target field value: "' +
-          (post.category_slug || post.category || '') +
-          '"'
-      );
-    });
-    renderFilteredPosts(filters);
+    renderFilteredPosts(getFilterValues());
   }
 
   function resetFilters() {
@@ -686,18 +518,11 @@
       : '';
     var titleStyle = blinded ? ' style="text-decoration:line-through;"' : '';
     var deadlineStyle = ended && !blinded ? ' style="color:var(--text-sub);"' : '';
-    var slugFromPost = (post.category_slug || post.category || '').toLowerCase().trim();
-    console.log(
-      '[Debugging] Row slug: "' +
-        slugFromPost +
-        '", Map keys includes: ' +
-        categoryMapHasSlug(slugFromPost)
-    );
+    var slugFromPost = getPostSlug(post);
     post.category_slug = slugFromPost;
     post.category = slugFromPost;
 
-    var categoryInfo = findCategoryInfo(slugFromPost);
-    var displayName = resolveCategoryDisplayName(slugFromPost, categoryInfo, post);
+    var displayName = categoryMap[slugFromPost] || slugFromPost || '—';
     var categoryBadgeStyle = getCategoryBadgeStyle(slugFromPost);
 
     return (

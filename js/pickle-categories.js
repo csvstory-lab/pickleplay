@@ -21,34 +21,17 @@
 
   var SLUG_META = { all: { label: '🔥 모든 불판' } };
 
-  /** DB 장애 시 폴백 (오프라인·RLS 미적용) */
-  var FALLBACK_ROWS = [
-    { slug: 'worldcup', name: '북중미 월드컵', icon: '⚽', sort_order: 10 },
-    { slug: 'food', name: '먹잘알/푸파', icon: '🍕', sort_order: 20 },
-    { slug: 'love', name: '연애/과몰입', icon: '💖', sort_order: 30 },
-    { slug: 'balance', name: '뇌정지 밸런스', icon: '⚖️', sort_order: 40 },
-    { slug: 'fashion', name: 'OOTD/스타일', icon: '👗', sort_order: 50 },
-    { slug: 'drama', name: '빌런/썰', icon: '🤬', sort_order: 60 },
-    { slug: 'fandom', name: '덕질/서브컬처', icon: '🍿', sort_order: 70 },
-    { slug: 'games', name: '겜심/이스포츠', icon: '🎮', sort_order: 80 },
-    { slug: 'pets', name: '힐링/동물', icon: '🐾', sort_order: 90 },
-    { slug: 'sports', name: '스포츠/매치업', icon: '🏟️', sort_order: 100 },
-    { slug: 'spending', name: '텅장/소비', icon: '💸', sort_order: 110 },
-    { slug: 'mind', name: 'MBTI/심리', icon: '🧠', sort_order: 120 },
-    { slug: 'kpop', name: '돌판/K-POP', icon: '🎤', sort_order: 130 },
-    { slug: 'mystery', name: '미스터리', icon: '👻', sort_order: 140 },
-    { slug: 'driving', name: '블박/과실', icon: '🚗', sort_order: 150 },
-  ];
+  var LABEL_BY_SLUG = Object.create(null);
+  var SLUG_BY_LABEL = Object.create(null);
+  var VALID_SLUG_SET = Object.create(null);
+  /** slug → 한글명 (DB categories.name) */
+  var categoryMap = Object.create(null);
 
   var cache = {
     list: [],
     loaded: false,
     loadPromise: null,
   };
-
-  var LABEL_BY_SLUG = Object.create(null);
-  var SLUG_BY_LABEL = Object.create(null);
-  var VALID_SLUG_SET = Object.create(null);
 
   function getClient() {
     if (!window.PickleSupabase || !window.PickleSupabase.getClient) {
@@ -88,7 +71,7 @@
       label: buildLabel(icon, name),
       sort_order: Number(row.sort_order) || 0,
       is_active: row.is_active !== false,
-      seasonal: slug === 'worldcup',
+      seasonal: row.seasonal === true,
     };
   }
 
@@ -96,9 +79,11 @@
     LABEL_BY_SLUG = Object.create(null);
     SLUG_BY_LABEL = Object.create(null);
     VALID_SLUG_SET = Object.create(null);
+    categoryMap = Object.create(null);
 
     (list || []).forEach(function (c) {
       if (!c || !c.slug) return;
+      categoryMap[c.slug] = c.name || c.slug;
       LABEL_BY_SLUG[c.slug] = c.label;
       if (c.label) SLUG_BY_LABEL[c.label] = c.slug;
       VALID_SLUG_SET[c.slug] = true;
@@ -135,10 +120,6 @@
       .map(normalizeCategoryRow)
       .filter(Boolean);
 
-    if (!list.length) {
-      throw new Error('categories 테이블에 활성 카테고리가 없습니다.');
-    }
-
     return list;
   }
 
@@ -152,13 +133,8 @@
         return applyCategoryList(rows);
       })
       .catch(function (err) {
-        console.warn('[P!CKLE Categories] DB 조회 실패 — 폴백 사용', err);
-        var fallback = FALLBACK_ROWS.map(function (r) {
-          return normalizeCategoryRow(
-            Object.assign({}, r, { is_active: true })
-          );
-        }).filter(Boolean);
-        return applyCategoryList(fallback);
+        console.warn('[P!CKLE Categories] DB 조회 실패', err);
+        return applyCategoryList([]);
       });
 
     return cache.loadPromise;
@@ -190,6 +166,12 @@
 
   function isValidCategorySlug(raw) {
     return !!normalizeCategorySlug(raw);
+  }
+
+  function resolveCategoryName(raw) {
+    var slug = String(raw || '').trim().toLowerCase();
+    if (!slug) return '';
+    return categoryMap[slug] || slug;
   }
 
   function resolveCategoryLabel(raw) {
@@ -617,6 +599,7 @@
     normalizeSlug: normalizeSlug,
     normalizeCategorySlug: normalizeCategorySlug,
     isValidCategorySlug: isValidCategorySlug,
+    resolveCategoryName: resolveCategoryName,
     resolveCategoryLabel: resolveCategoryLabel,
     resolveCategorySlugFromLabel: resolveCategorySlugFromLabel,
     slugToDbCategory: slugToDbCategory,
@@ -663,6 +646,12 @@
       return cache.list.map(function (c) {
         return c.slug;
       });
+    },
+  });
+
+  Object.defineProperty(window.PickleCategories, 'categoryMap', {
+    get: function () {
+      return Object.assign({}, categoryMap);
     },
   });
 

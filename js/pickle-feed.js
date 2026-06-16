@@ -377,10 +377,12 @@
   }
 
   function resolvePostCategoryLabel(category) {
-    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
-      return window.PickleCategories.resolveCategoryLabel(category);
+    var slug = String(category || '').trim().toLowerCase();
+    if (!slug) return null;
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryName) {
+      return window.PickleCategories.resolveCategoryName(slug);
     }
-    return null;
+    return slug;
   }
 
   function categoryLabel(category) {

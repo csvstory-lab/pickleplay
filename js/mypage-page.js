@@ -434,12 +434,12 @@
   }
 
   function categoryLabel(category) {
-    if (window.PickleCategories && window.PickleCategories.resolveCategoryLabel) {
-      var label = window.PickleCategories.resolveCategoryLabel(category);
-      if (label) return label;
+    var slug = String(category || '').trim().toLowerCase();
+    if (!slug) return '불판';
+    if (window.PickleCategories && window.PickleCategories.resolveCategoryName) {
+      return window.PickleCategories.resolveCategoryName(slug);
     }
-    if (!category) return '🔥 불판';
-    return category;
+    return slug;
   }
 
   function formatCardDate(iso) {
