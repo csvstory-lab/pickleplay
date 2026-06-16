@@ -8,8 +8,17 @@
   var filteredUsers = [];
   var currentPage = 1;
   var modalCurrentUserId = null;
-  var modalActiveTab = 'sanctions';
-  var modalTabCache = {};
+  var modalActiveTab = 'posts';
+  var modalCurrentPage = 1;
+  var modalTabTotals = {
+    posts: 0,
+    votes: 0,
+    comments: 0,
+    points: 0,
+    sanctions: 0,
+    points_balance: 0,
+  };
+  var MODAL_PAGE_SIZE = 10;
 
   var GENDER_LABELS = { male: '남성', female: '여성' };
   var AGE_LABELS = {
@@ -521,17 +530,6 @@
     });
   }
 
-  function setModalStatsLoading(isLoading) {
-    ['modalPoints', 'modalPostCount', 'modalParticipationCount'].forEach(function (id) {
-      var el = $(id);
-      if (!el) return;
-      el.classList.toggle('is-loading', isLoading);
-      if (isLoading) {
-        el.textContent = '로딩 중…';
-      }
-    });
-  }
-
   function formatDateTime(value) {
     if (!value) return '—';
     var d = new Date(value);
@@ -611,40 +609,6 @@
       .join('');
   }
 
-  function renderActivityList(rows) {
-    if (!rows.length) return emptyStateHtml();
-    return rows
-      .map(function (row) {
-        var isPost = row.kind === 'post';
-        var typeLabel = isPost ? '📝 불판' : '💬 댓글';
-        var title = isPost
-          ? row.title || '제목 없음'
-          : row.content || '내용 없음';
-        if (!isPost && title.length > 80) {
-          title = title.slice(0, 80) + '…';
-        }
-        return (
-          '<div class="history-item">' +
-          '<div>' +
-          '<div class="hi-type">' +
-          escapeHtml(typeLabel) +
-          '</div>' +
-          '<div class="hi-title">' +
-          escapeHtml(title) +
-          '</div>' +
-          '<div class="hi-date">' +
-          escapeHtml(formatDateTime(row.created_at)) +
-          '</div>' +
-          '</div>' +
-          '<span class="hi-badge blue">' +
-          escapeHtml(isPost ? '불판' : '댓글') +
-          '</span>' +
-          '</div>'
-        );
-      })
-      .join('');
-  }
-
   function renderPointsList(rows) {
     if (!rows.length) return emptyStateHtml();
     return rows
@@ -670,205 +634,109 @@
       .join('');
   }
 
+  function renderPostsList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var vis = row.visibility_status ? String(row.visibility_status) : '';
+        return (
+          '<div class="history-item">' +
+          '<div>' +
+          '<div class="hi-type">🔥 생성 불판</div>' +
+          '<div class="hi-title">' +
+          escapeHtml(row.title || '제목 없음') +
+          '</div>' +
+          '<div class="hi-date">' +
+          escapeHtml(formatDateTime(row.created_at)) +
+          (vis ? ' · ' + escapeHtml(vis) : '') +
+          '</div>' +
+          '</div>' +
+          '<span class="hi-badge blue">불판</span>' +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderVotesList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var choice = row.choice ? String(row.choice) : '?';
+        return (
+          '<div class="history-item">' +
+          '<div>' +
+          '<div class="hi-type">🗳️ 투표 참여 · ' +
+          escapeHtml(choice) +
+          ' 선택</div>' +
+          '<div class="hi-title">' +
+          escapeHtml(row.post_title || '불판') +
+          '</div>' +
+          '<div class="hi-date">' +
+          escapeHtml(formatDateTime(row.created_at)) +
+          '</div>' +
+          '</div>' +
+          '<span class="hi-badge green">' +
+          escapeHtml(choice) +
+          '</span>' +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderCommentsList(rows) {
+    if (!rows.length) return emptyStateHtml();
+    return rows
+      .map(function (row) {
+        var text = row.content ? String(row.content) : '';
+        if (text.length > 100) text = text.slice(0, 100) + '…';
+        return (
+          '<div class="history-item">' +
+          '<div>' +
+          '<div class="hi-type">💬 댓글 · ' +
+          escapeHtml(row.post_title || '불판') +
+          '</div>' +
+          '<div class="hi-title">' +
+          escapeHtml(text || '내용 없음') +
+          '</div>' +
+          '<div class="hi-date">' +
+          escapeHtml(formatDateTime(row.created_at)) +
+          '</div>' +
+          '</div>' +
+          '<span class="hi-badge blue">댓글</span>' +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
   function renderModalTabContent(tab, rows) {
-    if (tab === 'sanctions') return renderSanctionsList(rows);
-    if (tab === 'activity') return renderActivityList(rows);
+    if (tab === 'posts') return renderPostsList(rows);
+    if (tab === 'votes') return renderVotesList(rows);
+    if (tab === 'comments') return renderCommentsList(rows);
     if (tab === 'points') return renderPointsList(rows);
+    if (tab === 'sanctions') return renderSanctionsList(rows);
     return emptyStateHtml();
   }
 
-  async function fetchModalTabDataFallback(sb, userId, tab) {
-    if (tab === 'sanctions') {
-      var penalties = [];
-      var reports = [];
-      try {
-        var pRes = await sb
-          .from('user_penalties')
-          .select('id, reason, penalty_points, source_type, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!pRes.error && pRes.data) {
-          penalties = pRes.data.map(function (row) {
-            return {
-              kind: 'penalty',
-              id: row.id,
-              reason: row.reason,
-              penalty_points: row.penalty_points,
-              source_type: row.source_type,
-              status: null,
-              created_at: row.created_at,
-            };
-          });
-        }
-      } catch (e1) {
-        console.warn('[Admin Users] user_penalties fallback', e1);
-      }
-      try {
-        var rRes = await sb
-          .from('reports')
-          .select('id, reason, penalty_points, status, target_type, created_at')
-          .eq('reported_user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!rRes.error && rRes.data) {
-          reports = rRes.data.map(function (row) {
-            return {
-              kind: 'report',
-              id: row.id,
-              reason: row.reason,
-              penalty_points: row.penalty_points,
-              source_type: row.target_type,
-              status: row.status,
-              created_at: row.created_at,
-            };
-          });
-        }
-      } catch (e2) {
-        console.warn('[Admin Users] reports fallback', e2);
-      }
-      return penalties
-        .concat(reports)
-        .sort(function (a, b) {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        })
-        .slice(0, 50);
+  function formatTabCountLabel(key, value) {
+    var n = Number(value) || 0;
+    if (key === 'points') {
+      return '(' + n.toLocaleString() + ' P)';
     }
-
-    if (tab === 'activity') {
-      var posts = [];
-      var comments = [];
-      try {
-        var postRes = await sb
-          .from('posts')
-          .select('id, title, option_a_name, option_b_name, created_at')
-          .eq('author_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!postRes.error && postRes.data) {
-          posts = postRes.data.map(function (row) {
-            return {
-              kind: 'post',
-              id: row.id,
-              title:
-                row.title ||
-                String(row.option_a_name || '') + ' vs ' + String(row.option_b_name || ''),
-              content: null,
-              created_at: row.created_at,
-            };
-          });
-        }
-      } catch (e3) {
-        console.warn('[Admin Users] posts activity fallback', e3);
-      }
-      try {
-        var cRes = await sb
-          .from('comments')
-          .select('id, content, filtered_content, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!cRes.error && cRes.data) {
-          comments = cRes.data.map(function (row) {
-            return {
-              kind: 'comment',
-              id: row.id,
-              title: null,
-              content: row.filtered_content || row.content,
-              created_at: row.created_at,
-            };
-          });
-        }
-      } catch (e4) {
-        console.warn('[Admin Users] comments activity fallback', e4);
-      }
-      return posts
-        .concat(comments)
-        .sort(function (a, b) {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        })
-        .slice(0, 50);
-    }
-
-    if (tab === 'points') {
-      try {
-        var plRes = await sb
-          .from('point_logs')
-          .select('id, amount, reason, balance_after, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!plRes.error && plRes.data) return plRes.data;
-      } catch (e5) {
-        console.warn('[Admin Users] point_logs fallback', e5);
-      }
-    }
-
-    return [];
+    return '(' + n.toLocaleString() + ')';
   }
 
-  async function fetchModalTabData(userId, tab) {
-    var sb = getSupabaseClient();
-    var rpcResult = await sb.rpc('admin_user_modal_tab', {
-      p_user_id: userId,
-      p_tab: tab,
-    });
-    if (!rpcResult.error && rpcResult.data != null) {
-      return Array.isArray(rpcResult.data) ? rpcResult.data : [];
-    }
-    if (rpcResult.error) {
-      console.warn('[Admin Users] admin_user_modal_tab RPC fallback', rpcResult.error);
-    }
-    return fetchModalTabDataFallback(sb, userId, tab);
-  }
-
-  async function loadModalTab(tab, forceRefresh) {
-    var listEl = $('modalHistoryList');
-    if (!listEl || !modalCurrentUserId) return;
-
-    if (!forceRefresh && modalTabCache[tab]) {
-      listEl.innerHTML = renderModalTabContent(tab, modalTabCache[tab]);
-      return;
-    }
-
-    listEl.innerHTML = loadingHistoryHtml();
-    try {
-      var rows = await fetchModalTabData(modalCurrentUserId, tab);
-      modalTabCache[tab] = rows;
-      listEl.innerHTML = renderModalTabContent(tab, rows);
-    } catch (err) {
-      console.error('[Admin Users] modal tab load failed', tab, err);
-      listEl.innerHTML = emptyStateHtml();
-    }
-  }
-
-  function switchModalTab(tab, forceRefresh) {
-    modalActiveTab = tab || 'sanctions';
-    document.querySelectorAll('#modalTabs .m-tab').forEach(function (el) {
-      el.classList.toggle('active', el.getAttribute('data-tab') === modalActiveTab);
-    });
-    loadModalTab(modalActiveTab, forceRefresh);
-  }
-
-  function bindModalTabs() {
-    var tabsWrap = $('modalTabs');
-    if (!tabsWrap || tabsWrap.dataset.bound === '1') return;
-    tabsWrap.dataset.bound = '1';
-
-    tabsWrap.addEventListener('click', function (e) {
-      var tabEl = e.target.closest('.m-tab[data-tab]');
-      if (!tabEl) return;
-      var tab = tabEl.getAttribute('data-tab');
-      if (!tab || tab === modalActiveTab) return;
-      switchModalTab(tab, false);
-    });
-
-    tabsWrap.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      var tabEl = e.target.closest('.m-tab[data-tab]');
-      if (!tabEl) return;
-      e.preventDefault();
-      switchModalTab(tabEl.getAttribute('data-tab'), false);
+  function updateModalTabLabels() {
+    document.querySelectorAll('#modalTabs .m-tab-count').forEach(function (el) {
+      var key = el.getAttribute('data-count-key');
+      if (!key) return;
+      if (key === 'points') {
+        el.textContent = formatTabCountLabel('points', modalTabTotals.points_balance);
+        return;
+      }
+      el.textContent = formatTabCountLabel(key, modalTabTotals[key]);
     });
   }
 
@@ -881,84 +749,275 @@
     return result.count || 0;
   }
 
-  async function fetchUserModalStats(userId, user) {
+  async function loadModalTabCounts(userId, user) {
     var sb = getSupabaseClient();
-    var fallbackPoints = Number(user && user.points != null ? user.points : 0) || 0;
+    var rpc = await sb.rpc('admin_user_tab_counts', { p_user_id: userId });
+    if (!rpc.error && rpc.data) {
+      modalTabTotals.posts = Number(rpc.data.posts) || 0;
+      modalTabTotals.votes = Number(rpc.data.votes) || 0;
+      modalTabTotals.comments = Number(rpc.data.comments) || 0;
+      modalTabTotals.points_balance = Number(rpc.data.points_balance) || 0;
+      modalTabTotals.sanctions = Number(rpc.data.sanctions) || 0;
+      modalTabTotals.points = Number(rpc.data.point_logs) || 0;
+      updateModalTabLabels();
+      return;
+    }
 
-    var rpcResult = await sb.rpc('admin_user_stats', { p_user_id: userId });
-    if (!rpcResult.error && rpcResult.data) {
-      var data = rpcResult.data;
+    modalTabTotals.points_balance = Number(user && user.points != null ? user.points : 0) || 0;
+    try {
+      modalTabTotals.posts = await countUserRows(sb, 'posts', 'author_id', userId);
+    } catch (e1) {
+      modalTabTotals.posts = 0;
+    }
+    try {
+      modalTabTotals.votes = await countUserRows(sb, 'votes', 'user_id', userId);
+    } catch (e2) {
+      modalTabTotals.votes = 0;
+    }
+    try {
+      modalTabTotals.comments = await countUserRows(sb, 'comments', 'user_id', userId);
+    } catch (e3) {
+      modalTabTotals.comments = 0;
+    }
+    try {
+      modalTabTotals.points = await countUserRows(sb, 'point_logs', 'user_id', userId);
+    } catch (e4) {
+      modalTabTotals.points = 0;
+    }
+    try {
+      var pen = await countUserRows(sb, 'user_penalties', 'user_id', userId);
+      var rep = await countUserRows(sb, 'reports', 'reported_user_id', userId);
+      modalTabTotals.sanctions = pen + rep;
+    } catch (e5) {
+      modalTabTotals.sanctions = 0;
+    }
+    updateModalTabLabels();
+  }
+
+  async function fetchModalTabPageRange(sb, userId, tab, from, to) {
+    if (tab === 'posts') {
+      var postRes = await sb
+        .from('posts')
+        .select('id, title, option_a_name, option_b_name, visibility_status, created_at', {
+          count: 'exact',
+        })
+        .eq('author_id', userId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (postRes.error) throw postRes.error;
+      var postItems = (postRes.data || []).map(function (row) {
+        return {
+          id: row.id,
+          title:
+            row.title ||
+            String(row.option_a_name || '') + ' vs ' + String(row.option_b_name || ''),
+          visibility_status: row.visibility_status,
+          created_at: row.created_at,
+        };
+      });
+      return { items: postItems, total: postRes.count || 0 };
+    }
+
+    if (tab === 'votes') {
+      var voteRes = await sb
+        .from('votes')
+        .select('id, choice, post_id, created_at', { count: 'exact' })
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (voteRes.error) throw voteRes.error;
+      return { items: voteRes.data || [], total: voteRes.count || 0 };
+    }
+
+    if (tab === 'comments') {
+      var cRes = await sb
+        .from('comments')
+        .select('id, content, filtered_content, post_id, created_at', { count: 'exact' })
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (cRes.error) throw cRes.error;
+      var cItems = (cRes.data || []).map(function (row) {
+        return {
+          id: row.id,
+          content: row.filtered_content || row.content,
+          post_id: row.post_id,
+          post_title: row.post_id ? '불판 #' + String(row.post_id).slice(0, 8) : '불판',
+          created_at: row.created_at,
+        };
+      });
+      return { items: cItems, total: cRes.count || 0 };
+    }
+
+    if (tab === 'points') {
+      var pRes = await sb
+        .from('point_logs')
+        .select('id, amount, reason, balance_after, created_at', { count: 'exact' })
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (pRes.error) throw pRes.error;
+      return { items: pRes.data || [], total: pRes.count || 0 };
+    }
+
+    if (tab === 'sanctions') {
+      var rpc = await sb.rpc('admin_user_modal_tab_page', {
+        p_user_id: userId,
+        p_tab: 'sanctions',
+        p_offset: from,
+        p_limit: to - from + 1,
+      });
+      if (!rpc.error && rpc.data) {
+        return {
+          items: rpc.data.items || [],
+          total: Number(rpc.data.total) || 0,
+        };
+      }
+      return { items: [], total: 0 };
+    }
+
+    return { items: [], total: 0 };
+  }
+
+  async function fetchModalTabPage(userId, tab, page) {
+    var sb = getSupabaseClient();
+    var from = (page - 1) * MODAL_PAGE_SIZE;
+    var to = from + MODAL_PAGE_SIZE - 1;
+
+    var rpc = await sb.rpc('admin_user_modal_tab_page', {
+      p_user_id: userId,
+      p_tab: tab,
+      p_offset: from,
+      p_limit: MODAL_PAGE_SIZE,
+    });
+    if (!rpc.error && rpc.data) {
       return {
-        points: Number(data.points != null ? data.points : fallbackPoints) || 0,
-        postCount: Number(data.post_count != null ? data.post_count : 0) || 0,
-        participationCount:
-          Number(data.participation_count != null ? data.participation_count : 0) || 0,
+        items: Array.isArray(rpc.data.items) ? rpc.data.items : [],
+        total: Number(rpc.data.total) || 0,
       };
     }
-    if (rpcResult.error) {
-      console.warn('[Admin Users] admin_user_stats RPC fallback', rpcResult.error);
+    if (rpc.error) {
+      console.warn('[Admin Users] admin_user_modal_tab_page fallback', rpc.error);
     }
-
-    var postCount = 0;
-    var commentCount = 0;
-    var voteCount = 0;
-    try {
-      postCount = await countUserRows(sb, 'posts', 'author_id', userId);
-    } catch (postErr) {
-      console.warn('[Admin Users] posts count', postErr);
-    }
-    try {
-      commentCount = await countUserRows(sb, 'comments', 'user_id', userId);
-    } catch (commentErr) {
-      console.warn('[Admin Users] comments count', commentErr);
-    }
-    try {
-      voteCount = await countUserRows(sb, 'votes', 'user_id', userId);
-    } catch (voteErr) {
-      console.warn('[Admin Users] votes count', voteErr);
-    }
-
-    return {
-      points: fallbackPoints,
-      postCount: postCount,
-      participationCount: commentCount + voteCount,
-    };
+    return fetchModalTabPageRange(sb, userId, tab, from, to);
   }
 
-  function renderModalStats(stats) {
-    var pointsEl = $('modalPoints');
-    var postEl = $('modalPostCount');
-    var partEl = $('modalParticipationCount');
-    if (pointsEl) {
-      pointsEl.textContent = Number(stats.points || 0).toLocaleString() + ' P';
+  function renderModalPagination(total, page, tab) {
+    var wrap = $('modalPagination');
+    if (!wrap) return;
+
+    var totalPages = Math.max(1, Math.ceil(total / MODAL_PAGE_SIZE));
+    if (page > totalPages) page = totalPages;
+    modalCurrentPage = page;
+
+    if (total <= 0) {
+      wrap.innerHTML = '';
+      return;
     }
-    if (postEl) {
-      postEl.textContent = Number(stats.postCount || 0).toLocaleString() + ' 개';
+
+    var html = '';
+    html +=
+      '<button type="button" class="page-btn page-nav-label" data-modal-page="prev"' +
+      (page <= 1 ? ' disabled' : '') +
+      '>&lt; 이전</button>';
+
+    var maxButtons = 5;
+    var start = Math.max(1, page - 2);
+    var end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+
+    for (var p = start; p <= end; p++) {
+      html +=
+        '<button type="button" class="page-btn' +
+        (p === page ? ' active' : '') +
+        '" data-modal-page="' +
+        p +
+        '">' +
+        p +
+        '</button>';
     }
-    if (partEl) {
-      partEl.textContent = Number(stats.participationCount || 0).toLocaleString() + ' 회';
-    }
+
+    html +=
+      '<button type="button" class="page-btn page-nav-label" data-modal-page="next"' +
+      (page >= totalPages ? ' disabled' : '') +
+      '>다음 &gt;</button>';
+
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll('[data-modal-page]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        var target = btn.getAttribute('data-modal-page');
+        var totalPg = Math.max(1, Math.ceil(total / MODAL_PAGE_SIZE));
+        var nextPage = modalCurrentPage;
+        if (target === 'prev' && modalCurrentPage > 1) nextPage -= 1;
+        else if (target === 'next' && modalCurrentPage < totalPg) nextPage += 1;
+        else if (target !== 'prev' && target !== 'next') nextPage = parseInt(target, 10) || 1;
+        if (nextPage === modalCurrentPage) return;
+        loadModalTabPage(tab, nextPage);
+      });
+    });
   }
 
-  async function loadModalUserStats(user) {
-    if (!user || !user.id) return;
-    setModalStatsLoading(true);
+  async function loadModalTabPage(tab, page) {
+    var listEl = $('modalHistoryList');
+    if (!listEl || !modalCurrentUserId) return;
+
+    modalActiveTab = tab || modalActiveTab;
+    modalCurrentPage = page || 1;
+    listEl.innerHTML = loadingHistoryHtml();
+    $('modalPagination').innerHTML = '';
+
     try {
-      var stats = await fetchUserModalStats(user.id, user);
-      renderModalStats(stats);
+      var result = await fetchModalTabPage(modalCurrentUserId, modalActiveTab, modalCurrentPage);
+      var items = result.items || [];
+      var total = Number(result.total) || 0;
+
+      if (modalActiveTab === 'posts') modalTabTotals.posts = total;
+      else if (modalActiveTab === 'votes') modalTabTotals.votes = total;
+      else if (modalActiveTab === 'comments') modalTabTotals.comments = total;
+      else if (modalActiveTab === 'sanctions') modalTabTotals.sanctions = total;
+      else if (modalActiveTab === 'points') modalTabTotals.points = total;
+      updateModalTabLabels();
+
+      listEl.innerHTML = renderModalTabContent(modalActiveTab, items);
+      renderModalPagination(total, modalCurrentPage, modalActiveTab);
     } catch (err) {
-      console.error('[Admin Users] modal stats load failed', err);
-      renderModalStats({
-        points: Number(user.points || 0),
-        postCount: 0,
-        participationCount: 0,
-      });
-    } finally {
-      ['modalPoints', 'modalPostCount', 'modalParticipationCount'].forEach(function (id) {
-        var el = $(id);
-        if (el) el.classList.remove('is-loading');
-      });
+      console.error('[Admin Users] modal tab page load failed', modalActiveTab, err);
+      listEl.innerHTML = emptyStateHtml();
+      $('modalPagination').innerHTML = '';
     }
+  }
+
+  function switchModalTab(tab) {
+    modalActiveTab = tab || 'posts';
+    modalCurrentPage = 1;
+    document.querySelectorAll('#modalTabs .m-tab').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-tab') === modalActiveTab);
+    });
+    loadModalTabPage(modalActiveTab, 1);
+  }
+
+  function bindModalTabs() {
+    var tabsWrap = $('modalTabs');
+    if (!tabsWrap || tabsWrap.dataset.bound === '1') return;
+    tabsWrap.dataset.bound = '1';
+
+    tabsWrap.addEventListener('click', function (e) {
+      var tabEl = e.target.closest('.m-tab[data-tab]');
+      if (!tabEl) return;
+      var tab = tabEl.getAttribute('data-tab');
+      if (!tab || tab === modalActiveTab) return;
+      switchModalTab(tab);
+    });
+
+    tabsWrap.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var tabEl = e.target.closest('.m-tab[data-tab]');
+      if (!tabEl) return;
+      e.preventDefault();
+      switchModalTab(tabEl.getAttribute('data-tab'));
+    });
   }
 
   function openUserModal(userId) {
@@ -998,17 +1057,33 @@
 
     modal.style.display = 'flex';
     modalCurrentUserId = user.id;
-    modalActiveTab = 'sanctions';
-    modalTabCache = {};
-    switchModalTab('sanctions', true);
-    loadModalUserStats(user);
+    modalActiveTab = 'posts';
+    modalCurrentPage = 1;
+    modalTabTotals = {
+      posts: 0,
+      votes: 0,
+      comments: 0,
+      points: 0,
+      sanctions: 0,
+      points_balance: Number(user.points || 0) || 0,
+    };
+    document.querySelectorAll('#modalTabs .m-tab-count').forEach(function (el) {
+      el.textContent = '(…)';
+    });
+    document.querySelectorAll('#modalTabs .m-tab').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-tab') === 'posts');
+    });
+    $('modalHistoryList').innerHTML = loadingHistoryHtml();
+    $('modalPagination').innerHTML = '';
+    loadModalTabCounts(user.id, user);
+    loadModalTabPage('posts', 1);
   }
 
   function closeUserModal() {
     var modal = $('userModal');
     if (modal) modal.style.display = 'none';
     modalCurrentUserId = null;
-    modalTabCache = {};
+    modalCurrentPage = 1;
   }
 
   async function fetchUsersFromSupabase() {

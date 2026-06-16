@@ -151,87 +151,179 @@
     .page-btn.active { background-color: var(--neon-green); border-color: var(--neon-green); color: #000; }
 
     /* ======================================================== */
-    /* 💡 회원 상세 정보 모달 */
+    /* 회원 상세 정보 모달 — B2B 프로페셔널 톤 */
     /* ======================================================== */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-    .modal-container { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 800px; max-height: 90vh; animation: popIn 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); }
-    @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.72); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+    .modal-container { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.45); width: min(960px, 96vw); max-height: 90vh; animation: popIn 0.25s ease; }
+    @keyframes popIn { from { transform: scale(0.98); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
-    .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border-color); background: #121214; display: flex; justify-content: space-between; align-items: center; }
-    .modal-title { font-size: 1.1rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
-    .btn-close { background: none; border: none; color: var(--text-sub); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
-    .btn-close:hover { color: #fff; }
+    .modal-header { padding: 16px 22px; border-bottom: 1px solid var(--border-color); background: #121214; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 1rem; font-weight: 700; color: #fafafa; margin: 0; display: flex; align-items: center; gap: 8px; letter-spacing: -0.01em; }
+    .btn-close { background: none; border: none; color: var(--text-sub); font-size: 1.35rem; cursor: pointer; transition: 0.15s; line-height: 1; }
+    .btn-close:hover { color: #e4e4e7; }
     
-    .modal-body { padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .modal-body { padding: 20px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
     
-    .profile-summary { display: flex; gap: 25px; background: #09090b; padding: 20px 25px; border-radius: 12px; border: 1px solid #27272a; align-items: center; }
-    .ps-avatar { width: 70px; height: 70px; background: #27272a; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; flex-shrink: 0; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', sans-serif !important; }
-    .ps-info { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+    .modal-container .profile-summary { display: flex; gap: 20px; background: #0c0c0e; padding: 16px 20px; border-radius: 8px; border: 1px solid #27272a; align-items: center; }
+    .modal-container .ps-avatar { width: 56px; height: 56px; background: #27272a; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.75rem; flex-shrink: 0; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', sans-serif !important; }
+    .modal-container .ps-info { flex: 1; display: flex; flex-direction: column; gap: 12px; }
     
-    .ps-name-wrap { display: flex; align-items: center; gap: 10px; }
-    .ps-name { font-size: 1.3rem; font-weight: 900; color: #fff; }
-    .ps-uid { font-size: 0.85rem; color: #71717a; font-family: monospace; word-break: break-all; line-height: 1.45; position: relative; display: inline-block; max-width: 100%; }
-    .ps-uid.is-copyable { cursor: pointer; transition: color 0.2s; }
-    .ps-uid.is-copyable:hover { color: var(--neon-green); }
-    .uid-copy-toast {
+    .modal-container .ps-name-wrap { display: flex; align-items: center; gap: 10px; }
+    .modal-container .ps-name { font-size: 1.125rem; font-weight: 700; color: #fafafa; letter-spacing: -0.02em; }
+    .modal-container .ps-uid { font-size: 0.8125rem; color: #71717a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; line-height: 1.4; position: relative; display: inline-block; max-width: 100%; }
+    .modal-container .ps-uid.is-copyable { cursor: pointer; transition: color 0.15s; }
+    .modal-container .ps-uid.is-copyable:hover { color: #d4d4d8; }
+    .modal-container .uid-copy-toast {
         position: absolute;
         left: 0;
         top: calc(100% + 6px);
         z-index: 5;
-        background: var(--neon-green);
-        color: #000;
+        background: #27272a;
+        color: #e4e4e7;
         font-family: 'Pentabreed', 'Pretendard', sans-serif;
-        font-size: 0.72rem;
-        font-weight: 800;
-        padding: 5px 10px;
-        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #3f3f46;
         white-space: nowrap;
-        box-shadow: 0 4px 12px rgba(57, 255, 20, 0.35);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
         pointer-events: none;
         animation: uidToastIn 0.2s ease;
     }
     @keyframes uidToastIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
     
-    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 20px; width: 100%; }
-    .meta-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .meta-val { font-size: 1rem; font-weight: 800; color: #fff; }
-    .meta-label { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; letter-spacing: 0.02em; }
-    @media (max-width: 640px) { .meta-grid { grid-template-columns: repeat(2, 1fr); } }
+    .modal-container .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 16px; width: 100%; }
+    .modal-container .meta-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .modal-container .meta-val { font-size: 0.875rem; font-weight: 600; color: #f4f4f5; }
+    .modal-container .meta-label { font-size: 0.6875rem; color: #71717a; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
+    @media (max-width: 640px) { .modal-container .meta-grid { grid-template-columns: repeat(2, 1fr); } }
     
-    .status-wrap { text-align: right; border-left: 1px solid #3f3f46; padding-left: 25px; display: flex; flex-direction: column; justify-content: center; }
-    .status-wrap-title { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px; }
-    .status-wrap-val { font-size: 1.3rem; font-weight: 800; color: var(--alert-yellow); }
+    .modal-container .status-wrap { text-align: right; border-left: 1px solid #3f3f46; padding-left: 20px; display: flex; flex-direction: column; justify-content: center; min-width: 140px; }
+    .modal-container .status-wrap-title { font-size: 0.6875rem; color: #71717a; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+    .modal-container .status-wrap-val { font-size: 0.9375rem; font-weight: 600; color: #e4e4e7; line-height: 1.35; }
 
-    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .stat-box { background: #18181b; border: 1px dashed #3f3f46; padding: 15px; border-radius: 8px; text-align: center; }
-    .stat-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 700; margin-bottom: 5px; }
-    .stat-val { font-size: 1.2rem; font-weight: 800; color: #fff; min-height: 1.5rem; display: flex; align-items: center; justify-content: center; }
-    .stat-val.is-loading { color: transparent; position: relative; }
-    .stat-val.is-loading::after {
-        content: '';
-        position: absolute;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #3f3f46;
-        border-top-color: var(--neon-green);
-        border-radius: 50%;
-        animation: statSpin 0.7s linear infinite;
+    .stat-grid { display: none; }
+
+    /* 텍스트 탭 — 밑줄 강조 */
+    .modal-container .m-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        border-bottom: 1px solid #3f3f46;
+        margin-top: 2px;
     }
-    @keyframes statSpin { to { transform: rotate(360deg); } }
+    .modal-container .m-tab {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 10px 14px 11px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--text-sub);
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        text-align: center;
+        transition: color 0.15s, border-color 0.15s;
+        user-select: none;
+        margin-bottom: -1px;
+    }
+    .modal-container .m-tab:hover { color: #d4d4d8; }
+    .modal-container .m-tab.active {
+        color: #fff;
+        font-weight: 700;
+        background: transparent;
+        border-bottom-color: #fff;
+        box-shadow: none;
+    }
+    .modal-container .m-tab-count { color: inherit; opacity: 0.75; font-weight: 600; font-size: 0.75rem; }
 
-    .m-tabs { display: flex; gap: 10px; border-bottom: 1px solid #27272a; margin-top: 10px; }
-    .m-tab { padding: 10px 15px; font-size: 0.9rem; font-weight: 800; color: var(--text-sub); cursor: pointer; border-bottom: 2px solid transparent; }
-    .m-tab.active { color: var(--neon-green); border-bottom-color: var(--neon-green); }
+    .modal-container .modal-tab-panel { display: flex; flex-direction: column; gap: 8px; min-height: 200px; }
+    .modal-container .history-list { display: flex; flex-direction: column; gap: 4px; min-height: 160px; }
+    .modal-container .history-item {
+        background: #0f0f11;
+        border: 1px solid #27272a;
+        padding: 12px 16px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+    .modal-container .hi-title { font-size: 0.8125rem; color: #e4e4e7; font-weight: 600; line-height: 1.35; }
+    .modal-container .hi-date { font-size: 0.6875rem; color: #71717a; margin-top: 2px; line-height: 1.3; }
+    .modal-container .hi-type { font-size: 0.6875rem; color: #a1a1aa; font-weight: 600; margin-bottom: 1px; letter-spacing: 0.01em; }
+    .modal-container .hi-badge {
+        flex-shrink: 0;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #d4d4d8;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .modal-container .hi-badge.red { background: rgba(255, 255, 255, 0.05); color: #d4d4d8; border-color: rgba(255, 255, 255, 0.1); }
+    .modal-container .hi-badge.green { background: rgba(255, 255, 255, 0.06); color: #d4d4d8; border-color: rgba(255, 255, 255, 0.08); }
+    .modal-container .hi-badge.blue { background: rgba(255, 255, 255, 0.06); color: #d4d4d8; border-color: rgba(255, 255, 255, 0.08); }
 
-    .history-list { display: flex; flex-direction: column; gap: 8px; }
-    .history-item { background: #121214; border: 1px solid #27272a; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .hi-title { font-size: 0.85rem; color: #e4e4e7; font-weight: 700; }
-    .hi-date { font-size: 0.75rem; color: var(--text-sub); }
-    .hi-badge { font-size: 0.75rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(255, 204, 0, 0.1); color: var(--alert-yellow); }
-    .hi-badge.red { background: rgba(255, 51, 51, 0.1); color: var(--alert-red); }
-    .hi-badge.green { background: rgba(57, 255, 20, 0.1); color: var(--neon-green); }
-    .hi-badge.blue { background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); }
-    .hi-type { font-size: 0.7rem; color: var(--neon-blue); font-weight: 800; margin-bottom: 2px; }
+    .modal-container .empty-state { font-size: 0.8125rem !important; padding: 24px 16px !important; color: #71717a !important; }
+
+    /* 모달 페이지네이션 — 심플 텍스트형 */
+    .modal-container .modal-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 12px 0 2px;
+        margin-top: 2px;
+        border-top: 1px solid #27272a;
+    }
+    .modal-container .modal-pagination .page-btn {
+        min-width: 30px;
+        height: 30px;
+        padding: 0 8px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 4px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: #71717a;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
+        box-shadow: none;
+    }
+    .modal-container .modal-pagination .page-btn:hover:not(:disabled) {
+        color: #e4e4e7;
+        background: rgba(255, 255, 255, 0.04);
+        transform: none;
+        box-shadow: none;
+    }
+    .modal-container .modal-pagination .page-btn.active {
+        color: #fff;
+        font-weight: 700;
+        background: transparent;
+        border-color: #52525b;
+        box-shadow: none;
+    }
+    .modal-container .modal-pagination .page-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    .modal-container .modal-pagination .page-nav-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0 6px;
+        color: #a1a1aa;
+    }
+    .modal-container .modal-pagination .page-nav-label:hover:not(:disabled) { color: #e4e4e7; }
 
 </style>
 <!-- Firebase (App + Analytics + Firestore) -->
@@ -493,28 +585,18 @@
                 </div>
             </div>
 
-            <div class="stat-grid">
-                <div class="stat-box">
-                    <div class="stat-label">보유 포인트</div>
-                    <div class="stat-val" id="modalPoints">—</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">생성한 불판 수</div>
-                    <div class="stat-val" id="modalPostCount">—</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">참여(투표/댓글) 횟수</div>
-                    <div class="stat-val" id="modalParticipationCount">—</div>
-                </div>
-            </div>
-
             <div class="m-tabs" id="modalTabs">
-                <div class="m-tab active" data-tab="sanctions" role="button" tabindex="0">🚨 제재 및 신고 내역</div>
-                <div class="m-tab" data-tab="activity" role="button" tabindex="0">📝 작성한 불판/댓글</div>
-                <div class="m-tab" data-tab="points" role="button" tabindex="0">💰 포인트 내역</div>
+                <div class="m-tab active" data-tab="posts" role="button" tabindex="0">생성 불판 <span class="m-tab-count" data-count-key="posts">(—)</span></div>
+                <div class="m-tab" data-tab="votes" role="button" tabindex="0">참여 투표 <span class="m-tab-count" data-count-key="votes">(—)</span></div>
+                <div class="m-tab" data-tab="comments" role="button" tabindex="0">참여 댓글 <span class="m-tab-count" data-count-key="comments">(—)</span></div>
+                <div class="m-tab" data-tab="points" role="button" tabindex="0">보유 포인트 <span class="m-tab-count" data-count-key="points">(—)</span></div>
+                <div class="m-tab" data-tab="sanctions" role="button" tabindex="0">제재 및 신고 <span class="m-tab-count" data-count-key="sanctions">(—)</span></div>
             </div>
 
-            <div class="history-list" id="modalHistoryList"></div>
+            <div class="modal-tab-panel">
+                <div class="history-list" id="modalHistoryList"></div>
+                <div class="pagination modal-pagination" id="modalPagination"></div>
+            </div>
 
         </div>
     </div>
