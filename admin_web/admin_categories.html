@@ -58,9 +58,16 @@
     .btn-add { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-weight: 900; font-size: 0.95rem; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
     .btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(57,255,20,0.3); }
 
-    /* 카테고리 리스트 UI */
+    /* 카테고리 리스트 테이블 */
+    .category-table-wrap { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    .category-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .category-table th { background-color: #121214; padding: 14px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .category-table td { padding: 14px 16px; border-bottom: 1px solid #222; vertical-align: middle; font-size: 0.9rem; }
+    .category-table tbody tr:last-child td { border-bottom: none; }
+    .category-table tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+
     .category-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
-    .category-item { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; animation: fadeIn 0.3s ease; }
+    .category-item { background-color: transparent; border: none; border-radius: 0; padding: 0; display: table-row; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     .category-item:hover { border-color: #52525b; }
     .category-item.hidden-state { background-color: #09090b; border-color: #27272a; }
@@ -68,8 +75,12 @@
     /* 💡 드래그 중인 아이템 스타일 */
     .category-item.dragging { opacity: 0.5; border: 2px dashed var(--neon-green); background-color: rgba(57, 255, 20, 0.05); transform: scale(1.02); z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
 
-    /* 관리자 고정(필수) 카테고리 강조 */
-    .category-item.fixed-state { border-left: 4px solid var(--theme-gold); }
+    .category-item.hidden-state td { background-color: rgba(9, 9, 11, 0.35); }
+    .category-item.fixed-state td:first-child { box-shadow: inset 4px 0 0 var(--theme-gold); }
+
+    .cat-slug { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; color: var(--neon-blue); font-weight: 700; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.22); padding: 4px 8px; border-radius: 6px; display: inline-block; }
+    .form-input[readonly], .form-input:disabled { opacity: 0.72; cursor: not-allowed; background: #121214; color: #a1a1aa; border-color: #3f3f46; }
+    .form-hint { font-size: 0.75rem; color: var(--text-sub); line-height: 1.4; }
 
     .cat-left { display: flex; align-items: center; gap: 15px; }
     .drag-handle { color: #52525b; font-size: 1.2rem; cursor: grab; padding: 5px; }
@@ -189,8 +200,23 @@
             <button class="btn-add" onclick="openCategoryModal('new')">➕ 새 카테고리 추가</button>
         </div>
 
-        <div class="category-list" id="categoryListContainer">
-            <div class="category-list-empty" id="categoryListPlaceholder">카테고리를 불러오는 중…</div>
+        <div class="category-table-wrap">
+            <table class="category-table">
+                <thead>
+                    <tr>
+                        <th style="width:48px;"></th>
+                        <th style="width:56px;">아이콘</th>
+                        <th style="width:22%;">카테고리명</th>
+                        <th style="width:18%;">Slug (고유값)</th>
+                        <th>설명</th>
+                        <th style="width:100px;">상태</th>
+                        <th style="width:220px; text-align:right;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="categoryListContainer">
+                    <tr><td colspan="7"><div class="category-list-empty" id="categoryListPlaceholder">카테고리를 불러오는 중…</div></td></tr>
+                </tbody>
+            </table>
         </div>
         
         <div style="font-size: 0.8rem; color: var(--text-sub); text-align: center; margin-bottom: 40px;">
@@ -216,8 +242,14 @@
               </div>
 
               <div class="form-group">
-                  <span class="form-label">카테고리명 (최대 15자) <span class="req">*</span></span>
-                  <input type="text" class="form-input" id="catNameInput" placeholder="예: MBTI 탐구">
+                  <span class="form-label">Slug (영어 고유값) <span class="req">*</span></span>
+                  <input type="text" class="form-input" id="categorySlug" placeholder="영어 고유값 (예: worldcup)" autocomplete="off" spellcheck="false">
+                  <span class="form-hint" id="categorySlugHint">영문 소문자, 숫자, 밑줄(_)만 사용. 불판·필터와 연결되는 시스템 키입니다.</span>
+              </div>
+
+              <div class="form-group">
+                  <span class="form-label">카테고리명 (한글, 최대 15자) <span class="req">*</span></span>
+                  <input type="text" class="form-input" id="catNameInput" placeholder="예: 북중미 월드컵">
               </div>
 
               <div class="form-group">
@@ -283,9 +315,42 @@
               .replace(/'/g, '&#39;');
       }
 
-      /** 신규 INSERT용 slug — c_ + 타임스탬프 + 난수 */
-      function generateSlug() {
-          return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      /** Slug 정규화 — 소문자 + trim */
+      function normalizeSlugInput(raw) {
+          return String(raw ?? '').toLowerCase().trim().replace(/\s+/g, '_');
+      }
+
+      function validateSlug(slug) {
+          if (!slug) return 'Slug(영어 고유값)은 필수 입력 사항입니다.';
+          if (!/^[a-z0-9_]+$/.test(slug)) {
+              return 'Slug는 영문 소문자, 숫자, 밑줄(_)만 사용할 수 있습니다.';
+          }
+          if (slug.length > 64) return 'Slug는 64자 이하여야 합니다.';
+          return null;
+      }
+
+      function setCategorySlugFieldMode(mode, slugValue) {
+          const slugInput = document.getElementById('categorySlug');
+          const slugHint = document.getElementById('categorySlugHint');
+          if (!slugInput) return;
+
+          if (mode === 'edit') {
+              slugInput.value = slugValue || '';
+              slugInput.readOnly = true;
+              slugInput.disabled = false;
+              slugInput.classList.add('slug-readonly');
+              if (slugHint) {
+                  slugHint.textContent = '생성 후 Slug는 변경할 수 없습니다. 한글명·아이콘·설명만 수정하세요.';
+              }
+          } else {
+              slugInput.value = '';
+              slugInput.readOnly = false;
+              slugInput.disabled = false;
+              slugInput.classList.remove('slug-readonly');
+              if (slugHint) {
+                  slugHint.textContent = '영문 소문자, 숫자, 밑줄(_)만 사용. 불판·필터와 연결되는 시스템 키입니다.';
+              }
+          }
       }
 
       function updateCategoryCounts(categories) {
@@ -307,15 +372,12 @@
           const iconStyle = isActive ? '' : 'filter: grayscale(100%); opacity: 0.5;';
           const nameStyle = isActive ? '' : 'color: var(--text-sub);';
           const badgeClass = isActive ? 'badge-active' : 'badge-hidden';
-          const badgeText = isActive ? '👁️ Active' : '🙈 Hidden';
+          const badgeText = isActive ? 'Active' : 'Hidden';
           const handleHtml = isFixed
               ? '<div class="drag-handle" style="opacity: 0.5; cursor: not-allowed;">🔒</div>'
               : '<div class="drag-handle">≡</div>';
 
-          const descriptionHtml = cat.description
-              ? '<div class="cat-desc">' + escapeHtml(cat.description) + '</div>'
-              : '';
-
+          const descriptionText = cat.description ? escapeHtml(cat.description) : '—';
           const icon = cat.icon || '📁';
           const name = cat.name || '';
 
@@ -323,38 +385,36 @@
           if (isFixed || isHallCategory(cat)) {
               actionsHtml = '<button class="btn-action btn-disabled" disabled>시스템 고정</button>';
               if (isHallCategory(cat)) {
-                  actionsHtml += '<button type="button" class="btn-action btn-preview btn-hall-preview">👁️ 유저앱 미리보기</button>';
+                  actionsHtml += '<button type="button" class="btn-action btn-preview btn-hall-preview">유저앱 미리보기</button>';
               }
           } else {
               actionsHtml = ''
                   + '<button class="btn-action btn-edit" data-slug="' + escapeHtml(slug) + '">수정</button>'
                   + (isActive
-                      ? '<button class="btn-action btn-toggle-hide btn-toggle" data-slug="' + escapeHtml(slug) + '" data-active="1">👁️ 숨기기</button>'
-                      : '<button class="btn-action btn-toggle-active btn-toggle" data-slug="' + escapeHtml(slug) + '" data-active="0">✨ 활성화</button>')
+                      ? '<button class="btn-action btn-toggle-hide btn-toggle" data-slug="' + escapeHtml(slug) + '" data-active="1">숨기기</button>'
+                      : '<button class="btn-action btn-toggle-active btn-toggle" data-slug="' + escapeHtml(slug) + '" data-active="0">활성화</button>')
                   + '<button class="btn-action btn-delete" data-slug="' + escapeHtml(slug) + '">삭제</button>';
           }
 
           const hallPreviewAttr = isHallCategory(cat) ? ' data-hall-preview="1"' : '';
 
           return ''
-              + '<div class="' + itemClasses.join(' ') + '" data-slug="' + escapeHtml(slug) + '"' + hallPreviewAttr + '>'
-              + '  <div class="cat-left">'
-              +        handleHtml
-              + '    <div class="cat-icon" style="' + iconStyle + '">' + escapeHtml(icon) + '</div>'
-              + '    <div class="cat-info">'
-              + '      <div class="cat-name" style="' + nameStyle + '">' + escapeHtml(name) + ' <span class="badge ' + badgeClass + '">' + badgeText + '</span></div>'
-              +        descriptionHtml
-              + '    </div>'
-              + '  </div>'
-              + '  <div class="action-btns">' + actionsHtml + '</div>'
-              + '</div>';
+              + '<tr class="' + itemClasses.join(' ') + '" data-slug="' + escapeHtml(slug) + '"' + hallPreviewAttr + '>'
+              + '  <td>' + handleHtml + '</td>'
+              + '  <td><div class="cat-icon" style="' + iconStyle + '">' + escapeHtml(icon) + '</div></td>'
+              + '  <td><div class="cat-name" style="' + nameStyle + '">' + escapeHtml(name) + '</div></td>'
+              + '  <td><code class="cat-slug">' + escapeHtml(slug) + '</code></td>'
+              + '  <td><div class="cat-desc">' + descriptionText + '</div></td>'
+              + '  <td><span class="badge ' + badgeClass + '">' + badgeText + '</span></td>'
+              + '  <td style="text-align:right;"><div class="action-btns">' + actionsHtml + '</div></td>'
+              + '</tr>';
       }
 
       function renderCategoryList(categories) {
           categoriesCache = categories || [];
 
           if (!categoriesCache.length) {
-              container.innerHTML = '<div class="category-list-empty">등록된 카테고리가 없습니다.</div>';
+              container.innerHTML = '<tr><td colspan="7"><div class="category-list-empty">등록된 카테고리가 없습니다.</div></td></tr>';
               updateCategoryCounts([]);
               return;
           }
@@ -365,7 +425,7 @@
       }
 
       async function loadCategories() {
-          container.innerHTML = '<div class="category-list-empty" id="categoryListPlaceholder">카테고리를 불러오는 중…</div>';
+          container.innerHTML = '<tr><td colspan="7"><div class="category-list-empty" id="categoryListPlaceholder">카테고리를 불러오는 중…</div></td></tr>';
 
           try {
               const sb = getSupabaseClient();
@@ -379,7 +439,7 @@
               renderCategoryList(data || []);
           } catch (err) {
               console.error('[admin_categories] loadCategories failed:', err);
-              container.innerHTML = '<div class="category-list-empty error">카테고리를 불러오지 못했습니다.<br>' + escapeHtml(err.message || String(err)) + '</div>';
+              container.innerHTML = '<tr><td colspan="7"><div class="category-list-empty error">카테고리를 불러오지 못했습니다.<br>' + escapeHtml(err.message || String(err)) + '</div></td></tr>';
               document.getElementById('totalCatCount').textContent = '—';
               document.getElementById('activeCatCount').textContent = '—';
           }
@@ -390,18 +450,25 @@
       }
 
       function applyActiveUi(item, isActive) {
+          const badge = item.querySelector('.badge');
+          const iconEl = item.querySelector('.cat-icon');
+          const nameEl = item.querySelector('.cat-name');
           if (isActive) {
               item.classList.remove('hidden-state');
-              item.querySelector('.cat-icon').style = '';
-              item.querySelector('.cat-name').style.color = '#fff';
-              item.querySelector('.cat-name .badge').className = 'badge badge-active';
-              item.querySelector('.cat-name .badge').innerText = '👁️ Active';
+              if (iconEl) iconEl.style = '';
+              if (nameEl) nameEl.style.color = '#fff';
+              if (badge) {
+                  badge.className = 'badge badge-active';
+                  badge.innerText = 'Active';
+              }
           } else {
               item.classList.add('hidden-state');
-              item.querySelector('.cat-icon').style = 'filter: grayscale(100%); opacity: 0.5;';
-              item.querySelector('.cat-name').style.color = 'var(--text-sub)';
-              item.querySelector('.cat-name .badge').className = 'badge badge-hidden';
-              item.querySelector('.cat-name .badge').innerText = '🙈 Hidden';
+              if (iconEl) iconEl.style = 'filter: grayscale(100%); opacity: 0.5;';
+              if (nameEl) nameEl.style.color = 'var(--text-sub)';
+              if (badge) {
+                  badge.className = 'badge badge-hidden';
+                  badge.innerText = 'Hidden';
+              }
           }
 
           const toggleBtn = item.querySelector('.btn-toggle');
@@ -420,7 +487,7 @@
 
       async function toggleStatus(slug, shouldActivate) {
           const cat = findCategoryBySlug(slug);
-          const item = container.querySelector('.category-item[data-slug="' + slug + '"]');
+          const item = container.querySelector('tr.category-item[data-slug="' + CSS.escape(slug) + '"]');
           if (!cat || !item || item.classList.contains('fixed-state')) return;
 
           if (!shouldActivate) {
@@ -448,7 +515,7 @@
 
       async function deleteCategory(slug) {
           const cat = findCategoryBySlug(slug);
-          const item = container.querySelector('.category-item[data-slug="' + slug + '"]');
+          const item = container.querySelector('tr.category-item[data-slug="' + CSS.escape(slug) + '"]');
           if (!cat || !item || item.classList.contains('fixed-state') || cat.is_fixed === true) return;
 
           if (!confirm('[' + cat.name + '] 카테고리를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
@@ -468,7 +535,7 @@
               item.remove();
 
               if (!categoriesCache.length) {
-                  container.innerHTML = '<div class="category-list-empty">등록된 카테고리가 없습니다.</div>';
+                  container.innerHTML = '<tr><td colspan="7"><div class="category-list-empty">등록된 카테고리가 없습니다.</div></td></tr>';
               }
               updateCategoryCounts(categoriesCache);
               alert('삭제가 완료되었습니다.');
@@ -497,12 +564,14 @@
               document.getElementById('catNameInput').value = '';
               document.getElementById('catDescInput').value = '';
               document.getElementById('catStatusInput').checked = true;
+              setCategorySlugFieldMode('new');
           } else {
               title.innerHTML = '✏️ 카테고리 설정 수정';
               document.getElementById('catIconInput').innerText = icon || '📁';
               document.getElementById('catNameInput').value = name || '';
               document.getElementById('catDescInput').value = desc || '';
               document.getElementById('catStatusInput').checked = isActive !== false;
+              setCategorySlugFieldMode('edit', slug || '');
           }
 
           modal.style.display = 'flex';
@@ -515,14 +584,31 @@
 
       async function saveCategory() {
           const name = document.getElementById('catNameInput').value.trim();
+          const slugRaw = document.getElementById('categorySlug').value;
+          const slug = normalizeSlugInput(slugRaw);
           const icon = document.getElementById('catIconInput').innerText.trim() || '📁';
           const desc = document.getElementById('catDescInput').value.trim();
           const isActive = document.getElementById('catStatusInput').checked;
           const btnSubmit = document.getElementById('btnModalSubmit');
 
           if (!name) {
-              alert('카테고리명은 필수 입력 사항입니다!');
+              alert('카테고리명(한글)은 필수 입력 사항입니다!');
               return;
+          }
+
+          if (currentEditMode === 'new') {
+              const slugError = validateSlug(slug);
+              if (slugError) {
+                  alert(slugError);
+                  return;
+              }
+              const duplicate = categoriesCache.some(function (cat) {
+                  return normalizeSlugInput(cat.slug) === slug;
+              });
+              if (duplicate) {
+                  alert('이미 사용 중인 Slug입니다: ' + slug);
+                  return;
+              }
           }
 
           btnSubmit.disabled = true;
@@ -532,7 +618,6 @@
               const sb = getSupabaseClient();
 
               if (currentEditMode === 'new') {
-                  const slug = generateSlug();
                   const maxOrder = categoriesCache.reduce(function (max, cat) {
                       return Math.max(max, Number(cat.sort_order) || 0);
                   }, 0);
@@ -549,7 +634,7 @@
 
                   const { error } = await sb.from('categories').insert(row);
                   if (error) throw error;
-                  alert('[' + name + '] 카테고리가 추가되었습니다.');
+                  alert('[' + name + '] 카테고리가 추가되었습니다. (Slug: ' + slug + ')');
               } else {
                   if (!editingSlug) {
                       throw new Error('수정할 카테고리(slug)를 찾을 수 없습니다.');
@@ -578,7 +663,7 @@
       }
 
       async function saveOrder() {
-          const items = [...container.querySelectorAll('.category-item')];
+          const items = [...container.querySelectorAll('tr.category-item')];
           if (!items.length) return;
 
           const updates = items.map(function (el, index) {
@@ -633,14 +718,14 @@
       }
 
       function bindDraggableItems() {
-          container.querySelectorAll('.draggable-item').forEach(makeDraggable);
+          container.querySelectorAll('tr.draggable-item').forEach(makeDraggable);
       }
 
       container.addEventListener('dragover', function(e) {
           e.preventDefault();
 
           const afterElement = getDragAfterElement(container, e.clientY);
-          const dragging = document.querySelector('.dragging');
+          const dragging = document.querySelector('tr.category-item.dragging');
 
           if (dragging) {
               if (afterElement == null) {
@@ -652,7 +737,7 @@
       });
 
       function getDragAfterElement(container, y) {
-          const draggableElements = [...container.querySelectorAll('.category-item:not(.dragging):not(.fixed-state)')];
+          const draggableElements = [...container.querySelectorAll('tr.category-item:not(.dragging):not(.fixed-state)')];
 
           return draggableElements.reduce(function(closest, child) {
               const box = child.getBoundingClientRect();
