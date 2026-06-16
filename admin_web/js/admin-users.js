@@ -56,28 +56,90 @@
     return v || '—';
   }
 
+  function formatUserEmail(user) {
+    if (!user) return '이메일 미등록';
+    var email = user.email ? String(user.email).trim() : '';
+    return email || '이메일 미등록';
+  }
+
+  function formatModalUidLine(user) {
+    var rawId = String(user && user.id ? user.id : '').replace(/-/g, '');
+    var shortId = rawId ? rawId.slice(0, 6) : '—';
+    var email = formatUserEmail(user);
+    if (!email || email === '이메일 미등록') {
+      return 'UID: ' + shortId;
+    }
+    return 'UID: ' + shortId + ' | ' + email;
+  }
+
+  function getWeekStartMonday() {
+    var now = new Date();
+    var day = now.getDay();
+    var diff = day === 0 ? 6 : day - 1;
+    var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  }
+
+  function countNewUsersThisWeek() {
+    var weekStart = getWeekStartMonday().getTime();
+    return usersCache.filter(function (user) {
+      if (!user.created_at) return false;
+      return new Date(user.created_at).getTime() >= weekStart;
+    }).length;
+  }
+
+  function resolveSignupPlatform(user) {
+    var p = String((user && user.signup_platform) || '')
+      .toLowerCase()
+      .trim();
+    if (['kakao', 'naver', 'google', 'apple', 'email', 'guest'].indexOf(p) >= 0) {
+      return p;
+    }
+    if (user && user.email) {
+      var email = String(user.email).toLowerCase();
+      if (email.indexOf('kakao') !== -1) return 'kakao';
+      if (email.indexOf('naver') !== -1) return 'naver';
+      if (email.indexOf('gmail') !== -1 || email.indexOf('googlemail') !== -1) return 'google';
+    }
+    if (p === 'unknown' || !p) return 'email';
+    return p;
+  }
+
+  function platformInfo(userOrPlatform) {
+    var platform =
+      typeof userOrPlatform === 'string'
+        ? userOrPlatform
+        : resolveSignupPlatform(userOrPlatform);
+    var p = String(platform || '').toLowerCase();
+    var map = {
+      kakao: { emoji: '🟡', label: '카카오', cls: 'bg-kakao' },
+      naver: { emoji: '🟢', label: '네이버', cls: 'bg-naver' },
+      google: { emoji: '🔴', label: 'Google', cls: 'bg-google' },
+      apple: { emoji: '🍎', label: 'Apple', cls: 'bg-email' },
+      email: { emoji: '✉️', label: '이메일', cls: 'bg-email' },
+      guest: { emoji: '👤', label: '게스트', cls: 'bg-email' },
+    };
+    return map[p] || map.email;
+  }
+
+  function platformBadgeClass(userOrPlatform) {
+    return platformInfo(userOrPlatform).cls;
+  }
+
+  function platformLabel(userOrPlatform) {
+    var info = platformInfo(userOrPlatform);
+    return info.emoji + ' ' + info.label;
+  }
+
+  function platformLabelPlain(userOrPlatform) {
+    return platformInfo(userOrPlatform).label;
+  }
+
   function isMarketingAgreed(user) {
     if (user.marketing_agreed === true) return true;
     if (user.marketing_consent === true) return true;
     return false;
-  }
-
-  function platformBadgeClass(platform) {
-    var p = String(platform || '').toLowerCase();
-    if (p === 'kakao') return 'bg-kakao';
-    if (p === 'naver') return 'bg-naver';
-    if (p === 'google') return 'bg-google';
-    return 'bg-email';
-  }
-
-  function platformLabel(platform) {
-    var p = String(platform || '').toLowerCase();
-    if (p === 'kakao') return 'Kakao';
-    if (p === 'naver') return 'Naver';
-    if (p === 'google') return 'Google';
-    if (p === 'apple') return 'Apple';
-    if (p === 'email') return 'Email';
-    return platform || '—';
   }
 
   function penaltyTier(user) {
@@ -124,6 +186,7 @@
       platform: ($('filterPlatform') && $('filterPlatform').value) || 'all',
       gender: ($('filterGender') && $('filterGender').value) || 'all',
       ageGroup: ($('filterAgeGroup') && $('filterAgeGroup').value) || 'all',
+      region: ($('filterRegion') && $('filterRegion').value) || 'all',
       marketing: ($('filterMarketing') && $('filterMarketing').value) || 'all',
       status: ($('filterStatus') && $('filterStatus').value) || 'all',
       sort: ($('filterSort') && $('filterSort').value) || 'newest',
@@ -138,12 +201,13 @@
       if (f.q) {
         var nick = String(user.nickname || '').toLowerCase();
         var uid = String(user.id || '').toLowerCase();
-        if (nick.indexOf(f.q) === -1 && uid.indexOf(f.q) === -1) {
+        var email = String(user.email || '').toLowerCase();
+        if (nick.indexOf(f.q) === -1 && uid.indexOf(f.q) === -1 && email.indexOf(f.q) === -1) {
           return false;
         }
       }
 
-      if (f.platform !== 'all' && String(user.signup_platform || '') !== f.platform) {
+      if (f.platform !== 'all' && resolveSignupPlatform(user) !== f.platform) {
         return false;
       }
 
@@ -156,6 +220,10 @@
         } else if (user.age_group !== f.ageGroup) {
           return false;
         }
+      }
+
+      if (f.region !== 'all') {
+        if (formatRegion(user.region) !== f.region) return false;
       }
 
       if (f.marketing === 'y' && !isMarketingAgreed(user)) return false;
@@ -182,6 +250,7 @@
     });
 
     currentPage = 1;
+    syncMarketingChipState();
     renderTable();
     updateKpi();
     updateCountLabel();
@@ -246,14 +315,17 @@
           '<span class="user-nickname">' +
           escapeHtml(user.nickname || '픽클러') +
           '</span>' +
+          '<div style="font-size: 0.8rem; color: var(--text-sub); margin-top: 2px;">' +
+          escapeHtml(formatUserEmail(user)) +
+          '</div>' +
           '<span class="user-uid">UID: ' +
           escapeHtml(shortId) +
           '…</span>' +
           '</div></div></td>' +
           '<td><span class="small-badge ' +
-          platformBadgeClass(user.signup_platform) +
+          platformBadgeClass(user) +
           '">' +
-          escapeHtml(platformLabel(user.signup_platform)) +
+          escapeHtml(platformLabel(user)) +
           '</span></td>' +
           '<td>' +
           genderCell(user) +
@@ -290,11 +362,13 @@
 
   function updateKpi() {
     var totalEl = $('kpiTotalUsers');
+    var newWeekEl = $('kpiNewUsersWeek');
     var mktEl = $('kpiMarketingUsers');
     var warnEl = $('kpiWarningUsers');
     var banEl = $('kpiBannedUsers');
 
     if (totalEl) totalEl.textContent = usersCache.length.toLocaleString();
+    if (newWeekEl) newWeekEl.textContent = countNewUsersThisWeek().toLocaleString();
     if (mktEl) {
       var mktCount = usersCache.filter(isMarketingAgreed).length;
       mktEl.textContent = mktCount.toLocaleString();
@@ -382,7 +456,7 @@
 
     $('modalAvatar').textContent = avatar;
     $('modalName').textContent = user.nickname || '픽클러';
-    $('modalUid').textContent = 'UID: ' + user.id;
+    $('modalUid').textContent = formatModalUidLine(user);
     var genderEl = $('modalGender');
     genderEl.textContent = formatGender(user.gender);
     genderEl.className =
@@ -394,7 +468,7 @@
     $('modalJoined').textContent = user.created_at
       ? new Date(user.created_at).toLocaleDateString('ko-KR')
       : '—';
-    $('modalPlatform').textContent = platformLabel(user.signup_platform);
+    $('modalPlatform').textContent = platformLabel(user);
     $('modalStatus').textContent =
       tier.status === 'banned'
         ? '🟥 영구 차단 (' + tier.label + ')'
@@ -411,6 +485,29 @@
     if (modal) modal.style.display = 'none';
   }
 
+  async function fetchUsersFromSupabase() {
+    var sb = getSupabaseClient();
+
+    var rpcResult = await sb.rpc('admin_list_users');
+    if (!rpcResult.error && Array.isArray(rpcResult.data)) {
+      return { data: rpcResult.data, error: null };
+    }
+    if (rpcResult.error) {
+      console.warn('[Admin Users] admin_list_users RPC unavailable, falling back to users table', rpcResult.error);
+    }
+
+    var selectWithEmail =
+      'id, nickname, email, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, created_at';
+    var selectBase =
+      'id, nickname, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, created_at';
+
+    var result = await sb.from('users').select(selectWithEmail).order('created_at', { ascending: false });
+    if (result.error && /email/i.test(result.error.message || '')) {
+      result = await sb.from('users').select(selectBase).order('created_at', { ascending: false });
+    }
+    return result;
+  }
+
   async function loadUsers() {
     var tbody = $('usersTableBody');
     if (tbody) {
@@ -419,13 +516,7 @@
     }
 
     try {
-      var sb = getSupabaseClient();
-      var result = await sb
-        .from('users')
-        .select(
-          'id, nickname, signup_platform, points, penalty_points, account_status, gender, age_group, region, marketing_agreed, marketing_consent, is_info_collected, avatar_html, created_at'
-        )
-        .order('created_at', { ascending: false });
+      var result = await fetchUsersFromSupabase();
 
       if (result.error) throw result.error;
       usersCache = result.data || [];
@@ -441,11 +532,22 @@
     }
   }
 
+  function syncMarketingChipState() {
+    var mktOnlyBtn = $('filterMarketingOnly');
+    var marketingSelect = $('filterMarketing');
+    if (!mktOnlyBtn || !marketingSelect) return;
+    if (marketingSelect.value === 'y' && getFilterState().marketingOnly) {
+      mktOnlyBtn.classList.add('is-active');
+    } else if (marketingSelect.value !== 'y') {
+      mktOnlyBtn.classList.remove('is-active');
+    }
+  }
+
   function bindFilters() {
     var searchBtn = $('btnSearchUsers');
     if (searchBtn) searchBtn.addEventListener('click', applyFilters);
 
-    ['filterSearch', 'filterPlatform', 'filterGender', 'filterAgeGroup', 'filterMarketing', 'filterStatus', 'filterSort', 'listPageSize'].forEach(
+    ['filterSearch', 'filterPlatform', 'filterGender', 'filterAgeGroup', 'filterRegion', 'filterMarketing', 'filterStatus', 'filterSort', 'listPageSize'].forEach(
       function (id) {
         var el = $(id);
         if (!el) return;
@@ -461,10 +563,15 @@
     var mktOnlyBtn = $('filterMarketingOnly');
     if (mktOnlyBtn) {
       mktOnlyBtn.addEventListener('click', function () {
-        mktOnlyBtn.classList.toggle('is-active');
         var marketingSelect = $('filterMarketing');
-        if (mktOnlyBtn.classList.contains('is-active') && marketingSelect) {
-          marketingSelect.value = 'y';
+        var isActive = mktOnlyBtn.classList.contains('is-active');
+
+        if (isActive) {
+          mktOnlyBtn.classList.remove('is-active');
+          if (marketingSelect) marketingSelect.value = 'all';
+        } else {
+          mktOnlyBtn.classList.add('is-active');
+          if (marketingSelect) marketingSelect.value = 'y';
         }
         applyFilters();
       });

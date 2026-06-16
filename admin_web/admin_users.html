@@ -54,7 +54,8 @@
     .content-container { padding: 30px 40px; }
 
     /* 1. 미니 KPI 요약 */
-    .mini-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .mini-kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px; }
+    @media (max-width: 1200px) { .mini-kpi-row { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); } }
     .mini-kpi-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
     .mini-kpi-info { display: flex; flex-direction: column; gap: 5px; }
     .mini-kpi-title { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); }
@@ -89,6 +90,7 @@
     .avatar { width: 36px; height: 36px; background-color: #27272a; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; flex-shrink: 0; }
     .user-info { display: flex; flex-direction: column; gap: 4px; }
     .user-nickname { color: #fff; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
+    .user-email { font-size: 0.8rem; color: #9ca3af; font-weight: 500; line-height: 1.3; word-break: break-all; }
     .tier-badge { font-size: 0.65rem; background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); padding: 2px 6px; border-radius: 4px; font-weight: 800; }
     .user-uid { color: #71717a; font-size: 0.75rem; }
 
@@ -170,12 +172,13 @@
     
     .ps-name-wrap { display: flex; align-items: center; gap: 10px; }
     .ps-name { font-size: 1.3rem; font-weight: 900; color: #fff; }
-    .ps-uid { font-size: 0.85rem; color: #71717a; font-family: monospace; }
+    .ps-uid { font-size: 0.85rem; color: #71717a; font-family: monospace; word-break: break-all; line-height: 1.45; }
     
-    .meta-grid { display: flex; gap: 50px; }
-    .meta-col { display: flex; flex-direction: column; gap: 6px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 20px; width: 100%; }
+    .meta-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .meta-val { font-size: 1rem; font-weight: 800; color: #fff; }
-    .meta-label { font-size: 0.8rem; color: var(--text-sub); }
+    .meta-label { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; letter-spacing: 0.02em; }
+    @media (max-width: 640px) { .meta-grid { grid-template-columns: repeat(2, 1fr); } }
     
     .status-wrap { text-align: right; border-left: 1px solid #3f3f46; padding-left: 25px; display: flex; flex-direction: column; justify-content: center; }
     .status-wrap-title { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px; }
@@ -243,6 +246,10 @@
         <!-- KPI 요약 -->
         <div class="mini-kpi-row">
             <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">신규 가입 (이번 주)</span><span class="mini-kpi-val" style="color: var(--neon-blue);" id="kpiNewUsersWeek">—</span></div>
+                <div class="mini-kpi-icon">✨</div>
+            </div>
+            <div class="mini-kpi-card">
                 <div class="mini-kpi-info"><span class="mini-kpi-title">전체 회원</span><span class="mini-kpi-val" id="kpiTotalUsers">—</span></div>
                 <div class="mini-kpi-icon">🌍</div>
             </div>
@@ -277,7 +284,7 @@
         <div class="filter-bar">
             <div class="input-group">
                 <span class="input-label">검색어</span>
-                <input type="text" class="admin-input" id="filterSearch" placeholder="닉네임, UID">
+                <input type="text" class="admin-input" id="filterSearch" placeholder="닉네임, 이메일, UID">
             </div>
             <div class="input-group">
                 <span class="input-label">가입 플랫폼</span>
@@ -306,6 +313,29 @@
                     <option value="30s">30대</option>
                     <option value="40s">40대</option>
                     <option value="50plus">50대+</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-label">지역 (Region)</span>
+                <select class="admin-select" id="filterRegion" style="width: 110px;">
+                    <option value="all">전체</option>
+                    <option value="서울">서울</option>
+                    <option value="부산">부산</option>
+                    <option value="대구">대구</option>
+                    <option value="인천">인천</option>
+                    <option value="광주">광주</option>
+                    <option value="대전">대전</option>
+                    <option value="울산">울산</option>
+                    <option value="세종">세종</option>
+                    <option value="경기">경기</option>
+                    <option value="강원">강원</option>
+                    <option value="충북">충북</option>
+                    <option value="충남">충남</option>
+                    <option value="전북">전북</option>
+                    <option value="전남">전남</option>
+                    <option value="경북">경북</option>
+                    <option value="경남">경남</option>
+                    <option value="제주">제주</option>
                 </select>
             </div>
             <div class="input-group">
@@ -398,20 +428,20 @@
                     
                     <div class="meta-grid">
                         <div class="meta-col">
-                            <span class="meta-val" id="modalGender">—</span>
                             <span class="meta-label">성별</span>
+                            <span class="meta-val" id="modalGender">—</span>
                         </div>
                         <div class="meta-col">
-                            <span class="meta-val" id="modalAge">—</span>
                             <span class="meta-label">연령대</span>
+                            <span class="meta-val" id="modalAge">—</span>
                         </div>
                         <div class="meta-col">
-                            <span class="meta-val" id="modalRegion">—</span>
                             <span class="meta-label">지역</span>
+                            <span class="meta-val" id="modalRegion">—</span>
                         </div>
                         <div class="meta-col">
-                            <span class="meta-val" id="modalMarketing">—</span>
                             <span class="meta-label">마케팅 동의</span>
+                            <span class="meta-val" id="modalMarketing">—</span>
                         </div>
                         <div class="meta-col">
                             <span class="meta-label">가입일</span>
