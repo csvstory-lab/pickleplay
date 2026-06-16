@@ -57,7 +57,10 @@
 
     .badge-wrap { display: flex; gap: 10px; margin-bottom: 15px; }
     .cat-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
-    .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
+    .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; }
+    .status-badge.status-active { background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
+    .status-badge.status-blinded { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); }
+    .status-badge.status-ended { background-color: rgba(161, 161, 170, 0.15); color: var(--text-sub); border: 1px solid #3f3f46; }
     
     .post-title { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 0 0 10px 0; line-height: 1.4; word-break: keep-all; }
     .post-meta { font-size: 0.85rem; color: var(--text-sub); display: flex; gap: 15px; }
@@ -80,6 +83,8 @@
     .btn-action-post { width: 100%; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; border: none; font-size: 0.95rem; transition: 0.2s; }
     .btn-stop-post { background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); border: 1px solid var(--neon-pink); }
     .btn-stop-post:hover { background-color: var(--neon-pink); color: #fff; }
+    .btn-restore-post { background-color: transparent; color: var(--neon-green); border: 1px solid var(--neon-green); }
+    .btn-restore-post:hover { background-color: rgba(57, 255, 20, 0.1); }
 
     /* 2. 댓글(참견) 리스트 영역 */
     .comment-section { background-color: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
@@ -123,8 +128,6 @@
     .btn-restore { background-color: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
 </head>
 <body>
 
@@ -137,8 +140,8 @@
         <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
         <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
-        <li class="nav-item active" onclick="location.href='admin_board_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
-        <li class="nav-sub-item active" onclick="location.href='admin_board_list.html'">· 일반 불판 관리</li>
+        <li class="nav-item active" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item active" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 스폰(최애) 불판 설정</li>
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
@@ -166,51 +169,8 @@
 
     <div class="content-container">
         
-        <div class="post-summary-card">
-            <div class="post-info-left">
-                <div class="badge-wrap">
-                    <span class="cat-badge">💔 연애 / 썸 / 이별</span>
-                    <span class="status-badge">진행 중 (Active)</span>
-                    <span style="font-size:0.8rem; color:var(--text-sub); align-self:center;">ID: #10425</span>
-                </div>
-                <h2 class="post-title">10년지기 이성친구와 단둘이 1박 2일 여행가기 허용?</h2>
-                <div class="post-meta">
-                    <span>👤 작성자: <strong>프로불편러</strong> (UID: 88412)</span>
-                    <span>🕒 등록일: 2026.05.20 14:30</span>
-                </div>
-
-                <div class="vote-board">
-                    <div class="vote-text-wrap">
-                        <div class="vote-a-text">A. 허용 (쿨하게 가능)</div>
-                        <div class="vote-b-text">B. 절대 불가 (미쳤냐)</div>
-                    </div>
-                    <div class="vote-bar-bg">
-                        <div class="vote-bar-a" style="width: 15%;">15%</div>
-                        <div class="vote-bar-b" style="width: 85%;">85%</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="post-info-right">
-                <div class="stat-box">
-                    <span class="stat-label">누적 투표수</span>
-                    <span class="stat-val" style="color:var(--theme-gold);">15,240</span>
-                </div>
-                <!-- 💡 공유수 통계 추가 -->
-                <div class="stat-box">
-                    <span class="stat-label">누적 공유(Share)수</span>
-                    <span class="stat-val" style="color:var(--neon-blue);">156</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">작성된 참견(댓글)</span>
-                    <span class="stat-val">1,024</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">누적 신고 접수</span>
-                    <span class="stat-val" style="color:var(--neon-pink);">12</span>
-                </div>
-                <button class="btn-action-post btn-stop-post" onclick="alert('이 불판을 강제로 블라인드 처리합니다.')">👁️ 이 불판 강제 블라인드(숨김)</button>
-            </div>
+        <div class="post-summary-card" id="postSummaryCard">
+            <div style="width:100%;padding:40px;text-align:center;color:#71717a;">불판 정보를 불러오는 중...</div>
         </div>
 
         <div class="comment-section">
@@ -242,74 +202,8 @@
                         <th style="width: 20%; text-align:right;">관리자 액션</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <div class="user-info">
-                                <div class="avatar">🤬</div>
-                                <div>
-                                    <div class="nickname">유교보이 <span class="pick-badge pick-b">B 픽</span></div>
-                                    <div class="uid">UID: 45102</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="comment-text">아니 상식적으로 말이 되냐? 애인 놔두고 1박 2일 단둘이? 이건 선 넘었지 당장 헤어짐 ㅡㅡ</div>
-                            <span class="comment-date">2026.05.20 15:42</span>
-                        </td>
-                        <td style="text-align:center;"><span style="color:var(--text-sub); font-size:0.8rem;">0 건</span></td>
-                        <td style="text-align:right;">
-                            <div class="action-btns" style="justify-content: flex-end;">
-                                <button class="btn-sm btn-blind" onclick="blindComment(this, '유교보이')">🚨 즉시 숨김(제재)</button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 💡 알고리즘에 의해 자동 숨김 처리된 댓글 UI 예시 -->
-                    <tr style="opacity: 0.6; background-color: rgba(255, 0, 127, 0.03);">
-                        <td>
-                            <div class="user-info">
-                                <div class="avatar">🤡</div>
-                                <div>
-                                    <div class="nickname">쿨찐러 <span class="pick-badge pick-a">A 픽</span></div>
-                                    <div class="uid">UID: 99421</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="auto-blind-badge">🤖 1시간 내 10회 이상 신고로 시스템 자동 숨김됨</span>
-                            <div class="comment-text" style="color:var(--text-sub); text-decoration: line-through;">B 고른 X들은 다 모쏠 아다 새X들이냐? ㅋㅋ 쿨하지 못하게 찌질하게 구네 ㅉㅉ</div>
-                            <span class="comment-date">2026.05.20 16:01</span>
-                        </td>
-                        <td style="text-align:center;"><span class="report-count">🚨 15건</span></td>
-                        <td style="text-align:right;">
-                            <div class="action-btns" style="justify-content: flex-end;">
-                                <button class="btn-sm btn-restore" onclick="restoreComment(this)">제재 무효 및 복구</button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>
-                            <div class="user-info">
-                                <div class="avatar">🤔</div>
-                                <div>
-                                    <div class="nickname">고민중독 <span class="pick-badge pick-b">B 픽</span></div>
-                                    <div class="uid">UID: 12041</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="comment-text">솔직히 낮에 잠깐 밥먹는건 몰라도 숙박은 좀 아니지 않나... 서로 선은 지켜야지</div>
-                            <span class="comment-date">2026.05.20 16:15</span>
-                        </td>
-                        <td style="text-align:center;"><span style="color:var(--text-sub); font-size:0.8rem;">1 건</span></td>
-                        <td style="text-align:right;">
-                            <div class="action-btns" style="justify-content: flex-end;">
-                                <button class="btn-sm btn-blind" onclick="blindComment(this, '고민중독')">🚨 즉시 숨김(제재)</button>
-                            </div>
-                        </td>
-                    </tr>
+                <tbody id="commentsTableBody">
+                    <tr><td colspan="4" style="text-align:center;padding:40px;color:#71717a;">참견 데이터를 불러오는 중...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -317,91 +211,9 @@
     </div>
 </main>
 
-<script>
-    // 💡 수동 제재 클릭 시, 시스템 알고리즘에 편입됨을 알리는 로직
-    async function blindComment(btn, username) {
-        if(!confirm(`[${username}] 유저의 댓글을 즉시 숨김(블라인드) 처리하시겠습니까?\n\n※ 확인 시, 해당 댓글은 모든 유저에게 가려지며 [제재 벌점 알고리즘]에 위반 사실이 등록되어 시스템이 자동으로 누적 벌점을 부과합니다.`)) return;
-        const FB = window.PickleAdminFirebase;
-        const row = btn.closest('tr');
-        const commentText = row?.cells[1]?.querySelector('.comment-text')?.innerText || '';
-        const saved = await FB.persistNew('comment_moderation', {
-            username,
-            action: 'blind',
-            commentText,
-        }, {
-            page: 'admin_post_detail',
-            action: 'blind_comment',
-            successMessage: '✅ 숨김 처리 및 제재가 Firebase에 기록되었습니다.',
-        });
-        if (!saved.ok) return;
-        {
-            
-            // UI 변경
-            row.style.opacity = '0.5';
-            row.style.backgroundColor = 'transparent';
-            
-            const textCell = row.cells[1].querySelector('.comment-text');
-            textCell.style.textDecoration = 'line-through';
-            textCell.style.color = 'var(--text-sub)';
-            
-            const dateCell = row.cells[1].querySelector('.comment-date');
-            dateCell.style.color = 'var(--neon-pink)';
-            dateCell.style.fontWeight = '800';
-            dateCell.innerText = '관리자에 의해 즉각 숨김(제재) 처리됨';
-            
-            const actionCell = row.cells[3];
-            actionCell.innerHTML = `
-                <div class="action-btns" style="justify-content: flex-end;">
-                    <button class="btn-sm btn-restore" onclick="restoreComment(this)">제재 무효 및 복구</button>
-                </div>
-            `;
-            
-        }
-    }
-
-    // 댓글 숨김 해제(복구)
-    async function restoreComment(btn) {
-        if(!confirm('이 댓글의 숨김 조치를 해제하고, 부과된 시스템 벌점을 무효화 하시겠습니까?')) return;
-        const FB = window.PickleAdminFirebase;
-        const row = btn.closest('tr');
-        const commentText = row?.cells[1]?.querySelector('.comment-text')?.innerText || '';
-        const saved = await FB.persistNew('comment_moderation', {
-            action: 'restore',
-            commentText,
-        }, {
-            page: 'admin_post_detail',
-            action: 'restore_comment',
-            successMessage: '조치 해제가 Firebase에 기록되었습니다.',
-        });
-        if (!saved.ok) return;
-        {
-            
-            row.style.opacity = '1';
-            row.style.backgroundColor = 'transparent';
-            
-            const textCell = row.cells[1].querySelector('.comment-text');
-            textCell.style.textDecoration = 'none';
-            textCell.style.color = '#e4e4e7';
-            
-            // 시스템 뱃지가 있다면 숨김 처리
-            const autoBadge = row.cells[1].querySelector('.auto-blind-badge');
-            if(autoBadge) autoBadge.style.display = 'none';
-            
-            const dateCell = row.cells[1].querySelector('.comment-date');
-            dateCell.style.color = 'var(--text-sub)';
-            dateCell.style.fontWeight = 'normal';
-            dateCell.innerText = '숨김 해제됨 (방금 전)';
-            
-            const actionCell = row.cells[3];
-            actionCell.innerHTML = `
-                <div class="action-btns" style="justify-content: flex-end;">
-                    <button class="btn-sm btn-blind" onclick="blindComment(this, '유저')">🚨 즉시 숨김(제재)</button>
-                </div>
-            `;
-            
-        }
-    }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin-post-detail.js"></script>
 
 </body>
 </html>

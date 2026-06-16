@@ -184,7 +184,8 @@
   }
 
   function actionButtonsHtml(post, status) {
-    var id = escapeHtml(post.id);
+    var id = post.id;
+    var idAttr = escapeHtml(id);
     if (status === 'blinded') {
       return (
         '<div class="action-btns">' +
@@ -192,7 +193,7 @@
         id +
         '\'">사유 확인</button>' +
         '<button type="button" class="btn-sm btn-unblind" onclick="unblindPost(this, \'' +
-        id +
+        idAttr +
         '\')">숨김 해제</button>' +
         '</div>'
       );
@@ -203,7 +204,7 @@
       id +
       '\'">상세/댓글</button>' +
       '<button type="button" class="btn-sm btn-blind" onclick="blindPost(this, \'' +
-      id +
+      idAttr +
       '\')">블라인드</button>' +
       '</div>'
     );
