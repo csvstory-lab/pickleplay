@@ -414,6 +414,13 @@
     .comment-pick-a { color: var(--neon-blue); font-size: 0.7rem; border: 1px solid var(--neon-blue); padding: 2px 6px; border-radius: 4px; }
     .comment-pick-b { color: var(--neon-pink); font-size: 0.7rem; border: 1px solid var(--neon-pink); padding: 2px 6px; border-radius: 4px; }
     .comment-text { font-size: 0.95rem; line-height: 1.4; }
+    .comment-text--blinded,
+    .comment-body--blinded {
+      color: #71717a;
+      font-size: 0.88rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
     .comment-actions {
         display: flex; align-items: center; gap: 10px; margin-top: 10px;
         padding-top: 8px; border-top: 1px dashed #3f3f46;
@@ -720,6 +727,7 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-ranking-events.js"></script>
 <script src="../js/pickle-follows.js"></script>
+<script src="../js/pickle-comment-clean.js"></script>
 <script src="../js/pickle-detail.js?v=20260608_detail_reply1"></script>
 <script>
     function ensureKakaoReady() {

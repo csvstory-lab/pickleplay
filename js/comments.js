@@ -94,12 +94,29 @@
     return escapeHtml(raw);
   }
 
+  function isCommentBlinded(comment) {
+    if (window.PickleCommentClean?.isCommentBlinded) {
+      return window.PickleCommentClean.isCommentBlinded(comment);
+    }
+    if (!comment) return false;
+    if (comment.is_blind === true) return true;
+    return comment.visibility_status === 'blinded';
+  }
+
   function displayBody(comment) {
+    if (window.PickleCommentClean?.getDisplayBody) {
+      return window.PickleCommentClean.getDisplayBody(comment);
+    }
+    if (isCommentBlinded(comment)) {
+      return '🚫 관리자 및 규정 위반 신고에 의해 블라인드 처리된 댓글입니다.';
+    }
     return comment.filtered_content || comment.content || '';
   }
 
   function renderCommentHtml(comment) {
     const name = authorLabel(comment);
+    const blinded = isCommentBlinded(comment);
+    const bodyClass = blinded ? 'comment-body comment-body--blinded' : 'comment-body';
     return `
       <li class="comment-item" data-comment-id="${comment.id}">
         <div class="comment-author-avatar">${authorAvatarInner(comment)}</div>
@@ -107,7 +124,7 @@
           <span class="comment-author">${escapeHtml(name)}</span>
           <time class="comment-time" datetime="${escapeHtml(comment.created_at)}">${formatTime(comment.created_at)}</time>
         </div>
-        <p class="comment-body">${escapeHtml(displayBody(comment))}</p>
+        <p class="${bodyClass}">${escapeHtml(displayBody(comment))}</p>
       </li>
     `;
   }
@@ -155,6 +172,8 @@
   }
 
   const COMMENT_SELECT_VARIANTS = [
+    'id, content, filtered_content, created_at, user_id, visibility_status, author_nickname, author_avatar_html',
+    'id, content, filtered_content, created_at, user_id, visibility_status, users:user_id ( nickname )',
     'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html',
     'id, content, filtered_content, created_at, user_id, users:user_id ( nickname )',
   ];
@@ -177,11 +196,16 @@
     let lastError = null;
 
     for (let i = 0; i < COMMENT_SELECT_VARIANTS.length; i++) {
-      const { data, error } = await sb
+      let query = sb
         .from('comments')
         .select(COMMENT_SELECT_VARIANTS[i])
-        .eq('post_id', postId)
-        .order('created_at', { ascending: false });
+        .eq('post_id', postId);
+
+      if (COMMENT_SELECT_VARIANTS[i].includes('visibility_status')) {
+        query = query.in('visibility_status', ['visible', 'blinded']);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (!error) {
         return (data || []).map(normalizeCommentRow);
@@ -237,6 +261,11 @@
   async function submitComment(postId, content, panelEl) {
     const text = content.trim();
     if (!text) throw new Error('댓글 내용을 입력해 주세요.');
+
+    if (window.PickleCommentClean?.blockIfBanned(text)) {
+      return;
+    }
+
     if (!window.PickleAuth?.isLoggedIn()) {
       throw new Error('로그인이 필요합니다');
     }
@@ -369,7 +398,8 @@
 
     btn.disabled = true;
     try {
-      await submitComment(postId, text, panel);
+      const created = await submitComment(postId, text, panel);
+      if (!created) return;
       input.value = '';
       if (window.PickleFeed?.showToast) {
         window.PickleFeed.showToast('댓글이 등록되었습니다');

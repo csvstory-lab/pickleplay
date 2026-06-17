@@ -626,7 +626,7 @@
         .from('comments')
         .select('post_id')
         .in('post_id', postIds)
-        .eq('visibility_status', 'visible');
+        .in('visibility_status', ['visible', 'blinded']);
 
       if (result.error) {
         console.warn('[P!CKLE Feed] 댓글 수 조회 실패', result.error);

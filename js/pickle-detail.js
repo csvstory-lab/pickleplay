@@ -524,7 +524,17 @@
 
   function renderCommentItemHtml(comment, options) {
     options = options || {};
-    var body = comment.filtered_content || comment.content || '';
+    var blinded =
+      window.PickleCommentClean && window.PickleCommentClean.isCommentBlinded
+        ? window.PickleCommentClean.isCommentBlinded(comment)
+        : comment.is_blind === true || comment.visibility_status === 'blinded';
+    var body =
+      window.PickleCommentClean && window.PickleCommentClean.getDisplayBody
+        ? window.PickleCommentClean.getDisplayBody(comment)
+        : blinded
+          ? '🚫 관리자 및 규정 위반 신고에 의해 블라인드 처리된 댓글입니다.'
+          : comment.filtered_content || comment.content || '';
+    var textClass = blinded ? 'comment-text comment-text--blinded' : 'comment-text';
     var isReply = !!options.isReply;
     var itemClass = isReply ? 'comment-item comment-item--reply' : 'comment-item';
     var replyMarker = isReply
@@ -550,7 +560,9 @@
       '</span><span style="font-size:0.7rem;color:#71717a;">' +
       escapeHtml(formatCommentTime(comment.created_at)) +
       '</span></div>' +
-      '<div class="comment-text">' +
+      '<div class="' +
+      textClass +
+      '">' +
       escapeHtml(body) +
       '</div>' +
       renderCommentActionsHtml(comment, options) +
@@ -580,6 +592,8 @@
   }
 
   var COMMENT_SELECT_VARIANTS = [
+    'id, content, filtered_content, created_at, user_id, parent_id, like_count, visibility_status, author_nickname, author_avatar_html',
+    'id, content, filtered_content, created_at, user_id, parent_id, like_count, visibility_status, users:user_id ( nickname )',
     'id, content, filtered_content, created_at, user_id, parent_id, like_count, author_nickname, author_avatar_html',
     'id, content, filtered_content, created_at, user_id, parent_id, like_count, users:user_id ( nickname )',
     'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html',
@@ -614,12 +628,16 @@
     var lastError = null;
 
     for (var i = 0; i < COMMENT_SELECT_VARIANTS.length; i++) {
-      var result = await sb
+      var query = sb
         .from('comments')
         .select(COMMENT_SELECT_VARIANTS[i])
-        .eq('post_id', postId)
-        .eq('visibility_status', 'visible')
-        .order('created_at', { ascending: true });
+        .eq('post_id', postId);
+
+      if (COMMENT_SELECT_VARIANTS[i].indexOf('visibility_status') !== -1) {
+        query = query.in('visibility_status', ['visible', 'blinded']);
+      }
+
+      var result = await query.order('created_at', { ascending: true });
 
       if (!result.error) {
         return (result.data || []).map(normalizeCommentRow);
@@ -897,6 +915,10 @@
       return;
     }
 
+    if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(text)) {
+      return;
+    }
+
     replySubmitInFlight = true;
     setReplySubmitButtonsDisabled(true, submitBtn);
 
@@ -1120,6 +1142,10 @@
       return;
     }
 
+    if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(text)) {
+      return;
+    }
+
     if (!currentPostId) {
       alert('불판 정보를 찾을 수 없습니다.');
       return;
@@ -1283,7 +1309,7 @@
       .from('comments')
       .select('id', { count: 'exact', head: true })
       .eq('post_id', postId)
-      .eq('visibility_status', 'visible');
+      .in('visibility_status', ['visible', 'blinded']);
 
     if (result.error) {
       console.warn('[P!CKLE Detail] 댓글 수 조회 실패', result.error);

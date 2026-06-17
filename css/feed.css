@@ -388,6 +388,11 @@
   word-break: break-word;
 }
 
+.comment-body--blinded {
+  color: #71717a;
+  font-weight: 600;
+}
+
 .comments-form {
   display: flex;
   flex-direction: column;
