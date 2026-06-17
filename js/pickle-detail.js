@@ -908,18 +908,20 @@
 
     var inputEl = form.querySelector('.comment-reply-input');
     var submitBtn = form.querySelector('.comment-reply-submit');
-    var text = inputEl ? inputEl.value.trim() : '';
+    var rawText = inputEl ? inputEl.value : '';
 
-    if (!text) {
+    if (!rawText.trim()) {
       alert('답글 내용을 입력해주세요.');
       return;
     }
 
     if (window.PickleCommentClean && window.PickleCommentClean.blockIfBannedAsync) {
-      if (await window.PickleCommentClean.blockIfBannedAsync(text)) return;
-    } else if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(text)) {
+      if (await window.PickleCommentClean.blockIfBannedAsync(rawText)) return;
+    } else if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(rawText)) {
       return;
     }
+
+    var text = rawText.trim();
 
     replySubmitInFlight = true;
     setReplySubmitButtonsDisabled(true, submitBtn);
@@ -1137,18 +1139,20 @@
 
     var inputEl = $('detailCommentInput');
     var submitBtn = $('detailCommentSubmit');
-    var text = inputEl ? inputEl.value.trim() : '';
+    var rawText = inputEl ? inputEl.value : '';
 
-    if (!text) {
+    if (!rawText.trim()) {
       alert('댓글 내용을 입력해주세요.');
       return;
     }
 
     if (window.PickleCommentClean && window.PickleCommentClean.blockIfBannedAsync) {
-      if (await window.PickleCommentClean.blockIfBannedAsync(text)) return;
-    } else if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(text)) {
+      if (await window.PickleCommentClean.blockIfBannedAsync(rawText)) return;
+    } else if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(rawText)) {
       return;
     }
+
+    var text = rawText.trim();
 
     if (!currentPostId) {
       alert('불판 정보를 찾을 수 없습니다.');

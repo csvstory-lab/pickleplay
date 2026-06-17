@@ -10,52 +10,69 @@
   var BLIND_COMMENT_MESSAGE =
     '🚫 관리자 및 규정 위반 신고에 의해 블라인드 처리된 댓글입니다.';
 
-  /** @type {{ term: string, match_mode?: string, entry_type?: string }[]} */
-  var bannedEntries = [];
+  /** @type {string[]} DB에서 불러온 금지어(term) 목록 */
+  var bannedWords = [];
+
+  /** @type {{ term: string, match_mode?: string }[]} URL 패턴 등 regex 전용 */
+  var regexPatterns = [];
+
   var loadPromise = null;
-  var loadDone = false;
+  var loadAttempt = 0;
+  var MAX_LOAD_ATTEMPTS = 3;
 
-  function getBannedTerms() {
-    return bannedEntries
-      .map(function (entry) {
-        return entry && entry.term ? String(entry.term).trim() : '';
-      })
-      .filter(Boolean);
+  function resetLoadState() {
+    loadPromise = null;
   }
 
-  function matchesBannedEntry(text, entry) {
-    if (!entry) return false;
-    var term = entry.term ? String(entry.term).trim() : '';
-    if (!term) return false;
+  function applyBannedRows(rows) {
+    bannedWords = [];
+    regexPatterns = [];
 
-    var normalized = String(text || '');
-    var mode = entry.match_mode || 'contains';
+    (rows || []).forEach(function (row) {
+      if (!row || !row.term) return;
 
-    if (mode === 'exact') {
-      var trimmed = normalized.trim();
-      return trimmed === term || trimmed.toLowerCase() === term.toLowerCase();
-    }
+      var term = String(row.term).trim();
+      if (!term) return;
 
-    if (mode === 'regex') {
-      try {
-        return new RegExp(term, 'i').test(normalized);
-      } catch (err) {
-        console.warn('[P!CKLE CommentClean] 잘못된 regex 패턴:', term, err);
-        return false;
+      var entryType = row.entry_type || 'word';
+
+      if (entryType === 'word') {
+        bannedWords.push(term);
+        return;
       }
-    }
 
-    return normalized.indexOf(term) !== -1;
+      if (entryType === 'url_pattern') {
+        regexPatterns.push({
+          term: term,
+          match_mode: row.match_mode || 'regex',
+        });
+      }
+    });
   }
 
+  /**
+   * 부분 일치(includes) — 공백 제거하지 않은 원본 문자열 기준
+   * @param {string} text
+   */
   function containsBannedWord(text) {
-    var normalized = String(text || '').trim();
-    if (!normalized || !bannedEntries.length) return false;
+    var raw = String(text ?? '');
+    if (!raw) return false;
 
-    for (var i = 0; i < bannedEntries.length; i++) {
-      if (matchesBannedEntry(normalized, bannedEntries[i])) return true;
-    }
-    return false;
+    var hasBannedSubstring = bannedWords.some(function (word) {
+      return word && raw.includes(word);
+    });
+
+    if (hasBannedSubstring) return true;
+
+    return regexPatterns.some(function (entry) {
+      if (!entry || !entry.term) return false;
+      try {
+        return new RegExp(entry.term, 'i').test(raw);
+      } catch (err) {
+        console.warn('[P!CKLE CommentClean] 잘못된 regex 패턴:', entry.term, err);
+        return raw.includes(entry.term);
+      }
+    });
   }
 
   /** @returns {boolean} true면 등록 차단(alert 표시됨) */
@@ -63,6 +80,66 @@
     if (!containsBannedWord(text)) return false;
     alert(CLEAN_RULE_ALERT);
     return true;
+  }
+
+  async function fetchBannedWordsFromDb() {
+    var sb =
+      window.PickleSupabase && window.PickleSupabase.getClient
+        ? window.PickleSupabase.getClient()
+        : null;
+
+    if (!sb) {
+      throw new Error('Supabase 클라이언트 없음');
+    }
+
+    var result = await sb.from('banned_words').select('term, match_mode, entry_type');
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    applyBannedRows(result.data || []);
+  }
+
+  async function loadBannedWords(options) {
+    options = options || {};
+
+    if (loadPromise && !options.force) {
+      return loadPromise;
+    }
+
+    loadPromise = (async function () {
+      loadAttempt += 1;
+
+      try {
+        await fetchBannedWordsFromDb();
+      } catch (err) {
+        console.warn('[P!CKLE CommentClean] 금지어 로드 실패', err);
+        if (!options.keepExisting) {
+          bannedWords = [];
+          regexPatterns = [];
+        }
+      }
+    })();
+
+    return loadPromise;
+  }
+
+  /** 등록 검사 전 반드시 await — 로드 완료·재시도까지 보장 */
+  async function ensureBannedWordsLoaded() {
+    await loadBannedWords();
+
+    while (!bannedWords.length && !regexPatterns.length && loadAttempt < MAX_LOAD_ATTEMPTS) {
+      var hasClient =
+        window.PickleSupabase && typeof window.PickleSupabase.getClient === 'function';
+
+      if (!hasClient) break;
+
+      resetLoadState();
+      await loadBannedWords({ force: true });
+    }
+
+    return bannedWords;
   }
 
   /** @returns {Promise<boolean>} true면 등록 차단(alert 표시됨) */
@@ -82,52 +159,9 @@
     return comment.filtered_content || comment.content || '';
   }
 
-  async function loadBannedWords() {
-    if (loadPromise) return loadPromise;
-
-    loadPromise = (async function () {
-      bannedEntries = [];
-
-      try {
-        var sb =
-          window.PickleSupabase && window.PickleSupabase.getClient
-            ? window.PickleSupabase.getClient()
-            : null;
-
-        if (!sb) {
-          console.warn('[P!CKLE CommentClean] Supabase 클라이언트 없음 — 금지어 목록을 불러오지 못했습니다.');
-          return;
-        }
-
-        var result = await sb.from('banned_words').select('term, match_mode, entry_type');
-
-        if (result.error) {
-          console.warn('[P!CKLE CommentClean] 금지어 로드 실패', result.error);
-          return;
-        }
-
-        bannedEntries = (result.data || []).filter(function (row) {
-          if (!row || !row.term) return false;
-          var type = row.entry_type || 'word';
-          return type === 'word' || type === 'url_pattern';
-        });
-      } catch (err) {
-        console.warn('[P!CKLE CommentClean] 금지어 로드 예외', err);
-      } finally {
-        loadDone = true;
-      }
-    })();
-
-    return loadPromise;
-  }
-
-  function ensureBannedWordsLoaded() {
-    return loadDone ? Promise.resolve() : loadBannedWords();
-  }
-
   window.PickleCommentClean = {
     get BANNED_WORDS() {
-      return getBannedTerms();
+      return bannedWords.slice();
     },
     BLIND_COMMENT_MESSAGE: BLIND_COMMENT_MESSAGE,
     loadBannedWords: loadBannedWords,

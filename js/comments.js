@@ -259,14 +259,16 @@
   }
 
   async function submitComment(postId, content, panelEl) {
-    const text = content.trim();
-    if (!text) throw new Error('댓글 내용을 입력해 주세요.');
+    const raw = String(content ?? '');
+    if (!raw.trim()) throw new Error('댓글 내용을 입력해 주세요.');
 
     if (window.PickleCommentClean?.blockIfBannedAsync) {
-      if (await window.PickleCommentClean.blockIfBannedAsync(text)) return;
-    } else if (window.PickleCommentClean?.blockIfBanned(text)) {
+      if (await window.PickleCommentClean.blockIfBannedAsync(raw)) return;
+    } else if (window.PickleCommentClean?.blockIfBanned(raw)) {
       return;
     }
+
+    const text = raw.trim();
 
     if (!window.PickleAuth?.isLoggedIn()) {
       throw new Error('로그인이 필요합니다');
