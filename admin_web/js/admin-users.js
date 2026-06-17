@@ -1405,7 +1405,17 @@
     bindFilters();
     bindModalTabs();
     await loadCategories();
-    loadUsers();
+    await loadUsers();
+  }
+
+  function runBootstrap() {
+    var nav = window.PickleAdminNav;
+    if (nav && nav.safeInit) {
+      return nav.safeInit('Users', bootstrap);
+    }
+    return bootstrap().catch(function (err) {
+      console.error('[Admin Users] bootstrap failed:', err);
+    });
   }
 
   window.PickleAdminUsers = {
@@ -1425,8 +1435,8 @@
   window.closeUserModal = closeUserModal;
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootstrap);
+    document.addEventListener('DOMContentLoaded', runBootstrap);
   } else {
-    bootstrap();
+    runBootstrap();
   }
 })();

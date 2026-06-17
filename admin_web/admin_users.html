@@ -562,8 +562,8 @@
         <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
         <li class="nav-item active" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
         <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
-        <li class="nav-item" onclick="location.href='admin_board_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
-        <li class="nav-sub-item" onclick="location.href='admin_board_list.html'">· 일반 불판 관리</li>
+        <li class="nav-item" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 스폰(최애) 불판 설정</li>
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
@@ -823,6 +823,7 @@
     </div>
 </div>
 
+<script src="js/admin-nav.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-users.js"></script>
@@ -830,6 +831,10 @@
     async function banUser(nickname) {
         if(!confirm(`[${nickname}] 회원을 즉시 영구 차단하시겠습니까?\n사유: 사안이 중대하여 관리자 직권으로 차단함 (복구 불가)`)) return;
         const FB = window.PickleAdminFirebase;
+        if (!FB || !FB.persistNew) {
+            alert('벌점/차단 기능은 준비 중입니다.');
+            return;
+        }
         await FB.persistNew('user_sanctions', {
             nickname,
             action: 'permanent_ban',

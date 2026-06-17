@@ -748,8 +748,26 @@
   window.unblindPost = unblindPost;
   window.loadPosts = loadPosts;
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function initPostListPage() {
     bindFilterEvents();
-    loadPosts();
+    return loadPosts();
+  }
+
+  function runPostListBootstrap() {
+    var nav = window.PickleAdminNav;
+    if (nav && nav.safeInit) {
+      return nav.safeInit('PostList', initPostListPage);
+    }
+    try {
+      bindFilterEvents();
+      loadPosts();
+    } catch (err) {
+      console.error('[Admin Posts] init failed:', err);
+      showErrorRow(err && err.message ? err.message : '불판 목록 초기화에 실패했습니다.');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    runPostListBootstrap();
   });
 })();
