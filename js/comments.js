@@ -262,7 +262,9 @@
     const text = content.trim();
     if (!text) throw new Error('댓글 내용을 입력해 주세요.');
 
-    if (window.PickleCommentClean?.blockIfBanned(text)) {
+    if (window.PickleCommentClean?.blockIfBannedAsync) {
+      if (await window.PickleCommentClean.blockIfBannedAsync(text)) return;
+    } else if (window.PickleCommentClean?.blockIfBanned(text)) {
       return;
     }
 
