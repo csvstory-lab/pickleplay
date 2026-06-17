@@ -19,6 +19,30 @@
   }
 
   /**
+   * DB에서 금지어(term) 문자열 배열 조회 — 실패 시 빈 배열
+   * @returns {Promise<string[]>}
+   */
+  async function fetchBannedTermsList(client) {
+    var result = await client
+      .from('banned_words')
+      .select('term')
+      .eq('entry_type', 'word');
+
+    if (result.error) {
+      console.error('금지어 로드 실패:', result.error);
+      return [];
+    }
+
+    return (result.data || [])
+      .map(function (item) {
+        return item && item.term != null ? String(item.term).trim() : '';
+      })
+      .filter(function (term) {
+        return Boolean(term);
+      });
+  }
+
+  /**
    * 등록 버튼 클릭 시점에 DB에서 금지어를 즉시 조회해 검사
    * @returns {Promise<boolean>} true면 차단됨(alert 표시, insert 중단)
    */
@@ -30,35 +54,13 @@
     }
 
     var commentTextStr = String(commentText ?? '');
+    var bannedWordsList = await fetchBannedTermsList(client);
 
-    var bannedResult = await client.from('banned_words').select('word');
-    var bannedData = bannedResult.data;
-
-    if (bannedResult.error) {
-      var termResult = await client.from('banned_words').select('term');
-      if (termResult.error) {
-        console.warn('[P!CKLE CommentClean] 금지어 조회 실패', termResult.error);
-        return false;
-      }
-      bannedData = (termResult.data || []).map(function (row) {
-        return { word: row.term };
-      });
-    }
-
-    var bannedWordsList = (bannedData || [])
-      .map(function (item) {
-        return item && item.word != null ? String(item.word).trim() : '';
-      })
-      .filter(function (word) {
-        return Boolean(word);
-      });
-
-    console.log('금지어 목록:', bannedData);
-    console.log('금지어 문자열 배열:', bannedWordsList);
+    console.log('금지어 목록:', bannedWordsList);
     console.log('입력된 댓글:', commentTextStr);
 
-    var blocked = bannedWordsList.some(function (word) {
-      return commentTextStr.includes(word);
+    var blocked = bannedWordsList.some(function (term) {
+      return commentTextStr.includes(term);
     });
 
     if (blocked) {
@@ -83,6 +85,7 @@
   window.PickleCommentClean = {
     BLIND_COMMENT_MESSAGE: BLIND_COMMENT_MESSAGE,
     blockCommentOnSubmit: blockCommentOnSubmit,
+    fetchBannedTermsList: fetchBannedTermsList,
     isCommentBlinded: isCommentBlinded,
     getDisplayBody: getDisplayBody,
   };
