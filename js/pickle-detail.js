@@ -915,10 +915,8 @@
       return;
     }
 
-    if (window.PickleCommentClean && window.PickleCommentClean.blockIfBannedAsync) {
-      if (await window.PickleCommentClean.blockIfBannedAsync(rawText)) return;
-    } else if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(rawText)) {
-      return;
+    if (window.PickleCommentClean && window.PickleCommentClean.blockCommentOnSubmit) {
+      if (await window.PickleCommentClean.blockCommentOnSubmit(rawText)) return;
     }
 
     var text = rawText.trim();
@@ -1146,10 +1144,8 @@
       return;
     }
 
-    if (window.PickleCommentClean && window.PickleCommentClean.blockIfBannedAsync) {
-      if (await window.PickleCommentClean.blockIfBannedAsync(rawText)) return;
-    } else if (window.PickleCommentClean && window.PickleCommentClean.blockIfBanned(rawText)) {
-      return;
+    if (window.PickleCommentClean && window.PickleCommentClean.blockCommentOnSubmit) {
+      if (await window.PickleCommentClean.blockCommentOnSubmit(rawText)) return;
     }
 
     var text = rawText.trim();

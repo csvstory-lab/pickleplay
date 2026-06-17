@@ -262,10 +262,8 @@
     const raw = String(content ?? '');
     if (!raw.trim()) throw new Error('댓글 내용을 입력해 주세요.');
 
-    if (window.PickleCommentClean?.blockIfBannedAsync) {
-      if (await window.PickleCommentClean.blockIfBannedAsync(raw)) return;
-    } else if (window.PickleCommentClean?.blockIfBanned(raw)) {
-      return;
+    if (window.PickleCommentClean?.blockCommentOnSubmit) {
+      if (await window.PickleCommentClean.blockCommentOnSubmit(raw)) return;
     }
 
     const text = raw.trim();

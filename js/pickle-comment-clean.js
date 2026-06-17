@@ -10,142 +10,63 @@
   var BLIND_COMMENT_MESSAGE =
     '🚫 관리자 및 규정 위반 신고에 의해 블라인드 처리된 댓글입니다.';
 
-  /** @type {string[]} DB에서 불러온 금지어(term) 목록 */
-  var bannedWords = [];
-
-  /** @type {{ term: string, match_mode?: string }[]} URL 패턴 등 regex 전용 */
-  var regexPatterns = [];
-
-  var loadPromise = null;
-  var loadAttempt = 0;
-  var MAX_LOAD_ATTEMPTS = 3;
-
-  function resetLoadState() {
-    loadPromise = null;
-  }
-
-  function applyBannedRows(rows) {
-    bannedWords = [];
-    regexPatterns = [];
-
-    (rows || []).forEach(function (row) {
-      if (!row || !row.term) return;
-
-      var term = String(row.term).trim();
-      if (!term) return;
-
-      var entryType = row.entry_type || 'word';
-
-      if (entryType === 'word') {
-        bannedWords.push(term);
-        return;
-      }
-
-      if (entryType === 'url_pattern') {
-        regexPatterns.push({
-          term: term,
-          match_mode: row.match_mode || 'regex',
-        });
-      }
-    });
+  function getSupabaseClient(sb) {
+    if (sb) return sb;
+    if (window.PickleSupabase && window.PickleSupabase.getClient) {
+      return window.PickleSupabase.getClient();
+    }
+    return null;
   }
 
   /**
-   * 부분 일치(includes) — 공백 제거하지 않은 원본 문자열 기준
-   * @param {string} text
+   * 등록 버튼 클릭 시점에 DB에서 금지어를 즉시 조회해 검사
+   * @returns {Promise<boolean>} true면 차단됨(alert 표시, insert 중단)
    */
-  function containsBannedWord(text) {
-    var raw = String(text ?? '');
-    if (!raw) return false;
+  async function blockCommentOnSubmit(commentText, sb) {
+    var client = getSupabaseClient(sb);
+    if (!client) {
+      console.warn('[P!CKLE CommentClean] Supabase 클라이언트 없음 — 금지어 검사 생략');
+      return false;
+    }
 
-    var hasBannedSubstring = bannedWords.some(function (word) {
-      return word && raw.includes(word);
+    var commentTextStr = String(commentText ?? '');
+
+    var bannedResult = await client.from('banned_words').select('word');
+    var bannedData = bannedResult.data;
+
+    if (bannedResult.error) {
+      var termResult = await client.from('banned_words').select('term');
+      if (termResult.error) {
+        console.warn('[P!CKLE CommentClean] 금지어 조회 실패', termResult.error);
+        return false;
+      }
+      bannedData = (termResult.data || []).map(function (row) {
+        return { word: row.term };
+      });
+    }
+
+    var bannedWordsList = (bannedData || [])
+      .map(function (item) {
+        return item && item.word != null ? String(item.word).trim() : '';
+      })
+      .filter(function (word) {
+        return Boolean(word);
+      });
+
+    console.log('금지어 목록:', bannedData);
+    console.log('금지어 문자열 배열:', bannedWordsList);
+    console.log('입력된 댓글:', commentTextStr);
+
+    var blocked = bannedWordsList.some(function (word) {
+      return commentTextStr.includes(word);
     });
 
-    if (hasBannedSubstring) return true;
-
-    return regexPatterns.some(function (entry) {
-      if (!entry || !entry.term) return false;
-      try {
-        return new RegExp(entry.term, 'i').test(raw);
-      } catch (err) {
-        console.warn('[P!CKLE CommentClean] 잘못된 regex 패턴:', entry.term, err);
-        return raw.includes(entry.term);
-      }
-    });
-  }
-
-  /** @returns {boolean} true면 등록 차단(alert 표시됨) */
-  function blockIfBanned(text) {
-    if (!containsBannedWord(text)) return false;
-    alert(CLEAN_RULE_ALERT);
-    return true;
-  }
-
-  async function fetchBannedWordsFromDb() {
-    var sb =
-      window.PickleSupabase && window.PickleSupabase.getClient
-        ? window.PickleSupabase.getClient()
-        : null;
-
-    if (!sb) {
-      throw new Error('Supabase 클라이언트 없음');
+    if (blocked) {
+      alert(CLEAN_RULE_ALERT);
+      return true;
     }
 
-    var result = await sb.from('banned_words').select('term, match_mode, entry_type');
-
-    if (result.error) {
-      throw result.error;
-    }
-
-    applyBannedRows(result.data || []);
-  }
-
-  async function loadBannedWords(options) {
-    options = options || {};
-
-    if (loadPromise && !options.force) {
-      return loadPromise;
-    }
-
-    loadPromise = (async function () {
-      loadAttempt += 1;
-
-      try {
-        await fetchBannedWordsFromDb();
-      } catch (err) {
-        console.warn('[P!CKLE CommentClean] 금지어 로드 실패', err);
-        if (!options.keepExisting) {
-          bannedWords = [];
-          regexPatterns = [];
-        }
-      }
-    })();
-
-    return loadPromise;
-  }
-
-  /** 등록 검사 전 반드시 await — 로드 완료·재시도까지 보장 */
-  async function ensureBannedWordsLoaded() {
-    await loadBannedWords();
-
-    while (!bannedWords.length && !regexPatterns.length && loadAttempt < MAX_LOAD_ATTEMPTS) {
-      var hasClient =
-        window.PickleSupabase && typeof window.PickleSupabase.getClient === 'function';
-
-      if (!hasClient) break;
-
-      resetLoadState();
-      await loadBannedWords({ force: true });
-    }
-
-    return bannedWords;
-  }
-
-  /** @returns {Promise<boolean>} true면 등록 차단(alert 표시됨) */
-  async function blockIfBannedAsync(text) {
-    await ensureBannedWordsLoaded();
-    return blockIfBanned(text);
+    return false;
   }
 
   function isCommentBlinded(comment) {
@@ -160,18 +81,9 @@
   }
 
   window.PickleCommentClean = {
-    get BANNED_WORDS() {
-      return bannedWords.slice();
-    },
     BLIND_COMMENT_MESSAGE: BLIND_COMMENT_MESSAGE,
-    loadBannedWords: loadBannedWords,
-    ensureBannedWordsLoaded: ensureBannedWordsLoaded,
-    containsBannedWord: containsBannedWord,
-    blockIfBanned: blockIfBanned,
-    blockIfBannedAsync: blockIfBannedAsync,
+    blockCommentOnSubmit: blockCommentOnSubmit,
     isCommentBlinded: isCommentBlinded,
     getDisplayBody: getDisplayBody,
   };
-
-  loadBannedWords();
 })();
