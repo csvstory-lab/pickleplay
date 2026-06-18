@@ -1575,6 +1575,250 @@
     }
   }
 
+  function formatPenaltyLogDate(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  }
+
+  function pad2(n) {
+    return n < 10 ? '0' + n : String(n);
+  }
+
+  function isRestrictionActive(userData) {
+    return Boolean(
+      userData &&
+        userData.restricted_until &&
+        new Date(userData.restricted_until) > new Date()
+    );
+  }
+
+  function formatPanelAccountStatus(userData) {
+    if (userData && userData.is_banned) {
+      return { text: '[영구 차단]', color: 'var(--alert-red)' };
+    }
+    if (isRestrictionActive(userData)) {
+      var end = new Date(userData.restricted_until);
+      return {
+        text:
+          '[' +
+          pad2(end.getMonth() + 1) +
+          '월 ' +
+          pad2(end.getDate()) +
+          '일까지 정지]',
+        color: 'var(--alert-red)',
+      };
+    }
+    return { text: '[정상 활동 가능]', color: 'var(--neon-green)' };
+  }
+
+  function updateMenuPenaltyStatus(points, userData) {
+    var menuEl = document.getElementById('menuPenaltyStatus');
+    if (!menuEl) return;
+
+    var label = '[정상]';
+    var bg = 'rgba(57,255,20,0.15)';
+    var color = 'var(--neon-green)';
+
+    if (userData && userData.is_banned) {
+      label = '[차단]';
+      bg = 'rgba(255,51,51,0.2)';
+      color = 'var(--alert-red)';
+    } else if (isRestrictionActive(userData) || points >= 30) {
+      label = '[제한]';
+      bg = 'rgba(255,51,51,0.2)';
+      color = 'var(--alert-red)';
+    } else if (points >= 10) {
+      label = '[경고]';
+      bg = 'rgba(255,204,0,0.2)';
+      color = 'var(--theme-gold)';
+    }
+
+    menuEl.textContent = label;
+    menuEl.style.background = bg;
+    menuEl.style.color = color;
+  }
+
+  async function refreshNotiCountBadge(userId) {
+    var badgeEl = document.getElementById('notiCountBadge');
+    if (!badgeEl) return 0;
+
+    if (!userId) {
+      badgeEl.textContent = '';
+      badgeEl.classList.remove('is-visible');
+      return 0;
+    }
+
+    try {
+      var sb = getSupabaseClient();
+      var result = await sb
+        .from('penalty_logs')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+
+      if (result.error) {
+        console.warn('[P!CKLE Mypage] noti badge count failed', result.error);
+        badgeEl.textContent = '';
+        badgeEl.classList.remove('is-visible');
+        return 0;
+      }
+
+      var count = result.count || 0;
+      if (count > 0) {
+        badgeEl.textContent = count > 99 ? '99+' : String(count);
+        badgeEl.classList.add('is-visible');
+        var bell = badgeEl.closest('.noti-bell');
+        if (bell) {
+          bell.setAttribute('aria-label', '읽지 않은 제재 알림 ' + count + '건');
+        }
+      } else {
+        badgeEl.textContent = '';
+        badgeEl.classList.remove('is-visible');
+        var bellClear = badgeEl.closest('.noti-bell');
+        if (bellClear) {
+          bellClear.setAttribute('aria-label', '알림');
+        }
+      }
+
+      return count;
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] noti badge refresh failed', err);
+      badgeEl.textContent = '';
+      badgeEl.classList.remove('is-visible');
+      return 0;
+    }
+  }
+
+  function renderPenaltyDashboard(points, userData) {
+    var pointsEl = document.getElementById('myPenaltyPoints');
+    if (pointsEl) {
+      pointsEl.innerHTML = points + ' <span style="font-size:1rem;">점</span>';
+    }
+
+    var barFillEl = document.getElementById('myPenaltyBarFill');
+    if (barFillEl) {
+      barFillEl.style.width = Math.min(points, 100) + '%';
+    }
+
+    var statusTextEl = document.getElementById('myAccountStatusText');
+    if (statusTextEl) {
+      var panelStatus = formatPanelAccountStatus(userData);
+      statusTextEl.innerText = panelStatus.text;
+      statusTextEl.style.color = panelStatus.color;
+    }
+
+    updateMenuPenaltyStatus(points, userData);
+  }
+
+  function renderPenaltyHistory(logHistory) {
+    var listBody = document.getElementById('myPenaltyListBody');
+    if (!listBody) return;
+
+    if (!logHistory || logHistory.length === 0) {
+      listBody.innerHTML =
+        '<div style="padding:25px; color:#71717a; text-align:center; font-weight:700;">제재 내역이 없는 클린 신용 등급 계정입니다. 😊</div>';
+      return;
+    }
+
+    listBody.innerHTML = '';
+    logHistory.forEach(function (log) {
+      var item = document.createElement('div');
+      item.className = 'history-item';
+      item.style.marginBottom = '10px';
+
+      var pointsAdded = Number(log.points_added) || 0;
+      var badgeStyle =
+        pointsAdded === 0
+          ? 'color:var(--neon-green); background:rgba(57,255,20,0.1);'
+          : '';
+
+      item.innerHTML =
+        '<div>' +
+        '<div class="hi-title">' +
+        escapeHtml(log.reason || log.penalty_type || '제재') +
+        '</div>' +
+        '<div class="hi-date">' +
+        escapeHtml(formatPenaltyLogDate(log.created_at)) +
+        '</div>' +
+        '</div>' +
+        '<span class="hi-badge" style="' +
+        badgeStyle +
+        '">' +
+        escapeHtml(log.penalty_type || '제재') +
+        ' (+' +
+        pointsAdded +
+        '점)</span>';
+
+      listBody.appendChild(item);
+    });
+  }
+
+  async function markPenaltyLogsRead(sb, userId) {
+    if (!sb || !userId) return;
+
+    var markReadResult = await sb
+      .from('penalty_logs')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (markReadResult.error) {
+      console.warn('[P!CKLE Mypage] penalty is_read update failed', markReadResult.error);
+    }
+  }
+
+  async function syncPenaltyDashboard(options) {
+    options = options || {};
+    var user = currentUser;
+    if (!user || !user.id) return;
+
+    try {
+      var sb = getSupabaseClient();
+
+      if (options.markPenaltyRead) {
+        await markPenaltyLogsRead(sb, user.id);
+      }
+
+      var userResult = await sb
+        .from('users')
+        .select('penalty_points, restricted_until, is_banned')
+        .eq('id', user.id)
+        .single();
+
+      if (userResult.error) {
+        console.warn('[P!CKLE Mypage] penalty user fetch failed', userResult.error);
+      } else if (userResult.data) {
+        var points = Number(userResult.data.penalty_points) || 0;
+        renderPenaltyDashboard(points, userResult.data);
+      }
+
+      var historyResult = await sb
+        .from('penalty_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (historyResult.error) {
+        console.warn('[P!CKLE Mypage] penalty history fetch failed', historyResult.error);
+        var listBody = document.getElementById('myPenaltyListBody');
+        if (listBody) {
+          listBody.innerHTML =
+            '<div style="padding:25px; color:#71717a; text-align:center; font-weight:700;">제재 내역을 불러오지 못했습니다.</div>';
+        }
+      } else {
+        renderPenaltyHistory(historyResult.data || []);
+      }
+    } catch (err) {
+      console.error('[P!CKLE Mypage] penalty sync failed', err);
+    } finally {
+      await refreshNotiCountBadge(user.id);
+    }
+  }
+
   async function initMypage() {
     try {
       var b = window.PickleSupabaseBootstrap;
@@ -1617,6 +1861,7 @@
         loadVotedPosts(user.id),
       ]);
       mypageTabLoaded.voted = true;
+      await syncPenaltyDashboard();
     } catch (err) {
       handleMypageError(err, '마이페이지를 불러오지 못했습니다.');
     }
@@ -1633,6 +1878,8 @@
     loadCommentedPosts: loadCommentedPosts,
     loadSavedCoupons: loadSavedCoupons,
     onTabSwitch: onTabSwitch,
+    syncPenaltyDashboard: syncPenaltyDashboard,
+    refreshNotiCountBadge: refreshNotiCountBadge,
     copyPinToClipboard: copyPinToClipboard,
     openPostEditPanel: openPostEditPanel,
     closePostEditPanel: closePostEditPanel,
@@ -1650,23 +1897,41 @@
     if (window.PickleAuth && window.PickleAuth.ensureAuthenticated) {
       window.PickleAuth.ensureAuthenticated({ forceRefresh: true })
         .then(function (auth) {
-          if (auth && auth.user) return renderProfile(auth.user);
+          if (auth && auth.user) {
+            return renderProfile(auth.user).then(function () {
+              return syncPenaltyDashboard();
+            });
+          }
         })
         .catch(function (err) {
           console.warn('[P!CKLE Mypage] OAuth 후 프로필 렌더', err);
         });
       return;
     }
-    renderProfile(session.user).catch(function (err) {
-      console.warn('[P!CKLE Mypage] OAuth 후 프로필 렌더', err);
-    });
+    renderProfile(session.user)
+      .then(function () {
+        return syncPenaltyDashboard();
+      })
+      .catch(function (err) {
+        console.warn('[P!CKLE Mypage] OAuth 후 프로필 렌더', err);
+      });
   });
 
   window.addEventListener('pickle-auth-ready', function (ev) {
     if (currentUser || !ev.detail || !ev.detail.user) return;
-    renderProfile(ev.detail.user).catch(function (err) {
-      console.warn('[P!CKLE Mypage] auth-ready 프로필 렌더', err);
-    });
+    renderProfile(ev.detail.user)
+      .then(function () {
+        return syncPenaltyDashboard();
+      })
+      .catch(function (err) {
+        console.warn('[P!CKLE Mypage] auth-ready 프로필 렌더', err);
+      });
+  });
+
+  document.addEventListener('pickle:penalty-log-insert', function () {
+    if (!currentUser || !currentUser.id) return;
+    syncPenaltyDashboard();
+    refreshNotiCountBadge(currentUser.id);
   });
 
   document.addEventListener('DOMContentLoaded', function () {

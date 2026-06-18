@@ -8,7 +8,10 @@
   var postCache = null;
   var commentsCache = [];
   var categoriesMap = {};
-  var MIN_LOADING_MS = 500;
+  var COMMENT_PENALTY_POINTS = 10;
+  var PENALTY_RESTRICT_THRESHOLD = 30;
+  var PENALTY_BAN_THRESHOLD = 50;
+  var RESTRICT_DAYS = 3;
   var loadStartedAt = 0;
 
   function $(id) {
@@ -292,8 +295,14 @@
     );
   }
 
+  function isCommentBlinded(comment) {
+    if (!comment) return false;
+    if (comment.is_blind === true) return true;
+    return comment.visibility_status === 'blinded';
+  }
+
   function renderCommentRow(comment, post) {
-    var blinded = comment.visibility_status === 'blinded';
+    var blinded = isCommentBlinded(comment);
     var deleted = comment.visibility_status === 'deleted';
     var rowStyle = blinded
       ? ' style="opacity:0.6;background-color:rgba(255,0,127,0.03);"'
@@ -471,7 +480,7 @@
     return sb
       .from('comments')
       .select(
-        'id, user_id, post_id, content, filtered_content, visibility_status, created_at, author_nickname, author_avatar_html, users:user_id(nickname, avatar_html)'
+        'id, user_id, post_id, content, filtered_content, visibility_status, is_blind, created_at, author_nickname, author_avatar_html, users:user_id(nickname, avatar_html)'
       )
       .eq('post_id', id)
       .order('created_at', { ascending: false });
@@ -628,13 +637,158 @@
     renderPostSummary(postCache, stats);
   }
 
+  async function blindCommentInDb(sb, commentId) {
+    var updateResult = await sb
+      .from('comments')
+      .update({ is_blind: true, visibility_status: 'blinded' })
+      .eq('id', commentId)
+      .select('id, is_blind, visibility_status')
+      .maybeSingle();
+
+    if (!updateResult.error && updateResult.data) {
+      return { error: null };
+    }
+
+    return setCommentVisibility(commentId, 'blinded');
+  }
+
+  /**
+   * 3단계: 벌점 +10 후 누적 30점 이상 → restricted_until (+3일)
+   */
+  async function applyUserPenaltyAndRestrictions(sb, userId, penaltyPoints, reason) {
+    var userFetch = await sb
+      .from('users')
+      .select('id, penalty_points')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (userFetch.error || !userFetch.data) {
+      return { error: userFetch.error || { message: '회원 정보를 찾을 수 없습니다.' } };
+    }
+
+    var currentPoints = Number(userFetch.data.penalty_points) || 0;
+    var newTotal = currentPoints + penaltyPoints;
+    var userPatch = {
+      penalty_points: newTotal,
+      updated_at: new Date().toISOString(),
+    };
+    var restrictedUntilIso = null;
+
+    if (newTotal >= PENALTY_BAN_THRESHOLD) {
+      userPatch.is_banned = true;
+      userPatch.account_status = 'suspended';
+    } else if (newTotal >= PENALTY_RESTRICT_THRESHOLD) {
+      restrictedUntilIso = new Date(
+        Date.now() + RESTRICT_DAYS * 24 * 60 * 60 * 1000
+      ).toISOString();
+      userPatch.restricted_until = restrictedUntilIso;
+    }
+
+    var userUpdate = await sb.from('users').update(userPatch).eq('id', userId);
+    if (userUpdate.error) {
+      return { error: userUpdate.error };
+    }
+
+    var penaltyLog = await sb.from('user_penalties').insert({
+      user_id: userId,
+      reason: reason,
+      penalty_points: penaltyPoints,
+      source_type: 'admin',
+    });
+
+    if (penaltyLog.error) {
+      console.warn('[Admin Post Detail] user_penalties insert failed', penaltyLog.error);
+    }
+
+    return {
+      error: null,
+      data: {
+        penalty_added: penaltyPoints,
+        penalty_total: newTotal,
+        restricted_until: restrictedUntilIso,
+        is_banned: newTotal >= PENALTY_BAN_THRESHOLD,
+      },
+    };
+  }
+
+  /**
+   * 클린 2·3단계: 댓글 블라인드(is_blind) + 작성자 벌점 +10 + 누적 30점 3일 정지
+   */
+  async function applyCommentPenalty(commentId, options) {
+    options = options || {};
+    var penaltyPoints = COMMENT_PENALTY_POINTS;
+    var reason = options.reason || '댓글 규정 위반 (관리자 제재)';
+
+    var comment = commentsCache.find(function (c) {
+      return c.id === commentId;
+    });
+    if (!comment) {
+      return { error: { message: '댓글 정보를 찾을 수 없습니다.' } };
+    }
+    if (!comment.user_id) {
+      return { error: { message: '댓글 작성자 정보가 없습니다.' } };
+    }
+
+    var sb = getSupabaseClient();
+
+    var rpc = await sb.rpc('admin_apply_comment_penalty', {
+      p_comment_id: commentId,
+      p_penalty_points: penaltyPoints,
+      p_reason: reason,
+    });
+
+    if (!rpc.error && rpc.data && rpc.data.ok === true) {
+      comment.is_blind = true;
+      comment.visibility_status = 'blinded';
+      return { error: null, data: rpc.data };
+    }
+
+    if (rpc.error) {
+      console.warn('[Admin Post Detail] admin_apply_comment_penalty RPC fallback', rpc.error);
+    }
+
+    var blindResult = await blindCommentInDb(sb, commentId);
+    if (blindResult.error) {
+      return { error: blindResult.error };
+    }
+
+    var penaltyResult = await applyUserPenaltyAndRestrictions(
+      sb,
+      comment.user_id,
+      penaltyPoints,
+      reason
+    );
+    if (penaltyResult.error) {
+      return { error: penaltyResult.error };
+    }
+
+    comment.is_blind = true;
+    comment.visibility_status = 'blinded';
+
+    return {
+      error: null,
+      data: {
+        ok: true,
+        comment_id: commentId,
+        user_id: comment.user_id,
+        is_blind: true,
+        penalty_added: penaltyResult.data.penalty_added,
+        penalty_total: penaltyResult.data.penalty_total,
+        restricted_until: penaltyResult.data.restricted_until,
+        is_banned: penaltyResult.data.is_banned,
+      },
+    };
+  }
+
   async function blindComment(btn) {
     var username = (btn && btn.getAttribute('data-nickname')) || '유저';
     if (
       !confirm(
         '[' +
           username +
-          '] 유저의 댓글을 즉시 숨김(블라인드) 처리하시겠습니까?\n\n※ 확인 시, 해당 댓글은 모든 유저에게 가려집니다.'
+          '] 유저의 댓글에 벌점 ' +
+          COMMENT_PENALTY_POINTS +
+          '점을 부과하고 블라인드 처리하시겠습니까?\n\n※ 확인 시 댓글이 숨김 처리되고, 누적 벌점에 따라 자동 제재(3일 정지/영구 차단)가 적용됩니다.'
       )
     ) {
       return;
@@ -645,16 +799,34 @@
       (row && row.getAttribute('data-comment-id'));
     if (!commentId) return;
 
-    var result = await setCommentVisibility(commentId, 'blinded');
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    var result = await applyCommentPenalty(commentId);
+    btn.disabled = false;
+
     if (result.error) {
-      alert('댓글 숨김 처리에 실패했습니다: ' + (result.error.message || '알 수 없는 오류'));
+      alert('제재 처리에 실패했습니다: ' + (result.error.message || '알 수 없는 오류'));
       return;
     }
 
-    var comment = commentsCache.find(function (c) {
-      return c.id === commentId;
-    });
-    if (comment) comment.visibility_status = 'blinded';
+    var summary = result.data || {};
+    var msg =
+      '제재가 적용되었습니다.\n' +
+      '- 댓글 블라인드 처리 (is_blind: true)\n' +
+      '- 벌점 +' +
+      (summary.penalty_added != null ? summary.penalty_added : COMMENT_PENALTY_POINTS) +
+      '점 (누적 ' +
+      (summary.penalty_total != null ? summary.penalty_total : '—') +
+      '점)';
+    if (summary.restricted_until) {
+      msg += '\n- 3일 기능 정지 적용 (restricted_until)';
+    }
+    if (summary.is_banned) {
+      msg += '\n- 영구 정지 적용 (is_banned)';
+    }
+    alert(msg);
+
     renderCommentList(commentsCache, postCache);
   }
 
@@ -678,6 +850,7 @@
   }
 
   window.blindComment = blindComment;
+  window.applyCommentPenalty = applyCommentPenalty;
   window.restoreComment = restoreComment;
   window.loadPostDetail = loadPostDetail;
 

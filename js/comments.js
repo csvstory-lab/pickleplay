@@ -259,25 +259,41 @@
   }
 
   async function submitComment(postId, content, panelEl) {
-    const raw = String(content ?? '');
-    if (!raw.trim()) throw new Error('댓글 내용을 입력해 주세요.');
+    const sb = window.PickleSupabase.getClient();
+    const authResult = await sb.auth.getUser();
+    const currentUser = authResult.data?.user;
 
-    if (window.PickleCommentClean?.blockCommentOnSubmit) {
-      if (await window.PickleCommentClean.blockCommentOnSubmit(raw)) return;
+    if (currentUser && window.PickleUserSanction?.checkCommentSubmitSanction) {
+      const sanctionCheck = await window.PickleUserSanction.checkCommentSubmitSanction(
+        currentUser,
+        sb
+      );
+      if (sanctionCheck.blocked) return;
     }
 
-    const text = raw.trim();
+    const raw = String(content ?? '');
+    if (!raw.trim()) throw new Error('댓글 내용을 입력해 주세요.');
 
     if (!window.PickleAuth?.isLoggedIn()) {
       throw new Error('로그인이 필요합니다');
     }
 
-    const sb = window.PickleSupabase.getClient();
-    const authResult = await sb.auth.getUser();
-    const user = authResult.data?.user;
+    const user = currentUser || authResult.data?.user;
     if (!user) {
       throw new Error('로그인이 필요합니다');
     }
+
+    let prepared = { ok: true, text: raw.trim(), wasMasked: false };
+    if (window.PickleCommentClean?.prepareCommentForInsert) {
+      prepared = await window.PickleCommentClean.prepareCommentForInsert(raw, sb);
+      if (!prepared.ok) return;
+    } else if (window.PickleCommentClean?.blockCommentOnSubmit) {
+      if (await window.PickleCommentClean.blockCommentOnSubmit(raw, sb)) return;
+      prepared.text = raw.trim();
+    }
+
+    const text = prepared.text;
+    const wasMasked = Boolean(prepared.wasMasked);
 
     const authorSnapshot = extractCommentAuthorSnapshot(user);
     const insertPayload = {
@@ -285,7 +301,7 @@
       post_id: postId,
       content: text,
       filtered_content: text,
-      ai_filter_status: 'passed',
+      ai_filter_status: wasMasked ? 'masked' : 'passed',
       visibility_status: 'visible',
       author_nickname: authorSnapshot.author_nickname,
       author_avatar_html: authorSnapshot.author_avatar_html,

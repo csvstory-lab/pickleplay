@@ -915,11 +915,26 @@
       return;
     }
 
-    if (window.PickleCommentClean && window.PickleCommentClean.blockCommentOnSubmit) {
-      if (await window.PickleCommentClean.blockCommentOnSubmit(rawText)) return;
+    var supabase = window.PickleSupabase.getClient();
+    var prepared = { ok: true, text: rawText.trim(), wasMasked: false };
+    if (window.PickleCommentClean && window.PickleCommentClean.prepareCommentForInsert) {
+      prepared = await window.PickleCommentClean.prepareCommentForInsert(rawText, supabase);
+      if (!prepared.ok) return;
+    } else if (window.PickleCommentClean && window.PickleCommentClean.blockCommentOnSubmit) {
+      if (await window.PickleCommentClean.blockCommentOnSubmit(rawText, supabase)) return;
+      prepared.text = rawText.trim();
     }
 
-    var text = rawText.trim();
+    var text = prepared.text;
+
+    var currentUser = await getAuthUserForAction();
+    if (currentUser && window.PickleUserSanction && window.PickleUserSanction.checkCommentSubmitSanction) {
+      var sanctionCheck = await window.PickleUserSanction.checkCommentSubmitSanction(
+        currentUser,
+        supabase
+      );
+      if (sanctionCheck.blocked) return;
+    }
 
     replySubmitInFlight = true;
     setReplySubmitButtonsDisabled(true, submitBtn);
@@ -940,7 +955,7 @@
         parent_id: parentId,
         content: text,
         filtered_content: text,
-        ai_filter_status: 'passed',
+        ai_filter_status: prepared.wasMasked ? 'masked' : 'passed',
         visibility_status: 'visible',
         author_nickname: authorSnapshot.author_nickname,
         author_avatar_html: authorSnapshot.author_avatar_html,
@@ -1144,11 +1159,46 @@
       return;
     }
 
-    if (window.PickleCommentClean && window.PickleCommentClean.blockCommentOnSubmit) {
-      if (await window.PickleCommentClean.blockCommentOnSubmit(rawText)) return;
+    var supabase = window.PickleSupabase.getClient();
+    if (window.PickleCommentClean && window.PickleCommentClean.prepareCommentForInsert) {
+      var commentPrepared = await window.PickleCommentClean.prepareCommentForInsert(
+        rawText,
+        supabase
+      );
+      if (!commentPrepared.ok) return;
+    } else if (window.PickleCommentClean && window.PickleCommentClean.blockCommentOnSubmit) {
+      if (await window.PickleCommentClean.blockCommentOnSubmit(rawText, supabase)) return;
+      var commentPrepared = { ok: true, text: rawText.trim(), wasMasked: false };
+    } else {
+      var commentPrepared = { ok: true, text: rawText.trim(), wasMasked: false };
     }
 
-    var text = rawText.trim();
+    var text = commentPrepared.text;
+
+    var currentUser = await getAuthUserForAction();
+
+    if (currentUser) {
+      var sanctionQuery = await supabase
+        .from('users')
+        .select('is_banned, restricted_until')
+        .eq('id', currentUser.id)
+        .single();
+      var userData = sanctionQuery.data;
+
+      if (userData && userData.is_banned === true) {
+        alert('클린 가이드 위반으로 제재된 계정입니다.');
+        return;
+      }
+
+      if (
+        userData &&
+        userData.restricted_until &&
+        new Date(userData.restricted_until) > new Date()
+      ) {
+        alert('클린 가이드 위반으로 제재된 계정입니다.');
+        return;
+      }
+    }
 
     if (!currentPostId) {
       alert('불판 정보를 찾을 수 없습니다.');
@@ -1190,7 +1240,7 @@
         post_id: currentPostId,
         content: text,
         filtered_content: text,
-        ai_filter_status: 'passed',
+        ai_filter_status: commentPrepared.wasMasked ? 'masked' : 'passed',
         visibility_status: 'visible',
         author_nickname: authorSnapshot.author_nickname,
         author_avatar_html: authorSnapshot.author_avatar_html,

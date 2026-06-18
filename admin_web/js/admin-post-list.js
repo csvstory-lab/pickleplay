@@ -12,9 +12,13 @@
   /** @type {Array<{slug:string,name:string}>} */
   var categoriesList = [];
   var voteStatsCache = new Map();
+  /** @type {Map<string, number>} post_id → comments 테이블 실시간 count */
+  var commentCountsCache = new Map();
 
   var POST_SELECT =
     'id, title, category, option_a_name, option_b_name, author_id, author_nickname, visibility_status, created_at, expires_at, vote_count, comment_count, share_count, users:author_id(nickname)';
+
+  var COMMENT_COUNT_CHUNK = 40;
 
   var BADGE_COLOR_PALETTE = [
     { bg: 'rgba(0, 240, 255, 0.12)', border: 'rgba(0, 240, 255, 0.4)', color: '#7dd3fc' },
@@ -51,6 +55,26 @@
 
   function formatNumber(n) {
     return Number(n || 0).toLocaleString('ko-KR');
+  }
+
+  function resolveShareCount(post) {
+    if (!post) return 0;
+    return Number(post.shares_count ?? post.share_count) || 0;
+  }
+
+  function resolveCommentCount(post) {
+    if (!post) return 0;
+    if (commentCountsCache.has(post.id)) {
+      return commentCountsCache.get(post.id) || 0;
+    }
+    return Number(post.comment_count) || 0;
+  }
+
+  function applyEngagementFieldsToPost(post) {
+    if (!post) return;
+    post.comment_count = resolveCommentCount(post);
+    post.shares_count = resolveShareCount(post);
+    post.share_count = post.shares_count;
   }
 
   function formatPostId(id) {
@@ -312,7 +336,13 @@
     var postIds = allPosts.map(function (p) {
       return p.id;
     });
-    voteStatsCache = await fetchVoteStatsMap(sb, postIds);
+    var statsResults = await Promise.all([
+      fetchVoteStatsMap(sb, postIds),
+      fetchCommentCountsMap(sb, postIds),
+    ]);
+    voteStatsCache = statsResults[0];
+    commentCountsCache = statsResults[1];
+    allPosts.forEach(applyEngagementFieldsToPost);
 
     renderFilteredPosts(getFilterValues());
     window.allPosts = allPosts;
@@ -547,14 +577,17 @@
       '>' +
       escapeHtml(resolvePostTitle(post)) +
       '</span>' +
-      '<span class="post-author">작성자: ' +
+      '<span class="post-author">' +
+      '<span>작성자: ' +
       escapeHtml(resolveAuthorName(post)) +
-      ' <span style="margin:0 5px;">|</span> ' +
+      '</span>' +
+      '<span style="margin:0 5px; color:#3f3f46;">|</span>' +
       '<span class="meta-stat">💬 참견 ' +
-      formatNumber(post.comment_count) +
-      '</span> <span style="margin:0 5px;">|</span> ' +
+      formatNumber(resolveCommentCount(post)) +
+      '</span>' +
+      '<span style="margin:0 5px; color:#3f3f46;">|</span>' +
       '<span class="meta-share">🔗 공유 ' +
-      formatNumber(post.share_count) +
+      formatNumber(resolveShareCount(post)) +
       '</span></span>' +
       '</td>' +
       '<td>' +
@@ -635,6 +668,39 @@
     return map;
   }
 
+  async function fetchCommentCountsMap(sb, postIds) {
+    var map = new Map();
+    if (!postIds.length) return map;
+
+    postIds.forEach(function (id) {
+      map.set(id, 0);
+    });
+
+    try {
+      for (var i = 0; i < postIds.length; i += COMMENT_COUNT_CHUNK) {
+        var chunk = postIds.slice(i, i + COMMENT_COUNT_CHUNK);
+        var results = await Promise.all(
+          chunk.map(function (postId) {
+            return sb
+              .from('comments')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', postId);
+          })
+        );
+        chunk.forEach(function (postId, idx) {
+          var res = results[idx];
+          if (res && !res.error) {
+            map.set(postId, res.count || 0);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[Admin Posts] comment counts fetch failed', err);
+    }
+
+    return map;
+  }
+
   async function loadPosts() {
     showLoadingRow();
     try {
@@ -699,6 +765,7 @@
 
     post.visibility_status = visibilityStatus;
     post.status = visibilityStatus;
+    applyEngagementFieldsToPost(post);
 
     var row = btn.closest('tr');
     if (!row) return;

@@ -416,6 +416,20 @@
    * @param {string|null} [preloadedThumbnailUrl] — create.html에서 선업로드한 URL
    */
   async function submitPost(buildMediaPayload, getThumbnailFile, preloadedThumbnailUrl) {
+    var formData = collectFormData();
+    var sbForFilter = null;
+    try {
+      sbForFilter = getClient();
+    } catch (filterClientErr) {
+      console.warn('[P!CKLE Create] 금칙어 검사용 Supabase 클라이언트 준비 실패', filterClientErr);
+    }
+    if (
+      window.PickleCommentClean &&
+      (await window.PickleCommentClean.blockPostOnSubmit(formData, sbForFilter))
+    ) {
+      return { cancelled: true };
+    }
+
     var auth = null;
     if (window.PickleAuth?.ensureAuthenticated) {
       auth = await window.PickleAuth.ensureAuthenticated({ timeoutMs: 5000 });
@@ -444,7 +458,13 @@
 
     var sb = getClient();
 
-    var formData = collectFormData();
+    if (
+      window.PickleUserSanction &&
+      (await window.PickleUserSanction.blockIfUserSanctioned(user.id, sb))
+    ) {
+      return { cancelled: true };
+    }
+
     if (!formData.categoryLabel || !formData.categorySlug) {
       alert('"어느 전장으로 갈까요?"를 선택해주세요.');
       return { cancelled: true };

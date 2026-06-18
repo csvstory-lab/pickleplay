@@ -1,15 +1,12 @@
 /**
- * P!CKLE — 알림 (Supabase notifications 연동)
- *
- * · 종 아이콘 빨간 점 · notifications.html · Realtime 배지 갱신
- * · comment 알림: DB 트리거 즉시 생성
- * · end / honor 알림: pg_cron 1분 배치 (최대 1분 지연 — 서비스 정책상 허용)
+ * P!CKLE — 알림 (Supabase notifications + 제재 내역 통합 연동판 완결본)
  */
 (function () {
   'use strict';
 
   var STYLE_ID = 'pickle-notifications-styles';
   var boundBells = false;
+  var bellInitialized = false;
   var realtimeChannel = null;
   var realtimeUserId = null;
 
@@ -22,12 +19,11 @@
     mypick: { icon: '✔️', css: 'type-mypick' },
     result: { icon: '🏆', css: 'type-result' },
     system: { icon: '📢', css: 'type-system' },
+    penalty: { icon: '🚨', css: 'type-penalty' } // 💡 제재 알림 아이콘
   };
 
   function getClient() {
-    if (!window.PickleSupabase || !window.PickleSupabase.getClient) {
-      return null;
-    }
+    if (!window.PickleSupabase || !window.PickleSupabase.getClient) return null;
     return window.PickleSupabase.getClient();
   }
 
@@ -41,24 +37,31 @@
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
-
     var style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent =
       '.noti-bell::after { content: none !important; display: none !important; }' +
       '.noti-bell.noti-bell--unread::after {' +
-      '  content: "" !important;' +
-      '  display: block !important;' +
+      '  content: attr(data-unread-count) !important;' +
+      '  display: flex !important;' +
+      '  align-items: center;' +
+      '  justify-content: center;' +
       '  position: absolute;' +
-      '  top: 0;' +
-      '  right: 0;' +
-      '  width: 10px;' +
-      '  height: 10px;' +
+      '  top: -5px;' +
+      '  right: -7px;' +
+      '  min-width: 17px;' +
+      '  height: 17px;' +
+      '  padding: 0 4px;' +
       '  background: #ff0033;' +
-      '  border-radius: 50%;' +
+      '  color: #fff;' +
+      '  font-size: 0.58rem;' +
+      '  font-weight: 900;' +
+      '  line-height: 1;' +
+      '  border-radius: 999px;' +
       '  border: 2px solid var(--bg-color, #09090b);' +
       '  box-shadow: 0 0 8px rgba(255, 0, 51, 0.85);' +
       '  pointer-events: none;' +
+      '  font-family: "Pretendard", sans-serif;' +
       '}';
     document.head.appendChild(style);
   }
@@ -71,179 +74,123 @@
     if (window.PickleAuth && window.PickleAuth.getUserWhenReady) {
       return window.PickleAuth.getUserWhenReady();
     }
-    if (window.PickleAuth && window.PickleAuth.init) {
-      await window.PickleAuth.init();
-      if (window.PickleAuth.isLoggedIn()) {
-        return window.PickleAuth.getUser();
-      }
-    }
-
     var sb = getClient();
     if (!sb) return null;
-
-    if (window.PickleOAuthCallbackGuard?.waitForOAuthSession) {
-      await window.PickleOAuthCallbackGuard.waitForOAuthSession();
-    }
-
-    if (window.PickleAuth && window.PickleAuth.safeGetSessionUser) {
-      return window.PickleAuth.safeGetSessionUser(sb);
-    }
-
     var sessionResult = await sb.auth.getSession();
     return sessionResult.data?.session?.user ?? null;
+  }
+
+  async function fetchUnreadPenaltyCount(userId) {
+    var sb = getClient();
+    if (!sb || !userId) return 0;
+    var res = await sb.from('penalty_logs').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false);
+    return res.error ? 0 : (res.count || 0);
   }
 
   async function fetchUnreadCount(userId) {
     var sb = getClient();
     if (!sb || !userId) return 0;
-
-    var res = await sb
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    if (res.error) {
-      console.warn('[P!CKLE Notifications] unread count', res.error);
-      return 0;
-    }
-
-    return res.count || 0;
+    var res = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_read', false);
+    return res.error ? 0 : (res.count || 0);
   }
 
   async function fetchNotifications(userId, limit) {
     var sb = getClient();
     if (!sb || !userId) return [];
+    var targetLimit = limit || 50;
 
-    var res = await sb
-      .from('notifications')
-      .select('id, type, message, link_url, is_read, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(limit || 50);
+    var resNotif = await sb.from('notifications').select('id, type, message, link_url, is_read, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(targetLimit);
+    var resPenalty = await sb.from('penalty_logs').select('id, penalty_type, reason, points_added, is_read, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(targetLimit);
 
-    if (res.error) {
-      throw res.error;
-    }
+    var notifs = resNotif.data || [];
+    var penalties = resPenalty.data || [];
 
-    return res.data || [];
+    var mappedPenalties = penalties.map(function (p) {
+      return {
+        id: 'penalty_' + p.id,
+        type: 'penalty',
+        message: '🚨 클린 규정 제재 안내: [' + p.reason + '] 조치로 벌점 +' + p.points_added + '점이 누적되었습니다.',
+        link_url: 'mypage.html',
+        is_read: p.is_read,
+        created_at: p.created_at
+      };
+    });
+
+    var combined = notifs.concat(mappedPenalties);
+    combined.sort(function (a, b) {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    return combined.slice(0, targetLimit);
   }
 
   async function markAsRead(notificationId, userId) {
     var sb = getClient();
     if (!sb || !notificationId || !userId) return { ok: false };
 
-    var res = await sb
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId)
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    if (res.error) {
-      console.warn('[P!CKLE Notifications] markAsRead', res.error);
-      return { ok: false, error: res.error };
+    if (String(notificationId).startsWith('penalty_')) {
+      var realPenaltyId = String(notificationId).replace('penalty_', '');
+      var resPen = await sb.from('penalty_logs').update({ is_read: true }).eq('id', realPenaltyId).eq('user_id', userId);
+      return resPen.error ? { ok: false } : { ok: true };
     }
 
-    return { ok: true };
+    var res = await sb.from('notifications').update({ is_read: true }).eq('id', notificationId).eq('user_id', userId);
+    return res.error ? { ok: false } : { ok: true };
   }
 
   async function markAllAsRead(userId) {
     var sb = getClient();
     if (!sb || !userId) return { ok: false };
-
-    var res = await sb
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    if (res.error) {
-      console.warn('[P!CKLE Notifications] markAllAsRead', res.error);
-      return { ok: false, error: res.error };
-    }
-
+    await sb.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
+    await sb.from('penalty_logs').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
     return { ok: true };
   }
 
-  function setBellUnreadState(hasUnread) {
+  function setBellUnreadState(totalCount) {
+    var count = Number(totalCount) || 0;
+    var badgeLabel = count > 99 ? '99+' : String(count);
+
     document.querySelectorAll('.noti-bell').forEach(function (bell) {
-      if (hasUnread) {
+      if (count > 0) {
         bell.classList.add('noti-bell--unread');
-        bell.setAttribute('aria-label', '읽지 않은 알림 있음');
+        bell.setAttribute('data-unread-count', badgeLabel);
+        bell.setAttribute('aria-label', '읽지 않은 알림 ' + count + '건');
       } else {
         bell.classList.remove('noti-bell--unread');
+        bell.removeAttribute('data-unread-count');
         bell.setAttribute('aria-label', '알림');
       }
-      bell.removeAttribute('data-count');
     });
   }
 
   async function refreshBellBadge() {
     injectStyles();
-
     try {
       var user = await ensureAuthReady();
-      if (!user) {
-        setBellUnreadState(false);
-        return 0;
-      }
-
-      var count = await fetchUnreadCount(user.id);
-      setBellUnreadState(count > 0);
-      return count;
+      if (!user) { setBellUnreadState(0); return 0; }
+      var notifCount = await fetchUnreadCount(user.id);
+      var penaltyCount = await fetchUnreadPenaltyCount(user.id);
+      setBellUnreadState(notifCount + penaltyCount);
+      return notifCount + penaltyCount;
     } catch (err) {
-      console.warn('[P!CKLE Notifications] refreshBellBadge', err);
-      setBellUnreadState(false);
+      setBellUnreadState(0);
       return 0;
     }
   }
 
   function goToNotifications(e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    ensureAuthReady().then(function (user) {
-      if (!user) {
-        if (
-          window.location.hash.includes('access_token=') ||
-          window.PickleOAuthCallbackGuard?.shouldSuppressLoginAlert?.()
-        ) {
-          return;
-        }
-        if (window.PickleAuth && window.PickleAuth.goToLogin) {
-          window.PickleAuth.goToLogin({ redirect: 'notifications.html' });
-        } else {
-          window.location.href = 'login.html?redirect=notifications.html';
-        }
-        return;
-      }
-      window.location.href = 'notifications.html';
-    });
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    window.location.href = 'notifications.html';
   }
 
   function bindBellIcons() {
     if (boundBells) return;
     boundBells = true;
-
     document.querySelectorAll('.noti-bell').forEach(function (bell) {
       if (bell.dataset.pickleNotiBound === '1') return;
       bell.dataset.pickleNotiBound = '1';
-
-      if (!bell.getAttribute('role')) bell.setAttribute('role', 'button');
-      if (!bell.hasAttribute('tabindex')) bell.setAttribute('tabindex', '0');
-      if (!bell.getAttribute('aria-label')) bell.setAttribute('aria-label', '알림');
-
       bell.removeAttribute('onclick');
       bell.addEventListener('click', goToNotifications);
-      bell.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Enter' || ev.key === ' ') {
-          ev.preventDefault();
-          goToNotifications(ev);
-        }
-      });
     });
   }
 
@@ -251,21 +198,37 @@
     if (!iso) return '';
     var then = new Date(iso).getTime();
     if (Number.isNaN(then)) return '';
-
     var diffSec = Math.floor((Date.now() - then) / 1000);
     if (diffSec < 60) return '방금 전';
     if (diffSec < 3600) return Math.floor(diffSec / 60) + '분 전';
     if (diffSec < 86400) return Math.floor(diffSec / 3600) + '시간 전';
-    if (diffSec < 604800) return Math.floor(diffSec / 86400) + '일 전';
-
-    var d = new Date(iso);
-    var m = d.getMonth() + 1;
-    var day = d.getDate();
-    return m + '월 ' + day + '일';
+    return new Date(iso).toLocaleDateString('ko-KR');
   }
 
   function getTypeMeta(type) {
     return TYPE_META[type] || TYPE_META.system;
+  }
+
+  function subscribeRealtime(userId) {
+    var sb = getClient();
+    if (!sb || !userId) return;
+    if (realtimeUserId === userId && realtimeChannel) return;
+
+    teardownRealtime();
+    realtimeUserId = userId;
+    realtimeChannel = sb
+      .channel('pickle-notifications-' + userId)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + userId },
+        function () { refreshBellBadge(); }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'penalty_logs', filter: 'user_id=eq.' + userId },
+        function () { refreshBellBadge(); }
+      )
+      .subscribe();
   }
 
   function teardownRealtime() {
@@ -273,64 +236,31 @@
     try {
       var sb = getClient();
       if (sb) sb.removeChannel(realtimeChannel);
-    } catch (_) {
-      /* ignore */
-    }
+    } catch (_) {}
     realtimeChannel = null;
     realtimeUserId = null;
   }
 
-  function subscribeRealtime(userId) {
-    var sb = getClient();
-    if (!sb || !userId) return;
-
-    if (realtimeUserId === userId && realtimeChannel) return;
-
-    teardownRealtime();
-    realtimeUserId = userId;
-
-    realtimeChannel = sb
-      .channel('pickle-notifications-' + userId)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: 'user_id=eq.' + userId,
-        },
-        function () {
-          refreshBellBadge();
-          document.dispatchEvent(new CustomEvent('pickle:notification-insert'));
-        }
-      )
-      .subscribe(function (status) {
-        if (status === 'CHANNEL_ERROR') {
-          console.warn('[P!CKLE Notifications] Realtime 구독 실패');
-        }
-      });
-  }
-
   async function initBell() {
+    if (bellInitialized || window.__PICKLE_NOTI_BELL_INIT__) return;
+    bellInitialized = true;
+    window.__PICKLE_NOTI_BELL_INIT__ = true;
+
     injectStyles();
     bindBellIcons();
-
     var user = await ensureAuthReady();
-    if (user) {
-      subscribeRealtime(user.id);
-    } else {
-      teardownRealtime();
-    }
-
+    if (user) subscribeRealtime(user.id);
     await refreshBellBadge();
   }
 
+  // 💡 [핵심 교정] 외부 파일(notifications-page.js)이 정상 구동할 수 있도록 누락되었던 핵심 유틸 도구들을 주머니에 전부 다시 채워 넣었습니다.
   window.PickleNotifications = {
     TYPE_META: TYPE_META,
     getTypeMeta: getTypeMeta,
     formatRelativeTime: formatRelativeTime,
     escapeHtml: escapeHtml,
     fetchUnreadCount: fetchUnreadCount,
+    fetchUnreadPenaltyCount: fetchUnreadPenaltyCount,
     fetchNotifications: fetchNotifications,
     markAsRead: markAsRead,
     markAllAsRead: markAllAsRead,
@@ -339,23 +269,11 @@
     bindBellIcons: bindBellIcons,
     subscribeRealtime: subscribeRealtime,
     teardownRealtime: teardownRealtime,
-    init: initBell,
+    init: initBell
   };
 
   document.addEventListener('DOMContentLoaded', function () {
     if (!document.querySelector('.noti-bell')) return;
     initBell();
-  });
-
-  window.addEventListener('pageshow', function () {
-    if (document.querySelector('.noti-bell')) {
-      refreshBellBadge();
-    }
-  });
-
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible' && document.querySelector('.noti-bell')) {
-      refreshBellBadge();
-    }
   });
 })();

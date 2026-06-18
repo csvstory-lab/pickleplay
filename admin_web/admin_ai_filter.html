@@ -260,7 +260,7 @@
 
           <div class="setting-row" style="flex-direction: column; align-items: flex-start; border: none; padding-bottom: 0;">
             <div class="setting-info" style="width: 100%;">
-              <div class="s-title">수동 블라인드 금칙어 필터 <span>(현재 7개)</span></div>
+              <div class="s-title">수동 블라인드 금칙어 필터 <span id="keywordCountLabel">(현재 0개)</span></div>
               <div class="s-desc">아래 등록된 단어가 포함된 콘텐츠는 AI가 즉시 숨김 처리합니다.</div>
               
               <div class="keyword-input-wrap">
@@ -269,13 +269,7 @@
               </div>
 
               <div class="keyword-container" id="keywordContainer">
-                  <div class="kw-tag" id="kw1">씨발 <span class="kw-close" onclick="removeKeyword('kw1')">✕</span></div>
-                  <div class="kw-tag" id="kw2">ㅈ같네 <span class="kw-close" onclick="removeKeyword('kw2')">✕</span></div>
-                  <div class="kw-tag" id="kw3">오픈톡방 <span class="kw-close" onclick="removeKeyword('kw3')">✕</span></div>
-                  <div class="kw-tag" id="kw4">수익보장 <span class="kw-close" onclick="removeKeyword('kw4')">✕</span></div>
-                  <div class="kw-tag" id="kw5">도박 <span class="kw-close" onclick="removeKeyword('kw5')">✕</span></div>
-                  <div class="kw-tag" id="kw6">토토 <span class="kw-close" onclick="removeKeyword('kw6')">✕</span></div>
-                  <div class="kw-tag" id="kw7">홍보 <span class="kw-close" onclick="removeKeyword('kw7')">✕</span></div>
+                  <span style="color:#71717a;font-size:0.85rem;font-weight:700;">금칙어를 불러오는 중…</span>
               </div>
             </div>
           </div>
@@ -406,60 +400,26 @@
   </main>
 
   <script>
-      // 💡 금칙어 태그 추가 로직
-      let kwCount = 7;
-      
-      function handleKeywordEnter(event) {
-          if (event.key === 'Enter') {
-              addKeyword();
-          }
-      }
-
-      function addKeyword() {
-          const input = document.getElementById('newKeyword');
-          const value = input.value.trim();
-          
-          if(value === '') { 
-              alert('차단할 금칙어를 입력해주세요.'); 
-              return; 
-          }
-
-          kwCount++;
-          const kwId = 'kw' + kwCount;
-          const container = document.getElementById('keywordContainer');
-          
-          const tagDiv = document.createElement('div');
-          tagDiv.className = 'kw-tag';
-          tagDiv.id = kwId;
-          tagDiv.innerHTML = `${value} <span class="kw-close" onclick="removeKeyword('${kwId}')">✕</span>`;
-          
-          container.appendChild(tagDiv);
-          input.value = ''; // 입력창 비우기
-      }
-
-      // 💡 금칙어 태그 삭제 로직
-      function removeKeyword(kwId) {
-          const element = document.getElementById(kwId);
-          if(element) element.remove();
-      }
-
       async function saveSettings() {
           const FB = window.PickleAdminFirebase;
           const form = FB.collectForm(document.querySelector('.content-container'));
           const data = {
               checkboxes: form.checkboxes,
               selects: {},
-              keywords: FB.collectKeywords('keywordContainer'),
           };
           document.querySelectorAll('.ai-select').forEach((sel, i) => {
               data.selects['ai_select_' + i] = sel.value;
           });
           const res = await FB.persist('ai_filter', 'settings', data, {
               page: 'admin_ai_filter',
-              successMessage: '🛡️ AI 스팸 필터 강도 및 금칙어 설정이 Firebase에 반영되었습니다.',
+              successMessage: '🛡️ AI 스팸 필터 강도 설정이 Firebase에 반영되었습니다. (금칙어는 Supabase에 즉시 저장됩니다)',
           });
           return res;
       }
   </script>
+  <script src="js/admin-nav.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="js/admin-ai-filter.js"></script>
 </body>
 </html>

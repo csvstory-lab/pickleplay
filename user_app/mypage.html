@@ -49,8 +49,30 @@
     .top-row { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
     .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer; }
     .header-actions { display: flex; align-items: center; gap: 15px; }
-    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; transition: 0.2s; }
+    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
     .noti-bell:active { transform: scale(0.9); }
+    .noti-bell.noti-bell--unread::after { content: none !important; display: none !important; }
+    #notiCountBadge {
+        display: none;
+        position: absolute;
+        top: -5px;
+        right: -8px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        background: #ff0033;
+        color: #fff;
+        font-size: 0.58rem;
+        font-weight: 900;
+        line-height: 18px;
+        text-align: center;
+        border-radius: 999px;
+        border: 2px solid var(--bg-color);
+        box-shadow: 0 0 8px rgba(255, 0, 51, 0.85);
+        pointer-events: none;
+        font-family: 'Pretendard', sans-serif;
+    }
+    #notiCountBadge.is-visible { display: block; }
 
     /* === 메인 컨텐츠 === */
     main { padding: 0 0 120px 0; }
@@ -435,7 +457,7 @@
     .penalty-guide { flex: 2; padding-left: 10px; }
     .guide-title { font-size: 0.9rem; font-weight: 900; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
     .guide-bar-wrap { width: 100%; height: 10px; background: #27272a; border-radius: 5px; position: relative; margin-bottom: 8px; }
-    .guide-bar-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--theme-gold), var(--alert-red)); border-radius: 5px; width: 40%; }
+    .guide-bar-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--theme-gold), var(--alert-red)); border-radius: 5px; width: 0%; transition: width 0.4s ease; }
     .guide-milestones { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: var(--text-sub); }
     
     .history-list { display: flex; flex-direction: column; gap: 10px; }
@@ -721,7 +743,10 @@
     <div class="top-row">
         <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
         <div class="header-actions">
-            <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
+            <div class="noti-bell" role="button" tabindex="0" aria-label="알림" style="position: relative;" onclick="clickNotiBell()">
+                🔔
+                <span id="notiCountBadge">0</span>
+            </div>
         </div>
     </div>
 </header>
@@ -906,7 +931,10 @@
         <div class="settings-group">
             <div class="settings-group-title">이용 현황 및 제재 내역</div>
             <div class="settings-item" onclick="openPanel('penaltyPanel')">
-                <span style="display:flex; align-items:center; gap:8px;">내 계정 상태 <span style="font-size:0.75rem; background:rgba(255,204,0,0.2); color:var(--theme-gold); padding:2px 6px; border-radius:4px; font-weight:800;">경고 1회</span></span>
+                <span style="display:flex; align-items:center; gap:8px;">
+                    내 계정 상태
+                    <span id="menuPenaltyStatus" style="font-size:0.75rem; background:rgba(57,255,20,0.15); color:var(--neon-green); padding:2px 6px; border-radius:4px; font-weight:800;">[정상]</span>
+                </span>
                 <span class="arrow-icon">›</span>
             </div>
         </div>
@@ -1005,11 +1033,11 @@
         <div class="penalty-dashboard">
             <div class="penalty-score-box">
                 <div class="score-label">나의 누적 벌점</div>
-                <div class="score-value">40 <span style="font-size:1rem;">점</span></div>
+                <div class="score-value" id="myPenaltyPoints">—</div>
             </div>
             <div class="penalty-guide">
-                <div class="guide-title">⚖️ 계정 상태: <span style="color:var(--theme-gold);">[3일 이용 정지]</span></div>
-                <div class="guide-bar-wrap"><div class="guide-bar-fill" style="width:40%;"></div></div>
+                <div class="guide-title">⚖️ 계정 상태: <span id="myAccountStatusText" style="color:var(--neon-green);">[정상 활동 가능]</span></div>
+                <div class="guide-bar-wrap"><div class="guide-bar-fill" id="myPenaltyBarFill" style="width:0%;"></div></div>
                 <div class="guide-milestones">
                     <div>0</div><div>30점(정지)</div><div>50점</div><div style="color:var(--alert-red);">100점(차단)</div>
                 </div>
@@ -1017,24 +1045,10 @@
         </div>
         
         <div style="font-size:1.05rem; font-weight:900; color:#fff; margin-bottom:15px;">🚨 상세 제재 히스토리</div>
-        <div class="history-list">
-            <div class="history-item">
-                <div>
-                    <div class="hi-title">타 커뮤니티 링크 연속 삽입 (도배)</div>
-                    <div class="hi-date">2026.05.01 14:30</div>
-                </div>
-                <span class="hi-badge">+30점 (3일 정지)</span>
-            </div>
-            <div class="history-item">
-                <div>
-                    <div class="hi-title">욕설 및 비방 (댓글 블라인드 처리)</div>
-                    <div class="hi-date">2026.04.20 09:15</div>
-                </div>
-                <span class="hi-badge" style="color:var(--theme-gold); background:rgba(255,204,0,0.1);">+10점 (경고)</span>
-            </div>
-        </div>
+        <div class="history-list" id="myPenaltyListBody"></div>
         <div style="margin-top:20px; font-size:0.85rem; color:var(--text-sub); line-height:1.5; background:#09090b; padding:15px; border-radius:8px; border:1px solid #27272a;">
-            💡 <strong>벌점 관련 안내</strong><br>부여된 벌점은 정상적인 활동(불판 생성, 베스트 댓글 선정 등)이 30일 이상 누적될 경우 시스템 및 관리자 심사를 통해 순차적으로 감면될 수 있습니다. 억울한 제재는 고객센터로 이의 제기해 주세요.
+            💡 <strong>벌점 관련 안내</strong><br>
+            부여된 벌점은 마지막 벌점을 받은 날로부터 1개월 동안 추가 위반 없이 클린하게 활동할 경우, 누적 벌점에서 10점을 감면해 주는 <strong>'회복제도'</strong>가 적용됩니다. 건강한 픽클 커뮤니티를 위해 함께 노력해 주세요!
         </div>
     </div>
 </div>
@@ -1196,17 +1210,28 @@
         </div>
 
         <label class="legal-form-label">요청자 구분 <span>*</span></label>
-        <select class="legal-form-select">
+        <select class="legal-form-select" id="legalRequesterType">
             <option value="">선택하세요</option>
             <option value="me">권리침해 당사자 (본인)</option>
             <option value="agency">법적 대리인 (소속사/법무법인 등)</option>
         </select>
 
+        <div style="margin-top:8px; margin-bottom:4px; font-size:0.9rem; font-weight:900; color:#fff;">📞 신고자 연락처 <span style="color:var(--alert-red); font-size:0.85rem;">(법적 처리 결과 통보용 · 필수)</span></div>
+
+        <label class="legal-form-label">신고자 이름 <span>*</span></label>
+        <input type="text" class="legal-form-input" id="legalReporterName" placeholder="실명 또는 법인명" maxlength="50" autocomplete="name">
+
+        <label class="legal-form-label">연락처 (휴대폰) <span>*</span></label>
+        <input type="tel" class="legal-form-input" id="legalReporterPhone" placeholder="010-1234-5678" maxlength="20" autocomplete="tel">
+
+        <label class="legal-form-label">이메일 <span>*</span></label>
+        <input type="email" class="legal-form-input" id="legalReporterEmail" placeholder="result@example.com" maxlength="120" autocomplete="email">
+
         <label class="legal-form-label">침해 대상 게시물 URL <span>*</span></label>
-        <input type="text" class="legal-form-input" placeholder="https://pickle.com/issue/1234">
+        <input type="text" class="legal-form-input" id="legalTargetUrl" placeholder="https://pickle.com/issue/1234">
 
         <label class="legal-form-label">침해 사유 <span>*</span></label>
-        <select class="legal-form-select">
+        <select class="legal-form-select" id="legalReason">
             <option value="">선택하세요</option>
             <option value="defamation">명예훼손 및 허위사실 유포</option>
             <option value="copyright">저작권/초상권/퍼블리시티권 침해</option>
@@ -1214,20 +1239,22 @@
         </select>
 
         <label class="legal-form-label">상세 소명 내용 <span>*</span></label>
-        <textarea class="legal-form-textarea" placeholder="게시물이 어떻게 권리를 침해하고 있는지 구체적인 사실 관계를 작성해 주세요. (육하원칙 권장)"></textarea>
+        <textarea class="legal-form-textarea" id="legalDetail" placeholder="게시물이 어떻게 권리를 침해하고 있는지 구체적인 사실 관계를 작성해 주세요. (육하원칙 권장)"></textarea>
 
         <label class="legal-form-label">신분증 또는 사업자등록증 사본 <span>*</span></label>
-        <div class="file-upload-box" onclick="alert('파일 탐색기가 열립니다.')">
-            <div class="file-icon">📷</div>
-            <div class="file-text">클릭하여 파일 업로드 (JPG, PNG, PDF)</div>
+        <div class="file-upload-box" id="legalIdBox" onclick="document.getElementById('legalIdFile').click()">
+            <div class="file-icon" id="legalIdIcon">📷</div>
+            <div class="file-text" id="legalIdText">클릭하여 파일 업로드 (JPG, PNG, PDF)</div>
             <div class="file-sub">※ 주민번호 뒷자리는 반드시 가리고 첨부해 주세요.</div>
         </div>
+        <input type="file" id="legalIdFile" accept="image/*,application/pdf" style="display:none;" onchange="handleLegalFileChange(this, 'legalIdText', 'legalIdBox', '🪪 신분증 첨부 완료')">
 
         <label class="legal-form-label">위임장 (대리인인 경우 필수)</label>
-        <div class="file-upload-box" onclick="alert('파일 탐색기가 열립니다.')">
-            <div class="file-icon">📄</div>
-            <div class="file-text">클릭하여 위임장 업로드</div>
+        <div class="file-upload-box" id="legalPowerBox" onclick="document.getElementById('legalPowerFile').click()">
+            <div class="file-icon" id="legalPowerIcon">📄</div>
+            <div class="file-text" id="legalPowerText">클릭하여 위임장 업로드</div>
         </div>
+        <input type="file" id="legalPowerFile" accept="image/*,application/pdf" style="display:none;" onchange="handleLegalFileChange(this, 'legalPowerText', 'legalPowerBox', '📄 위임장 첨부 완료')">
 
         <label class="agree-box">
             <input type="checkbox" id="legalAgree">
@@ -1236,7 +1263,7 @@
             </div>
         </label>
 
-        <button type="button" class="btn-submit-legal" onclick="submitLegalForm()">법적 게시중단 요청서 제출</button>
+        <button type="button" class="btn-submit-legal" id="btnSubmitLegal" onclick="submitLegalForm()">법적 게시중단 요청서 제출</button>
     </div>
 </div>
 
@@ -1269,6 +1296,9 @@
     function openPanel(panelId) {
         document.getElementById(panelId).classList.add('open');
         document.body.style.overflow = 'hidden';
+        if (panelId === 'penaltyPanel' && window.PickleMypage && typeof window.PickleMypage.syncPenaltyDashboard === 'function') {
+            window.PickleMypage.syncPenaltyDashboard({ markPenaltyRead: true });
+        }
     }
     function closePanel(panelId) {
         document.getElementById(panelId).classList.remove('open');
@@ -1396,19 +1426,7 @@
         }
     }
 
-    // --- 🚨 권리침해 폼 제출 로직 (신규 추가) ---
-    function submitLegalForm() {
-        const isAgreed = document.getElementById('legalAgree').checked;
-        if(!isAgreed) {
-            alert('법적 책임 동의 항목에 체크해 주셔야 접수가 가능합니다.');
-            return;
-        }
-        
-        if(confirm('작성하신 소명 자료와 증빙 서류를 바탕으로 게시중단 요청을 접수하시겠습니까?\n접수 완료 시 관리자의 법무 검토가 시작됩니다.')) {
-            alert('✅ 성공적으로 법적 검토 요청이 접수되었습니다. 처리 결과는 기재해주신 이메일로 회신됩니다.');
-            closePanel('legalPanel');
-        }
-    }
+    // --- 🚨 권리침해 폼 제출 — js/pickle-legal-report.js (submitLegalForm)
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1421,12 +1439,39 @@
 <script src="../js/auth.js"></script>
 <script src="../js/user-info-modal.js"></script>
 <script src="../js/pickle-account.js"></script>
-<script src="../js/pickle-notifications.js"></script>
+<script src="../js/pickle-notifications.js?v=20260608_penaltybell"></script>
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-follows.js?v=20260608_fandom3"></script>
-<script src="../js/mypage-page.js"></script>
+<script src="../js/mypage-page.js?v=20260608_penalty4"></script>
+<script src="../js/pickle-legal-report.js"></script>
 
+<script>
+    function clickNotiBell() {
+        window.location.href = 'notifications.html';
+    }
+
+    window.handleLegalFileChange = function(input, textId, boxId, successMsg) {
+        const file = input.files && input.files[0];
+        const textEl = document.getElementById(textId);
+        const boxEl = document.getElementById(boxId);
+        if (!textEl || !boxEl) return;
+
+        if (file) {
+            let fileName = file.name;
+            if (fileName.length > 22) {
+                fileName = fileName.substring(0, 19) + '...';
+            }
+            textEl.innerText = successMsg ? `✅ ${successMsg} (${fileName})` : `✅ ${fileName}`;
+            boxEl.style.borderColor = 'var(--neon-green)';
+            boxEl.style.backgroundColor = 'rgba(57, 255, 20, 0.05)';
+        } else {
+            textEl.innerText = '클릭하여 파일 업로드';
+            boxEl.style.borderColor = '';
+            boxEl.style.backgroundColor = '';
+        }
+    };
+</script>
 </body>
 </html>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P!CKLE - Admin: 불판 상세 및 댓글 관리</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
     :root {
@@ -20,13 +21,13 @@
         --border-color: #27272a;
     }
 
-    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pentabreed', 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-    /* === 💡 완벽 복원된 사이드바 === */
+    /* === 사이드바 === */
     .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
     .sidebar::-webkit-scrollbar { display: none; }
     .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
-    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; }
+    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
     .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
     .nav-menu { list-style: none; padding: 0; margin: 0; }
     .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
@@ -50,17 +51,14 @@
 
     .content-container { padding: 30px 40px; display: flex; flex-direction: column; gap: 30px; }
 
-    /* 1. 불판 요약 정보 카드 */
+    /* 불판 요약 정보 카드 */
     .post-summary-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; display: flex; gap: 30px; }
     .post-info-left { flex: 2; border-right: 1px solid var(--border-color); padding-right: 30px; }
     .post-info-right { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
 
     .badge-wrap { display: flex; gap: 10px; margin-bottom: 15px; }
     .cat-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
-    .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; }
-    .status-badge.status-active { background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
-    .status-badge.status-blinded { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); }
-    .status-badge.status-ended { background-color: rgba(161, 161, 170, 0.15); color: var(--text-sub); border: 1px solid #3f3f46; }
+    .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
     
     .post-title { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 0 0 10px 0; line-height: 1.4; word-break: keep-all; }
     .post-meta { font-size: 0.85rem; color: var(--text-sub); display: flex; gap: 15px; }
@@ -72,27 +70,25 @@
     .vote-a-text { color: var(--neon-blue); }
     .vote-b-text { color: var(--neon-pink); }
     .vote-bar-bg { width: 100%; height: 16px; background-color: #27272a; border-radius: 8px; display: flex; overflow: hidden; }
-    .vote-bar-a { height: 100%; background-color: var(--neon-blue); display: flex; align-items: center; padding-left: 10px; font-size: 0.75rem; font-weight: 900; color: #000; }
-    .vote-bar-b { height: 100%; background-color: var(--neon-pink); display: flex; justify-content: flex-end; align-items: center; padding-right: 10px; font-size: 0.75rem; font-weight: 900; color: #fff; }
+    .vote-bar-a { height: 100%; background-color: var(--neon-blue); display: flex; align-items: center; padding-left: 10px; font-size: 0.75rem; font-weight: 900; color: #000; transition: width 0.5s ease; }
+    .vote-bar-b { height: 100%; background-color: var(--neon-pink); display: flex; justify-content: flex-end; align-items: center; padding-right: 10px; font-size: 0.75rem; font-weight: 900; color: #fff; transition: width 0.5s ease; }
 
     /* 우측 요약 통계 */
     .stat-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: #09090b; border-radius: 8px; border: 1px solid #27272a; }
     .stat-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; }
-    .stat-val { font-size: 1.2rem; font-weight: 900; color: #fff; }
+    .stat-val { font-size: 1.2rem; font-weight: 900; color: #fff; font-family: 'Black Han Sans', sans-serif; }
     
     .btn-action-post { width: 100%; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; border: none; font-size: 0.95rem; transition: 0.2s; }
     .btn-stop-post { background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); border: 1px solid var(--neon-pink); }
     .btn-stop-post:hover { background-color: var(--neon-pink); color: #fff; }
-    .btn-restore-post { background-color: transparent; color: var(--neon-green); border: 1px solid var(--neon-green); }
-    .btn-restore-post:hover { background-color: rgba(57, 255, 20, 0.1); }
 
-    /* 2. 댓글(참견) 리스트 영역 */
+    /* 댓글(참견) 리스트 영역 */
     .comment-section { background-color: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
     .section-header { padding: 20px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background-color: #121214; }
     .section-title { font-size: 1.1rem; font-weight: 900; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
     
     .filter-group { display: flex; gap: 10px; }
-    .admin-select, .admin-input { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; outline: none; transition: 0.2s;}
+    .admin-select, .admin-input { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pretendard', sans-serif; font-size: 0.85rem; padding: 8px 12px; border-radius: 6px; outline: none; transition: 0.2s;}
     .admin-input:focus, .admin-select:focus { border-color: var(--neon-green); }
     .admin-select { cursor: pointer; }
 
@@ -101,7 +97,6 @@
     td { padding: 15px 25px; border-bottom: 1px solid #222; font-size: 0.9rem; font-weight: 600; vertical-align: middle; }
     tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
 
-    /* 댓글 내 유저 뱃지 */
     .user-info { display: flex; align-items: center; gap: 10px; }
     .avatar { width: 32px; height: 32px; background-color: #3f3f46; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1rem; }
     .nickname { color: #fff; font-weight: 800; font-size: 0.9rem; }
@@ -115,41 +110,33 @@
     .comment-date { font-size: 0.75rem; color: var(--text-sub); margin-top: 4px; display: block; }
     
     .report-count { display: inline-flex; align-items: center; gap: 4px; background-color: rgba(255, 0, 127, 0.1); color: var(--neon-pink); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
-    
-    /* 💡 시스템 자동 블라인드 뱃지 */
     .auto-blind-badge { display: inline-block; background-color: #27272a; color: var(--text-sub); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; }
 
-    /* 액션 버튼 (댓글) */
     .action-btns { display: flex; gap: 8px; }
-    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
+    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pretendard', sans-serif;}
     .btn-sm:active { transform: scale(0.95); }
     .btn-blind { background-color: rgba(255, 0, 127, 0.1); border: 1px solid var(--neon-pink); color: var(--neon-pink); }
     .btn-blind:hover { background-color: var(--neon-pink); color: #fff; }
     .btn-restore { background-color: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); }
-
-    .summary-loading { width: 100%; padding: 40px; text-align: center; color: var(--text-sub); font-size: 0.95rem; font-weight: 600; }
-    .summary-content { width: 100%; display: flex; gap: 30px; }
-    .summary-content[hidden] { display: none !important; }
-
 </style>
+
+<!-- 💡 중요: 구형 파이어베이스 제거 후 최신 Supabase CDN 도입 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <aside class="sidebar">
-    <div class="logo-area">
-        <h1 class="logo" onclick="location.href='admin_dashboard.html'">P!CKLE</h1>
-        <div class="logo-sub">ADMINISTRATOR 2.6</div>
-    </div>
+    <div class="logo-area"><h1 class="logo" onclick="location.href='admin_dashboard.html'">P!CKLE</h1><div class="logo-sub">ADMINISTRATOR 2.6</div></div>
     <ul class="nav-menu">
         <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
         <li class="nav-item" onclick="location.href='admin_users.html'"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
         <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
-        <li class="nav-item active" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
-        <li class="nav-sub-item active" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
-        <li class="nav-sub-item" onclick="return false;">· 스폰(최애) 불판 설정</li>
-        <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
-        <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
-        <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
+        <li class="nav-item active" onclick="location.href='admin_board_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item active" onclick="location.href='admin_board_list.html'">· 일반 불판 관리</li>
+        <li class="nav-sub-item">· 스폰(최애) 불판 설정</li>
+        <li class="nav-item"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item">· 광고주 및 정산 관리</li>
+        <li class="nav-sub-item">· 파트너(대행사) 관리</li>
         <li class="nav-item" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
         <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
         <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
@@ -162,7 +149,7 @@
 <main class="main-content">
     <header class="top-header">
       <div class="page-title">
-        <a href="admin_post_list.html" class="back-btn">❮</a> 
+        <a href="admin_board_list.html" class="back-btn">❮</a> 
         상세 모니터링 및 댓글 관리
       </div>
       <div class="admin-profile">
@@ -172,71 +159,68 @@
     </header>
 
     <div class="content-container">
-        
+        <!-- 💡 상단 요약 영역 데이터 동적 연동 바인딩 타겟 설정 -->
         <div class="post-summary-card" id="postSummaryCard">
-            <div id="postSummaryLoading" class="summary-loading">데이터를 불러오는 중입니다...</div>
-            <div id="postSummaryContent" class="summary-content" hidden>
-                <div class="post-info-left">
-                    <div class="badge-wrap">
-                        <span class="cat-badge" id="postCategoryBadge"></span>
-                        <span id="postStatusBadge"></span>
-                        <span id="postIdLabel" style="font-size:0.8rem;color:var(--text-sub);align-self:center;"></span>
+            <div class="post-info-left">
+                <div class="badge-wrap">
+                    <span class="cat-badge" id="postCategory">불러오는 중...</span>
+                    <span class="status-badge" id="postStatus">Active</span>
+                    <span style="font-size:0.8rem; color:var(--text-sub); align-self:center;" id="postIdView">ID: #--</span>
+                </div>
+                <h2 class="post-title" id="postTitle">데이터를 불러오는 중입니다...</h2>
+                <div class="post-meta">
+                    <span id="postAuthor">👤 작성자: --</span>
+                    <span id="postDate">🕒 등록일: --</span>
+                </div>
+
+                <div class="vote-board">
+                    <div class="vote-text-wrap">
+                        <div class="vote-a-text" id="labelOptionA">A. 불러오는 중...</div>
+                        <div class="vote-b-text" id="labelOptionB">B. 불러오는 중...</div>
                     </div>
-                    <h2 class="post-title" id="postTitle"></h2>
-                    <div class="post-meta">
-                        <span>👤 작성자: <strong id="postAuthorName"></strong> (UID: <span id="postAuthorUid"></span>)</span>
-                        <span>🕒 등록일: <span id="postCreatedAt"></span></span>
-                    </div>
-                    <div class="vote-board">
-                        <div class="vote-text-wrap">
-                            <div class="vote-a-text" id="voteOptionA"></div>
-                            <div class="vote-b-text" id="voteOptionB"></div>
-                        </div>
-                        <div class="vote-bar-bg" id="voteBarBg">
-                            <div class="vote-bar-a" id="voteBarA"></div>
-                            <div class="vote-bar-b" id="voteBarB"></div>
-                        </div>
+                    <div class="vote-bar-bg">
+                        <div class="vote-bar-a" id="barOptionA" style="width: 50%;">50%</div>
+                        <div class="vote-bar-b" id="barOptionB" style="width: 50%;">50%</div>
                     </div>
                 </div>
-                <div class="post-info-right">
-                    <div class="stat-box">
-                        <span class="stat-label">누적 투표수</span>
-                        <span class="stat-val" id="statVoteCount" style="color:var(--theme-gold);"></span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">누적 공유(Share)수</span>
-                        <span class="stat-val" id="statShareCount" style="color:var(--neon-blue);"></span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">작성된 참견(댓글)</span>
-                        <span class="stat-val" id="statCommentCount"></span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">누적 신고 접수</span>
-                        <span class="stat-val" id="statReportCount" style="color:var(--neon-pink);"></span>
-                    </div>
-                    <button type="button" class="btn-action-post btn-stop-post" id="postBlindBtn"></button>
+            </div>
+            
+            <div class="post-info-right">
+                <div class="stat-box">
+                    <span class="stat-label">누적 투표수</span>
+                    <span class="stat-val" style="color:var(--theme-gold);" id="cntVotes">0</span>
                 </div>
+                <div class="stat-box">
+                    <span class="stat-label">누적 공유(Share)수</span>
+                    <span class="stat-val" style="color:var(--neon-blue);" id="cntShares">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">작성된 참견(댓글)</span>
+                    <span class="stat-val" id="cntComments">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">누적 신고 접수</span>
+                    <span class="stat-val" style="color:var(--neon-pink);" id="cntReports">0</span>
+                </div>
+                <button class="btn-action-post btn-stop-post" id="btnTogglePost" onclick="togglePostStatus()">👁️ 이 불판 강제 블라인드(숨김)</button>
             </div>
         </div>
 
         <div class="comment-section">
             <div class="section-header">
-                <h3 class="section-title" id="commentSectionTitle">💬 참견(댓글) 실시간 모니터링</h3>
+                <h3 class="section-title">💬 참견(댓글) 실시간 모니터링</h3>
                 <div class="filter-group">
-                    <select class="admin-select">
-                        <option>진영 전체 보기</option>
-                        <option>A 진영 댓글만</option>
-                        <option>B 진영 댓글만</option>
+                    <select class="admin-select" id="filterStance" onchange="loadComments()">
+                        <option value="all">진영 전체 보기</option>
+                        <option value="A">A 진영 댓글만</option>
+                        <option value="B">B 진영 댓글만</option>
                     </select>
-                    <select class="admin-select" style="border-color: var(--neon-pink); color: var(--neon-pink);">
-                        <option>상태: 전체</option>
-                        <option>🚨 신고 누적 댓글</option>
-                        <option>👁️ 블라인드 처리됨</option>
+                    <select class="admin-select" id="filterStatus" style="border-color: var(--neon-pink); color: var(--neon-pink);" onchange="loadComments()">
+                        <option value="all">상태: 전체</option>
+                        <option value="blind">👁️ 블라인드 처리됨</option>
                     </select>
-                    <!-- 💡 댓글 내용 포함 검색으로 UI 확장 -->
-                    <input type="text" class="admin-input" placeholder="닉네임 또는 댓글 내용 검색..." style="width: 250px;">
-                    <button class="btn-sm btn-blind" style="background:#27272a; color:#fff; border:1px solid #3f3f46;">검색</button>
+                    <input type="text" class="admin-input" id="searchKeyword" placeholder="닉네임 또는 댓글 내용 검색..." style="width: 250px;">
+                    <button class="btn-sm btn-blind" style="background:#27272a; color:#fff; border:1px solid #3f3f46;" onclick="loadComments()">검색</button>
                 </div>
             </div>
 
@@ -249,16 +233,244 @@
                         <th style="width: 20%; text-align:right;">관리자 액션</th>
                     </tr>
                 </thead>
-                <tbody id="commentsTableBody"></tbody>
+                <tbody id="commentTableBody">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding: 40px; color: var(--text-sub);">참견 데이터를 불러오는 중입니다...</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
-
     </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase-config.js"></script>
-<script src="js/admin-post-detail.js"></script>
+<script>
+(function () {
+    'use strict';
 
+    const supabaseUrl = 'https://jszgznanptutwxcsnrep.supabase.co';
+    const supabaseKey =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impzemd6bmFucHR1dHd4Y3NucmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDc1MjIsImV4cCI6MjA5NjA4MzUyMn0.Czo-Cmw7JQktWMV77KSt2Yk3Pnkx89ZE1Ey0C0dk1G4';
+
+    const supabase = window.supabase.createClient
+        ? window.supabase.createClient(supabaseUrl, supabaseKey)
+        : window.supabase;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('id');
+
+    let currentPost = null;
+
+    window.addEventListener('DOMContentLoaded', async function () {
+        if (!postId) {
+            alert('정확한 불판 고유 ID가 전달되지 않았습니다. 리스트로 돌아갑니다.');
+            location.href = 'admin_board_list.html';
+            return;
+        }
+        await loadPostDetail();
+        await loadComments();
+    });
+
+    // 1. 불판 요약 정보 동적 바인딩
+    async function loadPostDetail() {
+        try {
+            const { data, error } = await supabase.from('posts').select('*').eq('id', postId).single();
+            if (error || !data) throw error;
+            
+            currentPost = data;
+            
+            document.getElementById('postCategory').innerText = data.category || '일반';
+            document.getElementById('postStatus').innerText = data.is_active ? '진행 중 (Active)' : '강제 종료(Hidden)';
+            document.getElementById('postIdView').innerText = `ID: #${data.id}`;
+            document.getElementById('postTitle').innerText = data.title;
+            document.getElementById('postAuthor').innerHTML = `👤 작성자: <strong>${data.author_name || '익명'}</strong> (UID: ${data.user_id || '---'})`;
+            document.getElementById('postDate').innerText = `🕒 등록일: ${new Date(data.created_at).toLocaleString('ko-KR')}`;
+            
+            document.getElementById('labelOptionA').innerText = `A. ${data.option_a || '허용'}`;
+            document.getElementById('labelOptionB').innerText = `B. ${data.option_b || '불가'}`;
+            
+            // 투표수 비율 계산 계산기
+            const totalVotes = (data.votes_a || 0) + (data.votes_b || 0);
+            const percentA = totalVotes > 0 ? Math.round((data.votes_a / totalVotes) * 100) : 50;
+            const percentB = totalVotes > 0 ? 100 - percentA : 50;
+            
+            const barA = document.getElementById('barOptionA');
+            const barB = document.getElementById('barOptionB');
+            barA.style.width = `${percentA}%`; barA.innerText = `${percentA}%`;
+            barB.style.width = `${percentB}%`; barB.innerText = `${percentB}%`;
+            
+            document.getElementById('cntVotes').innerText = totalVotes.toLocaleString();
+            document.getElementById('cntShares').innerText = (data.shares_count || 0).toLocaleString();
+            document.getElementById('cntReports').innerText = (data.reports_count || 0).toLocaleString();
+            
+            const btnToggle = document.getElementById('btnTogglePost');
+            if(!data.is_active) {
+                btnToggle.innerText = "👁️ 이 불판 블라인드 해제(복구)";
+                btnToggle.style.background = "rgba(57, 255, 20, 0.1)";
+                btnToggle.style.color = "var(--neon-green)";
+                btnToggle.style.borderColor = "var(--neon-green)";
+            }
+            
+            // 총 댓글수 표기용 서브 쿼리
+            const { count } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', postId);
+            document.getElementById('cntComments').innerText = count || 0;
+            
+        } catch (err) {
+            console.error("불판 디테일 데이터 로드 실패:", err);
+            document.getElementById('postTitle').innerText = "불판 데이터를 불러오는데 오류가 발생했습니다.";
+        }
+    }
+
+    // 2. 댓글 실시간 필터 및 로드 처리
+    async function loadComments() {
+        const tbody = document.getElementById('commentTableBody');
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--text-sub);">참견 데이터를 불러오는 중입니다...</td></tr>`;
+        
+        try {
+            let query = supabase.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: false });
+            
+            // 진영 필터링 조건 추가
+            const stance = document.getElementById('filterStance').value;
+            if (stance !== 'all') query = query.eq('stance', stance);
+            
+            // 블라인드 필터링 조건 추가
+            const status = document.getElementById('filterStatus').value;
+            if (status === 'blind') query = query.eq('is_blind', true);
+            
+            const { data: comments, error } = await query;
+            if (error) throw error;
+            
+            if (!comments || comments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--text-sub);">등록된 참견(댓글)이 없습니다.</td></tr>`;
+                return;
+            }
+            
+            // 키워드 검색 필터링 (클라이언트 단 지원)
+            const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+            const filteredComments = comments.filter(c => {
+                if(!keyword) return true;
+                return (c.nickname && c.nickname.toLowerCase().includes(keyword)) || 
+                       (c.content && c.content.toLowerCase().includes(keyword));
+            });
+
+            tbody.innerHTML = "";
+            filteredComments.forEach(c => {
+                const tr = document.createElement('tr');
+                if (c.is_blind) {
+                    tr.style.opacity = "0.6";
+                    tr.style.backgroundColor = "rgba(255, 0, 127, 0.03)";
+                }
+                
+                const badgeClass = c.stance === 'A' ? 'pick-a' : 'pick-b';
+                const actionBtn = c.is_blind 
+                    ? `<button class="btn-sm btn-restore" onclick="restoreComment('${c.id}')">제재 무효 및 복구</button>`
+                    : `<button class="btn-sm btn-blind" onclick="blindComment('${c.id}', '${c.nickname}', '${c.user_id}')">🚨 즉시 숨김(제재)</button>`;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="user-info">
+                            <div class="avatar">${c.stance === 'A' ? '🤔' : '🤬'}</div>
+                            <div>
+                                <div class="nickname">${c.nickname || '익명'} <span class="pick-badge ${badgeClass}">${c.stance || 'X'} 픽</span></div>
+                                <div class="uid">UID: ${c.user_id ? c.user_id.substring(0,8) : '---'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        ${c.is_blind ? `<span class="auto-blind-badge">🚨 관리자 혹은 시스템에 의해 규제 완화 블라인드됨</span>` : ''}
+                        <div class="comment-text" style="${c.is_blind ? 'text-decoration: line-through; color: var(--text-sub);' : ''}">${c.content}</div>
+                        <span class="comment-date">${new Date(c.created_at).toLocaleString('ko-KR')}</span>
+                    </td>
+                    <td style="text-align:center;"><span class="${c.report_count > 0 ? 'report-count' : ''}">${c.report_count || 0} 건</span></td>
+                    <td style="text-align:right;">
+                        <div class="action-btns" style="justify-content: flex-end;">
+                            ${actionBtn}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+        } catch (err) {
+            console.error("댓글 로드 실패:", err);
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--neon-pink);">참견 목록을 동기화하지 못했습니다.</td></tr>`;
+        }
+    }
+
+    // 💡 대표님이 기틀을 세우신 핵심 [2단계 벌점 연쇄 제재 로직] 결합
+    async function blindComment(commentId, username, userId) {
+        if(!confirm(`[${username}] 유저의 댓글을 즉시 숨김(블라인드) 처리하시겠습니까?\n\n※ 확인 시 해당 댓글은 숨김 처리되며, 유저에게 벌점 10점이 가산됩니다.`)) return;
+        
+        try {
+            // 1. 댓글 블라인드 업데이트
+            const { error: commentErr } = await supabase.from('comments').update({ is_blind: true }).eq('id', commentId);
+            if (commentErr) throw commentErr;
+            
+            if (userId && userId !== '---') {
+                // 2. 해당 유저의 현재 penalty_points 단일 조회
+                const { data: userObj, error: userGetErr } = await supabase.from('users').select('penalty_points').eq('id', userId).single();
+                if (!userGetErr && userObj) {
+                    const nextPoints = (userObj.penalty_points || 0) + 10;
+                    let updateData = { penalty_points: nextPoints };
+                    
+                    // 30점 돌파 시 3일 징계 타임스탬프 계산 연동
+                    if (nextPoints >= 30) {
+                        let restrictedDate = new Date();
+                        restrictedDate.setDate(restrictedDate.getDate() + 3);
+                        updateData.restricted_until = restrictedDate.toISOString();
+                    }
+                    
+                    // 3. 유저 테이블 벌점 및 제재 반영 업데이트
+                    await supabase.from('users').update(updateData).eq('id', userId);
+                }
+            }
+            
+            alert("✅ 댓글 블라인드 및 제재 벌점 10점이 원격 적용되었습니다.");
+            await loadComments(); // 목록 실시간 동기화 리로드
+            
+        } catch (err) {
+            console.error("제재 실패:", err);
+            alert("제재 처리 중 데이터베이스 에러가 발생했습니다.");
+        }
+    }
+
+    // 댓글 숨김 해제 및 벌점 차감 복구 로직
+    async function restoreComment(commentId) {
+        if(!confirm('이 댓글의 숨김 조치를 해제하시겠습니까?')) return;
+        
+        try {
+            const { error } = await supabase.from('comments').update({ is_blind: false }).eq('id', commentId);
+            if (error) throw error;
+            
+            alert("조치가 정상적으로 해제되었습니다.");
+            await loadComments();
+        } catch (err) {
+            alert("복구 처리 중 에러가 발생했습니다.");
+        }
+    }
+
+    // 불판 자체를 강제 블라인드/해제 토글 처리
+    async function togglePostStatus() {
+        if(!currentPost) return;
+        const nextStatus = !currentPost.is_active;
+        const msg = nextStatus ? "이 불판을 다시 정상 공개 상태로 복구하시겠습니까?" : "이 불판을 강제 블라인드 처리하여 리스트에서 숨기시겠습니까?";
+        if(!confirm(msg)) return;
+        
+        try {
+            const { error } = await supabase.from('posts').update({ is_active: nextStatus }).eq('id', postId);
+            if(error) throw error;
+            alert("불판 상태가 변경되었습니다.");
+            await loadPostDetail();
+        } catch(err) {
+            alert("불판 상태 업데이트 실패.");
+        }
+    }
+
+    window.loadPostDetail = loadPostDetail;
+    window.loadComments = loadComments;
+    window.blindComment = blindComment;
+    window.restoreComment = restoreComment;
+    window.togglePostStatus = togglePostStatus;
+})();
+</script>
 </body>
 </html>

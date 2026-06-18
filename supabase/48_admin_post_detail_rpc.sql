@@ -56,6 +56,7 @@ AS $$
       c.content,
       c.filtered_content,
       c.visibility_status,
+      c.is_blind,
       c.created_at,
       COALESCE(NULLIF(trim(c.author_nickname), ''), u.nickname, '익명') AS author_nickname,
       COALESCE(c.author_avatar_html, u.avatar_html, '') AS author_avatar_html,
