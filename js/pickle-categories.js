@@ -430,11 +430,21 @@
       }
 
       var sb = window.PickleSupabase.getClient();
+
+      if (window.PickleAdminAuth && window.PickleAdminAuth.fetchMyAdminRole) {
+        var roleInfo = await window.PickleAdminAuth.fetchMyAdminRole(sb);
+        if (roleInfo && roleInfo.ok && roleInfo.role === 'super') {
+          return true;
+        }
+        return false;
+      }
+
       var res = await sb
         .from('user_roles')
         .select('role')
-        .eq('email', String(currentUser.email).trim().toLowerCase())
+        .ilike('email', String(currentUser.email).trim())
         .eq('status', 'active')
+        .limit(1)
         .maybeSingle();
 
       if (res.error) {

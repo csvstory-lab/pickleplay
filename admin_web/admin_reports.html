@@ -135,6 +135,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
+<script src="../js/pickle-admin-auth.js"></script>
 <script src="../js/pickle-penalties.js"></script>
 </head>
 <body>
@@ -798,6 +799,10 @@
             target_id: ctxTargetId,
             shouldBlind: shouldBlind,
         });
+        if (window.PickleAdminAuth && window.PickleAdminAuth.diagnoseManualPenaltyAccess) {
+            const access = await window.PickleAdminAuth.diagnoseManualPenaltyAccess(dbClient);
+            console.log('[admin_reports] 어드민 세션 진단:', access);
+        }
         try {
             const sanctionResult = await window.PicklePenalties.applyManualPenalty(
                 ctxUserId,

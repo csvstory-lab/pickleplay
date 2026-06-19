@@ -210,6 +210,11 @@
     });
 
     var sb = getClient();
+
+    if (window.PickleAdminAuth && window.PickleAdminAuth.diagnoseManualPenaltyAccess) {
+      await window.PickleAdminAuth.diagnoseManualPenaltyAccess(sb);
+    }
+
     var rpcRes = await sb.rpc('apply_manual_penalty', {
       p_user_id: userId || null,
       p_reason: reason || null,
