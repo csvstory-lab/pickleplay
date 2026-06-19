@@ -246,7 +246,16 @@
       loginBtn.textContent = '로그인 중…';
 
       try {
-        await signInWithEmail(creds.email, creds.password);
+        var signInResult = await signInWithEmail(creds.email, creds.password);
+        if (
+          signInResult &&
+          signInResult.user &&
+          signInResult.user.id &&
+          window.PicklePoints &&
+          window.PicklePoints.awardPoints
+        ) {
+          await window.PicklePoints.awardPoints(signInResult.user.id, 'signup');
+        }
         window.location.href = getRedirectAfterLogin();
       } catch (err) {
         alert(formatLoginError(err));
@@ -387,12 +396,22 @@
       signupBtn.textContent = '가입 처리 중…';
 
       try {
-        await signUpWithEmail(payload.email, payload.password, {
+        var signupData = await signUpWithEmail(payload.email, payload.password, {
           nickname: payload.email.split('@')[0],
           gender: payload.gender,
           age_group: payload.ageGroup,
           marketing_consent: payload.marketingConsent,
         });
+        if (
+          signupData &&
+          signupData.user &&
+          signupData.user.id &&
+          signupData.session &&
+          window.PicklePoints &&
+          window.PicklePoints.awardPoints
+        ) {
+          await window.PicklePoints.awardPoints(signupData.user.id, 'signup');
+        }
         alert(SIGNUP_SUCCESS_MSG);
         resetSignupFields();
         if (screenApi && screenApi.showLoginView) {

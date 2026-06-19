@@ -40,6 +40,14 @@
     }
   }
 
+  function isDuplicateDbError(error) {
+    if (!error) return false;
+    if (error.code === '23505') return true;
+    if (Number(error.status) === 409) return true;
+    var msg = String(error.message || error.details || '').toLowerCase();
+    return msg.indexOf('duplicate') !== -1 || msg.indexOf('unique') !== -1;
+  }
+
   async function recordPostView(postId) {
     if (!postId) return;
     var dedupeKey = String(postId) + ':view';
@@ -50,15 +58,50 @@
     if (!sb) return;
 
     var userId = await getAuthUserId();
+    var viewerKey = getViewerKey();
     var row = {
       post_id: postId,
-      viewer_key: getViewerKey(),
+      viewer_key: viewerKey,
     };
-    if (userId) row.viewer_id = userId;
 
-    var result = await sb.from('post_views').insert(row);
-    if (result.error) {
-      console.warn('[P!CKLE Ranking] post view record failed', result.error);
+    if (userId) {
+      row.user_id = userId;
+      row.viewer_id = userId;
+    }
+
+    var upsertOptions = userId
+      ? { onConflict: 'post_id,user_id', ignoreDuplicates: true }
+      : { onConflict: 'post_id,viewer_key', ignoreDuplicates: true };
+
+    var result = await sb.from('post_views').upsert(row, upsertOptions);
+
+    if (!result.error) return;
+
+    if (isDuplicateDbError(result.error)) return;
+
+    // upsert가 partial unique index와 맞지 않을 때: 존재 여부 확인 후 insert
+    try {
+      var existsQuery = sb
+        .from('post_views')
+        .select('id')
+        .eq('post_id', postId)
+        .limit(1);
+
+      if (userId) {
+        existsQuery = existsQuery.eq('user_id', userId);
+      } else {
+        existsQuery = existsQuery.eq('viewer_key', viewerKey).is('user_id', null);
+      }
+
+      var existing = await existsQuery.maybeSingle();
+      if (existing.data) return;
+
+      var insertResult = await sb.from('post_views').insert(row);
+      if (insertResult.error && !isDuplicateDbError(insertResult.error)) {
+        console.warn('[P!CKLE Ranking] post view record failed', insertResult.error);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Ranking] post view record failed', err);
     }
   }
 

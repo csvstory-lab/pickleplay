@@ -20,16 +20,13 @@
   };
 
   function getSupabaseClient() {
-    if (dbClient) return dbClient;
-    var cfg = window.PICKLE_SUPABASE_CONFIG;
-    if (!cfg || !cfg.url || !cfg.anonKey) {
-      throw new Error('Supabase 접속 정보가 없습니다. js/supabase-config.js 를 확인해 주세요.');
+    if (typeof window.getPickleSupabaseClient === 'function') {
+      return window.getPickleSupabaseClient();
     }
-    if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-      throw new Error('Supabase JS 라이브러리가 로드되지 않았습니다.');
+    if (window.supabaseClient) {
+      return window.supabaseClient;
     }
-    dbClient = window.supabase.createClient(cfg.url.trim(), cfg.anonKey.trim());
-    return dbClient;
+    throw new Error('Supabase 클라이언트를 초기화할 수 없습니다. supabase-config.js 를 확인해 주세요.');
   }
 
   function escapeHtml(str) {

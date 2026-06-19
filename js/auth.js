@@ -18,6 +18,12 @@
   };
 
   function getClient() {
+    if (typeof window.getPickleSupabaseClient === 'function') {
+      return window.getPickleSupabaseClient();
+    }
+    if (window.supabaseClient) {
+      return window.supabaseClient;
+    }
     if (window.PickleSupabaseBootstrap?.isReady()) {
       return window.PickleSupabaseBootstrap.getClient();
     }
@@ -620,6 +626,15 @@
             detail: { session, user, profile },
           })
         );
+        if (
+          window.PicklePoints &&
+          window.PicklePoints.shouldAttemptSignupBonus &&
+          window.PicklePoints.shouldAttemptSignupBonus(rawUser.id)
+        ) {
+          window.PicklePoints.awardPoints(rawUser.id, 'signup').catch(function (err) {
+            console.warn('[P!CKLE Points] signup bonus skipped', err);
+          });
+        }
         authContextCache = {
           session,
           user,

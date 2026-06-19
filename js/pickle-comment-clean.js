@@ -40,6 +40,13 @@
   function getSupabaseClient(sb) {
     if (sb) return sb;
 
+    if (typeof window.getPickleSupabaseClient === 'function') {
+      return window.getPickleSupabaseClient();
+    }
+    if (window.supabaseClient) {
+      return window.supabaseClient;
+    }
+
     try {
       if (window.PickleSupabase && window.PickleSupabase.getClient) {
         return window.PickleSupabase.getClient();
@@ -54,20 +61,6 @@
       }
     } catch (err) {
       console.warn('[P!CKLE CommentClean] PickleSupabaseBootstrap.getClient 실패', err);
-    }
-
-    var cfg = window.PICKLE_SUPABASE_CONFIG;
-    if (
-      cfg &&
-      cfg.url &&
-      cfg.anonKey &&
-      window.supabase &&
-      typeof window.supabase.createClient === 'function'
-    ) {
-      return window.supabase.createClient(
-        String(cfg.url).trim(),
-        String(cfg.anonKey).trim()
-      );
     }
 
     return null;

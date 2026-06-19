@@ -122,6 +122,7 @@
 
 <!-- 💡 중요: 구형 파이어베이스 제거 후 최신 Supabase CDN 도입 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
 </head>
 <body>
 
@@ -247,13 +248,9 @@
 (function () {
     'use strict';
 
-    const supabaseUrl = 'https://jszgznanptutwxcsnrep.supabase.co';
-    const supabaseKey =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impzemd6bmFucHR1dHd4Y3NucmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDc1MjIsImV4cCI6MjA5NjA4MzUyMn0.Czo-Cmw7JQktWMV77KSt2Yk3Pnkx89ZE1Ey0C0dk1G4';
-
-    const supabase = window.supabase.createClient
-        ? window.supabase.createClient(supabaseUrl, supabaseKey)
-        : window.supabase;
+    const supabase = window.getPickleSupabaseClient
+        ? window.getPickleSupabaseClient()
+        : window.supabaseClient;
 
     const urlParams = new URLSearchParams(window.location.search);
     const postId = urlParams.get('id');

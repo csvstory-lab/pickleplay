@@ -984,6 +984,17 @@
         await sendReplyNotification(sb, replyParentId, newReplyId, user.id);
       }
 
+      if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
+        window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment').catch(function (err) {
+          console.warn('[P!CKLE Detail] reply points skipped', err);
+        });
+      } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
+        console.log('✅ [Comment] 완료 -> awardPoints 호출 시도');
+        window.PicklePoints.awardPoints(user.id, 'comment').catch(function (err) {
+          console.warn('[P!CKLE Detail] reply points skipped', err);
+        });
+      }
+
       if (inputEl) inputEl.value = '';
       closeAllReplyForms();
       await loadComments(currentPostId);
@@ -1284,6 +1295,17 @@
         text: text,
         postAuthorId: currentPost ? currentPost.author_id : null,
       });
+
+      if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
+        window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment').catch(function (err) {
+          console.warn('[P!CKLE Detail] comment points skipped', err);
+        });
+      } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
+        console.log('✅ [Comment] 완료 -> awardPoints 호출 시도');
+        window.PicklePoints.awardPoints(user.id, 'comment').catch(function (err) {
+          console.warn('[P!CKLE Detail] comment points skipped', err);
+        });
+      }
 
       if (inputEl) inputEl.value = '';
 
@@ -1882,6 +1904,17 @@
         );
       }
       throw insertResult.error;
+    }
+
+    if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
+      window.PicklePoints.tryAwardPoints(user.id, 'vote', 'Vote').catch(function (err) {
+        console.warn('[P!CKLE Detail] vote points skipped', err);
+      });
+    } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
+      console.log('✅ [Vote] 완료 -> awardPoints 호출 시도');
+      window.PicklePoints.awardPoints(user.id, 'vote').catch(function (err) {
+        console.warn('[P!CKLE Detail] vote points skipped', err);
+      });
     }
   }
 

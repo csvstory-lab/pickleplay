@@ -533,6 +533,17 @@
       thumbnail_url: insertResult.data && insertResult.data.thumbnail_url,
     });
 
+    if (window.PicklePoints && window.PicklePoints.tryAwardPoints && user && user.id) {
+      window.PicklePoints.tryAwardPoints(user.id, 'post', 'Post').catch(function (err) {
+        console.warn('[P!CKLE Create] post points skipped', err);
+      });
+    } else if (window.PicklePoints && window.PicklePoints.awardPoints && user && user.id) {
+      console.log('✅ [Post] 완료 -> awardPoints 호출 시도');
+      window.PicklePoints.awardPoints(user.id, 'post').catch(function (err) {
+        console.warn('[P!CKLE Create] post points skipped', err);
+      });
+    }
+
     return { ok: true, id: insertResult.data?.id, thumbnail_url: insertResult.data?.thumbnail_url };
   }
 

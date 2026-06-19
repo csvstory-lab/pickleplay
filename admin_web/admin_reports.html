@@ -134,6 +134,7 @@
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
 </head>
 <body>
 
@@ -387,15 +388,12 @@
     let curLegalId = null, curLegalUserId = null, curLegalTargetId = null, curLegalTargetType = 'post';
 
     window.addEventListener('DOMContentLoaded', async () => {
-        const mUrl = MANUAL_SUPABASE_URL.trim();
-        const mKey = MANUAL_SUPABASE_KEY.trim();
-
-        if (mUrl && mKey && window.supabase) {
-            dbClient = window.supabase.createClient(mUrl, mKey);
-            console.log("🚀 [P!CKLE 관제탑] 강제 오버라이드 마스터키로 DB 연결 성공!");
+        if (typeof window.getPickleSupabaseClient === 'function') {
+            dbClient = window.getPickleSupabaseClient();
+            console.log('🚀 [P!CKLE 관제탑] Supabase Singleton 클라이언트로 DB 연결 성공!');
             startApp();
         } else {
-            const errHtml = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--alert-red);font-weight:800;line-height:1.6;">⚠️ Supabase API KEY가 누락되었습니다.<br>코드 하단 MANUAL_SUPABASE_KEY 에 값을 반드시 붙여넣어 주세요!</td></tr>`;
+            const errHtml = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--alert-red);font-weight:800;line-height:1.6;">⚠️ Supabase 설정을 불러오지 못했습니다.<br>../js/supabase-config.js 로드 순서를 확인해 주세요.</td></tr>`;
             document.getElementById('reportTableBody').innerHTML = errHtml;
             document.getElementById('legalTableBody').innerHTML = errHtml;
         }

@@ -20,15 +20,19 @@
   }
 
   function getSupabaseClient() {
+    if (typeof window.getPickleSupabaseClient === 'function') {
+      return window.getPickleSupabaseClient();
+    }
+    if (window.supabaseClient) {
+      return window.supabaseClient;
+    }
     if (window.PickleSupabase && window.PickleSupabase.getClient) {
       return window.PickleSupabase.getClient();
     }
     if (window.PickleMypage && window.PickleMypage.getSupabaseClient) {
       return window.PickleMypage.getSupabaseClient();
     }
-    var cfg = window.PICKLE_SUPABASE_CONFIG;
-    if (!cfg || !cfg.url || !cfg.anonKey || !window.supabase) return null;
-    return window.supabase.createClient(cfg.url.trim(), cfg.anonKey.trim());
+    return null;
   }
 
   function sanitizeExt(filename) {

@@ -311,6 +311,16 @@
 
     try {
       await submitVote(postId, choice, user.id);
+      if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
+        window.PicklePoints.tryAwardPoints(user.id, 'vote', 'Vote').catch(function (err) {
+          console.warn('[P!CKLE Feed] vote points skipped', err);
+        });
+      } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
+        console.log('✅ [Vote] 완료 -> awardPoints 호출 시도');
+        window.PicklePoints.awardPoints(user.id, 'vote').catch(function (err) {
+          console.warn('[P!CKLE Feed] vote points skipped', err);
+        });
+      }
       postsCache = await fetchPosts();
       renderFeed(postsCache);
       showToast('투표가 반영되었습니다!');

@@ -14,13 +14,6 @@
 (function () {
   'use strict';
 
-  function normalizeSupabaseUrl(url) {
-    return String(url || '')
-      .trim()
-      .replace(/\/rest\/v1\/?$/i, '')
-      .replace(/\/+$/, '');
-  }
-
   function readConfig() {
     const cfg = window.PICKLE_SUPABASE_CONFIG;
     if (!cfg || !cfg.url || !cfg.anonKey) {
@@ -30,37 +23,24 @@
       );
     }
     return {
-      url: normalizeSupabaseUrl(cfg.url),
+      url: String(cfg.url).trim(),
       anonKey: String(cfg.anonKey).trim(),
     };
   }
-
-  let cachedClient = null;
 
   function getClient() {
     if (window.PickleSupabaseBootstrap) {
       return window.PickleSupabaseBootstrap.getClient();
     }
-
-    if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-      throw new Error(
-        '[P!CKLE] Supabase JS 라이브러리가 로드되지 않았습니다. ' +
-          'HTML에 @supabase/supabase-js CDN script 가 먼저 있는지 확인하세요.'
-      );
+    if (typeof window.getPickleSupabaseClient === 'function') {
+      return window.getPickleSupabaseClient();
     }
-
-    if (!cachedClient) {
-      const { url, anonKey } = readConfig();
-      cachedClient = window.supabase.createClient(url, anonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      });
+    if (window.supabaseClient) {
+      return window.supabaseClient;
     }
-
-    return cachedClient;
+    throw new Error(
+      '[P!CKLE] Supabase 클라이언트를 초기화할 수 없습니다. supabase-config.js 로드 순서를 확인하세요.'
+    );
   }
 
   /** DB 연결 테스트 — cs_settings 1건 조회 (공개 읽기 허용 테이블) */
@@ -82,6 +62,8 @@
   window.PickleSupabase = {
     getClient,
     testConnection,
-    getProjectUrl: readConfig().url,
+    getProjectUrl: function () {
+      return readConfig().url;
+    },
   };
 })();

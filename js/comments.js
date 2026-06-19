@@ -418,6 +418,16 @@
     try {
       const created = await submitComment(postId, text, panel);
       if (!created) return;
+      if (window.PicklePoints && window.PicklePoints.tryAwardPoints && created.user_id) {
+        window.PicklePoints.tryAwardPoints(created.user_id, 'comment', 'Comment').catch(function (err) {
+          console.warn('[P!CKLE Comments] comment points skipped', err);
+        });
+      } else if (window.PicklePoints && window.PicklePoints.awardPoints && created.user_id) {
+        console.log('✅ [Comment] 완료 -> awardPoints 호출 시도');
+        window.PicklePoints.awardPoints(created.user_id, 'comment').catch(function (err) {
+          console.warn('[P!CKLE Comments] comment points skipped', err);
+        });
+      }
       input.value = '';
       if (window.PickleFeed?.showToast) {
         window.PickleFeed.showToast('댓글이 등록되었습니다');

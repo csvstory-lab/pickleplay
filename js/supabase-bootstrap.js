@@ -10,8 +10,6 @@
 (function () {
   'use strict';
 
-  var cachedClient = null;
-
   var PLACEHOLDER_PATTERNS = [
     'YOUR_SUPABASE',
     'YOUR_PROJECT_REF',
@@ -93,6 +91,10 @@
       return 'Supabase JS 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해 주세요.';
     }
 
+    if (typeof window.getPickleSupabaseClient !== 'function') {
+      return 'supabase-config.js 가 로드되지 않았습니다. script 순서를 확인해 주세요.';
+    }
+
     return null;
   }
 
@@ -107,30 +109,9 @@
     }
   }
 
-  function normalizeSupabaseUrl(url) {
-    return String(url || '')
-      .trim()
-      .replace(/\/rest\/v1\/?$/i, '')
-      .replace(/\/+$/, '');
-  }
-
   function getClient() {
     assertReady();
-    if (!cachedClient) {
-      var cfg = readConfig();
-      cachedClient = window.supabase.createClient(
-        normalizeSupabaseUrl(cfg.url),
-        String(cfg.anonKey).trim(),
-        {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-          },
-        }
-      );
-    }
-    return cachedClient;
+    return window.getPickleSupabaseClient();
   }
 
   window.PickleSupabaseBootstrap = {
