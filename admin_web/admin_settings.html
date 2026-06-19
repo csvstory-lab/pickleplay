@@ -636,7 +636,7 @@
                             <option value="terms">✅ 서비스 이용약관 (권리침해 조항 포함)</option>
                             <option value="privacy">🔒 개인정보 처리방침</option>
                         </select>
-                        <span style="color:var(--text-sub); font-size:0.85rem; font-weight:700;">마지막 배포: 2026.05.18</span>
+                        <span id="policyLastDeployed" style="color:var(--text-sub); font-size:0.85rem; font-weight:700;">불러오는 중…</span>
                     </div>
                     
                     <div class="toolbar">
@@ -644,19 +644,7 @@
                     </div>
                     
                     <div class="editor-body">
-                        <textarea class="rich-textarea" id="editorContent">
-제 1 조 (목적)
-본 약관은 P!CKLE 서비스 이용 조건 및 절차를 규정합니다.
-
-제 8 조 (게시물의 관리 및 법적 책임)
-1. 회원이 서비스 내에 게시한 게시물의 법적 책임은 게시한 회원 본인에게 있습니다.
-2. 회사는 사용자의 게시물에 대해 사전 검열 의무를 지지 않습니다.
-
-제 9 조 (권리침해에 대한 면책 및 게시중단 임시조치)
-1. 타인의 권리(명예훼손, 저작권, 초상권 등)를 침해하는 게시물로 피해를 입은 자는 관련 법령(정보통신망법 등)에 따라 고객센터를 통해 해당 게시물의 게시중단을 요청할 수 있습니다.
-2. 회사는 적법한 권리자의 요청(신분증, 위임장, 소명자료 등)이 접수될 경우, 법령에 따라 지체 없이 30일간 해당 게시물을 '임시조치(블라인드)' 처리하며, 이 의무를 이행함으로써 플랫폼으로서의 법적 책임을 면책받습니다.
-3. 정당한 권한 없는 자의 허위/악의적 신고로 인한 피해 발생 시, 회사는 신고자에게 민/형사상 책임을 물을 수 있습니다.
-                        </textarea>
+                        <textarea class="rich-textarea" id="editorContent" placeholder="약관/정책 본문을 입력하세요."></textarea>
                     </div>
                     
                     <div class="editor-footer">
@@ -664,7 +652,7 @@
                             <span class="v-label">배포 버전 명칭:</span>
                             <input type="text" class="v-input" value="v1.2.0" id="versionInput">
                         </div>
-                        <button class="btn-publish" onclick="publishPolicy()">🚀 유저 앱에 즉시 배포</button>
+                        <button class="btn-publish" type="button" id="btnPublishPolicy" onclick="publishPolicy()">🚀 유저 앱에 즉시 배포</button>
                     </div>
                 </div>
 
@@ -740,8 +728,10 @@
       </div>
   </div>
 
+  <script src="../js/pickle-policies.js"></script>
   <script src="../js/pickle-points.js"></script>
   <script src="js/admin-settings-system.js"></script>
+  <script src="js/admin-settings-policies.js"></script>
   <script>
     function syncManualPushTargetField() {
         const select = document.getElementById('manualPushTargetSelect');
@@ -1063,22 +1053,37 @@
         }
     }
 
-    // 💡 약관/정책 에디터 로직 (2가지로 통합된 텍스트 관리)
-    const policies = {
-        terms: `제 1 조 (목적)\n본 약관은 P!CKLE 서비스 이용 조건 및 절차를 규정합니다.\n\n제 8 조 (게시물의 관리 및 법적 책임)\n1. 회원이 서비스 내에 게시한 게시물의 법적 책임은 게시한 회원 본인에게 있습니다.\n2. 회사는 사용자의 게시물에 대해 사전 검열 의무를 지지 않습니다.\n\n제 9 조 (권리침해에 대한 면책 및 게시중단 임시조치)\n1. 타인의 권리(명예훼손, 저작권, 초상권 등)를 침해하는 게시물로 피해를 입은 자는 관련 법령(정보통신망법 등)에 따라 고객센터를 통해 해당 게시물의 게시중단을 요청할 수 있습니다.\n2. 회사는 적법한 권리자의 요청(신분증, 위임장, 소명자료 등)이 접수될 경우, 법령에 따라 지체 없이 30일간 해당 게시물을 '임시조치(블라인드)' 처리하며, 이 의무를 이행함으로써 플랫폼으로서의 법적 책임을 면책받습니다.\n3. 정당한 권한 없는 자의 허위/악의적 신고로 인한 피해 발생 시, 회사는 신고자에게 민/형사상 책임을 물을 수 있습니다.`,
-        privacy: `개인정보 처리방침\n\n1. 수집하는 개인정보의 항목\n- 필수항목: 소셜 연동 식별값, 닉네임, 이메일 주소\n\n2. 개인정보의 수집 및 이용 목적\n- 서비스 제공에 관한 계약 이행 및 맞춤형 콘텐츠 제공\n\n3. 개인정보의 파기\n- 회원은 언제든지 회원 탈퇴를 요청할 수 있으며, 탈퇴 시 수집된 식별 데이터는 복구 불가능한 방법으로 즉시 영구 파기됩니다.`
-    };
-
     function changePolicy() {
-        const selected = document.getElementById('policySelect').value;
-        const editor = document.getElementById('editorContent');
-        const versionInput = document.getElementById('versionInput');
-        
-        editor.value = policies[selected];
-        
-        // 항목 변경 시 버전을 자동으로 맞춰줌
-        if(selected === 'terms') versionInput.value = 'v1.2.0';
-        if(selected === 'privacy') versionInput.value = 'v1.1.0';
+        if (window.AdminSettingsPolicies && window.AdminSettingsPolicies.changePolicy) {
+            window.AdminSettingsPolicies.changePolicy();
+        }
+    }
+
+    async function publishPolicy() {
+        const policyName = document.getElementById('policySelect').options[document.getElementById('policySelect').selectedIndex].text;
+        const version = document.getElementById('versionInput').value;
+
+        if (!confirm(`[${policyName}]\n해당 정책을 ${version} 버전으로 유저 앱에 즉시 배포하시겠습니까?\n\n※ 저장 후 마이페이지 설정 탭에 즉시 반영됩니다.`)) return;
+
+        const btn = document.getElementById('btnPublishPolicy');
+        const originalLabel = '🚀 유저 앱에 즉시 배포';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '배포 중…';
+        }
+
+        try {
+            await AdminSettingsPolicies.publish(getSupabaseClient);
+            alert('[' + policyName + '] ' + version + ' — Supabase에 저장되었습니다.');
+        } catch (err) {
+            console.error('[Admin Policies] 배포 실패', err);
+            alert('정책 저장 실패: ' + (err.message || String(err)));
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = originalLabel;
+            }
+        }
     }
 
     async function saveAllSettings() {
@@ -1140,18 +1145,6 @@
         }
     }
 
-    async function publishPolicy() {
-        const policyName = document.getElementById('policySelect').options[document.getElementById('policySelect').selectedIndex].text;
-        const version = document.getElementById('versionInput').value;
-        const policyKey = document.getElementById('policySelect').value;
-        const content = document.getElementById('editorContent').value;
-
-        if(!confirm(`[${policyName}]\n해당 정책을 ${version} 버전으로 유저 앱에 즉시 배포하시겠습니까?\n\n※ 권리침해 면책 조항 등이 즉시 반영되어 법적 방어망이 업데이트됩니다.`)) return;
-
-        policies[policyKey] = content;
-        alert('[' + policyName + '] ' + version + ' — 에디터 내용이 로컬에 반영되었습니다.\n(Supabase 정책 배포 연동은 추후 적용 예정)');
-    }
-
     document.getElementById('adminListBody')?.addEventListener('click', function (e) {
         const editBtn = e.target.closest('.btn-admin-edit');
         if (editBtn) {
@@ -1170,6 +1163,7 @@
         syncManualPushTargetField();
         try {
             await loadSystemSettings(getSupabaseClient);
+            await AdminSettingsPolicies.load(getSupabaseClient);
         } catch (err) {
             console.error('시스템 설정 불러오기 실패:', err);
         }

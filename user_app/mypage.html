@@ -379,6 +379,37 @@
     .item-subtext { font-size: 0.85rem; color: var(--neon-blue); font-weight: 700; background: rgba(0, 240, 255, 0.1); padding: 4px 8px; border-radius: 8px; }
     .text-danger { color: var(--alert-red); }
 
+    /* 약관/정책 문서 패널 */
+    .policy-doc-card {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #3f3f46;
+        font-size: 0.85rem;
+        color: #d4d4d8;
+        line-height: 1.7;
+        max-height: calc(100vh - 220px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .policy-doc-meta {
+        text-align: right;
+        font-size: 0.75rem;
+        color: #52525b;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    .policy-doc-body { word-break: break-word; }
+    .policy-doc-loading,
+    .policy-doc-empty,
+    .policy-doc-error {
+        text-align: center;
+        color: var(--text-sub);
+        padding: 28px 12px;
+        font-weight: 700;
+    }
+    .policy-doc-error { color: var(--alert-red); }
+
     .settings-company-footer {
         margin-top: 28px;
         padding: 20px 5px 12px;
@@ -1291,21 +1322,17 @@
         <button class="top-tab" id="tabPrivacy" onclick="switchInnerTab('privacy', 'policy')">개인정보 처리방침</button>
     </div>
     <div class="tab-area">
-        <div id="termsArea" style="background:var(--card-bg); padding:20px; border-radius:12px; border:1px solid #3f3f46; font-size:0.85rem; color:#d4d4d8; line-height:1.6;">
-            <div style="text-align:right; font-size:0.75rem; color:#52525b; margin-bottom:15px;">개정일자: 2026.05.18</div>
-            <strong style="color:var(--neon-green);">제 1 조 (목적)</strong><br>본 약관은 P!CKLE 서비스 이용 조건 및 절차를 규정합니다.<br><br>
-            <strong style="color:var(--neon-green);">제 8 조 (게시물의 관리 및 법적 책임)</strong><br>
-            1. 회원이 서비스 내에 게시한 게시물(불판, 댓글 등)의 저작권 및 모든 민/형사상 법적 책임은 게시한 회원 본인에게 있습니다.<br>
-            2. 회사는 회원의 게시물을 사전 검열할 의무가 없으며, 게시물로 인해 발생하는 분쟁에 대해 원칙적으로 책임을 지지 않습니다.<br><br>
-            <strong style="color:var(--neon-green);">제 9 조 (권리침해에 대한 면책 및 임시조치)</strong><br>
-            1. 타인의 권리(명예훼손, 저작권 침해 등)를 침해하는 게시물로 인해 피해를 입은 자는 관련 법령에 따라 회사에 해당 게시물의 게시중단(블라인드)을 요청할 수 있습니다.<br>
-            2. 회사는 적법한 권리자의 요청이 접수될 경우, 정보통신망법 제44조의2 규정에 따라 지체 없이 30일간 해당 게시물을 임시조치(숨김) 처리하며, 이 의무를 다함으로써 플랫폼으로서의 법적 책임을 면책받습니다.<br>
-            3. 정당한 권한 없는 자의 허위 신고로 인한 피해 발생 시, 회사는 신고자에게 법적 책임을 물을 수 있습니다.
+        <div id="termsArea" class="policy-doc-card">
+            <div id="termsPolicyMeta" class="policy-doc-meta"></div>
+            <div id="termsPolicyBody" class="policy-doc-body">
+                <p class="policy-doc-loading">이용약관을 불러오는 중…</p>
+            </div>
         </div>
-        <div id="privacyArea" class="hidden" style="background:var(--card-bg); padding:20px; border-radius:12px; border:1px solid #3f3f46; font-size:0.85rem; color:#d4d4d8; line-height:1.6;">
-            <div style="text-align:right; font-size:0.75rem; color:#52525b; margin-bottom:15px;">개정일자: 2026.05.18</div>
-            <strong style="color:var(--neon-green);">1. 수집 항목</strong><br>카카오 고유 식별 ID, 이메일, 닉네임만 필수 수집합니다.<br><br>
-            <strong style="color:var(--neon-green);">2. 파기 절차</strong><br>탈퇴 시 수집된 식별 데이터와 쿠폰 이력은 즉시 영구 파기됩니다.
+        <div id="privacyArea" class="policy-doc-card hidden">
+            <div id="privacyPolicyMeta" class="policy-doc-meta"></div>
+            <div id="privacyPolicyBody" class="policy-doc-body">
+                <p class="policy-doc-loading">개인정보 처리방침을 불러오는 중…</p>
+            </div>
         </div>
     </div>
 </div>
@@ -1419,6 +1446,11 @@
         document.body.style.overflow = 'hidden';
         if (panelId === 'penaltyPanel' && window.PickleMypage && typeof window.PickleMypage.syncPenaltyDashboard === 'function') {
             window.PickleMypage.syncPenaltyDashboard({ markPenaltyRead: true });
+        }
+        if (panelId === 'policyPanel' && window.PicklePolicies && typeof window.PicklePolicies.loadForMypage === 'function') {
+            window.PicklePolicies.loadForMypage({ forceRefresh: true }).catch(function (err) {
+                console.warn('[Mypage] 약관 로드 실패', err);
+            });
         }
     }
     function closePanel(panelId) {
@@ -1564,6 +1596,7 @@
 <script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-follows.js?v=20260608_fandom3"></script>
+<script src="../js/pickle-policies.js"></script>
 <script src="../js/mypage-page.js?v=20260617_profile_grid"></script>
 <script src="../js/pickle-legal-report.js"></script>
 
