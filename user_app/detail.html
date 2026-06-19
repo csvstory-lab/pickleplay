@@ -596,7 +596,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">상세 내용 (선택)</label>
-            <textarea class="form-textarea" placeholder="신고 내용을 자세히 적어주시면 처리에 큰 도움이 됩니다."></textarea>
+            <textarea class="form-textarea" id="reportDetail" placeholder="신고 내용을 자세히 적어주시면 처리에 큰 도움이 됩니다."></textarea>
         </div>
         <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom: 20px; line-height: 1.5; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
             ※ 악의적/허위 신고 시 픽클 운영 정책에 따라 제재를 받을 수 있습니다.<br>
@@ -728,6 +728,7 @@
 <script src="../js/pickle-comment-clean.js?v=20260617_bannedkw2"></script>
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
+<script src="../js/pickle-penalties.js"></script>
 <script src="../js/pickle-detail.js?v=20260608_softmask"></script>
 <script>
     function ensureKakaoReady() {
@@ -758,15 +759,60 @@
         document.getElementById('reportReason').value = '';
     }
 
-    function submitReport() {
+    async function submitReport() {
         const reason = document.getElementById('reportReason').value;
+        const detailEl = document.getElementById('reportDetail');
+        const detail = detailEl ? detailEl.value.trim() : '';
+
         if (!reason) {
             alert('신고 사유를 선택해주세요.');
             return;
         }
-        if (confirm('해당 불판을 신고하시겠습니까?\n접수 후 관리자의 심사가 진행됩니다.')) {
+
+        var postId = window.PickleDetail && window.PickleDetail.getCurrentPostId
+            ? window.PickleDetail.getCurrentPostId()
+            : null;
+
+        if (!postId) {
+            alert('불판 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해 주세요.');
+            return;
+        }
+
+        if (!window.PicklePenalties || !window.PicklePenalties.submitContentReport) {
+            alert('신고 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+            return;
+        }
+
+        if (!confirm('해당 불판을 신고하시겠습니까?\n접수 후 관리자의 심사가 진행됩니다.')) {
+            return;
+        }
+
+        try {
+            var result = await window.PicklePenalties.submitContentReport({
+                targetType: 'post',
+                targetId: postId,
+                reason: reason,
+                detail: detail,
+            });
+
+            if (!result.ok) {
+                if (result.reason === 'login_required') {
+                    alert('신고하려면 로그인이 필요합니다.');
+                    return;
+                }
+                if (result.reason === 'cannot_report_self') {
+                    alert('본인 게시물은 신고할 수 없습니다.');
+                    return;
+                }
+                alert('신고 접수에 실패했습니다. (' + (result.reason || 'unknown') + ')');
+                return;
+            }
+
             alert('🚨 신고가 정상적으로 접수되었습니다. 깨끗한 픽클을 만들어주셔서 감사합니다!');
             closeModals();
+        } catch (err) {
+            console.error('❌ 신고 접수 실패:', err && err.message, err && err.details);
+            alert('신고 접수 실패: ' + (err.message || String(err)));
         }
     }
 

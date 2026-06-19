@@ -2185,6 +2185,9 @@
     getCurrentPost: function () {
       return currentPost;
     },
+    getCurrentPostId: function () {
+      return currentPostId;
+    },
     isPostExpired: isPostExpired,
     castVote: castVote,
     submitComment: submitComment,
