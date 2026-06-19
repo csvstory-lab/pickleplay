@@ -225,6 +225,21 @@
     }
 
     var sb = getClient();
+    var config;
+
+    try {
+      config = await fetchPointConfig(sb, {
+        forceRefresh: !!(options && options.forceRefreshConfig),
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Points] point_config 조회 실패', err);
+      return { awarded: false, reason: 'config_fetch_failed' };
+    }
+
+    if (!isEngineEnabled(config)) {
+      console.log('[P!CKLE Points] 마스터 스위치 OFF — RPC 호출 생략', actionType);
+      return { awarded: false, reason: 'engine_disabled' };
+    }
 
     var rpcRes = await sb.rpc('award_points', {
       p_user_id: userId,

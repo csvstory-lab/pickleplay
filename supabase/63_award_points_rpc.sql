@@ -26,6 +26,27 @@ BEGIN
     RETURN json_build_object('ok', false, 'awarded', false, 'reason', 'forbidden');
   END IF;
 
+  -- 마스터 스위치(engine_enabled) 최우선 확인 — OFF면 즉시 종료
+  SELECT point_config
+  INTO v_config
+  FROM public.system_settings
+  WHERE id = 1;
+
+  IF v_config IS NULL THEN
+    RETURN json_build_object('ok', true, 'awarded', false, 'reason', 'engine_disabled');
+  END IF;
+
+  v_engine_enabled := CASE lower(trim(COALESCE(v_config->>'engine_enabled', 'false')))
+    WHEN 'true' THEN true
+    WHEN 't' THEN true
+    WHEN '1' THEN true
+    ELSE false
+  END;
+
+  IF NOT v_engine_enabled THEN
+    RETURN json_build_object('ok', true, 'awarded', false, 'reason', 'engine_disabled');
+  END IF;
+
   v_config_key := CASE trim(p_action)
     WHEN 'signup' THEN 'signup_welcome'
     WHEN 'vote' THEN 'event_participate'
@@ -41,20 +62,6 @@ BEGIN
 
   IF v_config_key IS NULL THEN
     RETURN json_build_object('ok', false, 'awarded', false, 'reason', 'unknown_action');
-  END IF;
-
-  SELECT point_config
-  INTO v_config
-  FROM public.system_settings
-  WHERE id = 1;
-
-  IF v_config IS NULL THEN
-    RETURN json_build_object('ok', false, 'awarded', false, 'reason', 'config_missing');
-  END IF;
-
-  v_engine_enabled := COALESCE((v_config->>'engine_enabled')::boolean, false);
-  IF NOT v_engine_enabled THEN
-    RETURN json_build_object('ok', true, 'awarded', false, 'reason', 'engine_disabled');
   END IF;
 
   v_log_reason := CASE trim(p_action)
