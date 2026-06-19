@@ -366,7 +366,7 @@ REVOKE ALL ON FUNCTION public.apply_auto_penalty(uuid, text, integer) FROM PUBLI
 GRANT EXECUTE ON FUNCTION public.apply_auto_penalty(uuid, text, integer) TO authenticated;
 
 REVOKE ALL ON FUNCTION public.apply_manual_penalty(uuid, text, integer, uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.apply_manual_penalty(uuid, text, integer, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_manual_penalty(uuid, text, integer, uuid) TO anon, authenticated;
 
 REVOKE ALL ON FUNCTION public.submit_user_report(text, uuid, text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.submit_user_report(text, uuid, text, text) TO authenticated;

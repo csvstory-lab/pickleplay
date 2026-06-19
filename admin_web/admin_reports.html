@@ -185,7 +185,7 @@
         </div>
 
         <div class="filter-bar">
-            <select class="filter-select" id="searchStatus" onchange="window.loadReports()"><option value="all">상태 전체</option><option value="pending" selected>심사 대기</option><option value="done">처리 완료</option></select>
+            <select class="filter-select" id="searchStatus" onchange="window.loadReports()"><option value="all">상태 전체</option><option value="pending" selected>심사 대기</option><option value="processed">처리 완료</option></select>
             <select class="filter-select" id="searchType" onchange="window.loadReports()"><option value="all">구분 전체</option><option value="post">불판(게시물)</option><option value="comment">댓글</option></select>
             <input type="text" class="filter-input" id="searchKeyword" placeholder="피신고자, 본문 검색...">
             <button class="btn-search" onclick="window.loadReports()">검색 조건 조회</button>
@@ -277,7 +277,10 @@
                     <div class="calc-punish" id="autoPunish" style="background: rgba(255,0,127,0.1); color: var(--neon-pink);">제재 없음</div>
                 </div>
                 <label class="checkbox-wrap"><input type="checkbox" checked id="chkGuide"><div class="checkbox-info"><span>콘텐츠 강제 숨김(블라인드) 및 알림톡 발송</span></div></label>
-                <button class="btn-submit-sanction" style="background: var(--neon-pink); color: #fff; padding:15px; border-radius:8px; border:none; font-weight:900; cursor:pointer;" onclick="executeSanction()"> Hammer 집행 및 실시간 유저단 배지 전송</button>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button type="button" class="btn-submit-sanction" style="flex:1; background: var(--neon-pink); color: #fff; padding:15px; border-radius:8px; border:none; font-weight:900; cursor:pointer;" onclick="executeSanction()">🔨 제재 집행 (벌점 부여)</button>
+                    <button type="button" style="flex:1; background: #3f3f46; color: #fff; padding:15px; border-radius:8px; border:1px solid #52525b; font-weight:900; cursor:pointer;" onclick="executeDismiss()">✅ 무혐의 (반려)</button>
+                </div>
             </div>
         </div>
     </div>
@@ -365,6 +368,22 @@
         document.getElementById(id).style.display = 'none';
     }
 
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    }
+
+    function formatReportStatus(status) {
+        if (status === 'pending') return '<span class="status-badge s-pending">심사 대기</span>';
+        if (status === 'sanctioned') return '<span class="status-badge s-done">제재 완료</span>';
+        if (status === 'dismissed') return '<span class="status-badge s-done">무혐의 종결</span>';
+        return '<span class="status-badge s-done">처리 완료</span>';
+    }
+
+    function isReportProcessed(status) {
+        return status === 'sanctioned' || status === 'dismissed' || status === 'reviewed';
+    }
+
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -401,9 +420,93 @@
     });
 
     async function startApp() {
+        bindReportTableEvents();
+        bindLegalTableEvents();
         await refreshAllKPIs();
         await window.loadReports();
         await window.loadLegalReports();
+    }
+
+    function bindLegalTableEvents() {
+        const tbody = document.getElementById('legalTableBody');
+        if (!tbody || tbody.dataset.bound === '1') return;
+        tbody.dataset.bound = '1';
+        tbody.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-action="legal-review"]');
+            if (!btn) return;
+            e.preventDefault();
+            const legalId = btn.getAttribute('data-legal-id');
+            if (legalId && window.openLegalModal) window.openLegalModal(legalId);
+        });
+    }
+
+    function bindReportTableEvents() {
+        const tbody = document.getElementById('reportTableBody');
+        if (!tbody || tbody.dataset.bound === '1') return;
+        tbody.dataset.bound = '1';
+        tbody.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-action="sanction-review"]');
+            if (!btn) return;
+            e.preventDefault();
+            const reportId = btn.getAttribute('data-report-id');
+            console.log('🛠️ 사후 심사 버튼 클릭됨:', reportId);
+            if (reportId && window.openSanctionModal) {
+                window.openSanctionModal(reportId);
+            }
+        });
+    }
+
+    function attachCumulativeCounts(reports) {
+        const counts = {};
+        (reports || []).forEach(function (r) {
+            const key = String(r.target_type || '') + ':' + String(r.target_id || '');
+            counts[key] = (counts[key] || 0) + 1;
+        });
+        (reports || []).forEach(function (r) {
+            const key = String(r.target_type || '') + ':' + String(r.target_id || '');
+            r.cumulative_count = counts[key] || 1;
+        });
+    }
+
+    async function enrichReports(reports) {
+        if (!dbClient || !reports || !reports.length) return reports || [];
+        const enriched = [];
+        for (let i = 0; i < reports.length; i++) {
+            const r = Object.assign({}, reports[i]);
+            r.type = r.target_type;
+            r.user_id = r.reported_user_id;
+            r.content_snapshot = '';
+
+            if (r.target_type === 'post' && r.target_id) {
+                try {
+                    const res = await dbClient.from('posts').select('title, description').eq('id', r.target_id).maybeSingle();
+                    if (res.data) {
+                        r.content_snapshot = res.data.title || res.data.description || '(내용 없음)';
+                    } else {
+                        r.content_snapshot = '(삭제되었거나 조회 불가)';
+                    }
+                } catch (err) {
+                    r.content_snapshot = '(콘텐츠 조회 실패)';
+                }
+            } else if (r.target_type === 'comment' && r.target_id) {
+                try {
+                    const res = await dbClient.from('comments').select('content, filtered_content').eq('id', r.target_id).maybeSingle();
+                    if (res.data) {
+                        r.content_snapshot = res.data.filtered_content || res.data.content || '(내용 없음)';
+                    } else {
+                        r.content_snapshot = '(삭제되었거나 조회 불가)';
+                    }
+                } catch (err) {
+                    r.content_snapshot = '(콘텐츠 조회 실패)';
+                }
+            } else {
+                r.content_snapshot = r.reason || '(대상 정보 없음)';
+            }
+
+            enriched.push(r);
+        }
+        attachCumulativeCounts(enriched);
+        return enriched;
     }
 
     async function refreshAllKPIs() {
@@ -437,13 +540,36 @@
         if (!dbClient) return;
         try {
             const status = document.getElementById('searchStatus').value;
+            const typeFilter = document.getElementById('searchType').value;
             let query = dbClient.from('reports').select('*').order('created_at', { ascending: false });
-            if (status !== 'all') query = query.eq('status', status);
+            if (status === 'pending') {
+                query = query.eq('status', 'pending');
+            } else if (status === 'processed') {
+                query = query.in('status', ['sanctioned', 'dismissed', 'reviewed']);
+            }
+            if (typeFilter !== 'all') {
+                query = query.eq('target_type', typeFilter);
+            }
             const { data, error } = await query;
             if (error) throw error;
-            reportCache = data || [];
+            let rows = await enrichReports(data || []);
+            const keyword = (document.getElementById('searchKeyword').value || '').trim().toLowerCase();
+            if (keyword) {
+                rows = rows.filter(function (r) {
+                    const hay = [
+                        r.reason,
+                        r.content_snapshot,
+                        r.reported_user_id,
+                        r.target_type,
+                    ].join(' ').toLowerCase();
+                    return hay.indexOf(keyword) !== -1;
+                });
+            }
+            reportCache = rows;
             window.renderReportPage(1);
-        } catch(e) {}
+        } catch(e) {
+            console.error('[admin_reports] 신고 목록 로드 실패', e);
+        }
     };
 
     window.renderReportPage = function(page) {
@@ -458,13 +584,17 @@
         items.forEach(r => {
             const tr = document.createElement('tr');
             const dateStr = new Date(r.created_at).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-            const typeBadge = r.type === 'comment' ? `<span class="type-badge t-comment">💬 댓글</span>` : `<span class="type-badge t-post">🔥 불판</span>`;
-            const statusBadge = r.status === 'pending' ? `<span class="status-badge s-pending">심사 대기</span>` : `<span class="status-badge s-done">처리 완료</span>`;
-            let actionBtn = `<button class="btn-action btn-sanction" onclick="openSanctionModal(${r.id})">사후 심사</button>`;
-            if (r.status === 'done') actionBtn = `<span style="font-size:0.8rem; color:var(--text-sub); font-weight:700;">처분 완료</span>`;
+            const targetType = r.target_type || r.type || 'post';
+            const typeBadge = targetType === 'comment' ? `<span class="type-badge t-comment">💬 댓글</span>` : `<span class="type-badge t-post">🔥 불판</span>`;
+            const statusBadge = formatReportStatus(r.status);
+            let actionBtn = `<button type="button" class="btn-action btn-sanction" data-action="sanction-review" data-report-id="${escapeHtml(r.id)}">사후 심사</button>`;
+            if (isReportProcessed(r.status)) {
+                actionBtn = `<span style="font-size:0.8rem; color:var(--text-sub); font-weight:700;">처분 완료</span>`;
+            }
+            const snapshot = r.content_snapshot || r.reason || '';
             tr.innerHTML = `
                 <td>${dateStr}</td><td>${typeBadge}</td>
-                <td><span class="report-reason">${escapeHtml(r.reason)}</span><span class="report-target">"${escapeHtml(r.content_snapshot)}"</span></td>
+                <td><span class="report-reason">${escapeHtml(r.reason)}</span><span class="report-target">"${escapeHtml(snapshot)}"</span></td>
                 <td style="text-align:center;"><span class="count-badge">${r.cumulative_count || 1}</span></td>
                 <td style="text-align:center;">${statusBadge}</td>
                 <td style="text-align:center;"><div class="action-btns">${actionBtn}</div></td>
@@ -514,7 +644,7 @@
             }
             if (!fileIndicator) fileIndicator = `<span style="font-size:0.8rem; color:#52525b;">미첨부</span>`;
 
-            let actionBtn = `<button class="btn-action btn-law" onclick="openLegalModal(${r.id})">신고 내용 / 법리 심사</button>`;
+            let actionBtn = `<button type="button" class="btn-action btn-law" data-action="legal-review" data-legal-id="${escapeHtml(r.id)}">신고 내용 / 법리 심사</button>`;
             if (r.status === 'resolved') actionBtn = `<span style="font-size:0.8rem; color:var(--text-sub); font-weight:700;">처분 종결</span>`;
 
             tr.innerHTML = `
@@ -530,26 +660,63 @@
     };
 
     window.openSanctionModal = async function(id) {
-        if (!dbClient) return;
-        const r = reportCache.find(x => x.id === id);
-        if (!r) return;
-        ctxReportId = r.id; ctxType = r.type; ctxTargetId = r.target_id; ctxUserId = r.user_id;
-        document.getElementById('modalText').innerText = r.content_snapshot || '';
-        document.getElementById('modalReportReason').innerText = r.reason || '';
-        document.getElementById('modalBadge').innerText = r.type === 'comment' ? '💬 댓글' : '🔥 불판';
-        document.getElementById('modalBadge').className = r.type === 'comment' ? 'type-badge t-comment' : 'type-badge t-post';
+        console.log('🛠️ 사후 심사 버튼 클릭됨:', id);
+        if (!dbClient) {
+            console.warn('[admin_reports] DB 클라이언트 없음');
+            return;
+        }
+        const reportId = String(id);
+        const r = reportCache.find(function (x) { return String(x.id) === reportId; });
+        if (!r) {
+            console.warn('[admin_reports] reportCache에서 신고 건을 찾을 수 없음:', reportId);
+            alert('신고 데이터를 찾을 수 없습니다. 목록을 새로고침해 주세요.');
+            return;
+        }
+
+        ctxReportId = r.id;
+        ctxType = r.target_type || r.type;
+        ctxTargetId = r.target_id;
+        ctxUserId = r.reported_user_id || r.user_id;
+
+        console.log('[admin_reports] 사후 심사 모달 오픈:', {
+            report_id: ctxReportId,
+            user_id: ctxUserId,
+            target_type: ctxType,
+            target_id: ctxTargetId,
+        });
+
+        document.getElementById('modalText').innerText = r.content_snapshot || '(콘텐츠 없음)';
+        document.getElementById('modalReportReason').innerText = r.reason || '-';
+        document.getElementById('modalReportDetail').innerText = r.reason || '-';
+        document.getElementById('modalBadge').innerText = ctxType === 'comment' ? '💬 댓글' : '🔥 불판';
+        document.getElementById('modalBadge').className = ctxType === 'comment' ? 'type-badge t-comment' : 'type-badge t-post';
+
         try {
-            const { data: user } = await dbClient.from('users').select('penalty_points, nickname').eq('id', r.user_id).single();
-            ctxCurrentUserPoints = user ? (user.penalty_points || 0) : 0;
-            document.getElementById('modalTargetUser').innerText = `피신고자: ${user ? user.nickname : '회원'} (UID: ${r.user_id.substring(0,8)}...)`;
-        } catch(e) { ctxCurrentUserPoints = 0; document.getElementById('modalTargetUser').innerText = `피신고자: 회원`; }
-        document.querySelectorAll('#sanctionModal input[name="penaltyAction"]')[0].checked = true;
+            if (ctxUserId) {
+                const { data: user } = await dbClient.from('users').select('penalty_points, nickname').eq('id', ctxUserId).maybeSingle();
+                ctxCurrentUserPoints = user ? (user.penalty_points || 0) : 0;
+                document.getElementById('modalTargetUser').innerText = user
+                    ? `피신고자: ${user.nickname || '회원'} (UID: ${String(ctxUserId).substring(0, 8)}...)`
+                    : `피신고자: 회원 (UID: ${String(ctxUserId).substring(0, 8)}...)`;
+            } else {
+                ctxCurrentUserPoints = 0;
+                document.getElementById('modalTargetUser').innerText = '피신고자: (정보 없음)';
+            }
+        } catch (e) {
+            ctxCurrentUserPoints = 0;
+            document.getElementById('modalTargetUser').innerText = '피신고자: 회원';
+            console.warn('[admin_reports] 피신고자 정보 조회 실패', e);
+        }
+
+        const firstRadio = document.querySelector('#sanctionModal input[name="penaltyAction"]');
+        if (firstRadio) firstRadio.checked = true;
         window.updateCalc(0);
-        document.getElementById('sanctionModal').style.display = 'flex';
+        openModal('sanctionModal');
     };
 
     window.openLegalModal = function(id) {
-        const r = legalCache.find(x => x.id === id);
+        const legalId = String(id);
+        const r = legalCache.find(function (x) { return String(x.id) === legalId; });
         if (!r) return;
         curLegalId = r.id; curLegalUserId = r.user_id; curLegalTargetId = r.target_id; curLegalTargetType = r.target_type || 'post';
         document.getElementById('mdReporterName').innerText = r.reporter_name || '-';
@@ -581,7 +748,7 @@
 
         document.querySelectorAll('#legalModal input[name="legalAction"]')[1].checked = true;
         window.updateLegalCalc('temporary');
-        document.getElementById('legalModal').style.display = 'flex';
+        openModal('legalModal');
     };
 
     window.updateCalc = function(addPoint) {
@@ -596,6 +763,15 @@
         else { punishBox.innerText = "제재 없음"; punishBox.style.background = "transparent"; punishBox.style.color = "#a1a1aa"; }
     };
 
+    window.executeDismiss = async function() {
+        if (!confirm('무혐의(반려)로 처리하시겠습니까?')) return;
+        const dismissRadio = document.querySelector('#sanctionModal input[name="penaltyAction"][value="0"]');
+        if (dismissRadio) dismissRadio.checked = true;
+        window.updateCalc(0);
+        document.getElementById('chkGuide').checked = false;
+        await runSanctionSubmit(0, false);
+    };
+
     window.executeSanction = async function() {
         if (!dbClient) return;
         if (!window.PicklePenalties || !window.PicklePenalties.applyManualPenalty) {
@@ -604,12 +780,24 @@
         }
         const addPoint = parseInt(document.querySelector('#sanctionModal input[name="penaltyAction"]:checked').value, 10);
         const shouldBlind = document.getElementById('chkGuide').checked;
+        if (!confirm(addPoint > 0 ? '이 제재 수위를 전역 배포하시겠습니까?' : '무혐의(반려)로 처리하시겠습니까?')) return;
+        await runSanctionSubmit(addPoint, shouldBlind);
+    };
+
+    async function runSanctionSubmit(addPoint, shouldBlind) {
         const reasonMap = {
             10: '욕설/비방/어그로 (관리자 수동 집행)',
             30: '광고/도배 (관리자 수동 집행)',
             50: '음란/불법/혐오물 (관리자 수동 집행)',
         };
-        if(!confirm("이 제재 수위를 전역 배포하시겠습니까?")) return;
+        console.log('[admin_reports] 제재 RPC 요청:', {
+            addPoint: addPoint,
+            report_id: ctxReportId,
+            user_id: ctxUserId,
+            target_type: ctxType,
+            target_id: ctxTargetId,
+            shouldBlind: shouldBlind,
+        });
         try {
             const sanctionResult = await window.PicklePenalties.applyManualPenalty(
                 ctxUserId,
@@ -619,23 +807,45 @@
             );
 
             if (!sanctionResult.ok) {
-                alert('제재 처리에 실패했습니다. (' + (sanctionResult.reason || 'unknown') + ')');
+                console.error('[admin_reports] 제재 거부:', {
+                    reason: sanctionResult.reason,
+                    detail: sanctionResult.detail,
+                    data: sanctionResult.data,
+                });
+                const detailMsg = sanctionResult.detail ? ' / ' + sanctionResult.detail : '';
+                alert('제재 처리에 실패했습니다. (' + (sanctionResult.reason || 'unknown') + detailMsg + ')');
                 return;
             }
 
-            if (shouldBlind && addPoint > 0) {
-                if (ctxType === 'comment') await dbClient.from('comments').update({ is_blind: true }).eq('id', ctxTargetId);
-                else await dbClient.from('posts').update({ is_active: false }).eq('id', ctxTargetId);
+            if (shouldBlind && addPoint > 0 && ctxTargetId) {
+                const blindRes = ctxType === 'comment'
+                    ? await dbClient.from('comments').update({ is_blind: true }).eq('id', ctxTargetId)
+                    : await dbClient.from('posts').update({ is_active: false }).eq('id', ctxTargetId);
+                if (blindRes.error) {
+                    console.error('[admin_reports] 블라인드 처리 실패:', {
+                        message: blindRes.error.message,
+                        details: blindRes.error.details,
+                        hint: blindRes.error.hint,
+                        code: blindRes.error.code,
+                    });
+                }
             }
 
-            alert(addPoint > 0 ? "🔨 제재 처리가 완료되었습니다." : "✅ 무혐의 처리가 완료되었습니다.");
+            alert(addPoint > 0 ? '🔨 제재 처리가 완료되었습니다.' : '✅ 무혐의 처리가 완료되었습니다.');
             closeModal('sanctionModal');
-            await refreshAllKPIs(); await window.loadReports();
-        } catch(e) {
-            console.error('[수동 제재 Track] ❌ 집행 중 오류', e);
-            alert("업데이트 중 에러가 발생했습니다.");
+            await refreshAllKPIs();
+            await window.loadReports();
+        } catch (e) {
+            console.error('[admin_reports] 제재 집행 실패:', {
+                message: e && e.message,
+                details: e && e.details,
+                hint: e && e.hint,
+                code: e && e.code,
+                status: e && e.status,
+            }, e);
+            alert('업데이트 중 에러가 발생했습니다: ' + (e && e.message ? e.message : String(e)));
         }
-    };
+    }
 
     window.updateLegalCalc = function(actionType) {
         const countdown = document.getElementById('mdCountdownView');

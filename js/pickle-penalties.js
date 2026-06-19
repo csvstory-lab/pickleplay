@@ -218,14 +218,30 @@
     });
 
     if (rpcRes.error) {
-      console.error('[수동 제재 Track] ❌ RPC 실패:', rpcRes.error.message, rpcRes.error.details);
+      console.error('[수동 제재 Track] ❌ RPC HTTP 오류:', {
+        message: rpcRes.error.message,
+        details: rpcRes.error.details,
+        hint: rpcRes.error.hint,
+        code: rpcRes.error.code,
+        status: rpcRes.error.status,
+      });
       throw rpcRes.error;
     }
 
     var payload = rpcRes.data;
     if (!payload || payload.ok === false) {
-      console.warn('[수동 제재 Track] ❌ 거부:', payload && payload.reason, payload);
-      return { ok: false, reason: (payload && payload.reason) || 'rpc_failed' };
+      console.warn('[수동 제재 Track] ❌ RPC 거부:', {
+        reason: payload && payload.reason,
+        detail: payload && payload.detail,
+        error: payload && payload.error,
+        payload: payload,
+      });
+      return {
+        ok: false,
+        reason: (payload && payload.reason) || 'rpc_failed',
+        detail: payload && payload.detail,
+        data: payload,
+      };
     }
 
     if (payload.reason === 'dismissed') {
