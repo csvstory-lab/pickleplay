@@ -17,6 +17,9 @@
     .form-input:focus { border-color: #00f0ff; box-shadow: 0 0 10px rgba(0,240,255,0.1); }
     .btn-login { width: 100%; background: #00f0ff; color: #000; border: none; padding: 16px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; margin-top: 10px; transition: 0.2s; }
     .btn-login:hover { background: #00c3ff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,240,255,0.3); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .error-msg { display: none; margin-top: 16px; padding: 12px; border-radius: 8px; background: rgba(255,51,51,0.1); border: 1px solid rgba(255,51,51,0.35); color: #ff6b6b; font-size: 0.85rem; font-weight: 700; text-align: center; }
+    .error-msg.visible { display: block; }
     .footer-text { text-align: center; font-size: 0.75rem; color: #52525b; margin-top: 30px; }
 </style>
 </head>
@@ -27,22 +30,64 @@
             <div class="logo-sub">ADMIN WORKSPACE</div>
         </div>
         <div class="form-group">
-            <label class="form-label">관리자 이메일 (ID)</label>
-            <input type="email" class="form-input" id="adminEmail" placeholder="admin@pickle.com">
+            <label class="form-label" for="adminEmail">관리자 이메일 (ID)</label>
+            <input type="email" class="form-input" id="adminEmail" placeholder="ceo@pickle.com" autocomplete="username">
         </div>
         <div class="form-group">
-            <label class="form-label">비밀번호</label>
-            <input type="password" class="form-input" id="adminPassword" placeholder="••••••••">
+            <label class="form-label" for="adminPassword">비밀번호</label>
+            <input type="password" class="form-input" id="adminPassword" placeholder="••••••••" autocomplete="current-password">
         </div>
-        <button class="btn-login" onclick="attemptLogin()">시스템 접속</button>
-        <div class="footer-text">© 2026 P!CKLE Corp. All rights reserved.</div>
+        <button type="button" class="btn-login" id="btnLogin">시스템 접속</button>
+        <div class="error-msg" id="loginError"></div>
+        <div class="footer-text">© 2026 P!CKLE Corp. RBAC · Supabase Auth</div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-config.js"></script>
+    <script src="js/admin-auth.js"></script>
     <script>
-        function attemptLogin() {
-            // 추후 Supabase Auth 연동이 들어갈 자리입니다.
-            alert('로그인 로직 연동 대기 중입니다. 임시로 대시보드로 이동합니다.');
-            window.location.href = 'admin_dashboard.html';
+        function showLoginError(msg) {
+            var el = document.getElementById('loginError');
+            el.textContent = msg;
+            el.classList.add('visible');
         }
+
+        async function attemptLogin() {
+            var btn = document.getElementById('btnLogin');
+            var email = document.getElementById('adminEmail').value;
+            var password = document.getElementById('adminPassword').value;
+            var errorEl = document.getElementById('loginError');
+            errorEl.classList.remove('visible');
+
+            if (!window.PickleAdminWorkspace) {
+                showLoginError('인증 모듈을 불러오지 못했습니다.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '인증 중…';
+
+            try {
+                var result = await window.PickleAdminWorkspace.loginWithPassword(email, password);
+                if (!result.ok) {
+                    showLoginError(result.message || '접근 권한이 없거나 정지된 계정입니다.');
+                    return;
+                }
+                var target = window.__pickleAdminRedirect || 'admin_dashboard.html';
+                window.location.href = target;
+            } catch (err) {
+                console.error('[Admin Login] 실패:', err);
+                showLoginError(err.message || '로그인 중 오류가 발생했습니다.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '시스템 접속';
+            }
+        }
+
+        document.getElementById('btnLogin').addEventListener('click', attemptLogin);
+        document.getElementById('adminPassword').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') attemptLogin();
+        });
     </script>
 </body>
 </html>

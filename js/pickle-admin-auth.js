@@ -1,5 +1,6 @@
 /**
- * P!CKLE — 어드민 세션·user_roles 권한 조회 (RPC 기반, 406 방지)
+ * P!CKLE — 어드민 세션·user_roles 권한 조회 (user_app / admin 공용 RPC)
+ * admin_web 페이지는 js/admin-auth.js (PickleAdminWorkspace) 사용
  */
 (function () {
   'use strict';
@@ -13,11 +14,11 @@
     throw new Error('Supabase 클라이언트를 불러오지 못했습니다.');
   }
 
-  /**
-   * pickle_get_my_user_role RPC — user_roles 직접 SELECT 대체
-   * @returns {Promise<{ ok: boolean, is_admin?: boolean, role?: string, email?: string, mode?: string, reason?: string }>}
-   */
   async function fetchMyAdminRole(sb) {
+    if (window.PickleAdminWorkspace && window.PickleAdminWorkspace.fetchMyRole) {
+      return window.PickleAdminWorkspace.fetchMyRole(sb);
+    }
+
     var client = getClient(sb);
     var res = await client.rpc('pickle_get_my_user_role');
 
@@ -27,39 +28,25 @@
         details: res.error.details,
         hint: res.error.hint,
         code: res.error.code,
-        status: res.error.status,
       });
       return { ok: false, is_admin: false, reason: 'rpc_error', error: res.error };
     }
 
-    var payload = res.data || {};
-    console.log('[P!CKLE AdminAuth] 내 관리자 역할:', payload);
-    return payload;
+    return res.data || { ok: false, is_admin: false };
   }
 
-  /**
-   * 수동 제재 RPC 호출 전 세션·권한 진단
-   */
   async function diagnoseManualPenaltyAccess(sb) {
     var client = getClient(sb);
     var sessionRes = await client.auth.getSession();
     var session = sessionRes.data && sessionRes.data.session;
     var roleInfo = await fetchMyAdminRole(client);
 
-    var diagnosis = {
+    return {
       hasSession: !!session,
       sessionEmail: session && session.user ? session.user.email : null,
       roleInfo: roleInfo,
-      canProceed:
-        roleInfo.ok === true &&
-        (roleInfo.is_admin === true || roleInfo.mode === 'anon_admin_workspace'),
+      canProceed: roleInfo.ok === true && roleInfo.is_admin === true,
     };
-
-    if (!diagnosis.canProceed) {
-      console.warn('[P!CKLE AdminAuth] ⚠️ 수동 제재 권한 없음 — 일반 유저 세션이 어드민과 공유 중일 수 있음', diagnosis);
-    }
-
-    return diagnosis;
   }
 
   window.PickleAdminAuth = {

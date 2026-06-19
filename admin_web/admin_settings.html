@@ -204,6 +204,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
+<script src="js/admin-auth.js"></script>
 </head>
 <body>
 
@@ -729,8 +730,8 @@
 
               <div class="sc-item col" id="pwCreateSection" style="margin-bottom: 20px;">
                   <div class="sc-label"><strong>초기 임시 비밀번호 설정 <span style="color:var(--neon-pink);">*</span></strong></div>
-                  <input type="password" class="form-input" placeholder="8자리 이상 영문/숫자/특수문자 조합">
-                  <span style="font-size:0.75rem; color:var(--text-sub);">※ 등록 후 해당 담당자에게 임시 비밀번호를 전달해 주세요. 첫 로그인 시 의무적으로 변경해야 합니다.</span>
+                  <input type="password" class="form-input" id="admPassword" placeholder="8자리 이상 영문/숫자/특수문자 조합" autocomplete="new-password">
+                  <span style="font-size:0.75rem; color:var(--text-sub);">※ 등록 후 해당 담당자에게 임시 비밀번호를 전달해 주세요. Supabase Auth 계정이 함께 생성됩니다.</span>
               </div>
               
               <div class="sc-item col" id="pwResetSection" style="display: none; margin-bottom: 20px;">
@@ -740,7 +741,7 @@
 
               <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top: 1px solid #3f3f46; padding-top: 20px;">
                   <button style="padding:12px 24px; border-radius:8px; border:1px solid #52525b; background:transparent; color:#fff; cursor:pointer; font-weight:800;" onclick="closeAdminModal()">취소</button>
-                  <button style="padding:12px 30px; border-radius:8px; border:none; background:var(--theme-gold); color:#000; font-weight:900; cursor:pointer;" onclick="saveAdminAccount()">저장 완료</button>
+                  <button type="button" class="btn-save-admin" style="padding:12px 30px; border-radius:8px; border:none; background:var(--theme-gold); color:#000; font-weight:900; cursor:pointer;" onclick="saveAdminAccount()">저장 완료</button>
               </div>
           </div>
       </div>
@@ -996,7 +997,15 @@
     }
 
     // 관리자 추가/수정 모달 분기 (비밀번호 UI 전환)
-    function openAdminModal(mode, rowOrName) {
+    async function openAdminModal(mode, rowOrName) {
+        if (window.PickleAdminWorkspace) {
+            var roleInfo = await window.PickleAdminWorkspace.fetchMyRole(getSupabaseClient());
+            if (roleInfo.role !== 'super') {
+                alert('최고 관리자만 계정을 발급·수정할 수 있습니다.');
+                return;
+            }
+        }
+
         const modal = document.getElementById('adminModal');
         const title = document.getElementById('adminModalTitle');
         const pwCreate = document.getElementById('pwCreateSection');
@@ -1162,34 +1171,65 @@
         const email = document.getElementById('admEmail')?.value?.trim().toLowerCase() || '';
         const role = document.getElementById('admRole')?.value || 'marketer';
         const status = document.getElementById('admStatus')?.value || 'active';
+        const password = document.getElementById('admPassword')?.value || '';
+        const isNew = !editingAdminEmail;
 
         if (!name || !dept || !email) {
             alert('담당자 이름, 소속, 이메일은 필수 입력 사항입니다.');
             return;
         }
 
-        const payload = {
-            email: email,
-            display_name: name,
-            department: dept,
-            role: role,
-            status: status,
-            is_protected: role === 'super',
-        };
+        if (isNew && password.length < 8) {
+            alert('신규 발급 시 초기 비밀번호는 8자 이상이어야 합니다.');
+            return;
+        }
+
+        if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.provisionStaffAccount) {
+            alert('관리자 발급 모듈을 불러오지 못했습니다.');
+            return;
+        }
+
+        const saveBtn = document.querySelector('#adminModalOverlay button[onclick="saveAdminAccount()"]')
+            || document.querySelector('#adminModalOverlay .btn-save-admin');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = '발급 중…';
+        }
 
         try {
-            const sb = getSupabaseClient();
-            const { error } = await sb
-                .from('user_roles')
-                .upsert(payload, { onConflict: 'email' });
+            const result = await window.PickleAdminWorkspace.provisionStaffAccount({
+                email: email,
+                password: password || null,
+                display_name: name,
+                department: dept,
+                role: role,
+                status: status,
+                mode: isNew ? 'create' : 'update',
+            });
 
-            if (error) throw error;
+            if (!result.ok) {
+                alert('저장 실패: ' + (result.message || result.reason || 'unknown'));
+                return;
+            }
 
-            alert('관리자/파트너 계정 정보가 저장되었습니다.');
+            var msg = '관리자/파트너 계정 정보가 저장되었습니다.';
+            if (result.via === 'rpc_only' && result.warning) {
+                msg += '\n\n⚠️ ' + result.warning;
+            } else if (result.data && result.data.auth && result.data.auth.created) {
+                msg += '\n\n✅ Supabase Auth 로그인 계정이 생성되었습니다.';
+            }
+
+            alert(msg);
             closeAdminModal();
             await loadAdmins();
         } catch (err) {
+            console.error('[admin_settings] saveAdminAccount', err);
             alert('저장 실패: ' + (err.message || String(err)));
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '저장 완료';
+            }
         }
     }
 

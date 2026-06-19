@@ -72,6 +72,12 @@
     .s-incomplete {background: rgba(255, 51, 51, 0.15); color: var(--alert-red); border: 1px solid var(--alert-red);}
     .s-temporary {background: rgba(0, 240, 255, 0.15); color: var(--neon-blue); border: 1px solid var(--neon-blue);}
     .s-done {background: rgba(255, 255, 255, 0.05); color: var(--text-sub); border: 1px solid var(--safe-gray);}
+    .s-sanctioned {background: rgba(255, 51, 51, 0.12); color: var(--alert-red); border: 1px solid rgba(255, 51, 51, 0.35);}
+    .s-dismissed {background: rgba(57, 255, 20, 0.08); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.25);}
+    .action-done-badge {display: inline-block; font-size: 0.78rem; font-weight: 800; padding: 8px 12px; border-radius: 6px; line-height: 1.3; white-space: nowrap;}
+    .action-done-dismissed {background: rgba(57, 255, 20, 0.08); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.25);}
+    .action-done-sanctioned {background: rgba(255, 51, 51, 0.12); color: var(--alert-red); border: 1px solid rgba(255, 51, 51, 0.35);}
+    .action-done-reviewed {background: rgba(255, 255, 255, 0.05); color: var(--text-sub); border: 1px solid var(--safe-gray);}
     .action-btns {display: flex; gap: 8px; justify-content: center;}
     .btn-action {padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; border: none; display: flex; align-items: center; gap: 4px; font-family: 'Pretendard', sans-serif;}
     .btn-action.btn-sanction {background-color: var(--alert-red); color: #fff;}
@@ -135,7 +141,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
-<script src="../js/pickle-admin-auth.js"></script>
+<script src="js/admin-auth.js"></script>
 <script src="../js/pickle-penalties.js"></script>
 </head>
 <body>
@@ -186,7 +192,11 @@
         </div>
 
         <div class="filter-bar">
-            <select class="filter-select" id="searchStatus" onchange="window.loadReports()"><option value="all">상태 전체</option><option value="pending" selected>심사 대기</option><option value="processed">처리 완료</option></select>
+            <select class="filter-select" id="searchStatus" onchange="window.loadReports()">
+                <option value="all">전체</option>
+                <option value="pending" selected>심사 대기</option>
+                <option value="processed">심사 완료</option>
+            </select>
             <select class="filter-select" id="searchType" onchange="window.loadReports()"><option value="all">구분 전체</option><option value="post">불판(게시물)</option><option value="comment">댓글</option></select>
             <input type="text" class="filter-input" id="searchKeyword" placeholder="피신고자, 본문 검색...">
             <button class="btn-search" onclick="window.loadReports()">검색 조건 조회</button>
@@ -376,13 +386,38 @@
 
     function formatReportStatus(status) {
         if (status === 'pending') return '<span class="status-badge s-pending">심사 대기</span>';
-        if (status === 'sanctioned') return '<span class="status-badge s-done">제재 완료</span>';
-        if (status === 'dismissed') return '<span class="status-badge s-done">무혐의 종결</span>';
+        if (status === 'sanctioned') return '<span class="status-badge s-sanctioned">제재 확정</span>';
+        if (status === 'dismissed') return '<span class="status-badge s-dismissed">무혐의 종결</span>';
+        if (status === 'reviewed') return '<span class="status-badge s-done">심사 완료</span>';
         return '<span class="status-badge s-done">처리 완료</span>';
     }
 
     function isReportProcessed(status) {
         return status === 'sanctioned' || status === 'dismissed' || status === 'reviewed';
+    }
+
+    function formatReportActionCell(report) {
+        var status = report && report.status;
+        if (status === 'pending') {
+            return '<button type="button" class="btn-action btn-sanction" data-action="sanction-review" data-report-id="' + escapeHtml(report.id) + '">사후 심사</button>';
+        }
+        if (status === 'dismissed') {
+            return '<span class="action-done-badge action-done-dismissed">✅ 처리 완료 — 무혐의</span>';
+        }
+        if (status === 'sanctioned') {
+            var pts = Number(report.penalty_points) > 0 ? ' (+' + report.penalty_points + '점)' : '';
+            return '<span class="action-done-badge action-done-sanctioned">🔨 처리 완료 — 제재 확정' + pts + '</span>';
+        }
+        if (status === 'reviewed') {
+            return '<span class="action-done-badge action-done-reviewed">📋 처리 완료 — 검토 종료</span>';
+        }
+        return '<span class="action-done-badge action-done-reviewed">처리 완료</span>';
+    }
+
+    function getReportEmptyMessage(filterStatus) {
+        if (filterStatus === 'pending') return '심사 대기 중인 신고가 없습니다.';
+        if (filterStatus === 'processed') return '심사 완료된 신고 이력이 없습니다.';
+        return '조건에 맞는 신고 기록이 없습니다.';
     }
 
     function escapeHtml(str) {
@@ -539,20 +574,25 @@
 
     window.loadReports = async function() {
         if (!dbClient) return;
+        const statusFilter = document.getElementById('searchStatus').value;
         try {
-            const status = document.getElementById('searchStatus').value;
             const typeFilter = document.getElementById('searchType').value;
             let query = dbClient.from('reports').select('*').order('created_at', { ascending: false });
-            if (status === 'pending') {
+
+            if (statusFilter === 'pending') {
                 query = query.eq('status', 'pending');
-            } else if (status === 'processed') {
-                query = query.in('status', ['sanctioned', 'dismissed', 'reviewed']);
+            } else if (statusFilter === 'processed') {
+                query = query.in('status', ['dismissed', 'sanctioned']);
             }
+            // statusFilter === 'all' → 조건 없음 (전체)
+
             if (typeFilter !== 'all') {
                 query = query.eq('target_type', typeFilter);
             }
+
             const { data, error } = await query;
             if (error) throw error;
+
             let rows = await enrichReports(data || []);
             const keyword = (document.getElementById('searchKeyword').value || '').trim().toLowerCase();
             if (keyword) {
@@ -562,21 +602,24 @@
                         r.content_snapshot,
                         r.reported_user_id,
                         r.target_type,
+                        r.status,
                     ].join(' ').toLowerCase();
                     return hay.indexOf(keyword) !== -1;
                 });
             }
             reportCache = rows;
-            window.renderReportPage(1);
+            window.renderReportPage(1, statusFilter);
         } catch(e) {
             console.error('[admin_reports] 신고 목록 로드 실패', e);
         }
     };
 
-    window.renderReportPage = function(page) {
+    window.renderReportPage = function(page, filterStatus) {
         const tbody = document.getElementById('reportTableBody');
+        const activeFilter = filterStatus || (document.getElementById('searchStatus') && document.getElementById('searchStatus').value) || 'pending';
         if(reportCache.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#71717a;">접수된 일반 위반 기록이 없습니다.</td></tr>`;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#71717a;">' + getReportEmptyMessage(activeFilter) + '</td></tr>';
+            window.renderPaginationUI(0, 1, 'reportsPagination', 'active-report', window.renderReportPage);
             return;
         }
         const start = (page - 1) * pageSize;
@@ -586,19 +629,16 @@
             const tr = document.createElement('tr');
             const dateStr = new Date(r.created_at).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
             const targetType = r.target_type || r.type || 'post';
-            const typeBadge = targetType === 'comment' ? `<span class="type-badge t-comment">💬 댓글</span>` : `<span class="type-badge t-post">🔥 불판</span>`;
+            const typeBadge = targetType === 'comment' ? '<span class="type-badge t-comment">💬 댓글</span>' : '<span class="type-badge t-post">🔥 불판</span>';
             const statusBadge = formatReportStatus(r.status);
-            let actionBtn = `<button type="button" class="btn-action btn-sanction" data-action="sanction-review" data-report-id="${escapeHtml(r.id)}">사후 심사</button>`;
-            if (isReportProcessed(r.status)) {
-                actionBtn = `<span style="font-size:0.8rem; color:var(--text-sub); font-weight:700;">처분 완료</span>`;
-            }
+            const actionCell = formatReportActionCell(r);
             const snapshot = r.content_snapshot || r.reason || '';
             tr.innerHTML = `
                 <td>${dateStr}</td><td>${typeBadge}</td>
                 <td><span class="report-reason">${escapeHtml(r.reason)}</span><span class="report-target">"${escapeHtml(snapshot)}"</span></td>
                 <td style="text-align:center;"><span class="count-badge">${r.cumulative_count || 1}</span></td>
                 <td style="text-align:center;">${statusBadge}</td>
-                <td style="text-align:center;"><div class="action-btns">${actionBtn}</div></td>
+                <td style="text-align:center;"><div class="action-btns">${actionCell}</div></td>
             `;
             tbody.appendChild(tr);
         });
@@ -839,6 +879,8 @@
             alert(addPoint > 0 ? '🔨 제재 처리가 완료되었습니다.' : '✅ 무혐의 처리가 완료되었습니다.');
             closeModal('sanctionModal');
             await refreshAllKPIs();
+            const filterEl = document.getElementById('searchStatus');
+            if (filterEl) filterEl.value = 'processed';
             await window.loadReports();
         } catch (e) {
             console.error('[admin_reports] 제재 집행 실패:', {
