@@ -69,40 +69,12 @@
       row.viewer_id = userId;
     }
 
-    var upsertOptions = userId
-      ? { onConflict: 'post_id,user_id', ignoreDuplicates: true }
-      : { onConflict: 'post_id,viewer_key', ignoreDuplicates: true };
+    // partial unique index (post_id,user_id / post_id,viewer_key)는 PostgREST upsert onConflict 미지원 → insert + 중복 무시
+    var insertResult = await sb.from('post_views').insert(row);
+    if (!insertResult.error) return;
+    if (isDuplicateDbError(insertResult.error)) return;
 
-    var result = await sb.from('post_views').upsert(row, upsertOptions);
-
-    if (!result.error) return;
-
-    if (isDuplicateDbError(result.error)) return;
-
-    // upsert가 partial unique index와 맞지 않을 때: 존재 여부 확인 후 insert
-    try {
-      var existsQuery = sb
-        .from('post_views')
-        .select('id')
-        .eq('post_id', postId)
-        .limit(1);
-
-      if (userId) {
-        existsQuery = existsQuery.eq('user_id', userId);
-      } else {
-        existsQuery = existsQuery.eq('viewer_key', viewerKey).is('user_id', null);
-      }
-
-      var existing = await existsQuery.maybeSingle();
-      if (existing.data) return;
-
-      var insertResult = await sb.from('post_views').insert(row);
-      if (insertResult.error && !isDuplicateDbError(insertResult.error)) {
-        console.warn('[P!CKLE Ranking] post view record failed', insertResult.error);
-      }
-    } catch (err) {
-      console.warn('[P!CKLE Ranking] post view record failed', err);
-    }
+    console.warn('[P!CKLE Ranking] post view record failed', insertResult.error);
   }
 
   async function recordPostShare(postId, channel) {

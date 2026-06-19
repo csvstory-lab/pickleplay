@@ -434,9 +434,14 @@
         .from('user_roles')
         .select('role')
         .eq('email', String(currentUser.email).trim().toLowerCase())
-        .single();
+        .eq('status', 'active')
+        .maybeSingle();
 
-      if (res.error || !res.data) return false;
+      if (res.error) {
+        console.warn('[P!CKLE Categories] user_roles 조회 실패 — 픽클 오피셜 숨김', res.error);
+        return false;
+      }
+      if (!res.data) return false;
       return res.data.role === 'super';
     } catch (err) {
       console.warn('[P!CKLE Categories] user_roles 조회 실패 — 픽클 오피셜 숨김', err);
