@@ -11,11 +11,6 @@
     privacy: 'privacy_policy',
   };
 
-  var KEY_TO_SELECT = {
-    terms_of_service: 'terms',
-    privacy_policy: 'privacy',
-  };
-
   var DEFAULT_TERMS =
     '제 1 조 (목적)\n본 약관은 P!CKLE 서비스 이용 조건 및 절차를 규정합니다.\n\n제 8 조 (게시물의 관리 및 법적 책임)\n1. 회원이 서비스 내에 게시한 게시물의 법적 책임은 게시한 회원 본인에게 있습니다.\n2. 회사는 사용자의 게시물에 대해 사전 검열 의무를 지지 않습니다.';
 
@@ -28,7 +23,6 @@
   };
 
   var activeSelectKey = 'terms';
-  var loaded = false;
 
   function normalizeDoc(raw, fallbackContent, fallbackVersion) {
     return {
@@ -56,11 +50,109 @@
     if (!editor) return;
 
     var dbKey = getActiveDbKey();
+    var prev = editorState[dbKey] || { published_at: null };
     editorState[dbKey] = {
       content: editor.value,
       version: versionInput ? versionInput.value.trim() || 'v1.0.0' : 'v1.0.0',
-      published_at: editorState[dbKey] ? editorState[dbKey].published_at : null,
+      published_at: prev.published_at || null,
     };
+  }
+
+  function buildPolicyConfigPayload(options) {
+    syncEditorToState();
+
+    var now = new Date().toISOString();
+    var touchPublished = !!(options && options.touchPublished);
+    var onlyKey = options && options.onlyKey ? String(options.onlyKey) : null;
+
+    function buildDoc(key, fallbackVersion) {
+      var src = editorState[key] || {};
+      var doc = {
+        content: String(src.content != null ? src.content : ''),
+        version: String(src.version || fallbackVersion).trim() || fallbackVersion,
+        published_at: src.published_at || null,
+      };
+      if (touchPublished && (!onlyKey || onlyKey === key)) {
+        doc.published_at = now;
+      }
+      return doc;
+    }
+
+    return {
+      terms_of_service: buildDoc('terms_of_service', 'v1.2.0'),
+      privacy_policy: buildDoc('privacy_policy', 'v1.1.0'),
+    };
+  }
+
+  function logPolicySaveError(error, context) {
+    console.error(
+      '❌ 약관 저장 실패 원인:',
+      error && error.message ? error.message : error,
+      error && error.details ? error.details : '',
+      context || ''
+    );
+    if (error) {
+      console.error('❌ 약관 저장 실패 (전체 error 객체):', error);
+    }
+  }
+
+  async function persistPolicyConfig(getSupabaseClient, policyConfig) {
+    var sb = getSupabaseClient();
+
+    console.log(
+      '💾 Supabase update 요청 — system_settings.id =',
+      SYSTEM_SETTINGS_ID,
+      policyConfig
+    );
+
+    var updateRes = await sb
+      .from('system_settings')
+      .update({ policy_config: policyConfig })
+      .eq('id', SYSTEM_SETTINGS_ID)
+      .select('id, policy_config')
+      .single();
+
+    if (updateRes.error) {
+      logPolicySaveError(updateRes.error, 'update system_settings');
+      throw updateRes.error;
+    }
+
+    if (!updateRes.data || !updateRes.data.policy_config) {
+      console.warn(
+        '[Admin Policies] id=1 행 update 결과 없음 — upsert 시도',
+        updateRes
+      );
+
+      var upsertRes = await sb
+        .from('system_settings')
+        .upsert(
+          {
+            id: SYSTEM_SETTINGS_ID,
+            policy_config: policyConfig,
+            general_config: {},
+            point_config: {},
+            penalty_config: {},
+          },
+          { onConflict: 'id' }
+        )
+        .select('id, policy_config')
+        .single();
+
+      if (upsertRes.error) {
+        logPolicySaveError(upsertRes.error, 'upsert system_settings');
+        throw upsertRes.error;
+      }
+
+      if (!upsertRes.data || !upsertRes.data.policy_config) {
+        var emptyErr = new Error('policy_config 저장 후 응답 데이터가 비어 있습니다.');
+        logPolicySaveError(emptyErr, 'empty response after upsert');
+        throw emptyErr;
+      }
+
+      return upsertRes.data.policy_config;
+    }
+
+    return updateRes.data.policy_config;
   }
 
   function renderEditorFromState(selectKey) {
@@ -77,10 +169,10 @@
   }
 
   function formatDateLabel(iso) {
-    if (!window.PicklePolicies && !iso) return '—';
     if (window.PicklePolicies && window.PicklePolicies.formatPublishedDate) {
       return window.PicklePolicies.formatPublishedDate(iso);
     }
+    if (!iso) return '—';
     try {
       var d = new Date(iso);
       if (Number.isNaN(d.getTime())) return '—';
@@ -96,18 +188,8 @@
 
     var termsDate = formatDateLabel(editorState.terms_of_service.published_at);
     var privacyDate = formatDateLabel(editorState.privacy_policy.published_at);
-    var dbKey = getActiveDbKey();
-    var current = editorState[dbKey];
-    var currentDate = formatDateLabel(current && current.published_at);
 
-    el.textContent =
-      '이용약관 ' +
-      termsDate +
-      ' · 개인정보 ' +
-      privacyDate +
-      ' (현재 편집: ' +
-      currentDate +
-      ')';
+    el.textContent = '이용약관 ' + termsDate + ' · 개인정보 ' + privacyDate;
   }
 
   function updateHistoryCard() {
@@ -149,16 +231,15 @@
           '[Admin Policies] system_settings 행 없음 — supabase/64_policy_config.sql 실행 필요'
         );
         editorState = normalizeConfig({});
-        loaded = true;
         renderEditorFromState(activeSelectKey);
         updateHistoryCard();
         return editorState;
       }
+      logPolicySaveError(res.error, 'load policy_config');
       throw res.error;
     }
 
     editorState = normalizeConfig(res.data && res.data.policy_config);
-    loaded = true;
     renderEditorFromState(activeSelectKey);
     updateHistoryCard();
     console.log('[Admin Policies] policy_config 로드 완료', editorState);
@@ -172,52 +253,47 @@
     renderEditorFromState(activeSelectKey);
   }
 
+  /**
+   * 이용약관 + 개인정보 처리방침 전체 저장 (통합 저장 버튼 연동)
+   */
+  async function save(getSupabaseClient) {
+    console.log('💾 약관 저장 프로세스 시작');
+
+    var policyConfig = buildPolicyConfigPayload({ touchPublished: true });
+    console.log('💾 저장할 policy_config JSON:', JSON.stringify(policyConfig, null, 2));
+
+    var saved = await persistPolicyConfig(getSupabaseClient, policyConfig);
+    editorState = normalizeConfig(saved);
+    renderEditorFromState(activeSelectKey);
+    updateHistoryCard();
+
+    if (window.PicklePolicies && window.PicklePolicies.clearPolicyConfigCache) {
+      window.PicklePolicies.clearPolicyConfigCache();
+    }
+
+    console.log('✅ [Admin Policies] policy_config 저장 완료', editorState);
+    return editorState;
+  }
+
+  /**
+   * 현재 선택된 약관만 배포 (published_at 갱신)
+   */
   async function publish(getSupabaseClient) {
-    syncEditorToState();
+    console.log('💾 약관 저장 프로세스 시작 (단일 배포)');
 
     var select = document.getElementById('policySelect');
     var policyKey = (select && select.value) || 'terms';
     var dbKey = SELECT_TO_KEY[policyKey] || 'terms_of_service';
-    var policyName =
-      select && select.options[select.selectedIndex]
-        ? select.options[select.selectedIndex].text
-        : dbKey;
-    var versionInput = document.getElementById('versionInput');
-    var version = versionInput ? versionInput.value.trim() || 'v1.0.0' : 'v1.0.0';
-    var content = editorState[dbKey].content || '';
 
-    var publishedAt = new Date().toISOString();
-    editorState[dbKey] = {
-      content: content,
-      version: version,
-      published_at: publishedAt,
-    };
+    var policyConfig = buildPolicyConfigPayload({
+      touchPublished: true,
+      onlyKey: dbKey,
+    });
 
-    var sb = getSupabaseClient();
+    console.log('💾 배포할 policy_config JSON:', JSON.stringify(policyConfig, null, 2));
 
-    var currentRes = await sb
-      .from('system_settings')
-      .select('policy_config')
-      .eq('id', SYSTEM_SETTINGS_ID)
-      .single();
-
-    if (currentRes.error && currentRes.error.code !== 'PGRST116') {
-      throw currentRes.error;
-    }
-
-    var merged = normalizeConfig(
-      currentRes.data && currentRes.data.policy_config ? currentRes.data.policy_config : {}
-    );
-    merged[dbKey] = editorState[dbKey];
-
-    var updateRes = await sb
-      .from('system_settings')
-      .update({ policy_config: merged })
-      .eq('id', 1);
-
-    if (updateRes.error) throw updateRes.error;
-
-    editorState = merged;
+    var saved = await persistPolicyConfig(getSupabaseClient, policyConfig);
+    editorState = normalizeConfig(saved);
     renderEditorFromState(policyKey);
     updateHistoryCard();
 
@@ -225,12 +301,13 @@
       window.PicklePolicies.clearPolicyConfigCache();
     }
 
-    console.log('[Admin Policies] 배포 완료', dbKey, editorState[dbKey]);
+    console.log('✅ [Admin Policies] 배포 완료', dbKey, editorState[dbKey]);
     return editorState[dbKey];
   }
 
   window.AdminSettingsPolicies = {
     load: load,
+    save: save,
     changePolicy: changePolicy,
     publish: publish,
     getState: function () {

@@ -652,7 +652,10 @@
                             <span class="v-label">배포 버전 명칭:</span>
                             <input type="text" class="v-input" value="v1.2.0" id="versionInput">
                         </div>
+                        <div style="display:flex; gap:10px; flex-shrink:0;">
+                        <button class="btn-publish" type="button" id="btnSavePolicy" onclick="savePolicyConfig()" style="background:#27272a; color:#fff; border:1px solid #52525b;">💾 저장하기</button>
                         <button class="btn-publish" type="button" id="btnPublishPolicy" onclick="publishPolicy()">🚀 유저 앱에 즉시 배포</button>
+                        </div>
                     </div>
                 </div>
 
@@ -1059,7 +1062,33 @@
         }
     }
 
+    async function savePolicyConfig() {
+        console.log('💾 약관 저장 프로세스 시작 (저장하기 버튼)');
+
+        const btn = document.getElementById('btnSavePolicy');
+        const originalLabel = '💾 저장하기';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '저장 중…';
+        }
+
+        try {
+            await AdminSettingsPolicies.save(getSupabaseClient);
+            alert('✅ 이용약관·개인정보 처리방침이 Supabase에 저장되었습니다.');
+        } catch (err) {
+            console.error('❌ 약관 저장 실패 원인:', err && err.message, err && err.details);
+            alert('약관 저장 실패: ' + (err.message || String(err)));
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = originalLabel;
+            }
+        }
+    }
+
     async function publishPolicy() {
+        console.log('💾 약관 저장 프로세스 시작 (즉시 배포 버튼)');
+
         const policyName = document.getElementById('policySelect').options[document.getElementById('policySelect').selectedIndex].text;
         const version = document.getElementById('versionInput').value;
 
@@ -1076,7 +1105,7 @@
             await AdminSettingsPolicies.publish(getSupabaseClient);
             alert('[' + policyName + '] ' + version + ' — Supabase에 저장되었습니다.');
         } catch (err) {
-            console.error('[Admin Policies] 배포 실패', err);
+            console.error('❌ 약관 저장 실패 원인:', err && err.message, err && err.details);
             alert('정책 저장 실패: ' + (err.message || String(err)));
         } finally {
             if (btn) {
@@ -1097,8 +1126,12 @@
                 btn.textContent = '💾 저장 중...';
             }
             await AdminSettingsSystem.save(getSupabaseClient);
-            alert('✅ 시스템 설정이 성공적으로 저장 및 앱 전역에 반영되었습니다.');
+            if (window.AdminSettingsPolicies && typeof AdminSettingsPolicies.save === 'function') {
+                await AdminSettingsPolicies.save(getSupabaseClient);
+            }
+            alert('✅ 시스템 설정·약관이 성공적으로 저장되었습니다.');
         } catch (err) {
+            console.error('❌ 설정 저장 실패:', err && err.message, err && err.details);
             alert('저장 실패: ' + (err.message || String(err)));
         } finally {
             if (btn) {
