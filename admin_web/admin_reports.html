@@ -135,6 +135,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
+<script src="../js/pickle-penalties.js"></script>
 </head>
 <body>
 
@@ -597,33 +598,43 @@
 
     window.executeSanction = async function() {
         if (!dbClient) return;
-        const addPoint = parseInt(document.querySelector('#sanctionModal input[name="penaltyAction"]:checked').value);
+        if (!window.PicklePenalties || !window.PicklePenalties.applyManualPenalty) {
+            alert('제재 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+            return;
+        }
+        const addPoint = parseInt(document.querySelector('#sanctionModal input[name="penaltyAction"]:checked').value, 10);
         const shouldBlind = document.getElementById('chkGuide').checked;
+        const reasonMap = {
+            10: '욕설/비방/어그로 (관리자 수동 집행)',
+            30: '광고/도배 (관리자 수동 집행)',
+            50: '음란/불법/혐오물 (관리자 수동 집행)',
+        };
         if(!confirm("이 제재 수위를 전역 배포하시겠습니까?")) return;
         try {
-            const totalPoints = ctxCurrentUserPoints + addPoint;
-            const updateUserData = { penalty_points: totalPoints };
-            if (totalPoints >= 30) {
-                const restrictDate = new Date(); restrictDate.setDate(restrictDate.getDate() + 3);
-                updateUserData.restricted_until = restrictDate.toISOString();
+            const sanctionResult = await window.PicklePenalties.applyManualPenalty(
+                ctxUserId,
+                addPoint > 0 ? (reasonMap[addPoint] || '가이드라인 위반 조치') : '무혐의 (관리자 기각)',
+                addPoint,
+                ctxReportId
+            );
+
+            if (!sanctionResult.ok) {
+                alert('제재 처리에 실패했습니다. (' + (sanctionResult.reason || 'unknown') + ')');
+                return;
             }
-            if (addPoint > 0) {
-                await dbClient.from('users').update(updateUserData).eq('id', ctxUserId);
-                let pType = totalPoints >= 50 ? '영구 정지' : (totalPoints >= 30 ? '벌점 부과 및 3일 정지' : '벌점 부과 경고');
-                await dbClient.from('penalty_logs').insert({
-                    user_id: ctxUserId, penalty_type: pType, points_added: addPoint,
-                    reason: '가이드라인 위반 조치', is_read: false, comment_id: ctxType === 'comment' ? ctxTargetId : null
-                });
-            }
-            if (shouldBlind) {
+
+            if (shouldBlind && addPoint > 0) {
                 if (ctxType === 'comment') await dbClient.from('comments').update({ is_blind: true }).eq('id', ctxTargetId);
                 else await dbClient.from('posts').update({ is_active: false }).eq('id', ctxTargetId);
             }
-            await dbClient.from('reports').update({ status: 'done' }).eq('id', ctxReportId);
-            alert("🔨 제재 처리가 완료되었습니다.");
+
+            alert(addPoint > 0 ? "🔨 제재 처리가 완료되었습니다." : "✅ 무혐의 처리가 완료되었습니다.");
             closeModal('sanctionModal');
             await refreshAllKPIs(); await window.loadReports();
-        } catch(e) { alert("업데이트 중 에러가 발생했습니다."); }
+        } catch(e) {
+            console.error('[수동 제재 Track] ❌ 집행 중 오류', e);
+            alert("업데이트 중 에러가 발생했습니다.");
+        }
     };
 
     window.updateLegalCalc = function(actionType) {

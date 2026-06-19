@@ -150,6 +150,11 @@
 
     if (textContainsBannedKeyword(text, keywords)) {
       showCleanRuleAlert();
+      if (window.PicklePenalties && window.PicklePenalties.tryAutoPenaltyOnDetection) {
+        window.PicklePenalties.tryAutoPenaltyOnDetection('profanity_block').catch(function (err) {
+          console.warn('[P!CKLE CommentClean] [자동 제재 Track] 벌점 부여 실패', err);
+        });
+      }
       return true;
     }
 

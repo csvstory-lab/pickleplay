@@ -54,9 +54,8 @@
     report_blind_threshold: 10,
     ai_profanity_filter: true,
     ai_vision_threshold: 80,
-    report_post_points: 10,
-    report_comment_points: 10,
-    admin_delete_points: 30,
+    score_profanity_block: 10,
+    score_ai_vision: 50,
     score_abuse: 10,
     score_spam: 30,
     score_illegal: 50,
@@ -383,9 +382,8 @@
     setInput('pen_reportBlindThreshold', c.report_blind_threshold);
     setCheckbox('pen_aiProfanityFilter', c.ai_profanity_filter);
     setInput('pen_aiVisionThreshold', c.ai_vision_threshold);
-    setInput('pen_reportPostPoints', c.report_post_points);
-    setInput('pen_reportCommentPoints', c.report_comment_points);
-    setInput('pen_adminDeletePoints', c.admin_delete_points);
+    setInput('pen_scoreProfanityBlock', c.score_profanity_block);
+    setInput('pen_scoreAiVision', c.score_ai_vision);
     setInput('pen_scoreAbuse', c.score_abuse);
     setInput('pen_scoreSpam', c.score_spam);
     setInput('pen_scoreIllegal', c.score_illegal);
@@ -405,12 +403,8 @@
       ),
       ai_profanity_filter: getCheckbox('pen_aiProfanityFilter'),
       ai_vision_threshold: getNumber('pen_aiVisionThreshold', DEFAULT_PENALTY.ai_vision_threshold),
-      report_post_points: getNumber('pen_reportPostPoints', DEFAULT_PENALTY.report_post_points),
-      report_comment_points: getNumber(
-        'pen_reportCommentPoints',
-        DEFAULT_PENALTY.report_comment_points
-      ),
-      admin_delete_points: getNumber('pen_adminDeletePoints', DEFAULT_PENALTY.admin_delete_points),
+      score_profanity_block: getNumber('pen_scoreProfanityBlock', DEFAULT_PENALTY.score_profanity_block),
+      score_ai_vision: getNumber('pen_scoreAiVision', DEFAULT_PENALTY.score_ai_vision),
       score_abuse: getNumber('pen_scoreAbuse', DEFAULT_PENALTY.score_abuse),
       score_spam: getNumber('pen_scoreSpam', DEFAULT_PENALTY.score_spam),
       score_illegal: getNumber('pen_scoreIllegal', DEFAULT_PENALTY.score_illegal),

@@ -576,7 +576,7 @@
                         <span>🔒 채찍(벌점) 마스터 스위치</span>
                         <label class="switch"><input type="checkbox" id="pen_engineEnabled"><span class="slider"></span></label>
                     </div>
-                    <p style="font-size:0.85rem; color:var(--text-sub); margin:0;">OFF 시 신고 접수는 가능하나 자동 벌점 부여·자동 정지가 실행되지 않습니다.</p>
+                    <p style="font-size:0.85rem; color:var(--text-sub); margin:0;">OFF 시 <strong>시스템 자동</strong> 벌점·자동 정지가 실행되지 않습니다. 유저 신고 접수 및 관리자 수동 집행은 별도로 가능합니다.</p>
                 </div>
                 
                 <div class="setting-card" style="grid-column: span 2;">
@@ -600,14 +600,14 @@
                 <div class="setting-card" style="grid-column: span 2;">
                     <div class="sc-title"><span style="color:var(--alert-red);">⚖️ 3단계: 벌점 누적제 및 자동 제재 (Auto-Ban)</span></div>
                     
-                    <h4 style="color:var(--text-sub); margin-bottom:10px; font-size:0.95rem;">0) 자동 벌점 부여 (신고·관리자 삭제)</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-                        <div class="sc-item"><div class="sc-label"><strong>불판 신고 1건당</strong></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_reportPostPoints" value="10" style="color:var(--alert-red);"><span>점</span></div></div>
-                        <div class="sc-item"><div class="sc-label"><strong>댓글 신고 1건당</strong></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_reportCommentPoints" value="10" style="color:var(--alert-red);"><span>점</span></div></div>
-                        <div class="sc-item"><div class="sc-label"><strong>관리자 삭제 시</strong></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_adminDeletePoints" value="30" style="color:var(--alert-red);"><span>점</span></div></div>
+                    <h4 style="color:var(--text-sub); margin-bottom:10px; font-size:0.95rem;">0) 시스템 자동 감지 시 벌점 (알고리즘 100% 자동)</h4>
+                    <p style="font-size:0.8rem; color:var(--text-sub); margin:0 0 15px;">유저 신고 접수와 무관하게, AI·금칙어 필터 등 시스템이 위반을 감지하면 즉시 부여됩니다.</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                        <div class="sc-item"><div class="sc-label"><strong>금칙어 등록 차단 시</strong><span>1·2단계 텍스트 필터가 등록을 원천 차단할 때</span></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_scoreProfanityBlock" value="10" style="color:var(--alert-red);"><span>점</span></div></div>
+                        <div class="sc-item"><div class="sc-label"><strong>AI 비전 유해 이미지 차단 시</strong><span>업로드 이미지가 임계값 초과로 차단될 때</span></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_scoreAiVision" value="50" style="color:var(--alert-red);"><span>점</span></div></div>
                     </div>
 
-                    <h4 style="color:var(--text-sub); margin-bottom:10px; font-size:0.95rem;">1) 위반 사유별 벌점 부여 기준 (관리자 수동 판정용)</h4>
+                    <h4 style="color:var(--text-sub); margin-bottom:10px; font-size:0.95rem;">1) 위반 사유별 벌점 기준 (관리자 수동 판정용 — 신고 및 제재 관리)</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 35px;">
                         <div class="sc-item"><div class="sc-label"><strong>욕설/비방/어그로</strong></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_scoreAbuse" value="10" style="color:var(--alert-red);"><span>점</span></div></div>
                         <div class="sc-item"><div class="sc-label"><strong>광고/도배 (상업적)</strong></div><div class="input-with-suffix" style="width:110px;"><input type="number" id="pen_scoreSpam" value="30" style="color:var(--alert-red);"><span>점</span></div></div>
