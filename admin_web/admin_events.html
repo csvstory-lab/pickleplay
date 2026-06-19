@@ -66,6 +66,35 @@
     .form-label span { color: var(--neon-pink); }
     .form-input, .form-select { background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 12px 15px; border-radius: 8px; font-size: 0.9rem; outline: none; font-family: 'Pentabreed', 'Pretendard', sans-serif; width: 100%; box-sizing: border-box; }
     .form-input:focus, .form-select:focus { border-color: var(--neon-blue); }
+
+    .join-target-wrap {
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+        transform: translateY(-6px);
+        transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.35s ease, transform 0.35s ease;
+        pointer-events: none;
+    }
+    .join-target-wrap.is-visible {
+        max-height: 140px;
+        opacity: 1;
+        margin-top: 4px;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .drop-zone-box {
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.5;
+    }
+    .drop-zone-box.has-preview {
+        padding: 0;
+        overflow: hidden;
+    }
     .form-textarea { resize: vertical; min-height: 100px; }
 
     table { width: 100%; border-collapse: collapse; text-align: left; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
@@ -113,8 +142,9 @@
     .modal-body::-webkit-scrollbar { display: none; }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
 </head>
 <body>
 
@@ -167,31 +197,8 @@
                         <th style="width: 12%; text-align:center;">관리</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong style="color:#fff; cursor:pointer;" onclick="loadEventEditDemo('worldcup')">[월드컵 런칭기념] 승부 예측 밸런스! 한국의 운명은?</strong></td>
-                        <td>2026.06.11 ~ 2026.06.30</td>
-                        <td><span style="color:var(--theme-gold);">총 26명 (다중경품)</span></td>
-                        <td>12,450명</td>
-                        <td><span class="status-tag status-ing">진행 중</span></td>
-                        <td style="text-align:center;"><button class="btn-action-sm" onclick="loadEventEditDemo('worldcup')">✏️ 수정</button></td>
-                    </tr>
-                    <tr>
-                        <td><strong style="color:#fff; cursor:pointer;" onclick="loadEventEditDemo('yasik')">[야식 월드컵] 치맥 vs 피맥, 당신의 선택은?</strong></td>
-                        <td>2026.06.11 ~ 2026.06.20</td>
-                        <td><span style="color:var(--theme-gold);">100명</span></td>
-                        <td>8,920명</td>
-                        <td><span class="status-tag status-ing">진행 중</span></td>
-                        <td style="text-align:center;"><button class="btn-action-sm" onclick="loadEventEditDemo('yasik')">✏️ 수정</button></td>
-                    </tr>
-                    <tr style="opacity:0.7;">
-                        <td><strong style="color:var(--text-sub);">[오픈 이벤트] 픽클에 오신 것을 환영합니다!</strong></td>
-                        <td>2026.05.01 ~ 2026.05.31</td>
-                        <td><span>300명</span></td>
-                        <td>4,120명</td>
-                        <td><span class="status-tag status-end">종료됨</span></td>
-                        <td style="text-align:center;"><span style="font-size:0.8rem; color:var(--text-sub);">수정 불가</span></td>
-                    </tr>
+                <tbody id="eventListTableBody">
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px;">불러오는 중...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -200,9 +207,9 @@
             <div class="form-card">
                 <div class="form-section-title">🏆 종료된 이벤트 추첨 및 쿠폰 발송 안내</div>
                 <div style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 20px;">
-                    1. [AI 자동 추첨] 버튼을 눌러 설정된 인원만큼 당첨자를 무작위로 추출합니다.<br>
-                    2. 추출이 완료되면 [당첨 알림톡 & 구글폼 발송] 버튼을 눌러주세요.<br>
-                    3. 당첨된 유저의 앱으로 <strong>개인정보(전화번호) 수집용 구글 폼 링크</strong>가 포함된 푸시 알림이 자동 발송됩니다.
+                    1. [AI 자동 추첨하기] — 유령(guest)·벌점 30점 이상·정지 계정을 제외하고 실제 참여자 중 무작위 추첨합니다.<br>
+                    2. 추출 결과를 확인한 뒤 [당첨자들에게 즉시 발송]으로 당첨을 확정하세요.<br>
+                    3. 확정 시 당첨자 앱에 <strong>구글 폼 링크·7일 기한·보관함 미노출</strong> 안내가 포함된 푸시가 발송됩니다.
                 </div>
 
                 <table>
@@ -214,24 +221,8 @@
                             <th style="width: 35%; text-align:center;">관리자 액션</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong style="color:#fff;">[오픈 이벤트] 픽클에 오신 것을 환영합니다!</strong></td>
-                            <td>4,120명</td>
-                            <td>300명</td>
-                            <td style="text-align:center;">
-                                <span style="font-size:0.8rem; color:var(--text-sub); margin-right:10px;">추첨 완료</span>
-                                <button class="btn-action-sm btn-primary" onclick="openNotifyModal('오픈 이벤트', 300)">✉️ 당첨 알림톡 & 구글폼 발송</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color:#fff;">[사전예약] 픽클 앱 사전예약 공유 이벤트</strong></td>
-                            <td>2,500명</td>
-                            <td>총 26명 (다중경품)</td>
-                            <td style="text-align:center;" id="actionCell2">
-                                <button class="btn-action-sm" onclick="runAiDraw(this, 26)">🎲 AI 자동 추첨하기</button>
-                            </td>
-                        </tr>
+                    <tbody id="winnerTableBody">
+                        <tr><td colspan="4" style="text-align:center;color:var(--text-sub);padding:40px;">불러오는 중...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -257,11 +248,36 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">참여 방식 (조건) <span style="color:var(--neon-pink);">*</span></label>
-                        <select class="form-select" id="joinTypeSelect">
+                        <select class="form-select" id="joinTypeSelect" onchange="syncJoinTypeConditionalFields()">
                             <option value="vote">특정 불판 투표 완료 시 자동 응모</option>
                             <option value="reply">특정 불판 댓글 작성 시 자동 응모</option>
                             <option value="click">버튼 클릭 단순 응모형</option>
+                            <option value="first_come">선착순 버튼 응모</option>
+                            <option value="vote_count">투표 N회 달성 응모</option>
+                            <option value="profile_complete">프로필 정보 완성 응모</option>
                         </select>
+                    </div>
+                </div>
+
+                <div id="targetPostIdWrap" class="join-target-wrap" aria-hidden="true">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">🎯 대상 불판의 고유 ID (또는 URL) <span style="color:var(--neon-pink);">*</span></label>
+                        <input type="text" class="form-input" id="targetPostIdInput" placeholder="예: a1b2c3d4-.... 또는 detail.html?id=... 포함 URL">
+                        <span style="font-size:0.75rem;color:var(--text-sub);line-height:1.4;">불판 UUID 또는 상세 페이지 URL을 붙여넣으면 id가 자동 추출됩니다.</span>
+                    </div>
+                </div>
+
+                <div id="maxParticipantsWrap" class="join-target-wrap" aria-hidden="true">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">🏃‍♂️ 선착순 목표 인원 (명) <span style="color:var(--neon-pink);">*</span></label>
+                        <input type="number" class="form-input" id="maxParticipantsInput" min="1" placeholder="예: 100">
+                    </div>
+                </div>
+
+                <div id="targetVoteCountWrap" class="join-target-wrap" aria-hidden="true">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">🔥 목표 투표 횟수 (회) <span style="color:var(--neon-pink);">*</span></label>
+                        <input type="number" class="form-input" id="targetVoteCountInput" min="1" placeholder="예: 5">
                     </div>
                 </div>
             </div>
@@ -302,14 +318,16 @@
                 
                 <div class="form-row" style="margin-top: 15px;">
                     <div class="form-group">
-                        <label class="form-label">썸네일 배너 (목록 노출용) <span style="color:var(--neon-pink);">*</span></label>
-                        <div class="drop-zone-box" id="thumbDropZone" onclick="alert('목록용 썸네일 업로드 탐색기 오픈')">
+                        <label class="form-label">썸네일 배너 (목록 노출용)</label>
+                        <input type="file" id="thumbFileInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                        <div class="drop-zone-box" id="thumbDropZone" onclick="document.getElementById('thumbFileInput').click()">
                             📸 가로형 썸네일 업로드<br><span style="font-size:0.7rem;">(추천 720x360 / .jpg, .png)</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">이벤트 상세 페이지 배너 (본문용)</label>
-                        <div class="drop-zone-box" id="detailDropZone" onclick="alert('본문 상세 배너 업로드 탐색기 오픈')">
+                        <input type="file" id="bannerFileInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                        <div class="drop-zone-box" id="detailDropZone" onclick="document.getElementById('bannerFileInput').click()">
                             🖼️ 상세 본문 배너 업로드<br><span style="font-size:0.7rem;">(가로 고정 720px, 세로 자유 / .jpg, .png)</span>
                         </div>
                     </div>
@@ -342,7 +360,7 @@
   <div class="modal-overlay" id="notifyModal">
       <div class="modal-container">
           <div class="modal-header">
-              <h3 class="modal-title">✉️ 당첨자 알림 및 구글폼 발송</h3>
+              <h3 class="modal-title">✅ 당첨 최종 확정 및 푸시 발송</h3>
               <button class="btn-close" onclick="closeNotifyModal()">✕</button>
           </div>
           <div class="modal-body">
@@ -353,19 +371,12 @@
               
               <div class="form-group">
                   <label class="form-label">발송될 메시지 내용 미리보기</label>
-                  <textarea class="form-input form-textarea" readonly style="color: #a1a1aa; height: 180px;">🎉 축하합니다! 참여하신 이벤트에 당첨되셨습니다!
-
-모바일 쿠폰 발송을 위해 아래 링크(구글 폼)를 눌러 경품을 수령할 '전화번호'를 정확히 입력해 주세요.
-
-👉 입력 기한: 알림 수신 후 3일 이내
-👉 구글 폼 링크: https://forms.gle/xxxxxxxxx
-
-(기한 내 미입력 시 당첨이 취소될 수 있습니다.)</textarea>
+                  <textarea id="notifyPreviewText" class="form-input form-textarea" readonly style="color: #a1a1aa; height: 220px;"></textarea>
               </div>
 
               <div style="display:flex; justify-content:flex-end; gap:10px; margin-top: 20px;">
                   <button class="btn-action-sm" onclick="closeNotifyModal()" style="padding: 12px 20px;">취소</button>
-                  <button class="btn-action-sm btn-primary" onclick="confirmNotify()" style="padding: 12px 24px;">🚀 당첨자들에게 즉시 발송</button>
+                  <button class="btn-action-sm btn-primary" onclick="confirmNotify()" style="padding: 12px 24px;">📣 당첨자들에게 즉시 발송</button>
               </div>
           </div>
       </div>
@@ -373,6 +384,61 @@
 
   <script>
     let currentFormMode = 'new';
+    let editingEventId = null;
+
+    function needsTargetPost(joinType) {
+        return joinType === 'vote' || joinType === 'reply';
+    }
+
+    function syncJoinTypeConditionalFields() {
+        var select = document.getElementById('joinTypeSelect');
+        if (!select) return;
+        var joinType = select.value;
+
+        var postWrap = document.getElementById('targetPostIdWrap');
+        var maxWrap = document.getElementById('maxParticipantsWrap');
+        var voteWrap = document.getElementById('targetVoteCountWrap');
+
+        if (postWrap) {
+            var showPost = needsTargetPost(joinType);
+            postWrap.classList.toggle('is-visible', showPost);
+            postWrap.setAttribute('aria-hidden', showPost ? 'false' : 'true');
+        }
+        if (maxWrap) {
+            var showMax = joinType === 'first_come';
+            maxWrap.classList.toggle('is-visible', showMax);
+            maxWrap.setAttribute('aria-hidden', showMax ? 'false' : 'true');
+        }
+        if (voteWrap) {
+            var showVote = joinType === 'vote_count';
+            voteWrap.classList.toggle('is-visible', showVote);
+            voteWrap.setAttribute('aria-hidden', showVote ? 'false' : 'true');
+        }
+    }
+
+    function parseOptionalPositiveInt(raw) {
+        var n = parseInt(String(raw || '').trim(), 10);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    function resolveTargetPostId(raw) {
+        var s = String(raw || '').trim();
+        if (!s) return null;
+        try {
+            if (/^https?:\/\//i.test(s)) {
+                var url = new URL(s);
+                var idParam = url.searchParams.get('id');
+                if (idParam) s = idParam.trim();
+            } else if (s.indexOf('id=') !== -1) {
+                var qs = s.indexOf('?') >= 0 ? s.slice(s.indexOf('?') + 1) : s;
+                var params = new URLSearchParams(qs);
+                var fromQs = params.get('id');
+                if (fromQs) s = fromQs.trim();
+            }
+        } catch (_) {}
+        var match = s.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        return match ? match[0] : s;
+    }
 
     // 서브 뷰 전환
     function switchView(viewType) {
@@ -385,6 +451,12 @@
         } else if(viewType === 'winner') {
             document.getElementById('tabWinnerBtn').classList.add('active');
             document.getElementById('viewWinner').classList.add('active');
+            if (window.AdminEvents && window.AdminEvents.loadWinnerTab) {
+                window.AdminEvents.loadWinnerTab().catch(function (err) {
+                    console.error('[Admin Events] loadWinnerTab', err);
+                    alert('당첨 관리 목록을 불러오지 못했습니다: ' + (err.message || String(err)));
+                });
+            }
         } else {
             document.getElementById('tabRegBtn').classList.add('active');
             document.getElementById('viewReg').classList.add('active');
@@ -415,54 +487,46 @@
         container.appendChild(newRow);
     }
 
-    // 수정 클릭 시 데이터를 폼에 로드하는 마스터 스크립트
-    function loadEventEditDemo(eventType) {
+    window.loadEventFromRow = function(row) {
         currentFormMode = 'edit';
-        switchView('reg'); // 폼 화면으로 강제 이동
+        editingEventId = row.id;
+        switchView('reg');
 
         document.getElementById('formMainTitle').innerHTML = '✏️ 이벤트 데이터 수정 및 관리 모드';
         document.getElementById('btnSubmitForm').innerHTML = '💾 변경 사항 수정 저장';
         document.getElementById('btnSubmitForm').style.background = 'var(--theme-gold)';
 
-        if(eventType === 'worldcup') {
-            document.getElementById('eventTitleInput').value = '[월드컵 런칭기념] 승부 예측 밸런스! 한국의 운명은?';
-            document.getElementById('startDateInput').value = '2026-06-11';
-            document.getElementById('endDateInput').value = '2026-06-30';
-            document.getElementById('joinTypeSelect').value = 'vote';
-            document.getElementById('googleFormUrlInput').value = 'https://forms.gle/WorldCupPickleWinnerForm';
-            document.getElementById('eventDescInput').value = '대한민국 축구 국가대표팀의 월드컵 개막 전 성적을 예측해 주세요!\\n정답자 중 추첨을 통해 푸짐한 야식을 쏩니다.\\n\\n[유의사항]\\n- 중복 참여는 불가능합니다.\\n- 당첨자 발표 후 기한 내 연락처 미기재 시 취소됩니다.';
-            document.getElementById('pushTextInput').value = '⚽ 한국 첫 경기 대예측! 지금 참전하고 치킨 쿠폰 받아가세요!';
-            
-            const container = document.getElementById('prizeContainer');
-            container.innerHTML = ''; 
-            addPrizeTier('1등: BHC 황금올리브 치킨 세트', 1);
-            addPrizeTier('2등: 도미노피자 포테이토M', 5);
-            addPrizeTier('3등: 스타벅스 아이스 아메리카노', 20);
-
-            document.getElementById('thumbDropZone').innerHTML = '✅ 월드컵_목록_썸네일.png (업로드됨)';
-            document.getElementById('detailDropZone').innerHTML = '✅ 월드컵_상세_본문배너.jpg (업로드됨)';
-        } 
-        else if(eventType === 'yasik') {
-            document.getElementById('eventTitleInput').value = '[야식 월드컵] 치맥 vs 피맥, 당신의 선택은?';
-            document.getElementById('startDateInput').value = '2026-06-11';
-            document.getElementById('endDateInput').value = '2026-06-20';
-            document.getElementById('joinTypeSelect').value = 'reply';
-            document.getElementById('googleFormUrlInput').value = 'https://forms.gle/YasikCoffeeForm';
-            document.getElementById('eventDescInput').value = '축구 볼 때 가장 아드레날린 터지는 야식 조합은 무엇인가요?\\n이유를 댓글로 훈수 두면 스타벅스 커피 쿠폰을 일괄 추첨 발송합니다!';
-            document.getElementById('pushTextInput').value = '🍕 치맥이냐 피맥이냐 그것이 문제로다! 참견 댓글 달러 가기';
-
-            const container = document.getElementById('prizeContainer');
-            container.innerHTML = '';
-            addPrizeTier('스타벅스 아이스 아메리카노 T', 100);
-
-            document.getElementById('thumbDropZone').innerHTML = '✅ 야식_메인_썸네일.png (업로드됨)';
-            document.getElementById('detailDropZone').innerHTML = '⚠️ 배너 미지정 (텍스트로만 본문 출력)';
+        document.getElementById('eventTitleInput').value = row.title || '';
+        document.getElementById('startDateInput').value = String(row.start_date || '').slice(0, 10);
+        document.getElementById('endDateInput').value = String(row.end_date || '').slice(0, 10);
+        document.getElementById('joinTypeSelect').value = row.join_type || 'click';
+        document.getElementById('targetPostIdInput').value = row.target_post_id || '';
+        document.getElementById('maxParticipantsInput').value =
+            row.max_participants != null ? String(row.max_participants) : '';
+        document.getElementById('targetVoteCountInput').value =
+            row.target_vote_count != null ? String(row.target_vote_count) : '';
+        syncJoinTypeConditionalFields();
+        if (window.AdminEvents && window.AdminEvents.setEventImagesFromRow) {
+            window.AdminEvents.setEventImagesFromRow(row);
         }
-    }
+        document.getElementById('googleFormUrlInput').value = row.google_form_url || '';
+        document.getElementById('eventDescInput').value = row.description || '';
+        document.getElementById('pushTextInput').value = row.push_text || '';
+        document.getElementById('pushToggleInput').checked = !!row.push_enabled;
 
-    // 폼 초기화 (수정 완료 후나 새 등록 클릭 시)
+        const container = document.getElementById('prizeContainer');
+        container.innerHTML = '';
+        const prizes = Array.isArray(row.prizes) ? row.prizes : [];
+        if (prizes.length) {
+            prizes.forEach(p => addPrizeTier(p.name || '', p.count || ''));
+        } else {
+            addPrizeTier('', '');
+        }
+    };
+
     function resetFormToNew() {
         currentFormMode = 'new';
+        editingEventId = null;
         document.getElementById('formMainTitle').innerHTML = '📝 1. 이벤트 기본 정보';
         document.getElementById('btnSubmitForm').innerHTML = '🚀 이벤트 앱 등록 완료';
         document.getElementById('btnSubmitForm').style.background = 'var(--neon-blue)';
@@ -470,6 +534,14 @@
         document.getElementById('eventTitleInput').value = '';
         document.getElementById('startDateInput').value = '';
         document.getElementById('endDateInput').value = '';
+        document.getElementById('joinTypeSelect').value = 'click';
+        document.getElementById('targetPostIdInput').value = '';
+        document.getElementById('maxParticipantsInput').value = '';
+        document.getElementById('targetVoteCountInput').value = '';
+        syncJoinTypeConditionalFields();
+        if (window.AdminEvents && window.AdminEvents.resetEventImageState) {
+            window.AdminEvents.resetEventImageState();
+        }
         document.getElementById('googleFormUrlInput').value = '';
         document.getElementById('eventDescInput').value = '';
         document.getElementById('pushTextInput').value = '';
@@ -487,73 +559,90 @@
                 <button class="btn-remove-prize" onclick="this.parentElement.remove()">✕</button>
             </div>
         `;
-
-        // 💡 수정된 부분: 폼 초기화 시 규격 안내 텍스트로 변경되도록 완벽 조치!
-        document.getElementById('thumbDropZone').innerHTML = '📸 가로형 썸네일 업로드<br><span style="font-size:0.7rem;">(추천 720x360 / .jpg, .png)</span>';
-        document.getElementById('detailDropZone').innerHTML = '🖼️ 상세 본문 배너 업로드<br><span style="font-size:0.7rem;">(가로 고정 720px, 세로 자유 / .jpg, .png)</span>';
     }
 
-    // 폼 저장 액션 분기
     async function executeSubmitEvent() {
-        const FB = window.PickleAdminFirebase;
         const title = document.getElementById('eventTitleInput').value.trim();
         if(!title) {
             alert('이벤트 타이틀은 필수로 입력하셔야 합니다.');
             return;
         }
 
-        const eventData = {
+        const startDate = document.getElementById('startDateInput')?.value || '';
+        const endDate = document.getElementById('endDateInput')?.value || '';
+        if (!startDate || !endDate) {
+            alert('이벤트 진행 기간을 입력해 주세요.');
+            return;
+        }
+
+        const joinType = document.getElementById('joinTypeSelect')?.value || 'click';
+        let targetPostId = null;
+        let maxParticipants = null;
+        let targetVoteCount = null;
+
+        if (needsTargetPost(joinType)) {
+            targetPostId = resolveTargetPostId(document.getElementById('targetPostIdInput')?.value);
+            if (!targetPostId) {
+                alert('특정 불판 투표/댓글 이벤트는 대상 불판 ID(또는 URL)를 입력해 주세요.');
+                return;
+            }
+        }
+        if (joinType === 'first_come') {
+            maxParticipants = parseOptionalPositiveInt(document.getElementById('maxParticipantsInput')?.value);
+            if (!maxParticipants) {
+                alert('선착순 이벤트는 목표 인원을 1명 이상 입력해 주세요.');
+                return;
+            }
+        }
+        if (joinType === 'vote_count') {
+            targetVoteCount = parseOptionalPositiveInt(document.getElementById('targetVoteCountInput')?.value);
+            if (!targetVoteCount) {
+                alert('투표 N회 달성 이벤트는 목표 횟수를 1회 이상 입력해 주세요.');
+                return;
+            }
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        let status = 'ongoing';
+        if (endDate < today) status = 'ended';
+
+        const payload = {
             title,
-            startDate: document.getElementById('startDateInput')?.value || '',
-            endDate: document.getElementById('endDateInput')?.value || '',
-            joinType: document.getElementById('joinTypeSelect')?.value || '',
-            googleFormUrl: document.getElementById('googleFormUrlInput')?.value || '',
+            start_date: startDate,
+            end_date: endDate,
+            join_type: joinType,
+            target_post_id: needsTargetPost(joinType) ? targetPostId : null,
+            max_participants: joinType === 'first_come' ? maxParticipants : null,
+            target_vote_count: joinType === 'vote_count' ? targetVoteCount : null,
+            google_form_url: document.getElementById('googleFormUrlInput')?.value || null,
             description: document.getElementById('eventDescInput')?.value || '',
-            pushEnabled: document.getElementById('pushToggleInput')?.checked || false,
-            pushText: document.getElementById('pushTextInput')?.value || '',
-            prizes: FB.collectPrizeTiers(),
-            mode: currentFormMode,
+            push_enabled: document.getElementById('pushToggleInput')?.checked || false,
+            push_text: document.getElementById('pushTextInput')?.value || '',
+            prizes: window.AdminEvents ? window.AdminEvents.collectPrizeTiers() : [],
+            status,
         };
 
-        if(currentFormMode === 'edit') {
-            const docId = FB.slugify(title);
-            const res = await FB.persist('events', docId, eventData, {
-                page: 'admin_events',
-                successMessage: `✅ [${title}]\n이벤트 설정이 Firebase에 저장되었습니다!`,
-            });
-            if (!res.ok) return;
+        try {
+            const submitBtn = document.getElementById('btnSubmitForm');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '이미지 업로드 및 저장 중…';
+            }
+            await window.AdminEvents.saveEvent(payload, currentFormMode, editingEventId);
+            alert(currentFormMode === 'edit' ? '✅ 이벤트가 수정되었습니다.' : '🚀 새 이벤트가 등록되었습니다.');
             currentFormMode = 'edit_done';
+            await window.AdminEvents.loadEvents();
             switchView('list');
-        } else {
-            const res = await FB.persistNew('events', eventData, {
-                page: 'admin_events',
-                successMessage: '🚀 새로운 이벤트가 Firebase에 등록되었습니다!',
-            });
-            if (!res.ok) return;
-            switchView('list');
+        } catch (err) {
+            console.error(err);
+            alert('저장 실패: ' + (err.message || String(err)));
+        } finally {
+            const submitBtn = document.getElementById('btnSubmitForm');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = currentFormMode === 'edit' ? '💾 변경 사항 수정 저장' : '🚀 이벤트 설정 저장 완료';
+            }
         }
-    }
-
-    // AI 추첨 시뮬레이션
-    function runAiDraw(btn, count) {
-        btn.innerHTML = '⏳ 시스템 알고리즘으로 추첨 중...';
-        btn.style.opacity = '0.7';
-        btn.style.cursor = 'wait';
-        
-        setTimeout(() => {
-            const cell = document.getElementById('actionCell2');
-            cell.innerHTML = `
-                <span style="font-size:0.8rem; color:var(--text-sub); margin-right:10px;">당첨자 ${count}명 추출 완료!</span>
-                <button class="btn-action-sm btn-primary" onclick="openNotifyModal('사전예약 이벤트', ${count})">✉️ 당첨 알림톡 & 구글폼 발송</button>
-            `;
-        }, 1500);
-    }
-
-    // 알림톡 모달 제어
-    function openNotifyModal(eventName, count) {
-        document.getElementById('modalEventName').innerText = `[${eventName}]`;
-        document.getElementById('modalWinnerCount').innerText = `${count}명`;
-        document.getElementById('notifyModal').style.display = 'flex';
     }
 
     function closeNotifyModal() {
@@ -561,21 +650,13 @@
     }
 
     async function confirmNotify() {
-        if(!confirm('당첨자들에게 경품 수령용 구글 폼 링크가 포함된 알림을 일괄 발송하시겠습니까?')) return;
-        const FB = window.PickleAdminFirebase;
-        const eventName = document.getElementById('modalEventName')?.innerText || '';
-        const winnerCount = document.getElementById('modalWinnerCount')?.innerText || '';
-        const res = await FB.persistNew('event_notifications', {
-            eventName,
-            winnerCount,
-            status: 'sent',
-        }, {
-            page: 'admin_events',
-            action: 'notify_winners',
-            successMessage: '✅ 당첨 알림 발송 기록이 Firebase에 저장되었습니다.\n이제 유저들이 구글 폼에 남긴 연락처로 쿠폰을 발송하시면 됩니다!',
-        });
-        if (res.ok) closeNotifyModal();
+        if (window.AdminEvents && window.AdminEvents.confirmFinalize) {
+            await window.AdminEvents.confirmFinalize();
+        }
     }
+
+    syncJoinTypeConditionalFields();
   </script>
+  <script src="js/admin-events.js?v=20260617_event_upload"></script>
 </body>
 </html>

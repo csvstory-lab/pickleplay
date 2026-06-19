@@ -9,6 +9,24 @@
   var DEFAULT_AVATAR = '🥒';
   var currentUser = null;
   var currentUserRankingPoints = 0;
+  var profileDbRow = null;
+
+  var GENDER_LEGACY_MAP = {
+    male: '남자',
+    female: '여자',
+    '남성': '남자',
+    '여성': '여자',
+  };
+
+  var AGE_LEGACY_MAP = {
+    '10s': '10대',
+    '20s': '20대',
+    '30s': '30대',
+    '40s': '40대',
+    '50plus': '50대이상',
+    '50대+': '50대이상',
+    '50대 이상': '50대이상',
+  };
 
   function buildGradeBadgeHtmlFromPoints(points) {
     if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
@@ -232,6 +250,108 @@
     el.textContent = getSnsLinkLabel(user);
   }
 
+  function normalizeGenderForUi(value) {
+    if (!value) return '';
+    var s = String(value).trim();
+    return GENDER_LEGACY_MAP[s] || s;
+  }
+
+  function normalizeAgeGroupForUi(value) {
+    if (!value) return '';
+    var s = String(value).trim();
+    return AGE_LEGACY_MAP[s] || s;
+  }
+
+  function isMarketingAgreedRow(row) {
+    if (!row) return false;
+    return !!(row.marketing_agreed || row.marketing_consent);
+  }
+
+  async function loadProfileDbRow(userId) {
+    if (!userId) {
+      profileDbRow = null;
+      return null;
+    }
+    try {
+      var sb = getSupabaseClient();
+      var res = await sb
+        .from('users')
+        .select('gender, age_group, region, is_over_14, marketing_agreed, marketing_consent')
+        .eq('id', userId)
+        .maybeSingle();
+      if (res.error) {
+        console.warn('[P!CKLE Mypage] profile demographics fetch failed', res.error);
+        profileDbRow = null;
+        return null;
+      }
+      profileDbRow = res.data || null;
+      return profileDbRow;
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] profile demographics fetch error', err);
+      profileDbRow = null;
+      return null;
+    }
+  }
+
+  function syncProfileSelectFilledState() {
+    ['profileGenderSelect', 'profileAgeGroupSelect', 'profileRegionSelect'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('has-value', !!el.value);
+    });
+  }
+
+  function bindProfileSelectFilledState() {
+    ['profileGenderSelect', 'profileAgeGroupSelect', 'profileRegionSelect'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el || el.dataset.filledBound === '1') return;
+      el.dataset.filledBound = '1';
+      el.addEventListener('change', syncProfileSelectFilledState);
+    });
+  }
+
+  function fillProfileDemographicsForm(row) {
+    var genderSelect = document.getElementById('profileGenderSelect');
+    if (genderSelect) {
+      genderSelect.value = normalizeGenderForUi(row && row.gender) || '';
+    }
+
+    var ageSelect = document.getElementById('profileAgeGroupSelect');
+    if (ageSelect) {
+      var age = normalizeAgeGroupForUi(row && row.age_group);
+      ageSelect.value = age || '';
+    }
+
+    var regionSelect = document.getElementById('profileRegionSelect');
+    if (regionSelect) {
+      regionSelect.value = row && row.region ? String(row.region).trim() : '';
+    }
+
+    var over14 = document.getElementById('profileIsOver14');
+    if (over14) over14.checked = !!(row && row.is_over_14);
+
+    var marketing = document.getElementById('profileMarketingAgreed');
+    if (marketing) marketing.checked = isMarketingAgreedRow(row);
+
+    syncProfileSelectFilledState();
+  }
+
+  function collectProfileDemographicsFromForm() {
+    var genderSelect = document.getElementById('profileGenderSelect');
+    var ageSelect = document.getElementById('profileAgeGroupSelect');
+    var regionSelect = document.getElementById('profileRegionSelect');
+    var over14 = document.getElementById('profileIsOver14');
+    var marketing = document.getElementById('profileMarketingAgreed');
+
+    return {
+      gender: genderSelect && genderSelect.value ? genderSelect.value : null,
+      age_group: ageSelect && ageSelect.value ? ageSelect.value : null,
+      region: regionSelect && regionSelect.value ? regionSelect.value : null,
+      is_over_14: !!(over14 && over14.checked),
+      marketing_agreed: !!(marketing && marketing.checked),
+    };
+  }
+
   function fillProfileEditForm(user) {
     var name = getDisplayName(user);
     var bio = getBioInputValue(user);
@@ -261,6 +381,9 @@
     if (inquiryEmail && user.email) {
       inquiryEmail.value = user.email;
     }
+
+    var demoRow = profileDbRow || (user && user._profile) || null;
+    fillProfileDemographicsForm(demoRow);
   }
 
   async function renderProfile(user) {
@@ -329,7 +452,10 @@
     var btn = document.getElementById('btnOpenProfileEdit');
     if (!btn) return;
 
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', async function () {
+      if (currentUser && currentUser.id) {
+        await loadProfileDbRow(currentUser.id);
+      }
       if (currentUser) {
         fillProfileEditForm(currentUser);
       }
@@ -366,6 +492,12 @@
     var newNick = document.getElementById('nicknameInput').value.trim();
     if (newNick.length < 2) {
       alert('닉네임을 2글자 이상 입력해주세요.');
+      return;
+    }
+
+    var demographics = collectProfileDemographicsFromForm();
+    if (!demographics.is_over_14) {
+      alert('만 14세 이상만 정보 등록이 가능합니다.');
       return;
     }
 
@@ -408,7 +540,14 @@
 
       await cascadeProfileSnapshots(sb, updatedUser.id, snapshot);
 
-      var usersUpdate = { nickname: newNick };
+      var usersUpdate = {
+        nickname: newNick,
+        gender: demographics.gender,
+        age_group: demographics.age_group,
+        region: demographics.region,
+        is_over_14: demographics.is_over_14,
+        marketing_agreed: demographics.marketing_agreed,
+      };
       if (avatarHtml) {
         usersUpdate.avatar_html = avatarHtml;
       }
@@ -417,8 +556,11 @@
         .update(usersUpdate)
         .eq('id', updatedUser.id);
       if (usersResult.error) {
-        console.warn('[P!CKLE Mypage] users avatar sync failed', usersResult.error);
+        console.warn('[P!CKLE Mypage] users profile sync failed', usersResult.error);
+        throw usersResult.error;
       }
+
+      profileDbRow = Object.assign({}, profileDbRow || {}, usersUpdate);
 
       alert('프로필이 성공적으로 변경되었습니다.');
       window.location.reload();
@@ -1846,12 +1988,15 @@
         return;
       }
 
+      await loadProfileDbRow(user.id);
+
       if (window.PickleCategories && window.PickleCategories.load) {
         await window.PickleCategories.load();
       }
 
       await renderProfile(user);
       bindProfileEditOpen();
+      bindProfileSelectFilledState();
       bindLogout();
       bindWithdraw();
       bindPostEditThumbInput();

@@ -148,14 +148,20 @@
     .d-desc strong { color: var(--theme-gold); font-weight: 900; }
     
     .d-notice-box { background-color: rgba(255,255,255,0.03); border: 1px solid #27272a; padding: 20px; border-radius: 12px; margin-top: 30px; }
-    .notice-title { font-size: 0.9rem; font-weight: 800; color: #a1a1aa; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .notice-list { margin: 0; padding-left: 20px; font-size: 0.85rem; color: #71717a; line-height: 1.6; }
-    .notice-list li { margin-bottom: 5px; }
+    .notice-title { font-size: 0.9rem; font-weight: 800; color: #e4e4e7; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .notice-list { margin: 0; padding-left: 20px; font-size: 0.85rem; color: #a1a1aa; line-height: 1.65; }
+    .notice-list li { margin-bottom: 8px; }
+    .notice-list li:last-child { margin-bottom: 0; }
+    .notice-section { margin-top: 16px; }
+    .notice-section:first-of-type { margin-top: 4px; }
+    .notice-subtitle { font-size: 0.88rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .notice-section-text { margin: 0; font-size: 0.85rem; color: #a1a1aa; line-height: 1.65; padding-left: 2px; }
 
     .winner-box { background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(0,240,255,0.02)); border: 1px solid rgba(0,240,255,0.3); padding: 25px; border-radius: 16px; margin-top: 25px; }
     .winner-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.4rem; color: var(--neon-blue); margin: 0 0 15px 0; text-align: center; }
     .winner-list-wrap { display: flex; flex-direction: column; gap: 10px; }
-    .winner-item { display: flex; justify-content: space-between; background: #09090b; padding: 15px; border-radius: 8px; border: 1px solid #27272a; font-weight: 800; font-size: 0.95rem; color: #fff; }
+    .winner-item { display: flex; align-items: center; background: #09090b; padding: 14px 16px; border-radius: 8px; border: 1px solid #27272a; font-weight: 700; font-size: 0.95rem; color: #fff; }
+    .winner-nickname { flex: 1; word-break: keep-all; }
 
     /* 대형 하단 액션 버튼 */
     .detail-bottom-bar {
@@ -373,10 +379,9 @@
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
-<script src="../js/user-info-modal.js"></script>
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<script src="../js/pickle-events.js?v=20260613_events11"></script>
+<script src="../js/pickle-events.js?v=20260617_event_validate"></script>
 
 </body>
 </html>

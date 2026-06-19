@@ -22,20 +22,64 @@
   var SHARE_EVENT_PAGE = SHARE_SITE_ORIGIN + '/user_app/event.html';
   var DEFAULT_EVENT_SHARE_IMAGE = SHARE_SITE_ORIGIN + '/images/default_share.jpg';
 
-  var DEFAULT_EVENT_NOTICE_ITEMS = [
+  var ONGOING_NOTICE_LINES = [
+    '당첨자는 이벤트 마감 후 3~7일 이내에 푸시 알림으로 안내됩니다.',
+    '종료된 해당 이벤트에서 당첨자 리스트를 확인하실 수 있습니다.',
+    '당첨자 아래 "경품 수령 정보 입력하기"를 클릭해서 입력해 주십시오.',
+  ];
+
+  var ENDED_NOTICE_SECTIONS = [
     {
       label: '경품 지급 안내',
       text: '당첨 시 제출해주신 구글 폼 연락처를 통해 개별 문자(또는 카카오톡)로 직접 발송합니다.',
     },
     {
-      label: '당첨 취소 조건',
-      text: '당첨자 발표 후 안내된 기한 내에 경품 수령 정보를 입력하지 않으실 경우, 당첨이 자동 취소되며 추가 보상은 불가합니다.',
+      label: '당첨 취소',
+      text: '당첨자 발표 후 7일 이내에 경품 수령 정보를 입력하지 않으실 경우, 당첨이 취소되며 추가 보상은 불가합니다.',
     },
     {
       label: '개인정보 활용',
       text: '수집된 개인정보는 경품 발송 목적으로만 사용되며, 발송 완료 후 안전하게 파기됩니다.',
     },
   ];
+
+  function buildOngoingNoticeHtml() {
+    return (
+      '<div class="d-notice-box">' +
+      '<div class="notice-title">📌 꼭 확인해주세요</div>' +
+      '<ul class="notice-list">' +
+      ONGOING_NOTICE_LINES.map(function (line) {
+        return '<li>' + escapeHtml(line) + '</li>';
+      }).join('') +
+      '</ul>' +
+      '</div>'
+    );
+  }
+
+  function buildEndedNoticeHtml() {
+    return (
+      '<div class="d-notice-box">' +
+      '<div class="notice-title">📌 꼭 확인해주세요!</div>' +
+      ENDED_NOTICE_SECTIONS.map(function (section) {
+        return (
+          '<div class="notice-section">' +
+          '<div class="notice-subtitle">' +
+          escapeHtml(section.label) +
+          '</div>' +
+          '<p class="notice-section-text">- ' +
+          escapeHtml(section.text) +
+          '</p>' +
+          '</div>'
+        );
+      }).join('') +
+      '</div>'
+    );
+  }
+
+  function getEventGoogleFormUrl(row) {
+    if (!row) return '';
+    return String(row.google_form_url || row.winner_form_url || '').trim();
+  }
 
   function ensureAbsoluteShareUrl(value, fallback) {
     var raw = value ? String(value).trim() : '';
@@ -178,52 +222,10 @@
     );
   }
 
-  function buildNoticeListHtml(items) {
-    var list = Array.isArray(items) ? items : [];
-    if (!list.length) return '';
-    return (
-      '<div class="d-notice-box">' +
-      '<div class="notice-title">📌 꼭 확인해주세요</div>' +
-      '<ul class="notice-list">' +
-      list
-        .map(function (item) {
-          if (item && typeof item === 'object' && item.label) {
-            return (
-              '<li style="margin-bottom:14px;line-height:1.65;">' +
-              '<strong style="color:#fff;display:block;margin-bottom:5px;font-size:0.88rem;">' +
-              escapeHtml(item.label) +
-              '</strong>' +
-              '<span style="color:#a1a1aa;font-size:0.85rem;">' +
-              escapeHtml(item.text || '') +
-              '</span></li>'
-            );
-          }
-          return (
-            '<li style="margin-bottom:10px;line-height:1.6;color:#a1a1aa;">' +
-            escapeHtml(String(item)) +
-            '</li>'
-          );
-        })
-        .join('') +
-      '</ul>' +
-      '</div>'
-    );
-  }
-
-  function buildEventNoticeHtml() {
-    return buildNoticeListHtml(DEFAULT_EVENT_NOTICE_ITEMS);
-  }
-
   function buildWinnerItemHtml(w) {
-    var mask =
-      w && w.uid_mask != null && String(w.uid_mask).trim() !== ''
-        ? String(w.uid_mask).trim()
-        : '***';
     return (
-      '<div class="winner-item"><span>' +
+      '<div class="winner-item"><span class="winner-nickname">' +
       escapeHtml(w && w.nickname ? w.nickname : '—') +
-      '</span><span style="color:var(--text-sub);">UID: ' +
-      escapeHtml(mask) +
       '</span></div>'
     );
   }
@@ -298,22 +300,12 @@
   function buildWinnerBoxHtml(row) {
     var winners = Array.isArray(row.winners) ? row.winners : [];
     if (!winners.length && !row.winner_box_title) return '';
-    var rankNotice = winnersHaveRank(winners)
-      ? '<div style="text-align:center;font-size:0.82rem;color:var(--neon-blue);font-weight:700;margin-bottom:18px;letter-spacing:0.02em;opacity:0.95;">(개별 알림 및 쿠폰 발송 완료)</div>'
-      : '';
-    var summary = row.winner_summary
-      ? '<div style="text-align:center; font-size:0.85rem; color:var(--text-sub); margin-top:20px; font-weight:700;">' +
-        escapeHtml(row.winner_summary) +
-        '</div>'
-      : '';
     return (
       '<div class="winner-box">' +
       '<h3 class="winner-title">' +
       escapeHtml(row.winner_box_title || '🎉 당첨자 발표') +
       '</h3>' +
-      rankNotice +
       buildWinnerListBodyHtml(winners) +
-      summary +
       '</div>'
     );
   }
@@ -372,7 +364,7 @@
       '<p class="d-desc">' +
       descToHtml(row.description) +
       '</p>' +
-      buildEventNoticeHtml() +
+      buildOngoingNoticeHtml() +
       '</div>'
     );
   }
@@ -392,7 +384,7 @@
       '<div class="d-desc">' +
       descToHtml(row.description) +
       buildWinnerBoxHtml(row) +
-      buildEventNoticeHtml() +
+      buildEndedNoticeHtml() +
       '</div>' +
       '</div>'
     );
@@ -423,14 +415,105 @@
     );
   }
 
-  function participateCurrent() {
+  function isProfileFieldFilled(value) {
+    return value != null && String(value).trim() !== '';
+  }
+
+  async function validateParticipation(row, uid) {
+    var sb = getClient();
+    var joinType = row.join_type;
+
+    if (joinType === 'first_come') {
+      var max = Number(row.max_participants);
+      if (Number.isFinite(max) && max > 0) {
+        var countRes = await sb
+          .from('event_entries')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_id', row.id);
+        if (countRes.error) throw countRes.error;
+        if ((countRes.count || 0) >= max) {
+          alert('선착순이 마감되었습니다.');
+          return false;
+        }
+      }
+    }
+
+    if (joinType === 'vote_count') {
+      var target = Number(row.target_vote_count);
+      if (Number.isFinite(target) && target > 0) {
+        var votesRes = await sb
+          .from('votes')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', uid);
+        if (votesRes.error) throw votesRes.error;
+        var voteCount = votesRes.count || 0;
+        if (voteCount < target) {
+          alert('투표를 ' + (target - voteCount) + '회 더 참여해야 응모할 수 있습니다.');
+          return false;
+        }
+      }
+    }
+
+    if (joinType === 'profile_complete') {
+      var userRes = await sb
+        .from('users')
+        .select('gender, age_group, region')
+        .eq('id', uid)
+        .maybeSingle();
+      if (userRes.error) throw userRes.error;
+      var profile = userRes.data;
+      if (
+        !profile ||
+        !isProfileFieldFilled(profile.gender) ||
+        !isProfileFieldFilled(profile.age_group) ||
+        !isProfileFieldFilled(profile.region)
+      ) {
+        alert('마이페이지에서 프로필(성별/연령대/지역)을 완성해야 응모할 수 있습니다.');
+        window.location.href = 'mypage.html';
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  async function participateCurrent() {
     var row = currentEventData;
     if (!row || !currentEventId) return;
     if (hasParticipated(currentEventId)) return;
 
-    alert(PARTICIPATE_DONE_MSG);
-    participatedIds.add(String(currentEventId));
-    markParticipateButtonDone();
+    try {
+      var uid = await resolveAuthUid();
+      if (!uid) {
+        alert('로그인 후 이벤트에 응모할 수 있습니다.');
+        if (window.PickleAuth && window.PickleAuth.goToLogin) {
+          window.PickleAuth.goToLogin({ redirect: 'event.html?id=' + currentEventId });
+        }
+        return;
+      }
+
+      var allowed = await validateParticipation(row, uid);
+      if (!allowed) return;
+
+      var result = await getClient()
+        .from('event_entries')
+        .insert({ event_id: currentEventId, user_id: uid });
+
+      if (result.error) {
+        if (result.error.code === '23505') {
+          participatedIds.add(String(currentEventId));
+          markParticipateButtonDone();
+          return;
+        }
+        throw result.error;
+      }
+      alert(PARTICIPATE_DONE_MSG);
+      participatedIds.add(String(currentEventId));
+      markParticipateButtonDone();
+    } catch (err) {
+      console.error('[P!CKLE Events] participate failed', err);
+      alert('응모 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    }
   }
 
   function buildOngoingBottomBar(row) {
@@ -460,6 +543,13 @@
     if (!bottomBar || bottomBar.dataset.pickleEventsBound === '1') return;
     bottomBar.dataset.pickleEventsBound = '1';
     bottomBar.addEventListener('click', function (e) {
+      var claimBtn = e.target.closest('#btnOpenWinnerForm, .btn-winner-claim');
+      if (claimBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        openWinnerForm();
+        return;
+      }
       var shareBtn = e.target.closest('.btn-share-huge');
       if (!shareBtn) return;
       e.preventDefault();
@@ -514,7 +604,7 @@
 
   function buildWinnerClaimButtonHtml() {
     return (
-      '<button class="btn-participate-huge" type="button" onclick="PickleEvents.openWinnerForm()">' +
+      '<button class="btn-participate-huge btn-winner-claim" type="button" id="btnOpenWinnerForm">' +
       '🎁 경품 수령 정보 입력하기' +
       '</button>'
     );
@@ -527,7 +617,7 @@
     var seq = ++detailBarRenderSeq;
     var targetEventId = String(eventId || row.id);
 
-    if (row.status !== 'ended') {
+    if (!isEndedRow(row)) {
       if (seq === detailBarRenderSeq && currentEventId === targetEventId) {
         bottomBar.innerHTML = buildEndedDisabledBarHtml();
       }
@@ -553,14 +643,23 @@
 
   function openWinnerForm() {
     var row = currentEventData;
-    if (!row) return;
-    var formUrl =
-      row.winner_form_url != null ? String(row.winner_form_url).trim() : '';
-    if (!formUrl) {
-      alert('폼 링크가 준비 중입니다');
+    if (!row) {
+      alert('이벤트 정보를 불러오지 못했습니다.');
       return;
     }
-    window.open(formUrl, '_blank', 'noopener,noreferrer');
+    var formUrl = getEventGoogleFormUrl(row);
+    if (!formUrl) {
+      alert('폼 링크가 준비 중입니다.');
+      return;
+    }
+    if (!/^https?:\/\//i.test(formUrl)) {
+      alert('유효하지 않은 폼 링크입니다. 고객센터로 문의해 주세요.');
+      return;
+    }
+    var opened = window.open(formUrl, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      window.location.href = formUrl;
+    }
   }
 
   function setListMessage(listEl, message) {

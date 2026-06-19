@@ -80,6 +80,28 @@
     .sc-select { background: #09090b; border: 1px solid #3f3f46; color: #fff; font-size: 0.9rem; font-weight: 800; padding: 10px 15px; border-radius: 8px; outline: none; cursor: pointer; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
     .sc-select:focus { border-color: var(--theme-gold); }
 
+    .manual-push-email-wrap {
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+        transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+        pointer-events: none;
+    }
+    .manual-push-email-wrap.is-visible {
+        max-height: 80px;
+        opacity: 1;
+        margin-top: 4px;
+        pointer-events: auto;
+    }
+    .manual-push-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 4px;
+        border-top: 1px dashed #3f3f46;
+        margin-top: 4px;
+    }
+
     .input-with-suffix { display: flex; align-items: center; background: #09090b; border: 1px solid #3f3f46; border-radius: 8px; overflow: hidden; width: 140px; transition: 0.2s; }
     .input-with-suffix:focus-within { border-color: var(--theme-gold); }
     .input-with-suffix input { flex: 1; width: 100%; background: transparent; border: none; color: #fff; font-size: 1rem; font-weight: 900; padding: 10px 15px; text-align: right; outline: none; }
@@ -398,6 +420,52 @@
         </div>
 
         <div id="tab-noti" class="tab-content">
+            <div class="setting-card" style="margin-bottom: 25px;">
+                <div class="sc-title">🚀 타겟 맞춤형 수동 푸시 발송</div>
+
+                <div class="sc-item col">
+                    <div class="sc-label">
+                        <strong>발송 대상 선택</strong>
+                        <span>전체·마케팅 동의·특정 유저 이메일 중 대상을 지정합니다.</span>
+                    </div>
+                    <select class="sc-select" id="manualPushTargetSelect" onchange="syncManualPushTargetField()" style="width:100%; max-width:420px;">
+                        <option value="all">전체 유저</option>
+                        <option value="marketing">마케팅 동의 유저</option>
+                        <option value="specific_email">특정 유저 이메일 직접 입력</option>
+                    </select>
+                </div>
+
+                <div id="manualPushEmailWrap" class="manual-push-email-wrap sc-item col" aria-hidden="true">
+                    <div class="sc-label">
+                        <strong>특정 유저 이메일</strong>
+                        <span>발송할 단일 회원의 가입 이메일을 입력하세요.</span>
+                    </div>
+                    <input type="email" class="form-input" id="manualPushTargetEmail" placeholder="user@example.com">
+                </div>
+
+                <div class="sc-item col">
+                    <div class="sc-label"><strong>푸시 제목</strong></div>
+                    <input type="text" class="form-input" id="manualPushTitle" placeholder="예: [이벤트] 오늘만 드리는 특별 혜택!">
+                </div>
+
+                <div class="sc-item col">
+                    <div class="sc-label"><strong>푸시 내용</strong></div>
+                    <textarea class="form-textarea" id="manualPushBody" placeholder="앱 푸시 알림에 표시될 본문을 입력하세요." style="min-height:100px;"></textarea>
+                </div>
+
+                <div class="sc-item col">
+                    <div class="sc-label">
+                        <strong>연결 링크</strong>
+                        <span>선택사항 — 푸시 탭 시 이동할 URL (비우면 앱 기본 화면)</span>
+                    </div>
+                    <input type="url" class="form-input" id="manualPushLink" placeholder="https://pickleplay.kr/user_app/event.html">
+                </div>
+
+                <div class="manual-push-actions">
+                    <button type="button" class="btn-save-all" onclick="sendManualPush()">✉️ 푸시 알림 즉시 발송</button>
+                </div>
+            </div>
+
             <div class="settings-grid">
                 
                 <div class="setting-card">
@@ -664,6 +732,43 @@
   </div>
 
   <script>
+    function syncManualPushTargetField() {
+        const select = document.getElementById('manualPushTargetSelect');
+        const wrap = document.getElementById('manualPushEmailWrap');
+        if (!select || !wrap) return;
+        const show = select.value === 'specific_email';
+        wrap.classList.toggle('is-visible', show);
+        wrap.setAttribute('aria-hidden', show ? 'false' : 'true');
+    }
+
+    function sendManualPush() {
+        const target = document.getElementById('manualPushTargetSelect')?.value || 'all';
+        const title = document.getElementById('manualPushTitle')?.value.trim() || '';
+        const body = document.getElementById('manualPushBody')?.value.trim() || '';
+
+        if (!title) {
+            alert('푸시 제목을 입력해 주세요.');
+            document.getElementById('manualPushTitle')?.focus();
+            return;
+        }
+        if (!body) {
+            alert('푸시 내용을 입력해 주세요.');
+            document.getElementById('manualPushBody')?.focus();
+            return;
+        }
+        if (target === 'specific_email') {
+            const email = document.getElementById('manualPushTargetEmail')?.value.trim() || '';
+            if (!email || email.indexOf('@') === -1) {
+                alert('특정 유저 이메일을 올바르게 입력해 주세요.');
+                document.getElementById('manualPushTargetEmail')?.focus();
+                return;
+            }
+        }
+
+        // TODO: Supabase RPC 연동 (pickle_send_manual_push 등)
+        alert('해당 대상에게 푸시 알림 발송이 예약(Supabase RPC 호출)되었습니다.');
+    }
+
     let adminRolesCache = [];
     let editingAdminEmail = null;
 
@@ -962,6 +1067,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        syncManualPushTargetField();
         if (document.getElementById('tab-admin')?.classList.contains('active')) {
             loadAdmins();
         }

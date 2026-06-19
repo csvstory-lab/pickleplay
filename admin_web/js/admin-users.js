@@ -32,14 +32,58 @@
     { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' },
   ];
 
-  var GENDER_LABELS = { male: '남성', female: '여성' };
+  var GENDER_LABELS = {
+    male: '남성',
+    female: '여성',
+    '남자': '남자',
+    '여자': '여자',
+    '남성': '남성',
+    '여성': '여성',
+  };
   var AGE_LABELS = {
     '10s': '10대',
     '20s': '20대',
     '30s': '30대',
     '40s': '40대',
     '50plus': '50대+',
+    '10대': '10대',
+    '20대': '20대',
+    '30대': '30대',
+    '40대': '40대',
+    '50대이상': '50대 이상',
+    '50대 이상': '50대 이상',
+    '50대+': '50대+',
   };
+
+  function normalizeGenderKey(value) {
+    var v = String(value || '').trim();
+    if (v === 'male' || v === '남자' || v === '남성') return 'male';
+    if (v === 'female' || v === '여자' || v === '여성') return 'female';
+    return v;
+  }
+
+  function normalizeAgeGroupKey(value) {
+    var v = String(value || '').trim();
+    var map = {
+      '10대': '10s',
+      '20대': '20s',
+      '30대': '30s',
+      '40대': '40s',
+      '50대이상': '50plus',
+      '50대 이상': '50plus',
+      '50대+': '50plus',
+    };
+    return map[v] || v;
+  }
+
+  function ageGroupMatchesFilter(userAgeGroup, filterAgeGroup) {
+    if (!filterAgeGroup || filterAgeGroup === 'all') return true;
+    var userKey = normalizeAgeGroupKey(userAgeGroup);
+    if (filterAgeGroup === '40plus') {
+      return userKey === '40s' || userKey === '50plus';
+    }
+    return userKey === filterAgeGroup;
+  }
 
   function $(id) {
     return document.getElementById(id);
@@ -389,7 +433,8 @@
   function genderCell(user) {
     var g = user.gender;
     if (!g) return '<span class="text-muted-cell">—</span>';
-    var cls = g === 'female' ? 'text-female' : 'text-male';
+    var genderKey = normalizeGenderKey(g);
+    var cls = genderKey === 'female' ? 'text-female' : genderKey === 'male' ? 'text-male' : 'text-muted-cell';
     return '<span class="' + cls + '">' + escapeHtml(formatGender(g)) + '</span>';
   }
 
@@ -424,15 +469,11 @@
         return false;
       }
 
-      if (f.gender === 'male' && user.gender !== 'male') return false;
-      if (f.gender === 'female' && user.gender !== 'female') return false;
+      if (f.gender === 'male' && normalizeGenderKey(user.gender) !== 'male') return false;
+      if (f.gender === 'female' && normalizeGenderKey(user.gender) !== 'female') return false;
 
-      if (f.ageGroup !== 'all') {
-        if (f.ageGroup === '40plus') {
-          if (user.age_group !== '40s' && user.age_group !== '50plus') return false;
-        } else if (user.age_group !== f.ageGroup) {
-          return false;
-        }
+      if (f.ageGroup !== 'all' && !ageGroupMatchesFilter(user.age_group, f.ageGroup)) {
+        return false;
       }
 
       if (f.region !== 'all') {
@@ -1251,9 +1292,10 @@
     bindModalUidCopy(user);
     var genderEl = $('modalGender');
     genderEl.textContent = formatGender(user.gender);
+    var genderKey = normalizeGenderKey(user.gender);
     genderEl.className =
       'meta-val' +
-      (user.gender === 'female' ? ' text-female' : user.gender === 'male' ? ' text-male' : '');
+      (genderKey === 'female' ? ' text-female' : genderKey === 'male' ? ' text-male' : '');
     $('modalAge').textContent = formatAgeGroup(user.age_group);
     $('modalRegion').textContent = formatRegion(user.region);
     $('modalMarketing').textContent = isMarketingAgreed(user) ? '동의 (Y)' : '거부 (N)';

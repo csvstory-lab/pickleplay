@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin Workspace Login</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<style>
+    body { margin: 0; background-color: #09090b; color: #fff; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+    .login-container { background: #121214; border: 1px solid #27272a; border-radius: 16px; padding: 50px 40px; width: 100%; max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+    .logo-area { text-align: center; margin-bottom: 40px; }
+    .logo { font-size: 3rem; font-weight: 900; background: linear-gradient(90deg, #39ff14, #00f0ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -2px; }
+    .logo-sub { font-size: 0.85rem; color: #a1a1aa; font-weight: 800; letter-spacing: 4px; margin-top: 5px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 800; color: #a1a1aa; margin-bottom: 8px; }
+    .form-input { width: 100%; background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 15px; border-radius: 8px; font-size: 1rem; outline: none; box-sizing: border-box; transition: 0.2s; }
+    .form-input:focus { border-color: #00f0ff; box-shadow: 0 0 10px rgba(0,240,255,0.1); }
+    .btn-login { width: 100%; background: #00f0ff; color: #000; border: none; padding: 16px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+    .btn-login:hover { background: #00c3ff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,240,255,0.3); }
+    .footer-text { text-align: center; font-size: 0.75rem; color: #52525b; margin-top: 30px; }
+</style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-area">
+            <h1 class="logo">P!CKLE</h1>
+            <div class="logo-sub">ADMIN WORKSPACE</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">관리자 이메일 (ID)</label>
+            <input type="email" class="form-input" id="adminEmail" placeholder="admin@pickle.com">
+        </div>
+        <div class="form-group">
+            <label class="form-label">비밀번호</label>
+            <input type="password" class="form-input" id="adminPassword" placeholder="••••••••">
+        </div>
+        <button class="btn-login" onclick="attemptLogin()">시스템 접속</button>
+        <div class="footer-text">© 2026 P!CKLE Corp. All rights reserved.</div>
+    </div>
+    <script>
+        function attemptLogin() {
+            // 추후 Supabase Auth 연동이 들어갈 자리입니다.
+            alert('로그인 로직 연동 대기 중입니다. 임시로 대시보드로 이동합니다.');
+            window.location.href = 'admin_dashboard.html';
+        }
+    </script>
+</body>
+</html>
