@@ -73,7 +73,11 @@
                     showLoginError(result.message || '접근 권한이 없거나 정지된 계정입니다.');
                     return;
                 }
-                var target = window.__pickleAdminRedirect || 'admin_dashboard.html';
+                var target = window.PickleAdminWorkspace.getPostLoginUrl(
+                    result.roleInfo.role,
+                    window.__pickleAdminRedirect
+                );
+                console.log('[Admin Login] 이동:', target, 'role=', result.roleInfo.role);
                 window.location.href = target;
             } catch (err) {
                 console.error('[Admin Login] 실패:', err);

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - 스폰서(광고주) 전용 관리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<style>
+    :root {
+        --bg-color: #09090b; --sidebar-bg: #121214; --card-bg: #18181b;
+        --neon-green: #39ff14; --theme-gold: #ffcc00; --neon-blue: #00f0ff;
+        --text-main: #ffffff; --text-sub: #a1a1aa; --border-color: #27272a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 260px; flex-shrink: 0; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .logo-area { padding: 0 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--theme-gold), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; margin-top: 4px; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; gap: 12px; color: var(--text-sub); font-weight: 700; cursor: pointer; border-left: 4px solid transparent; }
+    .nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+    .nav-item.active { background: rgba(255,204,0,0.06); color: var(--theme-gold); border-left-color: var(--theme-gold); }
+    .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .top-header { padding: 20px 40px; border-bottom: 1px solid var(--border-color); }
+    .page-title { font-size: 1.4rem; font-weight: 900; margin: 0; }
+    .content { padding: 30px 40px; max-width: 1200px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; }
+    .kpi-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 900; color: var(--theme-gold); }
+    .panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; }
+    .panel h3 { margin: 0 0 12px; font-size: 1.05rem; }
+    .panel p { margin: 0; color: var(--text-sub); line-height: 1.6; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <h1 class="logo" onclick="location.href='admin_sponsor.html'">P!CKLE</h1>
+        <div class="logo-sub">SPONSOR PORTAL</div>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item active" onclick="location.href='admin_sponsor.html'"><span>💼</span> 스폰서 홈</li>
+        <li class="nav-item" onclick="location.href='admin_statistics.html'"><span>📈</span> 통계 및 분석</li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <h2 class="page-title">💼 스폰서(광고주) 전용 관리</h2>
+    </header>
+    <div class="content">
+        <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-label">진행 중 스폰 이벤트</div><div class="kpi-value" id="kpiEvents">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">총 참여자 수</div><div class="kpi-value" id="kpiParticipants">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">스폰 불판 노출</div><div class="kpi-value" id="kpiImpressions">-</div></div>
+        </div>
+        <div class="panel">
+            <h3>📊 스폰서 리포트 안내</h3>
+            <p>자사 스폰·이벤트 성과는 <strong>통계 및 분석</strong> 메뉴에서 확인할 수 있습니다. 회원 개인정보 및 타 광고주 데이터는 조회할 수 없습니다.</p>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin-auth.js"></script>
+</body>
+</html>

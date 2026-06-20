@@ -6,6 +6,7 @@
 
   var LOGIN_PAGE = 'admin_login.html';
   var DASHBOARD_PAGE = 'admin_dashboard.html';
+  var SPONSOR_PAGE = 'admin_sponsor.html';
   var SESSION_KEY = 'pickle_admin_role_cache';
 
   var ROLES = {
@@ -19,6 +20,7 @@
   /** 페이지 파일명 → 메뉴 키 */
   var PAGE_TO_MENU = {
     'admin_dashboard.html': 'dashboard',
+    'admin_sponsor.html': 'sponsor',
     'admin_users.html': 'users',
     'admin_categories.html': 'categories',
     'admin_post_list.html': 'posts',
@@ -35,6 +37,7 @@
   /** onclick href → 메뉴 키 */
   var HREF_TO_MENU = {
     'admin_dashboard.html': 'dashboard',
+    'admin_sponsor.html': 'sponsor',
     'admin_users.html': 'users',
     'admin_categories.html': 'categories',
     'admin_post_list.html': 'posts',
@@ -52,8 +55,34 @@
     marketer: ['dashboard', 'categories', 'posts', 'events', 'statistics'],
     cs: ['dashboard', 'users', 'categories', 'posts', 'reports', 'ai_filter', 'cs'],
     account: ['dashboard', 'ads', 'statistics'],
-    advertiser: ['dashboard', 'statistics'],
+    advertiser: ['sponsor', 'statistics'],
   };
+
+  function getDefaultLandingPage(role) {
+    return role === ROLES.ADVERTISER ? SPONSOR_PAGE : DASHBOARD_PAGE;
+  }
+
+  /**
+   * 로그인 후 이동 URL (role 기본 랜딩 + redirect 쿼리 검증)
+   */
+  function getPostLoginUrl(role, redirectParam) {
+    var target = redirectParam ? String(redirectParam).trim() : '';
+
+    if (target && PAGE_TO_MENU[target]) {
+      if (role === ROLES.ADVERTISER && target === DASHBOARD_PAGE) {
+        return SPONSOR_PAGE;
+      }
+      if (canAccessMenu(role, PAGE_TO_MENU[target])) {
+        return target;
+      }
+    }
+
+    return getDefaultLandingPage(role);
+  }
+
+  function getForbiddenFallbackPage(role) {
+    return getDefaultLandingPage(role);
+  }
 
   var cachedRole = null;
 
@@ -157,7 +186,11 @@
     }
 
     console.log('[AdminAuth] ✅ 로그인 성공 —', verify.roleInfo.role);
-    return { ok: true, roleInfo: verify.roleInfo };
+    return {
+      ok: true,
+      roleInfo: verify.roleInfo,
+      landingUrl: getPostLoginUrl(verify.roleInfo.role, null),
+    };
   }
 
   async function signOut() {
@@ -252,10 +285,16 @@
 
     applySidebarRBAC(role);
 
+    if (role === ROLES.ADVERTISER && page === DASHBOARD_PAGE) {
+      console.log('[AdminAuth] advertiser → 스폰서 홈으로 리다이렉트');
+      redirect(SPONSOR_PAGE);
+      return { ok: false, reason: 'advertiser_home_redirect' };
+    }
+
     if (menuKey && !canAccessMenu(role, menuKey)) {
       console.warn('[AdminAuth] 페이지 접근 거부:', page, 'role=', role);
       alert('이 메뉴에 대한 접근 권한이 없습니다.');
-      redirect(DASHBOARD_PAGE);
+      redirect(getForbiddenFallbackPage(role));
       return { ok: false, reason: 'page_forbidden' };
     }
 
@@ -326,7 +365,8 @@
     if (sessionRes.data && sessionRes.data.session) {
       var verify = await verifyStaffAfterAuth(sb);
       if (verify.ok) {
-        redirect(DASHBOARD_PAGE);
+        var params = new URLSearchParams(window.location.search);
+        redirect(getPostLoginUrl(verify.roleInfo.role, params.get('redirect')));
       }
     }
 
@@ -370,6 +410,8 @@
     applySidebarRBAC: applySidebarRBAC,
     canAccessMenu: canAccessMenu,
     provisionStaffAccount: provisionStaffAccount,
+    getDefaultLandingPage: getDefaultLandingPage,
+    getPostLoginUrl: getPostLoginUrl,
   };
 
   // pickle-penalties 등 기존 모듈 호환
