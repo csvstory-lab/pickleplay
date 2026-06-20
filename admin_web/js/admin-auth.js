@@ -357,6 +357,113 @@
     };
   }
 
+  function getAdminResetPasswordRedirectTo() {
+    return new URL('admin_reset_password.html', window.location.href).href;
+  }
+
+  function formatResetPasswordError(err) {
+    var msg = (err && err.message) ? String(err.message) : String(err || '');
+    var code = (err && err.code) ? String(err.code) : '';
+
+    if (/once every|rate limit|too many|60 seconds|429/i.test(msg)) {
+      return '⏳ 비밀번호 재설정 메일은 짧은 시간에 여러 번 요청할 수 없습니다. (약 60초~1시간 후 다시 시도해 주세요)\n\n상세: ' + msg;
+    }
+    if (/user not found|no user/i.test(msg)) {
+      return '❌ Supabase Auth에 해당 이메일 계정이 없습니다.\n신규 발급(저장 완료)으로 Auth 계정을 먼저 생성해 주세요.\n\n상세: ' + msg;
+    }
+    if (/redirect|url configuration|invalid redirect/i.test(msg)) {
+      return '❌ Redirect URL 설정 오류입니다.\nSupabase Dashboard → Authentication → URL Configuration에\n「admin_reset_password.html」 경로가 Redirect URLs에 등록되어 있는지 확인해 주세요.\n\n상세: ' + msg;
+    }
+    if (/smtp|email.*send|mailer/i.test(msg)) {
+      return '❌ 이메일 발송(SMTP) 설정 문제입니다.\nSupabase Dashboard → Project Settings → Auth → SMTP 설정을 확인해 주세요.\n\n상세: ' + msg;
+    }
+    return '❌ 비밀번호 재설정 메일 발송 실패\n\n' + (code ? '[' + code + '] ' : '') + msg;
+  }
+
+  /**
+   * super 전용 — resetPasswordForEmail + OAuth 계정 안내
+   */
+  async function requestPasswordResetEmail(targetEmail) {
+    var sb = getClient();
+    var email = String(targetEmail || '').trim().toLowerCase();
+
+    if (!email || email.indexOf('@') === -1) {
+      return { ok: false, message: '유효한 이메일이 없습니다.' };
+    }
+
+    var roleInfo = await fetchMyRole(sb);
+    if (roleInfo.role !== ROLES.SUPER) {
+      return { ok: false, message: '최고 관리자만 비밀번호 재설정 메일을 발송할 수 있습니다.' };
+    }
+
+    if (!confirm('[' + email + '] 계정으로\n비밀번호 재설정 링크 이메일을 발송하시겠습니까?')) {
+      return { ok: false, cancelled: true, message: '취소되었습니다.' };
+    }
+
+    var providerInfo = null;
+    try {
+      var providerRes = await sb.rpc('admin_get_auth_providers', { p_email: email });
+      if (providerRes.error) {
+        console.warn('[AdminAuth] provider 조회 실패:', providerRes.error);
+      } else {
+        providerInfo = providerRes.data;
+        console.log('[AdminAuth] Auth providers:', providerInfo);
+      }
+    } catch (e) {
+      console.warn('[AdminAuth] provider RPC 예외', e);
+    }
+
+    if (providerInfo && providerInfo.user_exists === false) {
+      return {
+        ok: false,
+        message:
+          '❌ Supabase Auth에 등록되지 않은 이메일입니다.\n' +
+          '「신규 계정 발급」으로 Auth 계정을 먼저 생성한 뒤 다시 시도해 주세요.',
+      };
+    }
+
+    if (providerInfo && providerInfo.oauth_only === true) {
+      var oauthProviders = (providerInfo.providers || []).join(', ') || 'oauth';
+      var useFallback = confirm(
+        '⚠️ 이 계정은 소셜 로그인 전용(' + oauthProviders + ')일 수 있습니다.\n\n' +
+          '• 재설정 메일만으로는 이메일/비밀번호 로그인이 불가할 수 있습니다.\n' +
+          '• 해결: 아래 「저장 완료」에서 새 임시 비밀번호를 입력해 Edge Function으로 직접 설정하거나,\n' +
+          '  Supabase Dashboard → Authentication에서 해당 유저에 email+password identity를 추가하세요.\n\n' +
+          '그래도 재설정 이메일을 발송하시겠습니까?'
+      );
+      if (!useFallback) {
+        return { ok: false, cancelled: true, message: 'OAuth 계정 — 이메일 발송을 취소했습니다.' };
+      }
+    }
+
+    console.log('[AdminAuth] resetPasswordForEmail 요청:', email);
+
+    var resetRes = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: getAdminResetPasswordRedirectTo(),
+    });
+
+    if (resetRes.error) {
+      console.error('[AdminAuth] resetPasswordForEmail 실패:', resetRes.error);
+      return { ok: false, message: formatResetPasswordError(resetRes.error) };
+    }
+
+    console.log('[AdminAuth] ✅ resetPasswordForEmail 성공:', resetRes.data);
+
+    var successMsg =
+      '✅ 비밀번호 재설정 메일 발송 요청이 완료되었습니다.\n\n' +
+      '• 수신: ' + email + '\n' +
+      '• 스팸함도 확인해 주세요.\n' +
+      '• 링크 유효 시간이 지나면 다시 요청해야 합니다.';
+
+    if (providerInfo && providerInfo.oauth_only === true) {
+      successMsg +=
+        '\n\n⚠️ 소셜 전용 계정이면 메일 링크만으로 로그인 방식이 바뀌지 않을 수 있습니다.\n' +
+        '이 경우 「저장 완료」로 임시 비밀번호를 직접 설정하세요.';
+    }
+
+    return { ok: true, message: successMsg, data: resetRes.data };
+  }
+
   async function initLoginPage() {
     if (!isLoginPage()) return;
 
@@ -410,6 +517,8 @@
     applySidebarRBAC: applySidebarRBAC,
     canAccessMenu: canAccessMenu,
     provisionStaffAccount: provisionStaffAccount,
+    requestPasswordResetEmail: requestPasswordResetEmail,
+    getAdminResetPasswordRedirectTo: getAdminResetPasswordRedirectTo,
     getDefaultLandingPage: getDefaultLandingPage,
     getPostLoginUrl: getPostLoginUrl,
   };

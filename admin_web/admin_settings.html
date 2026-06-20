@@ -736,7 +736,7 @@
               
               <div class="sc-item col" id="pwResetSection" style="display: none; margin-bottom: 20px;">
                   <div class="sc-label"><strong>비밀번호 관리</strong></div>
-                  <button style="width:100%; padding:12px; background:transparent; border:1px solid var(--neon-pink); color:var(--neon-pink); border-radius:8px; font-weight:800; cursor:pointer; transition:0.2s;" onclick="alert('해당 계정의 비밀번호가 초기화되었습니다. 등록된 이메일로 임시 비밀번호가 발송됩니다.')">🔄 비밀번호 강제 초기화 및 이메일 발송</button>
+                  <button type="button" id="btnAdminPasswordReset" style="width:100%; padding:12px; background:transparent; border:1px solid var(--neon-pink); color:var(--neon-pink); border-radius:8px; font-weight:800; cursor:pointer; transition:0.2s;" onclick="requestAdminPasswordReset()">🔄 비밀번호 강제 초기화 및 이메일 발송</button>
               </div>
 
               <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top: 1px solid #3f3f46; padding-top: 20px;">
@@ -1050,6 +1050,37 @@
         editingAdminEmail = null;
         const emailInput = document.getElementById('admEmail');
         if (emailInput) emailInput.readOnly = false;
+    }
+
+    async function requestAdminPasswordReset() {
+        if (!editingAdminEmail) {
+            alert('수정 중인 계정 이메일이 없습니다.');
+            return;
+        }
+        if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.requestPasswordResetEmail) {
+            alert('비밀번호 재설정 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
+            return;
+        }
+
+        var btn = document.getElementById('btnAdminPasswordReset');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '발송 중…';
+        }
+
+        try {
+            var result = await window.PickleAdminWorkspace.requestPasswordResetEmail(editingAdminEmail);
+            if (result.cancelled) return;
+            alert(result.message || (result.ok ? '발송 완료' : '발송 실패'));
+        } catch (err) {
+            console.error('[admin_settings] requestAdminPasswordReset', err);
+            alert('오류: ' + (err.message || String(err)));
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '🔄 비밀번호 강제 초기화 및 이메일 발송';
+            }
+        }
     }
 
     async function revokeAdminRole(email) {
