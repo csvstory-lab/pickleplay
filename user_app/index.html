@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,19 +13,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 메인 피드</title>
+
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 
 <style>
-    /* 🎨 트렌디 뉴트럴 톤앤매너 적용 */
+    /* 🎨 트렌디 뉴트럴 파스텔톤 지정 */
     :root {
-        --bg-base: #0a0a0c;
-        --bg-card: #1c1c1e;
-        --bg-elevated: #2c2c2e;
-        --point-green: #4ADE80;
-        --point-pink: #FF85A1;
-        --point-blue: #73A5FF;
-        --point-gold: #FCD34D;
+        --bg-base: #0a0a0c;        /* 완전 깊은 블랙 배경 */
+        --bg-card: #1c1c1e;        /* 구분이 명확한 다크 그레이 카드 */
+        --bg-elevated: #2c2c2e;    /* 버튼/태그용 칩 컬러 */
+        --point-green: #4ADE80;    /* 메인 파스텔 민트 */
+        --point-pink: #FF85A1;     /* 파스텔 코랄 핑크 (참전자 수 강조) */
+        --point-blue: #73A5FF;     /* 파스텔 블루 */
+        --point-gold: #FCD34D;     /* 파스텔 골드 (남은 시간 강조) */
         --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
         --border-soft: rgba(255, 255, 255, 0.08);
@@ -34,113 +35,132 @@
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-base); color: var(--text-main);
+        margin: 0; padding: 0; background-color: var(--bg-base) !important; color: var(--text-main) !important;
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 상단 헤더 (로고, 전체불판, 검색, 알림) === */
+    /* === 상단 헤더 (2D 플랫 라인 스타일) === */
     header {
-        position: sticky; top: 0;
-        background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
+        position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
         z-index: 120; border-bottom: 1px solid var(--border-soft);
-        display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;
     }
-    
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
     .logo {
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.6rem;
+        font-family: 'Black Han Sans', sans-serif; font-size: 1.7rem;
         background: linear-gradient(90deg, var(--point-green), #86efac);
         -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-        cursor: pointer; margin: 0; filter: none; 
+        cursor: pointer; margin: 0; filter: none;
     }
-    .header-actions { display: flex; align-items: center; gap: 14px; }
-
+    .header-actions { display: flex; align-items: center; gap: 16px; }
     .btn-category {
         background-color: transparent; color: var(--text-main); border: 1px solid var(--border-soft);
-        padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
+        padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
         cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
     }
-
-    .icon-search-top { font-size: 1.3rem; cursor: pointer; }
-    .noti-bell { font-size: 1.4rem; position: relative; cursor: pointer; display: flex; align-items: center;}
+    .icon-search-top { font-size: 1.35rem !important; color: var(--text-main); cursor: pointer; }
+    .noti-bell { font-size: 1.45rem !important; color: var(--text-main); position: relative; cursor: pointer; display: flex; align-items: center; }
     .noti-bell[data-count]::after { 
         content: attr(data-count); position: absolute; top: -2px; right: -4px; 
         background-color: var(--point-pink); color: #000; font-size: 0.6rem; font-weight: 900; 
         padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-base); 
     }
 
+    /* === 오버레이 & 바텀시트 === */
+    .noti-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .noti-overlay.open { opacity: 1; pointer-events: auto; }
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--bg-card); border-radius: 24px 24px 0 0; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-soft); }
+    .bottom-sheet.open { transform: translateY(0); }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .sheet-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--point-green); }
+    .btn-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .grid-item { background-color: var(--bg-base); border: 1px solid var(--border-soft); padding: 12px; border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+
     /* === 메인 콘텐츠 === */
     main { padding: 20px 0 100px 0; position: relative; z-index: 1; }
-    .section-header { margin-bottom: 12px; padding: 0 20px; }
-    .section-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 6px; color: var(--text-main); }
+    .section-header { margin-bottom: 16px; padding: 0 20px; }
+    .section-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
 
-    /* 👑 오늘의 픽클 (크기 100% 통일) */
+    /* 👑 오늘의 픽클 & 실시간 불판 크기 100% 일치 */
     .horizontal-scroll-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding: 0 20px 20px 20px; scrollbar-width: none; }
     .horizontal-scroll-container::-webkit-scrollbar { display: none; }
 
-    .king-card {
-        background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); 
-        flex: 0 0 100%; /* 🔥 카드를 100%로 꽉 채워 아래 리스트와 크기 동일하게 만듦 */
-        scroll-snap-align: center; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: 0.2s;
+    .king-card, .list-card {
+        background: var(--bg-card) !important; border: 1px solid var(--border-card) !important; border-radius: 24px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow: hidden;
     }
+    .king-card { flex: 0 0 100% !important; scroll-snap-align: center; display: flex; flex-direction: column; }
 
-    /* 🔥 JS 수정 없이 레이아웃 순서 바꾸기 (Flex Order) */
-    .king-card .card-body, .list-card .card-body { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; }
-    .feed-card-meta { order: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 0.75rem; font-weight: 700; color: var(--text-sub); }
-    .king-card .title, .list-card .title { order: 2; font-size: 1.1rem; font-weight: 800; line-height: 1.4; margin: 0; color: var(--text-main); word-break: keep-all;}
-    .king-ab-box, .text-vs-box { order: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; background: var(--bg-base); border: 1px solid var(--border-soft); border-radius: 12px; padding: 12px; margin-bottom: 0; }
+    /* 🛠️ 레이아웃 순서 및 여백 제어 (Flex Order 강제 적용) */
+    .king-card .card-body, .list-card .card-body { display: flex !important; flex-direction: column !important; gap: 12px !important; padding: 18px 20px !important; }
     
-    /* 🔥 JS 수정 없이 "내 픽 남기기" 텍스트 & 그레이 톤 변경 (CSS Content) */
+    /* 1. 메타 정보 영역 (맨 위로 이동 및 좌우 분리) */
+    .feed-card-meta { 
+        order: 1 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; 
+        width: 100% !important; font-size: 0.78rem !important; font-weight: 700 !important; color: var(--text-sub) !important; margin: 0 !important;
+    }
+    .feed-cat-badge { order: 1 !important; padding: 4px 10px !important; border-radius: 6px !important; color: var(--text-main) !important; background: var(--bg-elevated) !important; border: none !important; margin-right: 6px !important; font-size: 0.72rem !important;}
+    
+    /* 남은 시간 (왼쪽 배치, 파스텔 골드) */
+    .feed-meta-timer { order: 2 !important; color: var(--point-gold) !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; }
+    .feed-meta-timer::before { content: "⏳" !important; font-size: 0.75rem; }
+    
+    /* 참전자 수 (오른쪽 마진 밀기 적용, 파스텔 핑크) */
+    .feed-meta-participants { 
+        order: 3 !important; margin-left: auto !important; color: var(--point-pink) !important; 
+        font-weight: 800 !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; background: transparent !important; padding: 0 !important;
+    }
+    .feed-meta-participants::before { content: "🔥" !important; font-size: 0.75rem; }
+
+    /* 2. 제목 영역 (두 번째 순서) */
+    .king-card .title, .list-card .title { order: 2 !important; font-size: 1.15rem !important; font-weight: 800 !important; line-height: 1.4 !important; margin: 4px 0 2px 0 !important; color: var(--text-main) !important; word-break: keep-all; }
+
+    /* 3. A/B 투표 결과창 박스 (세 번째 순서) */
+    .king-ab-box, .text-vs-box { order: 3 !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; justify-content: center !important; gap: 8px 10px !important; background: var(--bg-base) !important; border: 1px solid var(--border-soft) !important; border-radius: 14px !important; padding: 12px !important; margin: 0 !important; }
+    .king-ab-a, .vs-a { color: var(--point-blue) !important; font-weight: 800 !important; }
+    .king-ab-b, .vs-b { color: var(--point-pink) !important; font-weight: 800 !important; }
+    .king-ab-vs, .vs-label { font-size: 0.75rem !important; color: var(--text-sub) !important; font-weight: 800 !important; background: rgba(255,255,255,0.05) !important; padding: 4px 8px !important; border-radius: 8px !important; }
+
+    /* 4. 닫기/참전 버튼 강제 위장 ("내 픽 남기기" 회색조 바) */
     .btn-pick {
-        order: 3; width: 100%; padding: 14px 16px; border-radius: 12px; border: none;
-        background: var(--bg-elevated) !important; color: transparent !important; /* 기존 빨간색, 글자 숨김 */
-        cursor: pointer; transition: 0.2s; position: relative; display: flex; justify-content: center; align-items: center;
+        order: 4 !important; width: 100% !important; padding: 14px 16px !important; border-radius: 14px !important; border: none !important;
+        background: var(--bg-elevated) !important; color: transparent !important; font-size: 0 !important; box-shadow: none !important;
+        cursor: pointer !important; position: relative !important; display: flex !important; justify-content: center !important; align-items: center !important; transition: 0.2s !important; margin-top: 4px !important;
     }
     .btn-pick::after {
-        content: "✔️ 내 픽 남기기"; position: absolute;
-        color: var(--text-main); font-family: 'Pretendard', sans-serif; font-size: 0.95rem; font-weight: 700;
+        content: "✔️ 내 픽 남기기" !important; position: absolute !important; color: var(--text-main) !important; font-family: 'Pretendard', sans-serif !important; font-size: 0.95rem !important; font-weight: 700 !important;
     }
     .btn-pick:active { background: #3a3a3c !important; }
 
-    /* 메타 태그 라벨 디자인 */
-    .feed-cat-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; color: var(--text-main); background: var(--bg-elevated); }
-    .feed-meta-participants { color: var(--point-pink); display: flex; align-items: center; gap: 4px; font-weight: 800;}
-    .feed-meta-timer { color: var(--point-gold); display: flex; align-items: center; gap: 4px;}
+    /* 16:9 정석 비주얼 썸네일 규격 고정 */
+    .card-thumb-top { width: 100% !important; aspect-ratio: 16 / 9 !important; overflow: hidden !important; background: #000 !important; flex-shrink: 0 !important; border-bottom: 1px solid var(--border-soft) !important; }
+    .card-thumb-top .card-thumb-img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
+    .card-thumb-top--fallback { display: flex !important; align-items: center !important; justify-content: center !important; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%) !important; }
+    .card-thumb-fallback-label { font-family: 'Nanum Myeongjo', serif !important; font-size: 1.45rem !important; text-align: center !important; padding: 0 20px !important; color: #1a1a1a !important; filter: none !important; line-height: 1.45 !important; word-break: keep-all !important; font-weight: 700 !important;}
 
-    /* 썸네일 레이아웃 */
-    .card-thumb-top { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; flex-shrink: 0; border-bottom: 1px solid var(--border-soft); }
-    .card-thumb-top .card-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .card-thumb-top--fallback { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); }
-    .card-thumb-fallback-label { font-family: 'Nanum Myeongjo', serif; font-size: 1.5rem; text-align: center; padding: 0 16px; color: #1a1a1a; filter: none; line-height: 1.4; word-break: keep-all; }
-
-    .king-ab-a, .vs-a { flex: 1 1 auto; color: var(--point-blue); font-size: 0.95rem; font-weight: 800; text-align: center;}
-    .king-ab-b, .vs-b { flex: 1 1 auto; color: var(--point-pink); font-size: 0.95rem; font-weight: 800; text-align: center;}
-    .king-ab-vs, .vs-label { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px;}
-
-    .feed-loading { padding: 36px 20px; text-align: center; color: var(--text-sub); font-size: 0.9rem; font-weight: 700; }
-    .feed-spinner { width: 36px; height: 36px; margin: 0 auto 14px; border: 3px solid var(--border-soft); border-top-color: var(--point-green); border-radius: 50%; animation: feedSpin 0.75s linear infinite; }
-    @keyframes feedSpin { to { transform: rotate(360deg); } }
-
-    /* 🔥 지금 뜨거운 불판 리스트 */
+    /* 🔥 실시간 리스트 섹션 */
     .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
-    .list-card { display: flex; flex-direction: column; background-color: var(--bg-card); border: 1px solid var(--border-card); border-radius: 20px; margin-bottom: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+    .list-card { margin-bottom: 16px !important; }
 
-    /* 💡 하단바 외부 CSS 완벽 무력화 & 2D 스타일 적용 */
-    .bottom-nav { background: rgba(28, 28, 30, 0.95) !important; border-top: 1px solid var(--border-soft) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; padding: 10px 0 20px 0 !important; height: auto !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px); }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; }
+    /* 📱 하단 네비게이션 바 외부 CSS 완벽 강제 진압 및 2D 아이콘 전환 */
+    .bottom-nav { 
+        background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
+        display: flex !important; justify-content: space-around !important; align-items: center !important; 
+        padding: 10px 0 24px 0 !important; height: auto !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
+    }
+    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
     .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
-    .bottom-nav .nav-btn.active .nav-icon { color: var(--text-main) !important; }
-    .bottom-nav .nav-icon { font-size: 1.5rem !important; filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important;}
+    .bottom-nav .nav-icon { font-size: 1.45rem !important; filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;}
     .bottom-nav span:not(.nav-icon) { font-size: 0.7rem !important; font-weight: 700 !important; }
     
-    /* 불판 생성 중앙 버튼 하이라이트 */
+    /* 불판 생성 버튼 (중앙 플로팅 2D 완성) */
     .bottom-nav .fire-btn { transform: translateY(-12px) !important; }
     .bottom-nav .fire-btn .nav-icon { 
         background: linear-gradient(135deg, var(--point-green) 0%, #20c997 100%) !important;
-        color: #000 !important; width: 48px !important; height: 48px !important; border-radius: 50% !important;
+        color: #000 !important; width: 46px !important; height: 46px !important; border-radius: 50% !important;
         display: flex !important; justify-content: center !important; align-items: center !important;
-        border: 4px solid var(--bg-base) !important; box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3) !important; font-size: 1.4rem !important;
+        border: 4px solid var(--bg-base) !important; box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3) !important; font-size: 1.35rem !important;
     }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -154,13 +174,25 @@
 </div>
 
 <header id="mainHeader">
-    <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
-    <div class="header-actions">
-        <button type="button" class="btn-category" onclick="alert('전체 카테고리 오픈 예정')"><span>≡</span> 전체 불판</button>
-        <div class="icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')">🔍</div>
-        <div class="noti-bell" role="button" tabindex="0" onclick="alert('알림 준비 중')">🔔</div>
+    <div class="top-row" id="headerTopRow">
+        <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
+        <div class="header-actions">
+            <button type="button" class="btn-category" onclick="toggleCategorySheet()"><i class="ph ph-list"></i> 전체 불판</button>
+            <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
+            <i class="ph ph-bell noti-bell" onclick="alert('알림 기능은 준비 중입니다.')"></i>
+        </div>
     </div>
 </header>
+
+<div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
+
+<div class="bottom-sheet" id="categorySheet">
+    <div class="sheet-header">
+        <div class="sheet-title">모든 불판 탐험 🚀</div>
+        <button class="btn-close" onclick="closeAllDrawers()">✕</button>
+    </div>
+    <div class="category-grid" id="categoryGrid"></div>
+</div>
 
 <main>
     <section>
@@ -170,30 +202,30 @@
         <div class="horizontal-scroll-container" id="aiCurationContainer">
             <div class="feed-loading">
                 <div class="feed-spinner" aria-hidden="true"></div>
-                <p>🔥 오늘의 픽클을 불러오는 중...</p>
+                <p>👑 오늘의 픽클을 지피는 중...</p>
             </div>
         </div>
     </section>
 
     <section class="list-section">
-        <div class="section-header" style="padding:0; margin-top:10px;">
+        <div class="section-header" style="padding:0;">
             <h2 class="section-title"><span style="color:var(--point-pink);">🔥</span> 지금 뜨거운 불판</h2>
         </div>
         <div id="hotFeedList">
             <div class="feed-loading">
                 <div class="feed-spinner" aria-hidden="true"></div>
-                <p>🔥 뜨거운 불판을 불러오는 중...</p>
+                <p>🔥 뜨거운 불판을 지피는 중...</p>
             </div>
         </div>
     </section>
 </main>
 
 <nav class="bottom-nav">
-    <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><span class="nav-icon">🏠</span><span>홈</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
+    <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph-fill ph-house nav-icon"></i><span>홈</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
+    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><i class="ph-fill ph-fire nav-icon"></i></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><i class="ph ph-gift nav-icon"></i><span>이벤트</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><i class="ph ph-user nav-icon"></i><span>마이</span></div>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -212,7 +244,19 @@
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
-    // 오늘의 픽클 3초 롤링
+    function closeAllDrawers() {
+        document.getElementById('commonOverlay').classList.remove('open');
+        document.getElementById('categorySheet').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    function toggleCategorySheet() {
+        closeAllDrawers();
+        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('categorySheet').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // 👑 오늘의 픽클 3초 자동 오토 스크롤
     document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('aiCurationContainer');
         let autoScrollTimer;
