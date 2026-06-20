@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const adminDir = path.resolve(__dirname, '..');
 
 const SNIPPET = [
+  '<link rel="stylesheet" href="css/admin-header.css">',
   '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',
   '<script src="../js/supabase-config.js"></script>',
   '<script src="js/admin-auth.js"></script>',

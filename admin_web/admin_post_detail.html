@@ -123,6 +123,7 @@
 <!-- 💡 중요: 구형 파이어베이스 제거 후 최신 Supabase CDN 도입 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
+  <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body>
 
@@ -153,10 +154,17 @@
         <a href="admin_board_list.html" class="back-btn">❮</a> 
         상세 모니터링 및 댓글 관리
       </div>
-      <div class="admin-profile">
-          <span style="font-size:0.9rem; font-weight:700;">최고관리자 님</span>
-          <div class="admin-avatar">A</div>
-      </div>
+      <div class="admin-profile admin-header-user" id="adminHeaderUser">
+            <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
+                <span id="header-user-info"></span>
+                <span class="admin-header-caret">▾</span>
+            </button>
+            <div class="admin-avatar" id="header-user-avatar">A</div>
+            <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
+                <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
+                <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+            </div>
+        </div>
     </header>
 
     <div class="content-container">

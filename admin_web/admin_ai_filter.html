@@ -110,6 +110,7 @@
 </style>
 <!-- Firebase (App + Analytics + Firestore) -->
 <script type="module" src="js/firebase-init.js"></script>
+  <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body data-firebase-page="ai_filter" data-firebase-doc="settings">
 
@@ -141,6 +142,18 @@
     <header class="top-header">
       <div class="page-title">🤖 AI 필터링 및 데이터 보안 통제판</div>
       <button class="btn-save" onclick="saveSettings()">💾 변경사항 서버에 반영</button>
+    
+        <div class="admin-profile admin-header-user" id="adminHeaderUser">
+            <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
+                <span id="header-user-info"></span>
+                <span class="admin-header-caret">▾</span>
+            </button>
+            <div class="admin-avatar" id="header-user-avatar">A</div>
+            <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
+                <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
+                <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+            </div>
+        </div>
     </header>
 
     <div class="content-container">

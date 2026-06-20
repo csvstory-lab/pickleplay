@@ -1,0 +1,172 @@
+/* P!CKLE Admin — 헤더 유저 정보 · 비밀번호 변경 */
+.admin-header-user {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-header-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #d4d4d8;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.admin-header-user-btn:hover,
+.admin-header-user-btn[aria-expanded='true'] {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #fff;
+}
+
+.admin-header-caret {
+  font-size: 0.7rem;
+  color: #71717a;
+}
+
+.admin-header-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  padding: 6px;
+  z-index: 200;
+}
+
+.admin-header-dropdown[hidden] {
+  display: none !important;
+}
+
+.admin-header-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #e4e4e7;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.admin-header-menu-item:hover {
+  background: #27272a;
+  color: #fff;
+}
+
+.admin-header-menu-logout {
+  color: #ff007f;
+}
+
+.admin-header-menu-logout:hover {
+  background: rgba(255, 0, 127, 0.1);
+}
+
+#myPasswordModal.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+
+#myPasswordModal.modal-overlay.is-open {
+  display: flex;
+}
+
+#myPasswordModal .modal-container {
+  width: 100%;
+  max-width: 420px;
+  background: #09090b;
+  border: 1px solid #ffcc00;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+
+#myPasswordModal .modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #27272a;
+  background: #121214;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#myPasswordModal .modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #ffcc00;
+}
+
+#myPasswordModal .modal-body {
+  padding: 24px;
+}
+
+#myPasswordModal label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #a1a1aa;
+}
+
+#myPasswordModal input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 1px solid #3f3f46;
+  background: #18181b;
+  color: #fff;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+#myPasswordModal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+#myPasswordModal .btn-modal-cancel {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid #52525b;
+  background: transparent;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#myPasswordModal .btn-modal-save {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #39ff14;
+  color: #000;
+  font-weight: 900;
+  cursor: pointer;
+}

@@ -3,16 +3,11 @@
  * Deploy: supabase functions deploy admin-force-password
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { handleCorsPreflight, jsonResponse } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -21,7 +16,7 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return json({ ok: false, reason: 'unauthorized' }, 401);
+      return jsonResponse({ ok: false, reason: 'unauthorized' }, 401);
     }
 
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -30,12 +25,12 @@ Deno.serve(async (req) => {
 
     const { data: userData, error: userErr } = await userClient.auth.getUser();
     if (userErr || !userData.user) {
-      return json({ ok: false, reason: 'unauthorized' }, 401);
+      return jsonResponse({ ok: false, reason: 'unauthorized' }, 401);
     }
 
     const { data: roleData, error: roleErr } = await userClient.rpc('pickle_get_my_user_role');
     if (roleErr || !roleData?.ok || roleData.role !== 'super') {
-      return json({ ok: false, reason: 'forbidden', detail: 'super_required' }, 403);
+      return jsonResponse({ ok: false, reason: 'forbidden', detail: 'super_required' }, 403);
     }
 
     const body = await req.json();
@@ -43,10 +38,10 @@ Deno.serve(async (req) => {
     const password = String(body.password || '');
 
     if (!email || email.indexOf('@') === -1) {
-      return json({ ok: false, reason: 'invalid_email' }, 400);
+      return jsonResponse({ ok: false, reason: 'invalid_email' }, 400);
     }
     if (password.length < 8) {
-      return json({ ok: false, reason: 'invalid_password', detail: 'min_8_chars' }, 400);
+      return jsonResponse({ ok: false, reason: 'invalid_password', detail: 'min_8_chars' }, 400);
     }
 
     const adminClient = createClient(supabaseUrl, serviceKey, {
@@ -58,12 +53,12 @@ Deno.serve(async (req) => {
       perPage: 1000,
     });
     if (listErr) {
-      return json({ ok: false, reason: 'auth_list_failed', error: listErr.message }, 500);
+      return jsonResponse({ ok: false, reason: 'auth_list_failed', error: listErr.message }, 500);
     }
 
     const target = list?.users?.find((u) => u.email?.toLowerCase() === email);
     if (!target) {
-      return json({ ok: false, reason: 'user_not_found', email }, 404);
+      return jsonResponse({ ok: false, reason: 'user_not_found', email }, 404);
     }
 
     const { error: updateErr } = await adminClient.auth.admin.updateUserById(target.id, {
@@ -71,23 +66,16 @@ Deno.serve(async (req) => {
       email_confirm: true,
     });
     if (updateErr) {
-      return json({ ok: false, reason: 'auth_password_update_failed', error: updateErr.message }, 500);
+      return jsonResponse({ ok: false, reason: 'auth_password_update_failed', error: updateErr.message }, 500);
     }
 
-    return json({
+    return jsonResponse({
       ok: true,
       email,
       user_id: target.id,
       method: 'auth_admin_api',
     });
   } catch (err) {
-    return json({ ok: false, reason: 'server_error', error: String(err) }, 500);
+    return jsonResponse({ ok: false, reason: 'server_error', error: String(err) }, 500);
   }
 });
-
-function json(payload: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}

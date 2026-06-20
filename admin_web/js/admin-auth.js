@@ -58,6 +58,16 @@
     advertiser: ['sponsor', 'statistics'],
   };
 
+  var ROLE_LABELS = {
+    super: '최고관리자',
+    marketer: '마케터',
+    cs: 'CS 매니저',
+    account: '재무/정산',
+    advertiser: '광고주',
+  };
+
+  var headerUiInitialized = false;
+
   function getDefaultLandingPage(role) {
     return role === ROLES.ADVERTISER ? SPONSOR_PAGE : DASHBOARD_PAGE;
   }
@@ -238,7 +248,7 @@
     footer.innerHTML =
       '<div style="margin-bottom:8px;color:#a1a1aa;font-weight:700;">' +
       escapeHtml((cachedRole && cachedRole.display_name) || '관리자') +
-      ' <span style="color:#52525b;">(' + escapeHtml(role || '') + ')</span></div>' +
+      ' <span style="color:#52525b;">(' + escapeHtml(getRoleLabel(role || '')) + ')</span></div>' +
       '<button type="button" id="btnAdminLogout" style="width:100%;padding:8px;border-radius:6px;' +
       'border:1px solid #3f3f46;background:#18181b;color:#fff;font-weight:800;cursor:pointer;">로그아웃</button>';
 
@@ -256,6 +266,238 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  function getRoleLabel(role) {
+    return ROLE_LABELS[role] || role || '관리자';
+  }
+
+  function resolveDisplayName(roleInfo, user) {
+    var fromRole = roleInfo && roleInfo.display_name ? String(roleInfo.display_name).trim() : '';
+    var meta = user && user.user_metadata ? user.user_metadata : {};
+    var fromMeta =
+      (meta.display_name && String(meta.display_name).trim()) ||
+      (meta.full_name && String(meta.full_name).trim()) ||
+      (meta.name && String(meta.name).trim()) ||
+      '';
+    var fromEmail =
+      user && user.email ? String(user.email).split('@')[0] : '';
+    return fromRole || fromMeta || fromEmail || '관리자';
+  }
+
+  function getAvatarInitial(name) {
+    var text = String(name || 'A').trim();
+    return text ? text.charAt(0).toUpperCase() : 'A';
+  }
+
+  function injectAdminHeaderAssets() {
+    if (!document.querySelector('link[href*="admin-header.css"]')) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'css/admin-header.css';
+      document.head.appendChild(link);
+    }
+  }
+
+  var HEADER_USER_BLOCK =
+    '<div class="admin-profile admin-header-user" id="adminHeaderUser">' +
+    '<button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">' +
+    '<span id="header-user-info"></span><span class="admin-header-caret">▾</span></button>' +
+    '<div class="admin-avatar" id="header-user-avatar">A</div>' +
+    '<div class="admin-header-dropdown" id="headerUserDropdown" hidden>' +
+    '<button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>' +
+    '<button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>' +
+    '</div></div>';
+
+  function ensureAdminHeaderSlot() {
+    if (document.getElementById('header-user-info')) return;
+
+    var header = document.querySelector('header.top-header');
+    if (!header) return;
+
+    var wrap = document.createElement('div');
+    wrap.innerHTML = HEADER_USER_BLOCK;
+    var block = wrap.firstElementChild;
+    if (block) header.appendChild(block);
+  }
+
+  function ensureMyPasswordModal() {
+    if (document.getElementById('myPasswordModal')) return;
+
+    var wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<div class="modal-overlay" id="myPasswordModal" aria-hidden="true">' +
+      '<div class="modal-container" role="dialog" aria-labelledby="myPasswordModalTitle">' +
+      '<div class="modal-header">' +
+      '<h3 class="modal-title" id="myPasswordModalTitle">🔐 내 비밀번호 변경</h3>' +
+      '<button type="button" class="btn-close-my-pw" id="btnCloseMyPasswordModal" style="background:none;border:none;color:#71717a;font-size:1.4rem;cursor:pointer;">✕</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+      '<form id="myPasswordForm">' +
+      '<label for="myNewPassword">새 비밀번호 (8자 이상)</label>' +
+      '<input type="password" id="myNewPassword" minlength="8" autocomplete="new-password" required>' +
+      '<label for="myConfirmPassword">새 비밀번호 확인</label>' +
+      '<input type="password" id="myConfirmPassword" minlength="8" autocomplete="new-password" required>' +
+      '<div class="modal-actions">' +
+      '<button type="button" class="btn-modal-cancel" id="btnCancelMyPassword">취소</button>' +
+      '<button type="submit" class="btn-modal-save" id="btnSaveMyPassword">저장</button>' +
+      '</div></form></div></div></div>';
+
+    document.body.appendChild(wrap.firstElementChild);
+  }
+
+  function renderAdminHeaderInfo(roleInfo, user) {
+    ensureAdminHeaderSlot();
+    injectAdminHeaderAssets();
+
+    var infoEl = document.getElementById('header-user-info');
+    if (!infoEl) return;
+
+    var role = roleInfo && roleInfo.role ? roleInfo.role : '';
+    var roleLabel = getRoleLabel(role);
+    var displayName = resolveDisplayName(roleInfo, user);
+
+    infoEl.textContent = roleLabel + ' ' + displayName + ' 님';
+
+    var avatarEl = document.getElementById('header-user-avatar');
+    if (avatarEl) avatarEl.textContent = getAvatarInitial(displayName);
+  }
+
+  function closeHeaderDropdown() {
+    var dropdown = document.getElementById('headerUserDropdown');
+    var btn = document.getElementById('btnHeaderUserMenu');
+    if (dropdown) dropdown.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function openMyPasswordModal() {
+    closeHeaderDropdown();
+    ensureMyPasswordModal();
+    var modal = document.getElementById('myPasswordModal');
+    var p1 = document.getElementById('myNewPassword');
+    var p2 = document.getElementById('myConfirmPassword');
+    if (p1) p1.value = '';
+    if (p2) p2.value = '';
+    if (modal) {
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeMyPasswordModal() {
+    var modal = document.getElementById('myPasswordModal');
+    if (modal) {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  async function submitMyPasswordChange(e) {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    var p1 = document.getElementById('myNewPassword');
+    var p2 = document.getElementById('myConfirmPassword');
+    var saveBtn = document.getElementById('btnSaveMyPassword');
+    var password = p1 ? p1.value : '';
+    var confirm = p2 ? p2.value : '';
+
+    if (password.length < 8) {
+      alert('❌ 새 비밀번호는 8자 이상이어야 합니다.');
+      return false;
+    }
+    if (password !== confirm) {
+      alert('❌ 비밀번호 확인이 일치하지 않습니다.');
+      return false;
+    }
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = '저장 중…';
+    }
+
+    try {
+      var sb = getClient();
+      var res = await sb.auth.updateUser({ password: password });
+      if (res.error) throw res.error;
+
+      closeMyPasswordModal();
+      alert('✅ 비밀번호가 변경되었습니다.\n다음 로그인부터 새 비밀번호를 사용해 주세요.');
+      return true;
+    } catch (err) {
+      console.error('[AdminAuth] submitMyPasswordChange', err);
+      alert('❌ 비밀번호 변경 실패\n\n' + (err.message || String(err)));
+      return false;
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '저장';
+      }
+    }
+  }
+
+  function setupAdminHeaderUI(roleInfo, user) {
+    injectAdminHeaderAssets();
+    ensureAdminHeaderSlot();
+    ensureMyPasswordModal();
+    renderAdminHeaderInfo(roleInfo, user);
+
+    if (headerUiInitialized) return;
+    headerUiInitialized = true;
+
+    document.addEventListener('click', function (e) {
+      var menuBtn = document.getElementById('btnHeaderUserMenu');
+      var dropdown = document.getElementById('headerUserDropdown');
+      var userWrap = document.getElementById('adminHeaderUser');
+
+      if (menuBtn && (e.target === menuBtn || menuBtn.contains(e.target))) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!dropdown) return;
+        var willOpen = dropdown.hidden;
+        dropdown.hidden = !willOpen;
+        menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        return;
+      }
+
+      if (userWrap && !userWrap.contains(e.target)) {
+        closeHeaderDropdown();
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (e.target && e.target.id === 'btnHeaderChangePassword') {
+        e.preventDefault();
+        e.stopPropagation();
+        openMyPasswordModal();
+      }
+      if (e.target && e.target.id === 'btnHeaderLogout') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeHeaderDropdown();
+        if (confirm('관리자 세션을 종료하시겠습니까?')) {
+          signOut();
+        }
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (e.target && (e.target.id === 'btnCloseMyPasswordModal' || e.target.id === 'btnCancelMyPassword')) {
+        e.preventDefault();
+        closeMyPasswordModal();
+      }
+      if (e.target && e.target.id === 'myPasswordModal') {
+        closeMyPasswordModal();
+      }
+    });
+
+    document.addEventListener('submit', function (e) {
+      if (e.target && e.target.id === 'myPasswordForm') {
+        submitMyPasswordChange(e);
+      }
+    });
   }
 
   async function guardAdminPage() {
@@ -284,6 +526,7 @@
     var menuKey = PAGE_TO_MENU[page];
 
     applySidebarRBAC(role);
+    setupAdminHeaderUI(roleInfo, session.user);
 
     if (role === ROLES.ADVERTISER && page === DASHBOARD_PAGE) {
       console.log('[AdminAuth] advertiser → 스폰서 홈으로 리다이렉트');
@@ -410,6 +653,11 @@
     applySidebarRBAC: applySidebarRBAC,
     canAccessMenu: canAccessMenu,
     provisionStaffAccount: provisionStaffAccount,
+    getRoleLabel: getRoleLabel,
+    renderAdminHeaderInfo: renderAdminHeaderInfo,
+    setupAdminHeaderUI: setupAdminHeaderUI,
+    openMyPasswordModal: openMyPasswordModal,
+    submitMyPasswordChange: submitMyPasswordChange,
     getDefaultLandingPage: getDefaultLandingPage,
     getPostLoginUrl: getPostLoginUrl,
   };

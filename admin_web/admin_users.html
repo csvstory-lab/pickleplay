@@ -549,6 +549,7 @@
 </style>
 <!-- Firebase (App + Analytics + Firestore) -->
 <script type="module" src="js/firebase-init.js"></script>
+  <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body>
 
@@ -581,9 +582,16 @@
 <main class="main-content">
     <header class="top-header">
         <h2 class="page-title"><span style="font-size:1.5rem;">👥</span> 회원 관리</h2>
-        <div class="admin-profile">
-            <span style="font-size:0.9rem; font-weight:700;">최고관리자 님</span>
-            <div class="admin-avatar">A</div>
+        <div class="admin-profile admin-header-user" id="adminHeaderUser">
+            <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
+                <span id="header-user-info"></span>
+                <span class="admin-header-caret">▾</span>
+            </button>
+            <div class="admin-avatar" id="header-user-avatar">A</div>
+            <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
+                <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
+                <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+            </div>
         </div>
     </header>
 

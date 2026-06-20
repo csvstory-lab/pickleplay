@@ -143,6 +143,7 @@
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>
 <script src="../js/pickle-penalties.js"></script>
+  <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body>
 
@@ -176,6 +177,18 @@
 <main class="main-content">
     <header class="top-header">
         <h2 class="page-title">🚨 커뮤니티 관리 및 권리 수호 정보 보관소</h2>
+    
+        <div class="admin-profile admin-header-user" id="adminHeaderUser">
+            <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
+                <span id="header-user-info"></span>
+                <span class="admin-header-caret">▾</span>
+            </button>
+            <div class="admin-avatar" id="header-user-avatar">A</div>
+            <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
+                <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
+                <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+            </div>
+        </div>
     </header>
 
     <div class="top-tab-wrapper">
