@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,24 +15,26 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 메인 피드</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
     /* 🎨 트렌디 뉴트럴 톤앤매너 적용 */
     :root {
-        --bg-color: #050505;
-        --card-bg: #18181b;
-        --pastel-mint: #4ade80;
-        --coral-pink: #fb7185;
-        --pastel-blue: #7dd3fc;
-        --soft-gold: #fde047;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FF85A1;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
-        --border-color: #27272a;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        margin: 0; padding: 0; background-color: var(--bg-base); color: var(--text-main);
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
@@ -39,137 +42,106 @@
     /* === 상단 헤더 (로고, 전체불판, 검색, 알림) === */
     header {
         position: sticky; top: 0;
-        background-color: rgba(5, 5, 5, 0.85); backdrop-filter: blur(12px);
-        z-index: 120;
-        border-bottom: 1px solid var(--border-color);
+        background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
+        z-index: 120; border-bottom: 1px solid var(--border-soft);
+        display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px; }
     
     .logo {
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.8rem;
-        background: linear-gradient(90deg, var(--pastel-mint), var(--pastel-blue));
+        font-family: 'Black Han Sans', sans-serif; font-size: 1.6rem;
+        background: linear-gradient(90deg, var(--point-green), #86efac);
         -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         cursor: pointer; margin: 0; filter: none; 
     }
     .header-actions { display: flex; align-items: center; gap: 14px; }
 
     .btn-category {
-        background-color: #18181b; color: #fff; border: 1px solid var(--border-color);
+        background-color: transparent; color: var(--text-main); border: 1px solid var(--border-soft);
         padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
         cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
     }
-    .btn-category:active { background-color: var(--pastel-mint); color: #000; border-color: var(--pastel-mint); }
 
-    .icon-search-top { font-size: 1.3rem; cursor: pointer; transition: 0.2s; }
-    .icon-search-top:active { transform: scale(0.9); }
-
-    .noti-bell { font-size: 1.4rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
-    .noti-bell:active { transform: scale(0.9); }
+    .icon-search-top { font-size: 1.3rem; cursor: pointer; }
+    .noti-bell { font-size: 1.4rem; position: relative; cursor: pointer; display: flex; align-items: center;}
     .noti-bell[data-count]::after { 
         content: attr(data-count); position: absolute; top: -2px; right: -4px; 
-        background-color: var(--coral-pink); color: white; font-size: 0.6rem; font-weight: 900; 
-        padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-color); 
+        background-color: var(--point-pink); color: #000; font-size: 0.6rem; font-weight: 900; 
+        padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-base); 
     }
-
-    /* === 모달 & 드로어 === */
-    .noti-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-    .noti-overlay.open { opacity: 1; pointer-events: auto; }
-
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--card-bg); border-radius: 24px 24px 0 0; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); }
-    .bottom-sheet.open { transform: translateY(0); }
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .sheet-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--pastel-mint); }
-    .btn-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .grid-item { background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .grid-item:active { background-color: var(--pastel-mint); color: #000; border-color: var(--pastel-mint); }
-
-    .noti-drawer {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 85%; max-width: 400px; 
-        background-color: var(--card-bg); z-index: 9999; transform: translateX(100%);
-        transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
-        display: flex; flex-direction: column; border-left: 1px solid var(--border-color);
-        box-shadow: -10px 0 30px rgba(0,0,0,0.8);
-    }
-    .noti-drawer.open { transform: translateX(0); }
-    .noti-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); }
-    .noti-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.15rem; color: #fff; margin: 0; }
-    .noti-header-actions { display: flex; align-items: center; gap: 15px; }
-    .btn-read-all { background: none; border: none; color: var(--text-sub); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
-    .btn-close-drawer { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-    .noti-list { flex: 1; overflow-y: auto; padding: 0; margin: 0; list-style: none; scrollbar-width: none; }
-    .noti-list::-webkit-scrollbar { display: none; }
-    .noti-item { display: flex; gap: 15px; padding: 18px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; position: relative; }
-    .noti-item.unread { background-color: rgba(74, 222, 128, 0.05); }
-    .noti-item.unread::before { content: ''; position: absolute; top: 25px; right: 20px; width: 8px; height: 8px; border-radius: 50%; background-color: var(--coral-pink); }
-    .noti-icon-wrapper { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; background-color: var(--bg-color); border: 1px solid var(--border-color); }
 
     /* === 메인 콘텐츠 === */
-    main { padding: 25px 0 100px 0; position: relative; z-index: 1; }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 20px; }
-    
-    /* 💡 타이틀 문구 및 사이즈 고급스럽게 조절 */
-    .section-title { font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 1.2rem; letter-spacing: -0.5px; margin: 0; color: #fff; }
-    .king-title { color: var(--coral-pink); text-shadow: none; display: flex; align-items: center; gap: 8px;}
+    main { padding: 20px 0 100px 0; position: relative; z-index: 1; }
+    .section-header { margin-bottom: 12px; padding: 0 20px; }
+    .section-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 6px; color: var(--text-main); }
 
-    /* 👑 오늘의 픽클 (가로 롤링) */
-    .horizontal-scroll-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 15px; padding: 0 20px 20px 20px; scrollbar-width: none; }
+    /* 👑 오늘의 픽클 (크기 100% 통일) */
+    .horizontal-scroll-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding: 0 20px 20px 20px; scrollbar-width: none; }
     .horizontal-scroll-container::-webkit-scrollbar { display: none; }
 
     .king-card {
-        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); flex: 0 0 auto;
-        width: 88%; scroll-snap-align: center; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: 0.2s;
-    }
-    .king-card:active { transform: scale(0.98); }
-    .king-card .card-body, .list-card .card-body { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-
-    .king-card .title, .list-card .title { font-size: 1.1rem; font-weight: 800; line-height: 1.4; margin: 0; word-break: keep-all; color: #fff; }
-
-    /* 💡 JS가 렌더링하는 요소들의 CSS 완벽 복구 */
-    .card-thumb-top { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--bg-color); flex-shrink: 0; border-bottom: 1px solid var(--border-color); }
-    .card-thumb-top .card-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .card-thumb-top--fallback { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1c1c1e, #27272a); }
-    .card-thumb-fallback-label {
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.5rem; text-align: center; padding: 0 16px;
-        background: linear-gradient(135deg, var(--pastel-mint), var(--pastel-blue));
-        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: none; word-break: keep-all;
+        background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); 
+        flex: 0 0 100%; /* 🔥 카드를 100%로 꽉 채워 아래 리스트와 크기 동일하게 만듦 */
+        scroll-snap-align: center; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: 0.2s;
     }
 
-    .king-ab-box, .text-vs-box { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 0; }
-    .king-ab-a, .vs-a { flex: 1 1 auto; color: var(--pastel-blue); font-size: 0.95rem; font-weight: 800; text-align: center; word-break: keep-all;}
-    .king-ab-b, .vs-b { flex: 1 1 auto; color: var(--coral-pink); font-size: 0.95rem; font-weight: 800; text-align: center; word-break: keep-all;}
-    .king-ab-vs, .vs-label { font-family: 'Black Han Sans', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
-
+    /* 🔥 JS 수정 없이 레이아웃 순서 바꾸기 (Flex Order) */
+    .king-card .card-body, .list-card .card-body { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; }
+    .feed-card-meta { order: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 0.75rem; font-weight: 700; color: var(--text-sub); }
+    .king-card .title, .list-card .title { order: 2; font-size: 1.1rem; font-weight: 800; line-height: 1.4; margin: 0; color: var(--text-main); word-break: keep-all;}
+    .king-ab-box, .text-vs-box { order: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; background: var(--bg-base); border: 1px solid var(--border-soft); border-radius: 12px; padding: 12px; margin-bottom: 0; }
+    
+    /* 🔥 JS 수정 없이 "내 픽 남기기" 텍스트 & 그레이 톤 변경 (CSS Content) */
     .btn-pick {
-        width: 100%; padding: 12px 16px; border-radius: 12px; border: none;
-        background: linear-gradient(90deg, var(--coral-pink), #f43f5e); color: white;
-        font-family: 'Black Han Sans', sans-serif; font-size: 0.95rem; cursor: pointer; transition: 0.2s; margin-top: 2px;
+        order: 3; width: 100%; padding: 14px 16px; border-radius: 12px; border: none;
+        background: var(--bg-elevated) !important; color: transparent !important; /* 기존 빨간색, 글자 숨김 */
+        cursor: pointer; transition: 0.2s; position: relative; display: flex; justify-content: center; align-items: center;
     }
-    .btn-pick:active { transform: scale(0.98); }
+    .btn-pick::after {
+        content: "✔️ 내 픽 남기기"; position: absolute;
+        color: var(--text-main); font-family: 'Pretendard', sans-serif; font-size: 0.95rem; font-weight: 700;
+    }
+    .btn-pick:active { background: #3a3a3c !important; }
 
-    /* 메타 태그 (시간, 참전자) */
-    .feed-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 2px; font-size: 0.75rem; font-weight: 700; color: var(--text-sub); }
-    .feed-cat-badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 0.7rem; color: #d4d4d8; background: var(--border-color); }
-    .feed-meta-participants { color: #000; background: var(--soft-gold); padding: 2px 8px; border-radius: 6px; font-weight: 800;}
-    .feed-meta-timer { border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 6px;}
+    /* 메타 태그 라벨 디자인 */
+    .feed-cat-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; color: var(--text-main); background: var(--bg-elevated); }
+    .feed-meta-participants { color: var(--point-pink); display: flex; align-items: center; gap: 4px; font-weight: 800;}
+    .feed-meta-timer { color: var(--point-gold); display: flex; align-items: center; gap: 4px;}
+
+    /* 썸네일 레이아웃 */
+    .card-thumb-top { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; flex-shrink: 0; border-bottom: 1px solid var(--border-soft); }
+    .card-thumb-top .card-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-thumb-top--fallback { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); }
+    .card-thumb-fallback-label { font-family: 'Nanum Myeongjo', serif; font-size: 1.5rem; text-align: center; padding: 0 16px; color: #1a1a1a; filter: none; line-height: 1.4; word-break: keep-all; }
+
+    .king-ab-a, .vs-a { flex: 1 1 auto; color: var(--point-blue); font-size: 0.95rem; font-weight: 800; text-align: center;}
+    .king-ab-b, .vs-b { flex: 1 1 auto; color: var(--point-pink); font-size: 0.95rem; font-weight: 800; text-align: center;}
+    .king-ab-vs, .vs-label { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px;}
 
     .feed-loading { padding: 36px 20px; text-align: center; color: var(--text-sub); font-size: 0.9rem; font-weight: 700; }
-    .feed-spinner { width: 36px; height: 36px; margin: 0 auto 14px; border: 3px solid var(--border-color); border-top-color: var(--pastel-mint); border-radius: 50%; animation: feedSpin 0.75s linear infinite; }
+    .feed-spinner { width: 36px; height: 36px; margin: 0 auto 14px; border: 3px solid var(--border-soft); border-top-color: var(--point-green); border-radius: 50%; animation: feedSpin 0.75s linear infinite; }
     @keyframes feedSpin { to { transform: rotate(360deg); } }
 
-    /* 🔥 지금 뜨거운 불판 */
+    /* 🔥 지금 뜨거운 불판 리스트 */
     .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
-    .list-card { display: flex; flex-direction: column; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 14px; overflow: hidden; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .list-card:active { transform: translate(1px, 1px); border-color: #52525b; box-shadow: none; }
+    .list-card { display: flex; flex-direction: column; background-color: var(--bg-card); border: 1px solid var(--border-card); border-radius: 20px; margin-bottom: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
 
-    /* 💡 하단바(bottom-nav.css) 완벽 덮어쓰기 및 2D 플랫 아이콘 적용 */
-    .bottom-nav { background: rgba(5,5,5,0.95) !important; border-top: 1px solid var(--border-color) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; padding: 8px 0 15px 0 !important; height: auto !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; color: var(--text-sub) !important; cursor: pointer !important; text-decoration: none !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; }
+    /* 💡 하단바 외부 CSS 완벽 무력화 & 2D 스타일 적용 */
+    .bottom-nav { background: rgba(28, 28, 30, 0.95) !important; border-top: 1px solid var(--border-soft) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; padding: 10px 0 20px 0 !important; height: auto !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px); }
+    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; }
     .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
-    .bottom-nav .nav-btn.active .nav-icon { color: var(--pastel-mint) !important; }
-    .bottom-nav .nav-icon { font-size: 1.4rem !important; filter: none !important; text-shadow: none !important; display: block !important; }
-    .bottom-nav span:not(.nav-icon) { font-size: 0.7rem !important; font-weight: 800 !important; }
+    .bottom-nav .nav-btn.active .nav-icon { color: var(--text-main) !important; }
+    .bottom-nav .nav-icon { font-size: 1.5rem !important; filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important;}
+    .bottom-nav span:not(.nav-icon) { font-size: 0.7rem !important; font-weight: 700 !important; }
+    
+    /* 불판 생성 중앙 버튼 하이라이트 */
+    .bottom-nav .fire-btn { transform: translateY(-12px) !important; }
+    .bottom-nav .fire-btn .nav-icon { 
+        background: linear-gradient(135deg, var(--point-green) 0%, #20c997 100%) !important;
+        color: #000 !important; width: 48px !important; height: 48px !important; border-radius: 50% !important;
+        display: flex !important; justify-content: center !important; align-items: center !important;
+        border: 4px solid var(--bg-base) !important; box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3) !important; font-size: 1.4rem !important;
+    }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
@@ -182,58 +154,19 @@
 </div>
 
 <header id="mainHeader">
-    <div class="top-row" id="headerTopRow">
-        <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
-        <div class="header-actions">
-            <button type="button" class="btn-category" onclick="toggleCategorySheet()">
-                <span>≡</span> 전체 불판
-            </button>
-            <div class="icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')">🔍</div>
-            <div class="noti-bell" role="button" tabindex="0" aria-label="알림" onclick="toggleNotiDrawer()">🔔</div>
-        </div>
+    <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
+    <div class="header-actions">
+        <button type="button" class="btn-category" onclick="alert('전체 카테고리 오픈 예정')"><span>≡</span> 전체 불판</button>
+        <div class="icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')">🔍</div>
+        <div class="noti-bell" role="button" tabindex="0" onclick="alert('알림 준비 중')">🔔</div>
     </div>
 </header>
-
-<div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>
-
-<div class="bottom-sheet" id="categorySheet">
-    <div class="sheet-header">
-        <div class="sheet-title">모든 불판 탐험 🚀</div>
-        <button class="btn-close" onclick="closeAllDrawers()">✕</button>
-    </div>
-    <div class="category-grid" id="categoryGrid"></div>
-</div>
-
-<div class="noti-drawer" id="notiDrawer">
-    <div class="noti-header">
-        <h2 class="noti-title">알림</h2>
-        <div class="noti-header-actions">
-            <button class="btn-read-all" onclick="markAllAsRead()">모두 읽음</button>
-            <button class="btn-close-drawer" onclick="closeAllDrawers()">✕</button>
-        </div>
-    </div>
-    <ul class="noti-list" id="notiList">
-        <li class="noti-item unread type-mypick" onclick="goToResult(this)">
-            <div class="noti-icon-wrapper">✔️</div>
-            <div class="noti-content">
-                <div style="font-size: 0.9rem; line-height: 1.4; color: #fff;">[새 불판] 나의 픽 <span style="color:var(--soft-gold); font-weight:800;">'쩝쩝박사'</span>님이 방금 새로운 불판을 지폈습니다!</div>
-            </div>
-        </li>
-        <li class="noti-item unread type-hot" onclick="goToResult(this)">
-            <div class="noti-icon-wrapper">🔥</div>
-            <div class="noti-content">
-                <div style="font-size: 0.9rem; line-height: 1.4; color: #fff;">[HOT 진입] 📈 지금 5만 명이 뇌정지 온 역대급 밸런스 게임!</div>
-            </div>
-        </li>
-    </ul>
-</div>
 
 <main>
     <section>
         <div class="section-header">
-            <h2 class="section-title king-title">👑 오늘의 픽클</h2>
+            <h2 class="section-title"><span style="color:var(--point-gold);">👑</span> 오늘의 픽클</h2>
         </div>
-        
         <div class="horizontal-scroll-container" id="aiCurationContainer">
             <div class="feed-loading">
                 <div class="feed-spinner" aria-hidden="true"></div>
@@ -243,7 +176,9 @@
     </section>
 
     <section class="list-section">
-        <div class="section-title" style="margin-bottom: 12px;">🔥 지금 뜨거운 불판</div>
+        <div class="section-header" style="padding:0; margin-top:10px;">
+            <h2 class="section-title"><span style="color:var(--point-pink);">🔥</span> 지금 뜨거운 불판</h2>
+        </div>
         <div id="hotFeedList">
             <div class="feed-loading">
                 <div class="feed-spinner" aria-hidden="true"></div>
@@ -256,7 +191,7 @@
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><span class="nav-icon">🏠</span><span>홈</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판생성</span></div>
+    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
 </nav>
@@ -277,32 +212,6 @@
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
-    function closeAllDrawers() {
-        document.getElementById('commonOverlay').classList.remove('open');
-        document.getElementById('notiDrawer').classList.remove('open');
-        document.getElementById('categorySheet').classList.remove('open');
-        document.body.style.overflow = '';
-    }
-    function toggleNotiDrawer() {
-        closeAllDrawers();
-        document.getElementById('commonOverlay').classList.add('open');
-        document.getElementById('notiDrawer').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-    function toggleCategorySheet() {
-        closeAllDrawers();
-        document.getElementById('commonOverlay').classList.add('open');
-        document.getElementById('categorySheet').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-    function goToResult(element) {
-        if(element.classList.contains('unread')) { element.classList.remove('unread'); }
-        closeAllDrawers();
-    }
-    function markAllAsRead() {
-        document.querySelectorAll('.noti-item.unread').forEach(item => item.classList.remove('unread'));
-    }
-
     // 오늘의 픽클 3초 롤링
     document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('aiCurationContainer');
@@ -311,7 +220,7 @@
             clearInterval(autoScrollTimer);
             autoScrollTimer = setInterval(() => {
                 if (!container || container.children.length <= 1) return;
-                const cardWidth = container.children[0].offsetWidth + 15; 
+                const cardWidth = container.children[0].offsetWidth + 16; 
                 const maxScroll = container.scrollWidth - container.clientWidth;
                 if (container.scrollLeft >= maxScroll - 10) {
                     container.scrollTo({ left: 0, behavior: 'smooth' });
