@@ -924,7 +924,8 @@
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
       renderKingAbBox(post) +
-      '<button type="button" class="btn-pick">결과가 궁금하다면? 참전하기 🔥</button>' +
+      /* 💡 기존 옛날 투표 문구에서 [✔️ 내 픽 남기기]로 텍스트 자체를 정석으로 바꿈 */
+      '<button type="button" class="btn-pick">✔️ 내 픽 남기기</button>' +
       renderFeedCardMetaFooter(post) +
       '</div>' +
       '</article>'
