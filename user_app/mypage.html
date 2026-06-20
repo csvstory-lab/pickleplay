@@ -228,6 +228,51 @@
     .my-pick-info span { color: var(--neon-blue); font-weight: 900; }
     .result-win { font-family: 'Black Han Sans', sans-serif; color: var(--neon-green); font-size: 1.1rem; text-shadow: 0 0 5px rgba(57, 255, 20, 0.3); }
 
+    .badge-creator-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: #000;
+        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+    .record-card.creator-live {
+        border-color: rgba(57, 255, 20, 0.35);
+        box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.08);
+    }
+    .vote-result-box.creator-live-stats {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        border: 1px solid rgba(57, 255, 20, 0.25);
+        background: linear-gradient(180deg, rgba(57, 255, 20, 0.06), #27272a);
+    }
+    .creator-live-ab {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        font-weight: 900;
+    }
+    .creator-live-ab .pick-a { color: var(--neon-blue); }
+    .creator-live-ab .pick-b { color: var(--neon-pink); }
+    .live-ab-sep { color: #71717a; font-weight: 700; font-size: 0.78rem; }
+    .creator-live-total {
+        font-size: 0.88rem;
+        text-align: center;
+        font-family: 'Pretendard', sans-serif;
+        font-weight: 800;
+        color: var(--theme-gold);
+        text-shadow: none;
+    }
+
     /* 보관함 — 네오브루탈리즘 쿠폰 카드 */
     .coupon-card {
         background: #0a0a0c;

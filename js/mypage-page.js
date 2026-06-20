@@ -918,9 +918,63 @@
     return map;
   }
 
-  function buildRecordCard(post, stats) {
+  function resolvePostAuthorId(post) {
+    if (!post) return null;
+    return post.author_id || post.user_id || post.creator_id || null;
+  }
+
+  function isViewerPostCreator(post, viewerUserId) {
+    if (!viewerUserId) return false;
+    var authorId = resolvePostAuthorId(post);
+    return !!authorId && authorId === viewerUserId;
+  }
+
+  function buildCreatorLiveResultHtml(post, stats) {
+    var st = stats || { votesA: 0, votesB: 0, total: 0 };
+    var pct = calcVotePercent(st.votesA, st.votesB);
+    var labelA = post.option_a_name || 'A';
+    var labelB = post.option_b_name || 'B';
+
+    return (
+      '<div class="vote-result-box creator-live-stats">' +
+      '<div class="creator-live-ab">' +
+      '<span class="pick-a">A ' +
+      pct.pctA +
+      '%</span>' +
+      '<span class="live-ab-sep">vs</span>' +
+      '<span class="pick-b">B ' +
+      pct.pctB +
+      '%</span>' +
+      '</div>' +
+      '<div class="creator-live-total">🔥 ' +
+      pct.total.toLocaleString() +
+      '표 · ' +
+      escapeHtml(labelA) +
+      ' ' +
+      (Number(st.votesA) || 0).toLocaleString() +
+      ' / ' +
+      escapeHtml(labelB) +
+      ' ' +
+      (Number(st.votesB) || 0).toLocaleString() +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function buildActiveBlindedResultHtml() {
+    return (
+      '<div class="vote-result-box">' +
+      '<div class="result-win" style="color:var(--neon-blue);font-size:0.9rem;">집계 중…</div>' +
+      '</div>'
+    );
+  }
+
+  function buildRecordCard(post, stats, viewerUserId) {
     var visible = post.visibility_status === 'visible';
     var expired = isPostTimeExpired(post.expires_at);
+    var active = !expired;
+    var isCreator = isViewerPostCreator(post, viewerUserId);
+    var showCreatorLive = active && isCreator;
     var statusClass = expired ? 'done' : 'ing';
     var statusText = getRemainingTime(post.expires_at);
     var total = stats && stats.total ? stats.total : 0;
@@ -930,9 +984,27 @@
         escapeHtml(post.id) +
         '" aria-label="불판 수정">수정</button>'
       : '';
+    var liveBadge = showCreatorLive
+      ? '<span class="badge-creator-live">📊 실시간 현황</span>'
+      : '';
+    var resultBoxHtml = '';
+    if (showCreatorLive) {
+      resultBoxHtml = buildCreatorLiveResultHtml(post, stats);
+    } else if (active && !isCreator) {
+      resultBoxHtml = buildActiveBlindedResultHtml();
+    }
+    var cardExtraClass = showCreatorLive ? ' creator-live' : '';
+    var footerStatsHtml =
+      active && !isCreator
+        ? ''
+        : '<span class="stat-fire">🔥 ' +
+          total.toLocaleString() +
+          '명 참전</span>';
 
     return (
-      '<div class="record-card" data-id="' +
+      '<div class="record-card' +
+      cardExtraClass +
+      '" data-id="' +
       escapeHtml(post.id) +
       '" role="button" tabindex="0" aria-label="' +
       escapeHtml(title) +
@@ -944,6 +1016,7 @@
       '">' +
       escapeHtml(statusText) +
       '</span>' +
+      liveBadge +
       editBtn +
       '</div>' +
       '<span class="card-date">' +
@@ -953,10 +1026,9 @@
       '<div class="card-title">' +
       escapeHtml(title) +
       '</div>' +
+      resultBoxHtml +
       '<div class="card-footer-stats">' +
-      '<span class="stat-fire">🔥 ' +
-      total.toLocaleString() +
-      '명 참전</span>' +
+      footerStatsHtml +
       '<span>' +
       escapeHtml(categoryLabel(post.category)) +
       '</span>' +
@@ -1503,12 +1575,18 @@
 
     try {
       var sb = getSupabaseClient();
+      var authResult = await sb.auth.getUser();
+      var viewerUserId =
+        (authResult.data && authResult.data.user && authResult.data.user.id) ||
+        userId ||
+        null;
+
       var result = await sb
         .from('posts')
         .select(
-          'id, title, category, option_a_name, option_b_name, visibility_status, created_at, expires_at'
+          'id, title, category, option_a_name, option_b_name, author_id, visibility_status, created_at, expires_at'
         )
-        .eq('author_id', userId)
+        .eq('author_id', viewerUserId || userId)
         .order('created_at', { ascending: false });
 
       if (result.error) throw result.error;
@@ -1528,7 +1606,7 @@
       container.innerHTML = posts
         .map(function (post) {
           var stats = voteMap.get(post.id);
-          return buildRecordCard(post, stats);
+          return buildRecordCard(post, stats, viewerUserId);
         })
         .join('');
 

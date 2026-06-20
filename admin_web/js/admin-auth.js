@@ -14,6 +14,8 @@
     MARKETER: 'marketer',
     CS: 'cs',
     ACCOUNT: 'account',
+    SPONSOR: 'sponsor',
+    /** @deprecated DB/API 호환 — normalizeRole() 로 sponsor 로 통일 */
     ADVERTISER: 'advertiser',
   };
 
@@ -41,6 +43,8 @@
     'admin_users.html': 'users',
     'admin_categories.html': 'categories',
     'admin_post_list.html': 'posts',
+    'admin_board_list.html': 'posts',
+    'admin_post_detail.html': 'posts',
     'admin_events.html': 'events',
     'admin_reports.html': 'reports',
     'admin_ai_filter.html': 'ai_filter',
@@ -49,13 +53,28 @@
     'admin_settings.html': 'settings',
   };
 
+  /** 스폰서 접근 불가 페이지 (URL 직접 입력 차단) */
+  var SPONSOR_FORBIDDEN_PAGES = [
+    'admin_users.html',
+    'admin_settings.html',
+    'admin_categories.html',
+    'admin_post_list.html',
+    'admin_post_detail.html',
+    'admin_board_list.html',
+    'admin_events.html',
+    'admin_reports.html',
+    'admin_ai_filter.html',
+    'admin_cs.html',
+    'admin_dashboard.html',
+  ];
+
   /** 역할별 접근 가능 메뉴 */
   var MENU_ACCESS = {
-    super: ['dashboard', 'users', 'categories', 'posts', 'ads', 'events', 'reports', 'ai_filter', 'statistics', 'cs', 'settings'],
+    super: ['dashboard', 'users', 'categories', 'posts', 'ads', 'events', 'reports', 'ai_filter', 'statistics', 'cs', 'settings', 'sponsor'],
     marketer: ['dashboard', 'categories', 'posts', 'events', 'statistics'],
     cs: ['dashboard', 'users', 'categories', 'posts', 'reports', 'ai_filter', 'cs'],
     account: ['dashboard', 'ads', 'statistics'],
-    advertiser: ['sponsor', 'statistics'],
+    sponsor: ['sponsor', 'statistics'],
   };
 
   var ROLE_LABELS = {
@@ -63,13 +82,33 @@
     marketer: '마케터',
     cs: 'CS 매니저',
     account: '재무/정산',
-    advertiser: '광고주',
+    sponsor: '외부 스폰서',
+    advertiser: '외부 스폰서',
   };
 
   var headerUiInitialized = false;
 
   function getDefaultLandingPage(role) {
-    return role === ROLES.ADVERTISER ? SPONSOR_PAGE : DASHBOARD_PAGE;
+    role = normalizeRole(role);
+    return role === ROLES.SPONSOR ? SPONSOR_PAGE : DASHBOARD_PAGE;
+  }
+
+  /** DB role · user_metadata.role · legacy advertiser → sponsor */
+  function normalizeRole(role) {
+    var r = String(role || '').trim().toLowerCase();
+    if (r === 'advertiser') return ROLES.SPONSOR;
+    return r;
+  }
+
+  function resolveEffectiveRole(roleInfo, user) {
+    var fromDb = roleInfo && roleInfo.role ? roleInfo.role : '';
+    var meta = user && user.user_metadata ? user.user_metadata : {};
+    var fromMeta = meta.role || meta.admin_role || '';
+    return normalizeRole(fromDb || fromMeta);
+  }
+
+  function isSponsorRole(role) {
+    return normalizeRole(role) === ROLES.SPONSOR;
   }
 
   /**
@@ -79,7 +118,7 @@
     var target = redirectParam ? String(redirectParam).trim() : '';
 
     if (target && PAGE_TO_MENU[target]) {
-      if (role === ROLES.ADVERTISER && target === DASHBOARD_PAGE) {
+      if (isSponsorRole(role) && target === DASHBOARD_PAGE) {
         return SPONSOR_PAGE;
       }
       if (canAccessMenu(role, PAGE_TO_MENU[target])) {
@@ -143,6 +182,9 @@
     }
 
     cachedRole = res.data || { ok: false, is_admin: false };
+    if (cachedRole.role) {
+      cachedRole.role = normalizeRole(cachedRole.role);
+    }
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(cachedRole));
     } catch (e) { /* ignore */ }
@@ -215,23 +257,49 @@
 
   function canAccessMenu(role, menuKey) {
     if (!role || !menuKey) return false;
+    role = normalizeRole(role);
     var allowed = MENU_ACCESS[role] || [];
     return allowed.indexOf(menuKey) !== -1;
   }
 
+  function injectSponsorCampaignNav(sidebar) {
+    var menu = sidebar.querySelector('.nav-menu');
+    if (!menu || menu.querySelector('[data-admin-menu="sponsor-campaign"]')) return;
+
+    var li = document.createElement('li');
+    li.className = 'nav-item';
+    li.setAttribute('data-admin-menu', 'sponsor-campaign');
+    li.setAttribute('onclick', "location.href='admin_sponsor.html'");
+    li.innerHTML =
+      '<div class="nav-item-left"><span class="nav-icon">💼</span> 캠페인 관리</div>';
+    menu.insertBefore(li, menu.firstChild);
+  }
+
   function applySidebarRBAC(role) {
+    role = normalizeRole(role);
     var allowed = MENU_ACCESS[role] || [];
     var sidebar = document.querySelector('aside.sidebar');
     if (!sidebar) return;
 
+    if (isSponsorRole(role)) {
+      injectSponsorCampaignNav(sidebar);
+    }
+
     sidebar.querySelectorAll('.nav-item, .nav-sub-item').forEach(function (el) {
       var href = extractHrefFromOnclick(el);
-      if (!href) return;
-      var menuKey = HREF_TO_MENU[href];
-      if (menuKey && allowed.indexOf(menuKey) === -1) {
+
+      if (href) {
+        var menuKey = HREF_TO_MENU[href];
+        if (menuKey && allowed.indexOf(menuKey) === -1) {
+          el.style.display = 'none';
+        } else if (menuKey) {
+          el.style.display = '';
+        }
+        return;
+      }
+
+      if (isSponsorRole(role)) {
         el.style.display = 'none';
-      } else {
-        el.style.display = '';
       }
     });
 
@@ -521,22 +589,30 @@
       return { ok: false, reason: roleInfo.reason || 'forbidden' };
     }
 
-    var role = roleInfo.role;
+    var role = resolveEffectiveRole(roleInfo, session.user);
+    roleInfo.role = role;
     var page = getCurrentPage();
     var menuKey = PAGE_TO_MENU[page];
 
     applySidebarRBAC(role);
     setupAdminHeaderUI(roleInfo, session.user);
 
-    if (role === ROLES.ADVERTISER && page === DASHBOARD_PAGE) {
-      console.log('[AdminAuth] advertiser → 스폰서 홈으로 리다이렉트');
+    if (isSponsorRole(role) && page === DASHBOARD_PAGE) {
+      console.log('[AdminAuth] sponsor → 캠페인 홈으로 리다이렉트');
       redirect(SPONSOR_PAGE);
-      return { ok: false, reason: 'advertiser_home_redirect' };
+      return { ok: false, reason: 'sponsor_home_redirect' };
+    }
+
+    if (isSponsorRole(role) && SPONSOR_FORBIDDEN_PAGES.indexOf(page) !== -1) {
+      console.warn('[AdminAuth] sponsor 금지 페이지:', page);
+      alert('접근 권한이 없습니다.');
+      redirect(getDefaultLandingPage(role));
+      return { ok: false, reason: 'sponsor_forbidden_page' };
     }
 
     if (menuKey && !canAccessMenu(role, menuKey)) {
       console.warn('[AdminAuth] 페이지 접근 거부:', page, 'role=', role);
-      alert('이 메뉴에 대한 접근 권한이 없습니다.');
+      alert(isSponsorRole(role) ? '접근 권한이 없습니다.' : '이 메뉴에 대한 접근 권한이 없습니다.');
       redirect(getForbiddenFallbackPage(role));
       return { ok: false, reason: 'page_forbidden' };
     }
@@ -645,6 +721,10 @@
     ROLES: ROLES,
     MENU_ACCESS: MENU_ACCESS,
     PAGE_TO_MENU: PAGE_TO_MENU,
+    SPONSOR_FORBIDDEN_PAGES: SPONSOR_FORBIDDEN_PAGES,
+    normalizeRole: normalizeRole,
+    resolveEffectiveRole: resolveEffectiveRole,
+    isSponsorRole: isSponsorRole,
     getClient: getClient,
     fetchMyRole: fetchMyRole,
     loginWithPassword: loginWithPassword,

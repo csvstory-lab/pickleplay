@@ -39,12 +39,17 @@ Deno.serve(async (req) => {
     const password = String(body.password || '');
     const displayName = String(body.display_name || '').trim();
     const department = String(body.department || '').trim();
-    const role = String(body.role || 'marketer');
+    const roleRaw = String(body.role || 'marketer').trim().toLowerCase();
+    const role = roleRaw === 'advertiser' ? 'sponsor' : roleRaw;
     const status = String(body.status || 'active');
     const mode = String(body.mode || 'create');
 
     if (!email || email.indexOf('@') === -1) {
       return jsonResponse({ ok: false, reason: 'invalid_email' }, 400);
+    }
+
+    if (!['super', 'marketer', 'cs', 'account', 'sponsor'].includes(role)) {
+      return jsonResponse({ ok: false, reason: 'invalid_role' }, 400);
     }
 
     const adminClient = createClient(supabaseUrl, serviceKey, {
@@ -85,7 +90,7 @@ Deno.serve(async (req) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { display_name: displayName, admin_role: role },
+        user_metadata: { display_name: displayName, admin_role: role, role: role },
       });
 
       if (createErr) {
@@ -132,7 +137,7 @@ Deno.serve(async (req) => {
           email,
           password,
           email_confirm: true,
-          user_metadata: { display_name: displayName, admin_role: role },
+          user_metadata: { display_name: displayName, admin_role: role, role: role },
         });
         if (createErr) {
           return jsonResponse({ ok: false, reason: 'auth_create_failed', error: createErr.message }, 500);

@@ -729,7 +729,7 @@
                           <option value="marketer" selected>📈 마케터 (기획/이벤트)</option>
                           <option value="cs">🎧 CS 매니저 (회원/운영)</option>
                           <option value="account">💳 재무/정산 담당</option>
-                          <option value="advertiser">💼 외부 광고주/스폰서 (읽기 전용)</option>
+                          <option value="sponsor">💼 외부 스폰서(광고주)</option>
                       </select>
                   </div>
                   <div class="sc-item col">
@@ -879,7 +879,8 @@
             marketer:   '<span class="role-badge role-manager">📈 마케터</span>',
             cs:         '<span class="role-badge role-cs">🎧 CS 매니저</span>',
             account:    '<span class="role-badge role-acc">💳 재무/정산 담당</span>',
-            advertiser: '<span class="role-badge role-adv">💼 외부 광고주</span>',
+            advertiser: '<span class="role-badge role-adv">💼 외부 스폰서</span>',
+            sponsor: '<span class="role-badge role-adv">💼 외부 스폰서</span>',
         };
         return badges[role] || ('<span class="role-badge role-cs">' + escapeHtml(role || '—') + '</span>');
     }
@@ -934,7 +935,7 @@
 
             adminRolesCache.forEach(function (row) {
                 const tr = document.createElement('tr');
-                if (row.role === 'advertiser') {
+                if (row.role === 'advertiser' || row.role === 'sponsor') {
                     tr.style.background = 'rgba(255,255,255,0.02)';
                 }
                 tr.dataset.adminEmail = row.email;
