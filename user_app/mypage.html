@@ -161,6 +161,17 @@
     .btn-edit-post.done {
         color: #a1a1aa; border: 1px solid #52525b;
     }
+    .btn-share-post {
+        flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
+        background: transparent; cursor: pointer; transition: 0.2s; line-height: 1.2;
+    }
+    .btn-share-post.ing {
+        color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.55);
+    }
+    .btn-share-post.ing:active {
+        background: rgba(0, 240, 255, 0.12); border-color: var(--neon-blue);
+    }
+    .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
     .status-badge.ing { color: var(--neon-blue); }
     .status-badge.done { color: var(--neon-pink); }
     .card-date { color: #52525b; }
@@ -250,6 +261,7 @@
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
+        margin-bottom: 12px;
         border: 1px solid rgba(57, 255, 20, 0.25);
         background: linear-gradient(180deg, rgba(57, 255, 20, 0.06), #27272a);
     }

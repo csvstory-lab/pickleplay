@@ -969,6 +969,62 @@
     );
   }
 
+  function buildPostDetailShareUrl(postId) {
+    var url = new URL('detail.html', window.location.href);
+    url.searchParams.set('id', postId);
+    return url.toString();
+  }
+
+  async function copyShareUrlToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+
+  function notifyShareUrlCopied() {
+    alert('주소가 복사되었습니다.');
+  }
+
+  async function requestPostShare(post) {
+    if (!post || !post.id) return;
+
+    var title = post.title || post.option_a_name || 'P!CKLE 불판';
+    var text = '지금 P!CKLE에서 치열한 투표가 진행 중입니다! 당신의 선택은?';
+    var shareUrl = buildPostDetailShareUrl(post.id);
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: title,
+          text: text,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        console.warn('[P!CKLE Mypage] navigator.share 실패, 클립보드 fallback', err);
+      }
+    }
+
+    try {
+      await copyShareUrlToClipboard(shareUrl);
+      notifyShareUrlCopied();
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] share URL 복사 실패', err);
+      alert('주소 복사에 실패했습니다. 직접 복사해 주세요:\n' + shareUrl);
+    }
+  }
+
   function buildRecordCard(post, stats, viewerUserId) {
     var visible = post.visibility_status === 'visible';
     var expired = isPostTimeExpired(post.expires_at);
@@ -983,6 +1039,13 @@
       ? '<button type="button" class="btn-edit-post ing" data-post-id="' +
         escapeHtml(post.id) +
         '" aria-label="불판 수정">수정</button>'
+      : '';
+    var shareBtn = visible
+      ? '<button type="button" class="btn-share-post ing" data-post-id="' +
+        escapeHtml(post.id) +
+        '" data-post-title="' +
+        escapeHtml(title) +
+        '" aria-label="참전 요청">🔗 참전 요청</button>'
       : '';
     var liveBadge = showCreatorLive
       ? '<span class="badge-creator-live">📊 실시간 현황</span>'
@@ -1018,6 +1081,7 @@
       '</span>' +
       liveBadge +
       editBtn +
+      shareBtn +
       '</div>' +
       '<span class="card-date">' +
       escapeHtml(formatCardDate(post.created_at)) +
@@ -1301,6 +1365,25 @@
         var postId = btn.dataset.postId;
         if (postId) {
           openPostEditPanel(postId);
+        }
+      });
+    });
+
+    container.querySelectorAll('.btn-share-post').forEach(function (btn) {
+      btn.addEventListener('click', async function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var postId = btn.dataset.postId;
+        if (!postId) return;
+
+        btn.disabled = true;
+        try {
+          await requestPostShare({
+            id: postId,
+            title: btn.dataset.postTitle || '',
+          });
+        } finally {
+          btn.disabled = false;
         }
       });
     });
