@@ -735,12 +735,14 @@
               </div>
               
               <div class="sc-item col" id="pwResetSection" style="display: none; margin-bottom: 20px;">
-                  <div class="sc-label"><strong>비밀번호 관리</strong></div>
-                  <button type="button" id="btnAdminPasswordReset" style="width:100%; padding:12px; background:transparent; border:1px solid var(--neon-pink); color:var(--neon-pink); border-radius:8px; font-weight:800; cursor:pointer; transition:0.2s;" onclick="requestAdminPasswordReset()">🔄 비밀번호 강제 초기화 및 이메일 발송</button>
+                  <div class="sc-label"><strong>비밀번호 직접 설정</strong></div>
+                  <input type="password" class="form-input" id="admNewPassword" placeholder="새 비밀번호 직접 입력 (8자 이상)" autocomplete="new-password" style="margin-bottom:10px;">
+                  <span style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px; display:block;">※ 이메일 발송 없이 즉시 적용됩니다. OAuth(구글) 계정도 email+password 로그인이 가능해집니다.</span>
+                  <button type="button" id="btnAdminPasswordChange" style="width:100%; padding:12px; background:rgba(57,255,20,0.08); border:1px solid var(--neon-green); color:var(--neon-green); border-radius:8px; font-weight:800; cursor:pointer;">비밀번호 즉시 변경</button>
               </div>
 
               <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top: 1px solid #3f3f46; padding-top: 20px;">
-                  <button style="padding:12px 24px; border-radius:8px; border:1px solid #52525b; background:transparent; color:#fff; cursor:pointer; font-weight:800;" onclick="closeAdminModal()">취소</button>
+                  <button type="button" style="padding:12px 24px; border-radius:8px; border:1px solid #52525b; background:transparent; color:#fff; cursor:pointer; font-weight:800;" onclick="closeAdminModal()">취소</button>
                   <button type="button" class="btn-save-admin" style="padding:12px 30px; border-radius:8px; border:none; background:var(--theme-gold); color:#000; font-weight:900; cursor:pointer;" onclick="saveAdminAccount()">저장 완료</button>
               </div>
           </div>
@@ -1023,6 +1025,7 @@
             document.getElementById('admRole').value = 'marketer';
             document.getElementById('admStatus').value = 'active';
 
+            document.getElementById('admNewPassword').value = '';
             pwCreate.style.display = 'flex';
             pwReset.style.display = 'none';
         } else {
@@ -1039,6 +1042,7 @@
             document.getElementById('admRole').value = row.role || 'marketer';
             document.getElementById('admStatus').value = row.status || 'active';
 
+            document.getElementById('admNewPassword').value = '';
             pwCreate.style.display = 'none';
             pwReset.style.display = 'flex';
         }
@@ -1050,37 +1054,8 @@
         editingAdminEmail = null;
         const emailInput = document.getElementById('admEmail');
         if (emailInput) emailInput.readOnly = false;
-    }
-
-    async function requestAdminPasswordReset() {
-        if (!editingAdminEmail) {
-            alert('수정 중인 계정 이메일이 없습니다.');
-            return;
-        }
-        if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.requestPasswordResetEmail) {
-            alert('비밀번호 재설정 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
-            return;
-        }
-
-        var btn = document.getElementById('btnAdminPasswordReset');
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = '발송 중…';
-        }
-
-        try {
-            var result = await window.PickleAdminWorkspace.requestPasswordResetEmail(editingAdminEmail);
-            if (result.cancelled) return;
-            alert(result.message || (result.ok ? '발송 완료' : '발송 실패'));
-        } catch (err) {
-            console.error('[admin_settings] requestAdminPasswordReset', err);
-            alert('오류: ' + (err.message || String(err)));
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = '🔄 비밀번호 강제 초기화 및 이메일 발송';
-            }
-        }
+        var newPw = document.getElementById('admNewPassword');
+        if (newPw) newPw.value = '';
     }
 
     async function revokeAdminRole(email) {
@@ -1280,6 +1255,11 @@
 
     document.addEventListener('DOMContentLoaded', async function () {
         syncManualPushTargetField();
+        if (window.AdminSettingsSystem && window.AdminSettingsSystem.initAdminPasswordChange) {
+            window.AdminSettingsSystem.initAdminPasswordChange(getSupabaseClient, function () {
+                return editingAdminEmail;
+            });
+        }
         try {
             await loadSystemSettings(getSupabaseClient);
             await AdminSettingsPolicies.load(getSupabaseClient);

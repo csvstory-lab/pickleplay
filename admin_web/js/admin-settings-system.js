@@ -479,6 +479,170 @@
     }
   }
 
+  function setAdminModalBusy(busy) {
+    var modal = document.getElementById('adminModal');
+    if (!modal) return;
+    modal.querySelectorAll('button, input, select').forEach(function (el) {
+      if (busy) {
+        el.dataset.wasDisabled = el.disabled ? '1' : '0';
+        el.disabled = true;
+      } else if (el.dataset.wasDisabled !== undefined) {
+        el.disabled = el.dataset.wasDisabled === '1';
+        delete el.dataset.wasDisabled;
+      }
+    });
+  }
+
+  function formatForcePasswordError(data, priorError) {
+    if (!data) {
+      return '❌ 비밀번호 변경 실패\n\n' + (priorError && priorError.message ? priorError.message : 'unknown');
+    }
+    var reason = data.reason || data.detail || '';
+    var errText = data.error || data.message || '';
+    if (reason === 'forbidden' || reason === 'super_required') {
+      return '❌ 최고 관리자(super)만 비밀번호를 변경할 수 있습니다.';
+    }
+    if (reason === 'user_not_found') {
+      return '❌ Supabase Auth에 해당 이메일 계정이 없습니다.\n신규 계정 발급으로 Auth 계정을 먼저 생성해 주세요.';
+    }
+    if (reason === 'invalid_password') {
+      return '❌ 비밀번호는 8자 이상이어야 합니다.';
+    }
+    return '❌ 비밀번호 변경 실패\n\n' + (reason ? '[' + reason + '] ' : '') + errText;
+  }
+
+  /**
+   * super 전용 — Edge Function → RPC fallback
+   */
+  async function forceAdminPasswordChange(getSupabaseClient, email, password) {
+    var sb = getSupabaseClient();
+    var targetEmail = String(email || '').trim().toLowerCase();
+    var newPassword = String(password || '');
+
+    if (!targetEmail || targetEmail.indexOf('@') === -1) {
+      return { ok: false, message: '유효한 대상 이메일이 없습니다.' };
+    }
+    if (newPassword.length < 8) {
+      return { ok: false, message: '새 비밀번호는 8자 이상이어야 합니다.' };
+    }
+
+    if (
+      !confirm(
+        '[' +
+          targetEmail +
+          '] 계정 비밀번호를\n즉시 변경하시겠습니까?\n\n• 이메일 발송 없음\n• OAuth 계정 포함'
+      )
+    ) {
+      return { ok: false, cancelled: true };
+    }
+
+    console.log('[AdminSettings] forceAdminPasswordChange:', targetEmail);
+
+    var invokeRes = await sb.functions.invoke('admin-force-password', {
+      body: { email: targetEmail, password: newPassword },
+    });
+
+    if (!invokeRes.error && invokeRes.data && invokeRes.data.ok === true) {
+      console.log('[AdminSettings] ✅ Edge Function 성공:', invokeRes.data);
+      return {
+        ok: true,
+        via: 'edge_function',
+        data: invokeRes.data,
+        message:
+          '✅ 비밀번호가 즉시 변경되었습니다.\n\n• 계정: ' +
+          targetEmail +
+          '\n• 입력한 새 비밀번호로 admin_login.html에서 로그인해 보세요.',
+      };
+    }
+
+    console.warn('[AdminSettings] Edge Function 실패 — RPC fallback:', invokeRes.error || invokeRes.data);
+
+    var rpcRes = await sb.rpc('admin_force_set_password', {
+      p_email: targetEmail,
+      p_password: newPassword,
+    });
+
+    if (rpcRes.error) {
+      return {
+        ok: false,
+        message: '❌ 비밀번호 변경 실패\n\n' + (rpcRes.error.message || String(rpcRes.error)),
+      };
+    }
+
+    if (!rpcRes.data || rpcRes.data.ok !== true) {
+      return {
+        ok: false,
+        message: formatForcePasswordError(rpcRes.data, invokeRes.error),
+      };
+    }
+
+    console.log('[AdminSettings] ✅ RPC fallback 성공:', rpcRes.data);
+    return {
+      ok: true,
+      via: 'rpc',
+      data: rpcRes.data,
+      message:
+        '✅ 비밀번호가 즉시 변경되었습니다.\n\n• 계정: ' +
+        targetEmail +
+        '\n• 입력한 새 비밀번호로 admin_login.html에서 로그인해 보세요.\n\n(RPC fallback 적용)',
+    };
+  }
+
+  /**
+   * 계정 수정 모달 — 비밀번호 즉시 변경 버튼 바인딩
+   */
+  function initAdminPasswordChange(getSupabaseClient, getTargetEmail) {
+    var btn = document.getElementById('btnAdminPasswordChange');
+    var input = document.getElementById('admNewPassword');
+    var modal = document.getElementById('adminModal');
+
+    if (!btn || btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+
+    if (modal) {
+      modal.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+    }
+
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var targetEmail = typeof getTargetEmail === 'function' ? getTargetEmail() : null;
+      if (!targetEmail) {
+        alert('수정 중인 계정 이메일이 없습니다.');
+        return;
+      }
+
+      var password = input ? input.value : '';
+      if (password.length < 8) {
+        alert('새 비밀번호는 8자 이상이어야 합니다.');
+        return;
+      }
+
+      var prevLabel = btn.textContent;
+      btn.textContent = '변경 중…';
+      setAdminModalBusy(true);
+
+      try {
+        var result = await forceAdminPasswordChange(getSupabaseClient, targetEmail, password);
+        if (result.cancelled) return;
+        alert(result.message || (result.ok ? '✅ 완료' : '❌ 실패'));
+        if (result.ok && input) input.value = '';
+      } catch (err) {
+        console.error('[AdminSettings] initAdminPasswordChange', err);
+        alert('❌ 오류: ' + (err.message || String(err)));
+      } finally {
+        setAdminModalBusy(false);
+        btn.textContent = prevLabel || '비밀번호 즉시 변경';
+      }
+    });
+  }
+
   window.loadSystemSettings = loadSystemSettings;
   window.uploadSystemImage = uploadSystemImage;
   window.AdminSettingsSystem = {
@@ -489,5 +653,7 @@
     uploadSystemImage: uploadSystemImage,
     renderSystemImagePreview: renderSystemImagePreview,
     notifyPointConfigChanged: notifyPointConfigChanged,
+    forceAdminPasswordChange: forceAdminPasswordChange,
+    initAdminPasswordChange: initAdminPasswordChange,
   };
 })();

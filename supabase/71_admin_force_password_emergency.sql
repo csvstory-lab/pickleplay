@@ -1,0 +1,41 @@
+-- =============================================================================
+-- P!CKLE — 관리자 비밀번호 강제 설정 (긴급 안내)
+-- auth.users.encrypted_password 는 SQL UPDATE 로 직접 변경 불가 (GoTrue bcrypt)
+-- =============================================================================
+--
+-- [권장 · 즉시 테스트]
+--   admin_settings.html → 계정 수정 → 새 임시 비밀번호 입력
+--   → 「🔑 비밀번호 직접 강제 설정 (즉시 적용 · OAuth 포함)」
+--   → admin_login.html 에서 이메일 + 임시 비밀번호 로그인
+--
+-- [Edge Function — admin-provision-user]
+--   supabase functions deploy admin-provision-user
+--   super 로그인 JWT 로 invoke (mode=update, password 포함):
+--
+--   curl -X POST "$SUPABASE_URL/functions/v1/admin-provision-user" \
+--     -H "Authorization: Bearer $SUPER_ACCESS_TOKEN" \
+--     -H "apikey: $SUPABASE_ANON_KEY" \
+--     -H "Content-Type: application/json" \
+--     -d '{
+--       "email": "target@example.com",
+--       "password": "TempPass123!",
+--       "display_name": "홍길동",
+--       "department": "운영",
+--       "role": "cs",
+--       "status": "active",
+--       "mode": "update"
+--     }'
+--
+-- [Dashboard 수동]
+--   Authentication → Users → 대상 유저 → (⋮) → Send password recovery
+--   또는 User details 에서 password reset / invite
+--
+-- [OAuth(구글) 전용 계정]
+--   resetPasswordForEmail / recovery 메일만으로는 email+password 로그인이 안 될 수 있음.
+--   Auth Admin API updateUserById({ password, email_confirm: true }) 가 확실한 방법.
+--   (admin-provision-user Edge Function 이 동일 API 사용)
+--
+-- provider 확인 (super 전용, 70_admin_auth_providers.sql 선행):
+--   SELECT public.admin_get_auth_providers('target@example.com');
+
+NOTIFY pgrst, 'reload schema';

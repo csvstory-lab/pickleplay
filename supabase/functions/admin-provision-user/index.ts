@@ -101,16 +101,21 @@ Deno.serve(async (req) => {
         authResult = { created: true, user_id: created.user?.id };
       }
     } else if (password && password.length >= 8) {
-      const { data: list } = await adminClient.auth.admin.listUsers();
+      const { data: list, error: listErr } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (listErr) {
+        return json({ ok: false, reason: 'auth_list_failed', error: listErr.message }, 500);
+      }
+
       const existing = list?.users?.find((u) => u.email?.toLowerCase() === email);
       if (existing) {
         const { error: updateErr } = await adminClient.auth.admin.updateUserById(existing.id, {
           password,
+          email_confirm: true,
         });
         if (updateErr) {
           return json({ ok: false, reason: 'auth_password_update_failed', error: updateErr.message }, 500);
         }
-        authResult = { updated: true };
+        authResult = { updated: true, user_id: existing.id, oauth_compatible: true };
       } else {
         const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
           email,
