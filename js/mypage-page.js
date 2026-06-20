@@ -1047,9 +1047,6 @@
         escapeHtml(title) +
         '" aria-label="참전 요청">🔗 참전 요청</button>'
       : '';
-    var liveBadge = showCreatorLive
-      ? '<span class="badge-creator-live">📊 실시간 현황</span>'
-      : '';
     var resultBoxHtml = '';
     if (showCreatorLive) {
       resultBoxHtml = buildCreatorLiveResultHtml(post, stats);
@@ -1079,9 +1076,7 @@
       '">' +
       escapeHtml(statusText) +
       '</span>' +
-      liveBadge +
       editBtn +
-      shareBtn +
       '</div>' +
       '<span class="card-date">' +
       escapeHtml(formatCardDate(post.created_at)) +
@@ -1091,11 +1086,14 @@
       escapeHtml(title) +
       '</div>' +
       resultBoxHtml +
-      '<div class="card-footer-stats">' +
+      '<div class="card-footer-stats card-footer-stats--created">' +
+      '<div class="card-footer-info">' +
       footerStatsHtml +
       '<span>' +
       escapeHtml(categoryLabel(post.category)) +
       '</span>' +
+      '</div>' +
+      shareBtn +
       '</div>' +
       '</div>'
     );

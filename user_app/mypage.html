@@ -148,8 +148,8 @@
     
     .record-card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 15px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative; }
     .record-card:active { transform: scale(0.98); border-color: var(--neon-green); }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; font-size: 0.75rem; font-weight: 800; gap: 8px; }
-    .card-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.75rem; font-weight: 800; gap: 8px; }
+    .card-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
     .btn-edit-post {
         flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
         background: transparent; cursor: pointer; transition: 0.2s; line-height: 1.2;
@@ -174,9 +174,26 @@
     .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
     .status-badge.ing { color: var(--neon-blue); }
     .status-badge.done { color: var(--neon-pink); }
-    .card-date { color: #52525b; }
+    .card-date {
+        color: #52525b;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
     .card-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 12px; line-height: 1.4; word-break: keep-all; }
     .card-footer-stats { display: flex; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
+    .card-footer-stats--created {
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+    .card-footer-info {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        min-width: 0;
+    }
     .stat-fire { color: var(--theme-gold); }
 
     .record-card.comment-card .comment-preview {
@@ -239,20 +256,6 @@
     .my-pick-info span { color: var(--neon-blue); font-weight: 900; }
     .result-win { font-family: 'Black Han Sans', sans-serif; color: var(--neon-green); font-size: 1.1rem; text-shadow: 0 0 5px rgba(57, 255, 20, 0.3); }
 
-    .badge-creator-live {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 0.68rem;
-        font-weight: 800;
-        color: #000;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00);
-        letter-spacing: -0.02em;
-        white-space: nowrap;
-        line-height: 1.2;
-    }
     .record-card.creator-live {
         border-color: rgba(57, 255, 20, 0.35);
         box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.08);
