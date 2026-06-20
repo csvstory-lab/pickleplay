@@ -42,7 +42,7 @@
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 상단 헤더 (2D 플랫 라인 스타일) === */
+    /* === 상단 헤더 === */
     header {
         position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
         z-index: 120; border-bottom: 1px solid var(--border-soft);
@@ -104,7 +104,7 @@
     }
     .feed-cat-badge { order: 1 !important; padding: 4px 10px !important; border-radius: 6px !important; color: var(--text-main) !important; background: var(--bg-elevated) !important; border: none !important; margin-right: 6px !important; font-size: 0.72rem !important;}
     
-    /* [버그 수정 1] 중복 아이콘 노출 해결을 위해 CSS 강제 추가 문구(::before) 제거 및 컬러 제어만 남김 */
+    /* [버그 수정 1] 아이콘 중복 제거 및 깔끔한 골드 컬러 정렬 */
     .feed-meta-timer { order: 2 !important; color: var(--point-gold) !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; }
     
     /* 참전자 수 (오른쪽 마진 밀기 적용, 파스텔 핑크) */
@@ -117,21 +117,35 @@
     .king-card .title, .list-card .title { order: 2 !important; font-size: 1.15rem !important; font-weight: 800 !important; line-height: 1.4 !important; margin: 4px 0 2px 0 !important; color: var(--text-main) !important; word-break: keep-all; }
 
     /* 3. A/B 투표 결과창 박스 (세 번째 순서) */
-    .king-ab-box, .text-vs-box { order: 3 !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; justify-content: center !important; gap: 8px 10px !important; background: var(--bg-base) !important; border: 1px solid var(--border-soft) !important; border-radius: 14px !important; padding: 12px !important; margin: 0 !important; }
-    .king-ab-a, .vs-a { color: var(--point-blue) !important; font-weight: 800 !important; }
-    .king-ab-b, .vs-b { color: var(--point-pink) !important; font-weight: 800 !important; }
-    .king-ab-vs, .vs-label { font-size: 0.75rem !important; color: var(--text-sub) !important; font-weight: 800 !important; background: rgba(255,255,255,0.05) !important; padding: 4px 8px !important; border-radius: 8px !important; }
+    /* 🔥🔥🔥 핵심 수정: 기존 코드를 완전히 쪼개서 킹카드의 A/B 박스만 절대적으로 숨김 처리!!! */
+    .king-ab-box { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important; } 
+    
+    .text-vs-box { order: 3 !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; justify-content: center !important; gap: 8px 10px !important; background: var(--bg-base) !important; border: 1px solid var(--border-soft) !important; border-radius: 14px !important; padding: 12px !important; margin: 0 !important; }
+    .vs-a { color: var(--point-blue) !important; font-weight: 800 !important; }
+    .vs-b { color: var(--point-pink) !important; font-weight: 800 !important; }
+    .vs-label { font-size: 0.75rem !important; color: var(--text-sub) !important; font-weight: 800 !important; background: rgba(255,255,255,0.05) !important; padding: 4px 8px !important; border-radius: 8px !important; }
 
-    /* 4. [버그 수정 2] "내 픽 남기기" 버튼 쪼그라듦 현상 완벽 방어 및 가로 100% 확장 */
+    /* 4. [버그 수정 2] 억지 덮어쓰기 꼼수 제거! 원본 여백과 예쁜 두께 그대로 가로 100% 꽉 채우기 */
     .btn-pick {
-        order: 4 !important; width: 100% !important; min-width: 100% !important; box-sizing: border-box !important;
-        padding: 14px 16px !important; border-radius: 14px !important; border: none !important;
-        background: var(--bg-elevated) !important; color: transparent !important; font-size: 0 !important; box-shadow: none !important;
-        cursor: pointer !important; position: relative !important; display: flex !important; justify-content: center !important; align-items: center !important; transition: 0.2s !important; margin-top: 4px !important;
-    }
-    .btn-pick::after {
-        content: "✔️ 내 픽 남기기" !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important;
-        color: var(--text-main) !important; font-family: 'Pretendard', sans-serif !important; font-size: 0.95rem !important; font-weight: 700 !important; white-space: nowrap !important;
+        order: 4 !important; 
+        width: 100% !important; 
+        min-width: 100% !important; 
+        box-sizing: border-box !important;
+        padding: 14px 16px !important; 
+        border-radius: 14px !important; 
+        border: none !important;
+        background: var(--bg-elevated) !important; 
+        color: var(--text-main) !important; /* 투명도 제거, 진짜 글자 띄움 */
+        font-family: 'Pretendard', sans-serif !important; 
+        font-size: 0.95rem !important; 
+        font-weight: 700 !important; 
+        box-shadow: none !important;
+        cursor: pointer !important; 
+        display: flex !important; 
+        justify-content: center !important; 
+        align-items: center !important; 
+        transition: 0.2s !important; 
+        margin-top: 4px !important;
     }
     .btn-pick:active { background: #3a3a3c !important; }
 
@@ -230,7 +244,7 @@
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
     <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><i class="ph-fill ph-fire nav-icon"></i></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><i class="ph ph-gift nav-icon"></i><span>이벤트</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><i class="ph ph-user nav-icon"></i><span>마이</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><i class="ph-fill ph-user nav-icon"></i><span>마이</span></div>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -245,7 +259,8 @@
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<script src="../js/pickle-feed.js?v=0621"></script>
+<!-- 💡 캐시 강제 폭파 꼬리표 (v=0623) 부착 완료! -->
+<script src="../js/pickle-feed.js?v=0623"></script>
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
