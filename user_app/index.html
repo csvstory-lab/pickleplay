@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,6 +15,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 메인 피드</title>
 
+<!-- 🎨 폰트 및 모던 2D 라인 아이콘(Phosphor) 패키지 로드 -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -102,16 +104,14 @@
     }
     .feed-cat-badge { order: 1 !important; padding: 4px 10px !important; border-radius: 6px !important; color: var(--text-main) !important; background: var(--bg-elevated) !important; border: none !important; margin-right: 6px !important; font-size: 0.72rem !important;}
     
-    /* 남은 시간 (왼쪽 배치, 파스텔 골드) */
+    /* [버그 수정 1] 중복 아이콘 노출 해결을 위해 CSS 강제 추가 문구(::before) 제거 및 컬러 제어만 남김 */
     .feed-meta-timer { order: 2 !important; color: var(--point-gold) !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; }
-    .feed-meta-timer::before { content: "⏳" !important; font-size: 0.75rem; }
     
     /* 참전자 수 (오른쪽 마진 밀기 적용, 파스텔 핑크) */
     .feed-meta-participants { 
         order: 3 !important; margin-left: auto !important; color: var(--point-pink) !important; 
         font-weight: 800 !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; background: transparent !important; padding: 0 !important;
     }
-    .feed-meta-participants::before { content: "🔥" !important; font-size: 0.75rem; }
 
     /* 2. 제목 영역 (두 번째 순서) */
     .king-card .title, .list-card .title { order: 2 !important; font-size: 1.15rem !important; font-weight: 800 !important; line-height: 1.4 !important; margin: 4px 0 2px 0 !important; color: var(--text-main) !important; word-break: keep-all; }
@@ -122,14 +122,16 @@
     .king-ab-b, .vs-b { color: var(--point-pink) !important; font-weight: 800 !important; }
     .king-ab-vs, .vs-label { font-size: 0.75rem !important; color: var(--text-sub) !important; font-weight: 800 !important; background: rgba(255,255,255,0.05) !important; padding: 4px 8px !important; border-radius: 8px !important; }
 
-    /* 4. 닫기/참전 버튼 강제 위장 ("내 픽 남기기" 회색조 바) */
+    /* 4. [버그 수정 2] "내 픽 남기기" 버튼 쪼그라듦 현상 완벽 방어 및 가로 100% 확장 */
     .btn-pick {
-        order: 4 !important; width: 100% !important; padding: 14px 16px !important; border-radius: 14px !important; border: none !important;
+        order: 4 !important; width: 100% !important; min-width: 100% !important; box-sizing: border-box !important;
+        padding: 14px 16px !important; border-radius: 14px !important; border: none !important;
         background: var(--bg-elevated) !important; color: transparent !important; font-size: 0 !important; box-shadow: none !important;
         cursor: pointer !important; position: relative !important; display: flex !important; justify-content: center !important; align-items: center !important; transition: 0.2s !important; margin-top: 4px !important;
     }
     .btn-pick::after {
-        content: "✔️ 내 픽 남기기" !important; position: absolute !important; color: var(--text-main) !important; font-family: 'Pretendard', sans-serif !important; font-size: 0.95rem !important; font-weight: 700 !important;
+        content: "✔️ 내 픽 남기기" !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important;
+        color: var(--text-main) !important; font-family: 'Pretendard', sans-serif !important; font-size: 0.95rem !important; font-weight: 700 !important; white-space: nowrap !important;
     }
     .btn-pick:active { background: #3a3a3c !important; }
 
@@ -195,6 +197,7 @@
 </div>
 
 <main>
+    <!-- 👑 오늘의 픽클 섹션 -->
     <section>
         <div class="section-header">
             <h2 class="section-title"><span style="color:var(--point-gold);">👑</span> 오늘의 픽클</h2>
@@ -207,6 +210,7 @@
         </div>
     </section>
 
+    <!-- 🔥 지금 뜨거운 불판 섹션 -->
     <section class="list-section">
         <div class="section-header" style="padding:0;">
             <h2 class="section-title"><span style="color:var(--point-pink);">🔥</span> 지금 뜨거운 불판</h2>
@@ -220,6 +224,7 @@
     </section>
 </main>
 
+<!-- 📱 완벽 보완된 2D 플랫 하단바 구조 -->
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph-fill ph-house nav-icon"></i><span>홈</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
