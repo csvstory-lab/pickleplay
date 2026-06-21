@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -15,7 +14,6 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 불판 상세</title>
 
-<!-- 🎨 폰트 및 모던 2D 라인 아이콘(Phosphor) 패키지 로드 -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -43,7 +41,7 @@
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 🌍 글로벌 상단 헤더 (메인피드 디자인 완벽 통일) === */
+    /* === 🌍 글로벌 상단 헤더 (완벽 디자인 통일) === */
     header {
         position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
         z-index: 120; border-bottom: 1px solid var(--border-soft);
@@ -87,17 +85,19 @@
     .btn-mypick { background-color: transparent; color: var(--point-green); border: 1px solid var(--point-green); padding: 4px 12px; border-radius: 16px; font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .btn-mypick.active { background-color: var(--point-green); color: #000; }
 
-    /* 2단: 카테고리, 해시태그, 타이머 메타박스 */
+    /* 🛠️ 2단: 카테고리 / 남은시간 구성 (지저분한 해시태그 완전 노출 제거 및 미니멀 정돈) */
     .issue-header-box { padding: 10px 20px 14px; }
     .issue-title { font-size: 1.3rem; font-weight: 900; line-height: 1.45; margin: 0 0 12px 0; word-break: keep-all; }
-    .meta-row-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .meta-timer-badge { background-color: rgba(252, 211, 77, 0.15) !important; color: var(--point-gold) !important; border: 1px solid rgba(252, 211, 77, 0.25) !important; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+    .meta-row-top { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); }
+    .meta-timer-badge { display: inline-flex; align-items: center; gap: 4px; color: var(--point-gold); }
+    
+    /* 🛠️ 해시태그 동적 생성 태그 박스 숨김 처리 */
+    #detailMetaTags, .meta-hashtag, [class*="hashtag"] { display: none !important; }
 
-    /* 3단: 미디어 레이아웃 구조 */
+    /* 3단: 본문 미디어 레이아웃 구조 */
     .master-media-container { padding: 0 20px; margin-bottom: 16px; position: relative; width: 100%; box-sizing: border-box; }
     .media-container { position: relative; display: flex; gap: 10px; width: 100%; box-sizing: border-box; overflow: hidden; }
     
-    /* 가로 세로 가변 조절 스펙 */
     .media-container.media-layout-horizontal { flex-direction: column; }
     .media-container.media-layout-horizontal .split-half { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; }
     .media-container.media-layout-vertical { flex-direction: row; }
@@ -115,7 +115,7 @@
     }
     .detail-desc { padding: 0 20px 12px; font-size: 0.88rem; color: var(--text-sub); line-height: 1.5; word-break: keep-all; }
 
-    /* 4단: A/B 투표 옵션 선택 박스 */
+    /* 4단: A/B 텍스트 선택지 */
     .options-box { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 10px; }
     .opt-item { background-color: var(--bg-card); padding: 16px 18px; border-radius: 14px; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-card); cursor: pointer; transition: 0.2s; }
     .opt-item.selected-a { border-color: var(--point-blue); background-color: rgba(115, 165, 255, 0.08); }
@@ -123,7 +123,7 @@
     .opt-label-a { color: var(--point-blue); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
     .opt-label-b { color: var(--point-pink); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
 
-    /* 🏁 투표 완료 실시간 롤링 알림 카드 디자인 */
+    /* 🏁 투표 완료 즉시 피드백 안내 디자인 */
     .blind-feedback-wrapper { padding: 0 20px; margin-bottom: 16px; display: none; }
     .blind-feedback-wrapper.show { display: block; animation: slideDown 0.4s ease; }
     .blind-card { background: linear-gradient(135deg, #1c1c1e, #2c2c2e); border-radius: 16px; padding: 22px 20px; text-align: center; border: 1px solid var(--point-green); box-shadow: 0 4px 15px rgba(74, 222, 128, 0.15); }
@@ -131,7 +131,7 @@
     .blind-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--point-green); margin-bottom: 6px; }
     .blind-desc { font-size: 0.9rem; font-weight: 600; color: var(--text-main); line-height: 1.5; }
 
-    /* 리얼타임 마감용 스탯 보드 */
+    /* 실시간 통계 롤러 보드 */
     .result-view { padding: 0 20px 16px; display: none; }
     .result-view.show { display: block; }
     .result-container { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 20px; }
@@ -140,27 +140,27 @@
     .bar-fill-a { background: var(--point-blue); }
     .bar-fill-b { background: var(--point-pink); margin-left: auto; }
 
-    /* 📱 [황금 비율 대변신] 5:3:2 액션 컨트롤 그리드 시스템 */
+    /* 📱 [황금 비율 대변신] 5:3:2 비율 하단 인터랙션 컨트롤 바 */
     .issue-footer-box { padding: 0 20px 20px; }
     .action-bar-v2 { display: flex; gap: 8px; width: 100%; box-sizing: border-box; }
     .btn-action-v2 { border: none; padding: 13px 0; border-radius: 12px; font-size: 0.85rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; color: #fff; transition: 0.15s; }
     
-    /* 가로 비중 정밀 테일러링 배치 (5 : 3 : 2) */
+    /* 🛠️ 화력지원요청 -> 친구소환하기 5:3:2 전폭 분할 스펙 */
     .btn-share-v2 { flex: 5 !important; background: linear-gradient(135deg, var(--point-blue), #5b86e5); box-shadow: 0 4px 12px rgba(115, 165, 255, 0.2); }
     .btn-like-v2 { flex: 3 !important; background-color: var(--bg-elevated); border: 1px solid var(--border-soft); }
     .btn-like-v2.is-liked { background-color: rgba(255, 133, 161, 0.15); border-color: var(--point-pink); color: var(--point-pink); }
     .btn-report-v2 { flex: 2 !important; background-color: #2a1a1d; border: 1px solid rgba(255, 77, 77, 0.2); color: var(--alert-red); }
 
-    /* === 💬 댓글 컴포넌트 고도화 === */
+    /* === 💬 댓글/답글 다크 미니멀 파스텔 테마 전면 교사 === */
     .comments-section { padding: 20px 20px 40px; border-top: 1px solid var(--border-soft); position: relative; }
     .comments-header { font-size: 1rem; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
     
-    /* 🛠️ 작동형 슬림 네이티브 정렬 셀렉터 배치 */
+    /* 슬림 드롭다운 정렬 셀렉터 커스텀 스타일 */
     .sort-select-wrapper { position: relative; display: flex; align-items: center; }
-    .comment-sort-select { background: transparent; color: var(--text-sub); border: none; font-size: 0.82rem; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; padding-right: 4px; -webkit-appearance: none; }
+    .comment-sort-select { background: transparent !important; color: var(--text-sub) !important; border: none !important; font-size: 0.82rem !important; font-weight: 700 !important; font-family: inherit !important; outline: none !important; cursor: pointer !important; padding-right: 4px; -webkit-appearance: none !important; appearance: none !important; }
 
-    /* 자물쇠 보안 장막 시스템 */
-    .comment-lock-screen { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); background: linear-gradient(to bottom, rgba(10,10,12,0.92), #0a0a0c 95%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; gap: 8px; padding-top: 40px;}
+    /* 자물쇠 스크린 장막 */
+    .comment-lock-screen { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); background: linear-gradient(to bottom, rgba(10,10,12,0.95), #0a0a0c 95%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; gap: 8px; padding-top: 40px;}
     .lock-icon { font-size: 2.2rem; margin-bottom: 4px; }
     .lock-text { font-size: 0.95rem; font-weight: 800; color: var(--point-pink); }
     .lock-subtext { font-size: 0.8rem; color: var(--text-sub); text-align: center; line-height: 1.4; }
@@ -173,12 +173,27 @@
     .comment-submit { background-color: var(--point-green); color: #0a0a0c; border: none; font-weight: 800; padding: 0 16px; border-radius: 12px; cursor: pointer; font-size: 0.85rem; }
     
     .comment-list { display: flex; flex-direction: column; gap: 14px; }
-    .comment-item { display: flex; gap: 10px; }
+    .comment-item { display: flex; flex-direction: column; gap: 8px; }
+    .comment-main-row { display: flex; gap: 10px; width: 100%; }
     .comment-content { flex: 1; background-color: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-soft); }
     .comment-user { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; }
     .comment-text { font-size: 0.9rem; line-height: 1.45; color: var(--text-main); }
 
-    /* === 📱 [글로벌 고정] 메인피드 스펙 완벽 대칭형 초슬림 하단바 시스템 === */
+    /* 🛠️ 하트(0) 및 답글 액션 버튼 다크 테마 커스텀 기획 정렬 */
+    .comment-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-soft); }
+    .comment-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-soft) !important; background: var(--bg-elevated) !important; color: var(--text-sub) !important; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; -webkit-appearance: none; }
+    .comment-action-btn:active { transform: scale(0.95); }
+    .comment-action-btn.is-liked { color: var(--point-pink) !important; border-color: var(--point-pink) !important; background: rgba(255, 133, 161, 0.1) !important; }
+    
+    /* 🛠️ 답글 입력 폼 기본 완전 숨김 및 파스텔 조형화 */
+    .comment-replies { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 0 16px; padding-left: 10px; border-left: 2px solid var(--border-soft); }
+    .comment-reply-form { display: none; gap: 8px; margin-top: 6px; width: 100%; }
+    .comment-reply-form.show { display: flex !important; }
+    .comment-reply-input { flex: 1; background: var(--bg-base) !important; border: 1px solid var(--border-soft) !important; border-radius: 10px; padding: 8px 12px; color: #fff; font-size: 0.85rem; outline: none; }
+    .comment-reply-input:focus { border-color: var(--point-green); }
+    .comment-reply-submit { background: var(--point-green) !important; color: #0a0a0c !important; border: none !important; border-radius: 10px; padding: 0 14px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+
+    /* === 📱 글로벌 하단 네비게이션 바 고정 연동 시스템 === */
     .bottom-nav { 
         background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
         display: flex !important; justify-content: space-around !important; align-items: center !important; 
@@ -196,7 +211,7 @@
         width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; border: none !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; 
     }
 
-    /* 애니메이션 및 모달 공통 */
+    /* 팝업 및 모달 핵심 오버레이 */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: 0.2s; }
     .overlay.open { opacity: 1; pointer-events: auto; }
     .share-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--bg-card); border-radius: 24px 24px 0 0; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: 0.25s ease-out; border-top: 1px solid var(--border-soft); }
@@ -213,6 +228,13 @@
     .report-modal .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px; }
     .report-modal .modal-title { font-size: 1rem; font-weight: 800; color: var(--alert-red); }
     .report-modal .modal-body { padding: 10px 20px 20px; }
+    
+    /* 🛠️ 신고 모달창 X 버튼 배경 박스 제거 및 단일 순수 흰색 세팅 */
+    .report-modal .btn-close { 
+        background: none !important; border: none !important; color: #ffffff !important; 
+        font-size: 1.4rem !important; cursor: pointer !important; padding: 0 !important; line-height: 1 !important; 
+    }
+    
     .form-select, .form-textarea { width: 100%; background: var(--bg-base); border: 1px solid var(--border-soft); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: inherit; box-sizing: border-box; margin-bottom: 12px;}
     .form-textarea { height: 70px; resize: none; }
     .btn-submit-report { width: 100%; padding: 12px; background: var(--alert-red); color: #000; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; }
@@ -231,10 +253,9 @@
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
-<!-- 🌍 글로벌 통일 규격 헤더 -->
 <header id="mainHeader">
     <div class="top-row">
-        <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
+        <h1 class="logo" onclick="location.href='index.html'">P!CKLE</h1>
         <div class="header-actions">
             <button type="button" class="btn-category" onclick="location.href='index.html'">전체 불판</button>
             <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
@@ -245,10 +266,9 @@
 
 <div class="overlay" id="commonOverlay" onclick="closeModals()"></div>
 
-<!-- 공유하기 모달 -->
 <div class="share-sheet" id="shareSheet">
     <div class="sheet-header">
-        <h2 class="sheet-title">🔥 이 불판 화력 지원하기</h2>
+        <h2 class="sheet-title">🔥 이 불판 친구에게 소환하기</h2>
         <button class="btn-close-sheet" onclick="closeModals()">✕</button>
     </div>
     <div class="share-grid">
@@ -267,7 +287,6 @@
     </div>
 </div>
 
-<!-- 신고하기 모달 -->
 <div class="report-modal" id="reportModal">
     <div class="modal-header">
         <h3 class="modal-title">🚨 이 불판 신고하기</h3>
@@ -280,13 +299,12 @@
             <option value="abuse">욕설 / 혐오 / 비방</option>
             <option value="nsfw">음란물 / 선정성</option>
         </select>
-        <textarea class="form-textarea" id="reportDetail" placeholder="상세 내용을 적어주세요 (선택)"></textarea>
+        <textarea class="form-textarea" id="reportDetail" placeholder="상세 사유를 필수적으로 입력해주세요. (필수 기재 항목)"></textarea>
         <button class="btn-submit-report" onclick="submitReport()">신고 접수</button>
     </div>
 </div>
 
 <main>
-    <!-- 1단: 작성자 프로필 -->
     <div class="post-author-box">
         <div class="author-info">
             <div class="author-pic" id="detailAuthorPic">🔥</div>
@@ -297,23 +315,21 @@
         <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ 나의 픽</button>
     </div>
 
-    <!-- 2단: 카테고리, 해시태그, 남은시간 메타그룹 -->
     <div class="issue-header-box">
         <h2 class="issue-title" id="detailTitle">불판 불러오는 중…</h2>
         <div class="meta-row-top">
+            <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;">카테고리</span>
+            <span>/</span>
             <div class="meta-timer-badge"><i class="ph ph-clock"></i> <span id="detailTimer">00:00:00 남음</span></div>
-            <div id="detailMetaTags" style="display:inline-flex; gap:6px;"></div>
         </div>
     </div>
 
     <p class="detail-desc post-content-area" id="detailDescription" hidden></p>
 
-    <!-- 3단: 본문 미디어 콘텐츠 -->
     <div class="master-media-container post-content-area" id="videoContainer">
         <div class="detail-media-empty"><span>⏳</span><p>미디어 로딩 중…</p></div>
     </div>
 
-    <!-- 4단: A/B 텍스트 선택지 -->
     <div class="options-box vote-content" id="optionsBox">
         <div class="opt-item" id="optBtnA" onclick="castVote('A', event, this)">
             <span class="opt-label-a">A</span> <span id="optTextA">…</span>
@@ -323,7 +339,6 @@
         </div>
     </div>
 
-    <!-- 🏁 투표 완료 즉시 피드백 알림 블록 -->
     <div class="blind-feedback-wrapper" id="blindFeedback">
         <div class="blind-card">
             <div class="blind-icon">🤫🔒</div>
@@ -333,7 +348,6 @@
         </div>
     </div>
 
-    <!-- 결과 통계 대기 구조 (마감 처리용 보관) -->
     <div class="result-view" id="detailResultView" aria-hidden="true">
         <div class="result-container">
             <div class="result-bar-track">
@@ -344,21 +358,18 @@
         </div>
     </div>
 
-    <!-- 하단 (5:3:2) 레이아웃 액션 바 -->
     <div class="issue-footer-box">
         <div class="action-bar-v2">
-            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 화력 지원 요청</button>
-            <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">좋아요</span></button>
+            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 친구 소환하기</button>
+            <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">좋아요 (0)</span></button>
             <button class="btn-action-v2 btn-report-v2" onclick="openReportModal()"><i class="ph ph-warning-circle"></i> 신고</button>
         </div>
     </div>
 
-    <!-- 댓글 섹션 컴포넌트 -->
     <div class="comments-section">
         <div class="comments-header">
             <span id="detailCommentCount" style="font-weight:800;">댓글 (0)</span>
             <div class="sort-select-wrapper">
-                <!-- 🛠️ 실시간 인터랙션 정렬 드롭다운 복구 완료 -->
                 <select class="comment-sort-select" id="commentSortSelect" onchange="handleCommentSortChange(this.value)">
                     <option value="latest">최신순 ▾</option>
                     <option value="popular">인기순 ▾</option>
@@ -366,14 +377,12 @@
             </div>
         </div>
         
-        <!-- 투표 유도 자물쇠 스크린 장막 -->
         <div class="comment-lock-screen" id="commentLock">
             <div class="lock-icon">🔒</div>
             <div class="lock-text">투표 후 댓글을 볼 수 있어요!</div>
             <div class="lock-subtext">지금 참전하고 훈수를 확인하세요.</div>
         </div>
         
-        <!-- 댓글 실제 활성 공간 -->
         <div class="comment-active-area" id="commentActive">
             <div class="comment-input-box">
                 <input type="text" class="comment-input" id="detailCommentInput" placeholder="훈수를 자유롭게 남겨보세요." maxlength="2000">
@@ -384,7 +393,6 @@
     </div>
 </main>
 
-<!-- 📱 글로벌 디자인 규격 적용 완료된 초슬림 하단 네비게이션 바 -->
 <nav class="bottom-nav">
     <div class="nav-btn" onclick="location.href='index.html'"><i class="ph ph-house nav-icon"></i><span>홈</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
@@ -411,54 +419,17 @@
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
-<script src="../js/pickle-detail.js?v=0627_detailfix"></script>
+<script src="../js/pickle-detail.js?v=0628_detailv2"></script>
 
 <script>
-    // 🛠️ 투표 프로세스 연동 및 잠금 자동 해제 기능 브릿지
-    function castVote(choice, event, element) {
-        if (window.PickleDetail && typeof window.PickleDetail.castVote === 'function') {
-            window.PickleDetail.castVote(choice, event, element);
-        }
-        
-        // 대표님이 요청하신 피드백 처리 연동 스크립트 실행
-        document.getElementById('optionsBox').style.display = 'none';
-        const feedback = document.getElementById('blindFeedback');
-        if (feedback) feedback.classList.add('show');
-        
-        // 즉시 댓글창 락(Lock) 풀고 열기 활성화
-        const lockScreen = document.getElementById('commentLock');
-        const activeArea = document.getElementById('commentActive');
-        if (lockScreen) lockScreen.style.display = 'none';
-        if (activeArea) activeArea.classList.add('show');
-    }
+    // 🛠️ 구형 인앱 브라우저 호환성을 위해 Optional Chaining(?.)을 ES5 문법으로 완벽 제거
 
-    // 🛠️ 정렬 옵션 변경 시 동작 복구 스크립트
-    function handleCommentSortChange(sortType) {
-        console.log("선택된 정렬:", sortType);
-        if (window.PickleDetail && typeof window.PickleDetail.loadComments === 'function') {
-            window.PickleDetail.loadComments(sortType); // 백엔드 정렬 모듈 스위칭 호출
-        } else {
-            // 스크립트 로드 전 예외 보완 조치
-            const list = document.getElementById('detailCommentList');
-            if(list && list.children.length > 0) {
-                alert('댓글을 정렬하여 다시 구성 중입니다.');
-            }
+    function ensureKakaoReady() {
+        if (!window.Kakao) return false;
+        if (!window.Kakao.isInitialized()) {
+            Kakao.init('f18676580f0d5bc2f8f6374d138bb200');
         }
-    }
-
-    // 좋아요 내부 상태 반전 핸들러
-    function handleLikeToggle() {
-        const likeBtn = document.getElementById('detailLikeBtn');
-        likeBtn.classList.toggle('is-liked');
-        if(likeBtn.classList.contains('is-liked')) {
-            likeBtn.innerHTML = `<i class="ph-fill ph-heart"></i> 완료`;
-            if (window.PickleRankingEvents?.recordPostLike) {
-                var postId = new URLSearchParams(window.location.search).get('id');
-                window.PickleRankingEvents.recordPostLike(postId);
-            }
-        } else {
-            likeBtn.innerHTML = `<i class="ph ph-heart"></i> 좋아요`;
-        }
+        return window.Kakao.isInitialized();
     }
 
     function closeModals() {
@@ -477,19 +448,181 @@
         document.getElementById('reportModal').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
+
+    // 🛠️ 답글(대댓글) 토글 시 스르륵 열리게 만드는 전역 하이브리드 이벤트 리스너 세팅
+    document.addEventListener('click', function(e) {
+        var replyBtn = e.target.closest('.comment-action-btn');
+        if (replyBtn && replyBtn.textContent.indexOf('답글') !== -1) {
+            e.preventDefault();
+            var commentItem = replyBtn.closest('.comment-item');
+            if (commentItem) {
+                var replyForm = commentItem.querySelector('.comment-reply-form');
+                if (replyForm) {
+                    replyForm.classList.toggle('show');
+                }
+            }
+        }
+    });
+
+    // 🛠️ 정렬 기능 전환 시 발생하는 꼬임 복구 필터 브릿지
+    function handleCommentSortChange(sortType) {
+        try {
+            if (window.PickleDetail && typeof window.PickleDetail.loadComments === 'function') {
+                window.PickleDetail.loadComments(sortType);
+            } else if (window.PickleDetail && typeof window.PickleDetail.fetchComments === 'function') {
+                window.PickleDetail.fetchComments(sortType);
+            }
+        } catch (err) {
+            console.error("정렬 예외 트래킹:", err);
+        }
+    }
+
+    // 🛠️ 좋아요 클릭 수 연동형 실시간 리얼타임 숫자 업그레이드 스크립트
+    function handleLikeToggle() {
+        var likeBtn = document.getElementById('detailLikeBtn');
+        var likeTextSpan = document.getElementById('likeCountText');
+        if (!likeBtn || !likeTextSpan) return;
+        
+        likeBtn.classList.toggle('is-liked');
+        var currentCount = 0;
+        var match = likeTextSpan.textContent.match(/\d+/);
+        if (match) {
+            currentCount = parseInt(match[0], 10);
+        }
+        
+        if (likeBtn.classList.contains('is-liked')) {
+            currentCount += 1;
+            likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
+            likeBtn.querySelector('i').className = 'ph-fill ph-heart';
+            
+            if (window.PickleRankingEvents && typeof window.PickleRankingEvents.recordPostLike === 'function') {
+                var postId = new URLSearchParams(window.location.search).get('id');
+                window.PickleRankingEvents.recordPostLike(postId);
+            }
+        } else {
+            currentCount = Math.max(0, currentCount - 1);
+            likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
+            likeBtn.querySelector('i').className = 'ph ph-heart';
+        }
+    }
+
+    // 🛠️ 상세사유 필수 기재 정책 밸리데이션 고도화 반영
+    async function submitReport() {
+        var reason = document.getElementById('reportReason').value;
+        var detailEl = document.getElementById('reportDetail');
+        var detail = detailEl ? detailEl.value.trim() : '';
+
+        if (!reason) {
+            alert('신고 사유를 선택해주세요.');
+            return;
+        }
+        if (!detail) {
+            alert('신고 상세 내용을 필히 입력해주세요. (누락 시 접수 불가)');
+            return;
+        }
+
+        var postId = window.PickleDetail && typeof window.PickleDetail.getCurrentPostId === 'function'
+            ? window.PickleDetail.getCurrentPostId()
+            : new URLSearchParams(window.location.search).get('id');
+
+        if (!postId) {
+            alert('불판 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            var result = await window.PicklePenalties.submitContentReport({
+                targetType: 'post',
+                targetId: postId,
+                reason: reason,
+                detail: detail,
+            });
+
+            if (!result.ok) {
+                alert('신고 접수에 실패했습니다.');
+                return;
+            }
+
+            alert('🚨 신고가 정상적으로 접수되었습니다. 깨끗한 픽클을 만들어주셔서 감사합니다!');
+            closeModals();
+        } catch (err) {
+            alert('신고 접수 실패');
+        }
+    }
+
+    function getSharePayload() {
+        var post = (window.PickleDetail && typeof window.PickleDetail.getCurrentPost === 'function') ? window.PickleDetail.getCurrentPost() : null;
+        return {
+            title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
+            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. 당신의 선택은?') : '픽클 불판에 참전하세요!',
+            imageUrl: 'https://pickleplay.kr/images/default_share.jpg'
+        };
+    }
+
+    function recordDetailShare(channel) {
+        var post = (window.PickleDetail && typeof window.PickleDetail.getCurrentPost === 'function') ? window.PickleDetail.getCurrentPost() : null;
+        var postId = (post && post.id) || new URLSearchParams(window.location.search).get('id');
+        if (postId && window.PickleRankingEvents && typeof window.PickleRankingEvents.recordPostShare === 'function') {
+            window.PickleRankingEvents.recordPostShare(postId, channel);
+        }
+    }
+
+    function sendKakaoMessage() {
+        if (!ensureKakaoReady()) {
+            alert('카카오톡 모듈 로딩 중...');
+            return;
+        }
+        var share = getSharePayload();
+        var shareUrl = window.location.href;
+        try {
+            Kakao.Share.sendDefault({
+                objectType: 'feed',
+                content: {
+                    title: share.title,
+                    description: share.text,
+                    imageUrl: share.imageUrl,
+                    link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+                },
+                buttons: [{ title: '🔥 참전하러 가기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
+            });
+            recordDetailShare('kakao');
+            closeModals();
+        } catch (e) {
+            alert('카카오 공유 실패');
+        }
+    }
+
     function copyLink() {
-        navigator.clipboard.writeText(window.location.href).then(() => {
+        navigator.clipboard.writeText(window.location.href).then(function() {
             alert("불판 주소가 복사되었습니다!");
+            recordDetailShare('copy');
             closeModals();
         });
     }
+
     function nativeShare() {
+        var share = getSharePayload();
         if (navigator.share) {
-            navigator.share({ title: 'P!CKLE 불판', url: window.location.href }).catch(console.error);
+            navigator.share({ title: share.title, text: share.text, url: window.location.href }).catch(console.error);
+            recordDetailShare('native');
         } else {
-            alert('링크 복사를 이용해 주세요.');
+            alert('링크 복사를 이용해주세요.');
         }
         closeModals();
+    }
+
+    function castVote(choice, event, element) {
+        if (window.PickleDetail && typeof window.PickleDetail.castVote === 'function') {
+            window.PickleDetail.castVote(choice, event, element);
+        }
+        document.getElementById('optionsBox').style.display = 'none';
+        var feedback = document.getElementById('blindFeedback');
+        if (feedback) feedback.classList.add('show');
+        
+        var lockScreen = document.getElementById('commentLock');
+        var activeArea = document.getElementById('commentActive');
+        if (lockScreen) lockScreen.style.display = 'none';
+        if (activeArea) activeArea.classList.add('show');
     }
 </script>
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js"></script>
