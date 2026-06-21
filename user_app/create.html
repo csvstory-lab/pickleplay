@@ -12,7 +12,8 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>P!CKLE - 불판 생성 (법적 경고 추가)</title>
+<title>P!CKLE - 불판 생성</title>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
@@ -301,7 +302,7 @@
 
     <form id="createPostForm" novalidate>
     <div class="form-group">
-        <label class="form-label">어떤 전장으로 갈까요?</label>
+        <label class="form-label">어떤 주제로 불판을 지펴볼까요?</label>
         <button type="button" class="btn-open-category" id="btnOpenCategory" onclick="toggleCategorySheet()">📂 카테고리 선택</button>
         <input type="hidden" id="selectedCategorySlug" value="">
     </div>
@@ -312,12 +313,12 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label">상세 설명 <span class="form-hint">(선택사항)</span></label>
+        <label class="form-label">상세 설명 <span class="form-hint">(선택)</span></label>
         <textarea id="inputDesc" class="input-box" rows="2" maxlength="60" placeholder="제목에 다 담지 못한 디테일한 상황이나 룰을 60자 이내로 적어주세요."></textarea>
     </div>
 
     <div class="form-group form-group-thumbnail">
-        <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint" style="color:var(--point-blue);">(필수)</span></label>
+        <label class="form-label">리스트 노출용 썸네일 이미지<span class="form-hint" style="color:var(--point-blue);">(필수)</span></label>
         <p class="upload-size-hint">(※ 리스트에만 노출 · 터치해서 썸네일을 선택하세요)</p>
         <div class="thumb-preview-box ratio-16-9" id="thumbPreviewBox" onclick="openThumbnailSheet()" role="button" tabindex="0" aria-label="썸네일 선택">
             <div id="thumbLiveText" class="thumb-live-text" style="display: none;"></div>
@@ -391,7 +392,7 @@
 
     <div class="form-group">
         <label class="form-label">해시태그 <span class="form-hint">(선택사항, 최대 3개)</span></label>
-        <input type="text" id="inputHashtag" class="input-box" placeholder="#과실비율 #소개팅 (띄어쓰기 구분)">
+        <input type="text" id="inputHashtag" class="input-box" placeholder="#블박 #과실비율 (띄어쓰기로 구분, 최대 3개 입력)">
     </div>
 
     <div class="legal-warning-box">
@@ -399,13 +400,9 @@
         <div class="legal-warning-text">
             음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
         </div>
-        <label class="legal-check-wrap">
-            <input type="checkbox" id="legalAgreeCheck">
-            <span class="legal-check-label">위 내용을 확인하였으며, 이에 동의합니다.</span>
-        </label>
     </div>
 
-    <button type="submit" class="btn-submit" id="btnSubmitPost">🚀 불판 지피기 (등록)</button>
+    <button type="submit" class="btn-submit" id="btnSubmitPost">불판 지피기 (등록)</button>
 
     </form>
 </main>
@@ -434,20 +431,10 @@
 <script src="../js/pickle-points.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
-    // ==========================================
-    // 1. 기초 설정 및 카테고리/기간 로직 (원본 유지)
-    // ==========================================
     async function loadCategories() {
-        if (!window.PickleCategories || !window.PickleCategories.loadCategoriesForCreate) {
-            console.warn('[create] PickleCategories 모듈 없음');
-            return;
-        }
+        if (!window.PickleCategories || !window.PickleCategories.loadCategoriesForCreate) return;
         const isSuperAdmin = window.PickleCategories.resolveIsSuperAdmin ? await window.PickleCategories.resolveIsSuperAdmin() : false;
-        try {
-            await window.PickleCategories.loadCategoriesForCreate(isSuperAdmin);
-        } catch (err) {
-            console.error('[create] loadCategories failed:', err);
-        }
+        try { await window.PickleCategories.loadCategoriesForCreate(isSuperAdmin); } catch (err) { console.error(err); }
     }
 
     window.__pickleSelectedCategorySlug = '';
@@ -478,20 +465,13 @@
     function resetCustomEndDateIfInvalid() {
         const endInput = document.getElementById('inputEndDate'); if (!endInput || !endInput.value) return;
         const end = new Date(endInput.value); const maxMs = getMaxEndDate().getTime();
-        if (!Number.isNaN(end.getTime()) && end.getTime() > maxMs) {
-            alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.'); endInput.value = '';
-        }
+        if (!Number.isNaN(end.getTime()) && end.getTime() > maxMs) { alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.'); endInput.value = ''; }
     }
     function setDuration(btn, val) {
         document.querySelectorAll('.duration-btn').forEach(el => el.classList.remove('active'));
         btn.classList.add('active'); selectedDuration = val;
-        const customWrap = document.getElementById('customDateWrap');
-        customWrap.style.display = (val === 'custom') ? 'block' : 'none';
-        if (val === 'custom') {
-            refreshEndDateMin();
-            const endInput = document.getElementById('inputEndDate');
-            if (endInput && !endInput.value) endInput.value = toDatetimeLocalValue(new Date(Date.now() + 60 * 60 * 1000));
-        }
+        const customWrap = document.getElementById('customDateWrap'); customWrap.style.display = (val === 'custom') ? 'block' : 'none';
+        if (val === 'custom') { refreshEndDateMin(); const endInput = document.getElementById('inputEndDate'); if (endInput && !endInput.value) { endInput.value = toDatetimeLocalValue(new Date(Date.now() + 60 * 60 * 1000)); } }
     }
     function validateCustomEndDate() {
         if (selectedDuration !== 'custom') return true;
@@ -503,10 +483,21 @@
         return true;
     }
 
-    // ==========================================
-    // 2. 미디어 업로드 및 썸네일 팔레트 엔진 튜닝
-    // ==========================================
-    let currentMode = 'text'; // 기본값을 텍스트 카드로 세팅
+    // 💡 [추가] 실시간 A/B 텍스트 입력 연동 함수
+    window.updateLivePreviews = function() {
+        const valA = document.getElementById('inputA')?.value.trim() || 'A 선택지';
+        const valB = document.getElementById('inputB')?.value.trim() || 'B 선택지';
+        if (document.getElementById('textPreviewInnerA')) document.getElementById('textPreviewInnerA').textContent = valA;
+        if (document.getElementById('textPreviewInnerB')) document.getElementById('textPreviewInnerB').textContent = valB;
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshEndDateMin(); loadCategories(); renderThumbMockGrids();
+        const endInput = document.getElementById('inputEndDate');
+        if (endInput) { endInput.addEventListener('change', resetCustomEndDateIfInvalid); endInput.addEventListener('input', resetCustomEndDateIfInvalid); }
+    });
+
+    let currentMode = 'text'; // 기본값을 텍스트 모드로 세팅
     let currentOri = 'horizontal';
     let uploadStatus = { single: false, vsA: false, vsB: false };
     let uploadFiles = { single: null, vsA: null, vsB: null };
@@ -514,128 +505,55 @@
     const GIPHY_API_KEY = 'QkcJRijkCEnyAQ7Q2tJ1g81hVQh6zvSY';
 
     let createThumbnailState = { type: 'none', file: null, url: null, css: null };
-    let selectedThumbFont = 'Pretendard';
-    let selectedTextCardColor = '#BAE1FF';
 
-    // 🎨 5x5 파스텔톤 썸네일 전용 25색 팔레트 (블랙/그레이 제외)
+    // 🎨 썸네일 색상도 부드러운 파스텔톤/그라데이션으로 변경
     const THUMB_COLOR_PRESETS = [
-        '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF',
-        '#E6B3FF', '#FFB3E6', '#FFD1B3', '#E6FFB3', '#B3FFE6',
+        '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E6B3FF', '#FFB3E6', '#FFD1B3', '#E6FFB3', '#B3FFE6',
         '#B3D1FF', '#D1B3FF', '#FFC4C4', '#F4DFCD', '#D4F0F0',
-        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-        'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
-        'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-        'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
-        'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',
-        'linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)',
-        'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-        'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
-        'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-        'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
+        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
     ];
 
-    // 🎨 4x2 파스텔톤 텍스트 카드 전용 8색 팔레트
-    const TEXT_CARD_COLORS = [
-        '#FFB3BA', '#BAE1FF', '#BAFFC9', '#E6B3FF',
-        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-        'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
-        'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
-        'linear-gradient(135deg, #f6d365 0%, #fda085 100%)'
+    // 🎨 [추가] 환상의 짝꿍 (A/B) 18개 파스텔 테마 (9칸 x 2줄)
+    const TEXT_CARD_THEMES = [
+        { a: '#FFB3BA', b: '#BAE1FF' }, { a: '#FFDFBA', b: '#E6B3FF' }, { a: '#FFFFBA', b: '#FFB3E6' },
+        { a: '#BAFFC9', b: '#FFD1B3' }, { a: '#BAE1FF', b: '#E6FFB3' }, { a: '#E6B3FF', b: '#B3FFE6' },
+        { a: '#FFB3E6', b: '#B3D1FF' }, { a: '#FFD1B3', b: '#D1B3FF' }, { a: '#E6FFB3', b: '#FFC4C4' },
+        { a: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', b: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)' },
+        { a: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', b: 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)' },
+        { a: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)', b: 'linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)' },
+        { a: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', b: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)' },
+        { a: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', b: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)' },
+        { a: '#D4F0F0', b: '#F4DFCD' }, { a: '#C1E1C1', b: '#FFB7B2' }, { a: '#E2F0CB', b: '#C7CEEA' }, { a: '#FFDAC1', b: '#B5EAD7' }
     ];
+    let selectedTextThemeIndex = 0;
+
+    window.selectTextCardTheme = function(idx) {
+        selectedTextThemeIndex = idx; renderUploadArea();
+    };
 
     function setCreateThumbnailState(type, payload) {
         createThumbnailState = { type: type || 'none', file: null, url: null, css: null };
-        if (type === 'file' && payload instanceof File) createThumbnailState.file = payload;
-        else if (type === 'url' && payload) createThumbnailState.url = String(payload).trim();
-        else if (type === 'css' && payload) createThumbnailState.css = String(payload).trim();
+        if (type === 'file' && payload instanceof File) { createThumbnailState.file = payload; } else if (type === 'url' && payload) { createThumbnailState.url = String(payload).trim(); } else if (type === 'css' && payload) { createThumbnailState.css = String(payload).trim(); }
     }
-    window.getPickleCreateThumbnailState = function () {
-        return { type: createThumbnailState.type, file: createThumbnailState.file, url: createThumbnailState.url, css: createThumbnailState.css };
-    };
-
+    window.getPickleCreateThumbnailState = function () { return { type: createThumbnailState.type, file: createThumbnailState.file, url: createThumbnailState.url, css: createThumbnailState.css }; };
     function resetThumbPreviewBoxStyles(box) { box.style.background = ''; box.style.backgroundColor = ''; box.style.backgroundImage = ''; }
-
-    function applyThumbPreviewToBox(box, mode, value) {
-        resetThumbPreviewBoxStyles(box);
-        if (mode === 'url') {
-            box.style.backgroundColor = '#0f0f11'; box.style.backgroundImage = 'url("' + value + '")';
-            box.style.backgroundSize = 'cover'; box.style.backgroundPosition = 'center';
-        } else if (mode === 'css') {
-            box.style.background = value;
-        }
-        box.classList.add('has-preview');
-    }
-
-    function closeAllCreateSheets() {
-        const categorySheet = document.getElementById('categorySheet'); const categoryOverlay = document.getElementById('categoryOverlay');
-        if (categorySheet) categorySheet.classList.remove('open'); if (categoryOverlay) categoryOverlay.classList.remove('open');
-        closeThumbnailSheet(false); document.body.style.overflow = '';
-    }
+    function applyThumbPreviewToBox(box, mode, value) { resetThumbPreviewBoxStyles(box); if (mode === 'url') { box.style.backgroundColor = '#0f0f11'; box.style.backgroundImage = 'url("' + value + '")'; box.style.backgroundSize = 'cover'; box.style.backgroundPosition = 'center'; } else if (mode === 'css') { box.style.background = value; } box.classList.add('has-preview'); }
+    function closeAllCreateSheets() { const categorySheet = document.getElementById('categorySheet'); const categoryOverlay = document.getElementById('categoryOverlay'); if (categorySheet) categorySheet.classList.remove('open'); if (categoryOverlay) categoryOverlay.classList.remove('open'); closeThumbnailSheet(false); document.body.style.overflow = ''; }
+    
+    // 💡 [수정] 모달 열 때 loadCategories() 강제 호출하여 빈 화면 원천 차단
     function toggleCategorySheet() {
-        const overlay = document.getElementById('categoryOverlay'); const sheet = document.getElementById('categorySheet');
-        const willOpen = !sheet.classList.contains('open'); closeThumbnailSheet(false);
-        sheet.classList.toggle('open'); overlay.classList.toggle('open'); document.body.style.overflow = willOpen ? 'hidden' : '';
+        loadCategories(); 
+        const overlay = document.getElementById('categoryOverlay'); const sheet = document.getElementById('categorySheet'); const willOpen = !sheet.classList.contains('open'); closeThumbnailSheet(false); sheet.classList.toggle('open'); overlay.classList.toggle('open'); document.body.style.overflow = willOpen ? 'hidden' : '';
     }
-    function openThumbnailSheet() {
-        closeAllCreateSheets(); document.getElementById('thumbnailOverlay').classList.add('open');
-        document.getElementById('thumbnailSheet').classList.add('open'); document.body.style.overflow = 'hidden';
-    }
-    function closeThumbnailSheet(restoreScroll) {
-        const overlay = document.getElementById('thumbnailOverlay'); const sheet = document.getElementById('thumbnailSheet');
-        if (overlay) overlay.classList.remove('open'); if (sheet) sheet.classList.remove('open');
-        if (restoreScroll !== false) {
-            const categoryOpen = document.getElementById('categorySheet')?.classList.contains('open');
-            document.body.style.overflow = categoryOpen ? 'hidden' : '';
-        }
-    }
-    function switchThumbTab(tabKey) {
-        document.querySelectorAll('.thumb-tab').forEach(function (btn) { btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey); });
-        document.querySelectorAll('.thumb-tab-panel').forEach(function (panel) { panel.classList.remove('active'); });
-        const panelMap = { album: 'thumbPanelAlbum', free: 'thumbPanelFree', gif: 'thumbPanelGif', color: 'thumbPanelColor' };
-        const panel = document.getElementById(panelMap[tabKey]); if (panel) panel.classList.add('active');
-    }
-
-    // 💡 썸네일 라이브 폰트 적용
-    window.setThumbLiveFont = function(fontFamily, btn) {
-        document.querySelectorAll('#thumbFontGroup .font-chip').forEach(el => el.classList.remove('active'));
-        btn.classList.add('active'); selectedThumbFont = fontFamily;
-        const txtEl = document.getElementById('thumbLiveText');
-        if (txtEl) txtEl.style.fontFamily = fontFamily;
-    };
-
-    // 💡 텍스트 카드 라이브 실시간 입력 연동
-    window.updateLivePreviews = function() {
-        const title = document.getElementById('inputTitle').value.trim();
-        const txtEl = document.getElementById('thumbLiveText');
-        if (txtEl && createThumbnailState.type === 'css') {
-            txtEl.textContent = title || '불판 제목 미리보기';
-        }
-        if (currentMode === 'text') {
-            const valA = document.getElementById('inputA').value.trim() || 'A 선택지';
-            const valB = document.getElementById('inputB').value.trim() || 'B 선택지';
-            if (document.getElementById('textPreviewInnerA')) document.getElementById('textPreviewInnerA').textContent = valA;
-            if (document.getElementById('textPreviewInnerB')) document.getElementById('textPreviewInnerB').textContent = valB;
-        }
-    };
-
-    function initThumbnailUi() {
-        renderThumbAlbumPanel();
-        renderThumbColorGrid('thumbPanelColor', THUMB_COLOR_PRESETS);
-        bindThumbSearchInputs();
-    }
+    
+    function openThumbnailSheet() { closeAllCreateSheets(); document.getElementById('thumbnailOverlay').classList.add('open'); document.getElementById('thumbnailSheet').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function closeThumbnailSheet(restoreScroll) { const overlay = document.getElementById('thumbnailOverlay'); const sheet = document.getElementById('thumbnailSheet'); if (overlay) overlay.classList.remove('open'); if (sheet) sheet.classList.remove('open'); if (restoreScroll !== false) { const categoryOpen = document.getElementById('categorySheet')?.classList.contains('open'); document.body.style.overflow = categoryOpen ? 'hidden' : ''; } }
+    function switchThumbTab(tabKey) { document.querySelectorAll('.thumb-tab').forEach(function (btn) { btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey); }); document.querySelectorAll('.thumb-tab-panel').forEach(function (panel) { panel.classList.remove('active'); }); const panelMap = { album: 'thumbPanelAlbum', free: 'thumbPanelFree', gif: 'thumbPanelGif', color: 'thumbPanelColor' }; const panel = document.getElementById(panelMap[tabKey]); if (panel) panel.classList.add('active'); }
+    function initThumbnailUi() { renderThumbAlbumPanel(); renderThumbColorGrid('thumbPanelColor', THUMB_COLOR_PRESETS); bindThumbSearchInputs(); }
     function renderThumbAlbumPanel() { renderThumbImageGrid('thumbPanelAlbum', [{ type: 'picker' }], true); }
-
-    function bindThumbSearchInputs() {
-        const freeInput = document.getElementById('thumbFreeSearch'); const gifInput = document.getElementById('thumbGifSearch');
-        if (freeInput) freeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchPixabayPhotos(freeInput.value); } });
-        if (gifInput) gifInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchGiphyGifs(gifInput.value); } });
-    }
-    function setThumbSearchStatus(elementId, message, variant) {
-        const el = document.getElementById(elementId); if (!el) return;
-        el.textContent = message; el.classList.remove('is-loading', 'is-error', 'thumb-search-hint'); el.classList.add('thumb-search-status');
-        if (variant === 'loading') el.classList.add('is-loading'); if (variant === 'error') el.classList.add('is-error');
-        if (!variant) el.classList.add('thumb-search-hint');
-    }
+    function bindThumbSearchInputs() { const freeInput = document.getElementById('thumbFreeSearch'); const gifInput = document.getElementById('thumbGifSearch'); if (freeInput) { freeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchPixabayPhotos(freeInput.value); } }); } if (gifInput) { gifInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchGiphyGifs(gifInput.value); } }); } }
+    function setThumbSearchStatus(elementId, message, variant) { const el = document.getElementById(elementId); if (!el) return; el.textContent = message; el.classList.remove('is-loading', 'is-error', 'thumb-search-hint'); el.classList.add('thumb-search-status'); if (variant === 'loading') el.classList.add('is-loading'); if (variant === 'error') el.classList.add('is-error'); if (!variant) el.classList.add('thumb-search-hint'); }
+    
     async function searchPixabayPhotos(query) {
         const q = String(query || '').trim(); const grid = document.getElementById('thumbFreeGrid');
         if (!q) { setThumbSearchStatus('thumbFreeHint', '검색어를 입력해 주세요.', 'error'); return; }
@@ -643,15 +561,14 @@
         if (grid) grid.innerHTML = ''; setThumbSearchStatus('thumbFreeHint', '무료 사진 검색 중...', 'loading');
         try {
             const apiUrl = 'https://pixabay.com/api/?key=' + encodeURIComponent(PIXABAY_API_KEY) + '&q=' + encodeURIComponent(q) + '&image_type=photo&orientation=horizontal&per_page=20&safesearch=true';
-            const res = await fetch(apiUrl);
-            if (!res.ok) throw new Error('Pixabay API 오류 (' + res.status + ')');
-            const data = await res.json();
-            const urls = (data.hits || []).map(hit => hit.webformatURL || hit.largeImageURL || hit.previewURL).filter(Boolean);
+            const res = await fetch(apiUrl); if (!res.ok) throw new Error('Pixabay API 오류 (' + res.status + ')'); const data = await res.json();
+            const urls = (data.hits || []).map(function (hit) { return hit.webformatURL || hit.largeImageURL || hit.previewURL; }).filter(Boolean);
             renderThumbSearchResults('thumbFreeGrid', urls);
             if (!urls.length) { setThumbSearchStatus('thumbFreeHint', '"' + q + '" 검색 결과가 없습니다.', 'error'); return; }
             setThumbSearchStatus('thumbFreeHint', urls.length + '개의 무료 사진을 찾았습니다.', null);
         } catch (err) { setThumbSearchStatus('thumbFreeHint', err.message || '무료 사진 검색에 실패했습니다.', 'error'); }
     }
+
     async function searchGiphyGifs(query) {
         const q = String(query || '').trim(); const grid = document.getElementById('thumbGifGrid');
         if (!q) { setThumbSearchStatus('thumbGifHint', '검색어를 입력해 주세요.', 'error'); return; }
@@ -659,104 +576,29 @@
         if (grid) grid.innerHTML = ''; setThumbSearchStatus('thumbGifHint', '움짤 검색 중...', 'loading');
         try {
             const apiUrl = 'https://api.giphy.com/v1/gifs/search?api_key=' + encodeURIComponent(GIPHY_API_KEY) + '&q=' + encodeURIComponent(q) + '&limit=20&rating=pg&lang=ko';
-            const res = await fetch(apiUrl);
-            if (!res.ok) throw new Error('Giphy API 오류 (' + res.status + ')');
-            const data = await res.json();
-            const urls = (data.data || []).map(gif => (gif.images && (gif.images.fixed_height_small?.url || gif.images.fixed_height?.url || gif.images.original?.url)) || '').filter(Boolean);
+            const res = await fetch(apiUrl); if (!res.ok) throw new Error('Giphy API 오류 (' + res.status + ')'); const data = await res.json();
+            const urls = (data.data || []).map(function (gif) { return (gif.images && (gif.images.fixed_height_small?.url || gif.images.fixed_height?.url || gif.images.original?.url)) || ''; }).filter(Boolean);
             renderThumbSearchResults('thumbGifGrid', urls, 'GIF');
             if (!urls.length) { setThumbSearchStatus('thumbGifHint', '"' + q + '" 검색 결과가 없습니다.', 'error'); return; }
             setThumbSearchStatus('thumbGifHint', urls.length + '개의 움짤을 찾았습니다.', null);
         } catch (err) { setThumbSearchStatus('thumbGifHint', err.message || '움짤 검색에 실패했습니다.', 'error'); }
     }
-    function renderThumbSearchResults(gridId, urls, badge) {
-        const grid = document.getElementById(gridId); if (!grid) return; grid.innerHTML = '';
-        urls.forEach(function (url) {
-            const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item'; cell.style.position = 'relative';
-            cell.innerHTML = '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' + (badge ? '<span style="position:absolute;bottom:6px;right:6px;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + badge + '</span>' : '');
-            cell.addEventListener('click', function () { applyThumbPreviewImage(url); });
-            grid.appendChild(cell);
-        });
-    }
 
-    function renderThumbImageGrid(panelId, items, includePicker) {
-        const panel = document.getElementById(panelId); if (!panel) return;
-        panel.innerHTML = '<div class="thumb-grid"></div>'; const grid = panel.querySelector('.thumb-grid');
-        items.forEach(function (item) {
-            if (item.type === 'picker') {
-                const picker = document.createElement('button'); picker.type = 'button'; picker.className = 'thumb-grid-item thumb-grid-item--picker';
-                picker.innerHTML = '<span>📷</span><span>앨범에서<br>선택</span>';
-                picker.addEventListener('click', function () { document.getElementById('thumbAlbumInput')?.click(); });
-                grid.appendChild(picker); return;
-            }
-            const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item';
-            cell.innerHTML = '<img src="' + item.url + '" alt="" loading="lazy">' + (item.badge ? '<span style="position:absolute;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + item.badge + '</span>' : '');
-            cell.style.position = 'relative'; cell.addEventListener('click', function () { applyThumbPreviewImage(item.url); });
-            grid.appendChild(cell);
-        });
-    }
-
-    function renderThumbColorGrid(panelId, colors) {
-        const panel = document.getElementById(panelId); if (!panel) return;
-        let existingGrid = panel.querySelector('.thumb-color-grid');
-        if (!existingGrid) {
-            existingGrid = document.createElement('div');
-            existingGrid.className = 'thumb-color-grid';
-            panel.appendChild(existingGrid);
-        }
-        existingGrid.innerHTML = '';
-        colors.forEach(function (color) {
-            const swatch = document.createElement('button'); swatch.type = 'button'; swatch.className = 'thumb-color-item'; swatch.style.background = color; swatch.setAttribute('aria-label', '배경 ' + color);
-            swatch.addEventListener('click', function () { applyThumbPreviewCss(color); });
-            existingGrid.appendChild(swatch);
-        });
-    }
-
-    function applyThumbPreviewImage(url) {
-        const box = document.getElementById('thumbPreviewBox'); if (!box || !url) return;
-        setCreateThumbnailState('url', url); applyThumbPreviewToBox(box, 'url', url);
-        document.getElementById('thumbLiveText').style.display = 'none';
-        closeThumbnailSheet();
-    }
-
-    // 💡 썸네일 색상 선택 시 라이브 텍스트 보이기 연동
-    function applyThumbPreviewCss(cssValue) {
-        const box = document.getElementById('thumbPreviewBox'); if (!box || !cssValue) return;
-        setCreateThumbnailState('css', cssValue); applyThumbPreviewToBox(box, 'css', cssValue);
-        document.getElementById('thumbPreviewPlaceholder').style.display = 'none';
-        document.getElementById('thumbLiveText').style.display = 'flex';
-        updateLivePreviews(); closeThumbnailSheet();
-    }
-
+    function renderThumbSearchResults(gridId, urls, badge) { const grid = document.getElementById(gridId); if (!grid) return; grid.innerHTML = ''; urls.forEach(function (url) { const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item'; cell.style.position = 'relative'; cell.innerHTML = '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' + (badge ? '<span style="position:absolute;bottom:6px;right:6px;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + badge + '</span>' : ''); cell.addEventListener('click', function () { applyThumbPreviewImage(url); }); grid.appendChild(cell); }); }
+    function renderThumbMockGrids() { initThumbnailUi(); }
+    function renderThumbImageGrid(panelId, items, includePicker) { const panel = document.getElementById(panelId); if (!panel) return; panel.innerHTML = '<div class="thumb-grid"></div>'; const grid = panel.querySelector('.thumb-grid'); items.forEach(function (item) { if (item.type === 'picker') { const picker = document.createElement('button'); picker.type = 'button'; picker.className = 'thumb-grid-item thumb-grid-item--picker'; picker.innerHTML = '<span>📷</span><span>앨범에서<br>선택</span>'; picker.addEventListener('click', function () { document.getElementById('thumbAlbumInput')?.click(); }); grid.appendChild(picker); return; } const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item'; cell.innerHTML = '<img src="' + item.url + '" alt="" loading="lazy">' + (item.badge ? '<span style="position:absolute;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + item.badge + '</span>' : ''); cell.style.position = 'relative'; cell.addEventListener('click', function () { applyThumbPreviewImage(item.url); }); grid.appendChild(cell); }); }
+    function renderThumbColorGrid(panelId, colors) { const panel = document.getElementById(panelId); if (!panel) return; panel.innerHTML = '<div class="thumb-color-grid"></div>'; const grid = panel.querySelector('.thumb-color-grid'); colors.forEach(function (color) { const swatch = document.createElement('button'); swatch.type = 'button'; swatch.className = 'thumb-color-item'; swatch.style.background = color; swatch.addEventListener('click', function () { applyThumbPreviewCss(color); }); grid.appendChild(swatch); }); }
+    function applyThumbPreviewImage(url) { const box = document.getElementById('thumbPreviewBox'); if (!box || !url) return; setCreateThumbnailState('url', url); applyThumbPreviewToBox(box, 'url', url); closeThumbnailSheet(); }
+    function applyThumbPreviewCss(cssValue) { const box = document.getElementById('thumbPreviewBox'); if (!box || !cssValue) return; setCreateThumbnailState('css', cssValue); applyThumbPreviewToBox(box, 'css', cssValue); closeThumbnailSheet(); }
+    
     const CREATE_THUMB_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const CREATE_THUMB_MAX_BYTES = 10 * 1024 * 1024;
-    function validateCreateThumbnailFile(file) {
-        if (!file || typeof File === 'undefined' || !(file instanceof File)) return '썸네일 파일이 올바르지 않습니다.';
-        if (!file.size) return '비어 있는 파일은 업로드할 수 없습니다.';
-        if (file.size > CREATE_THUMB_MAX_BYTES) return '사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.';
-        if (!CREATE_THUMB_ALLOWED_TYPES.includes(file.type)) return 'JPG, PNG, WEBP, GIF 이미지만 썸네일로 업로드할 수 있습니다.';
-        return null;
-    }
-    function applyThumbPreviewFromFile(file) {
-        const box = document.getElementById('thumbPreviewBox'); if (!box || !file) return;
-        const objectUrl = URL.createObjectURL(file); setCreateThumbnailState('file', file);
-        applyThumbPreviewToBox(box, 'url', objectUrl);
-        document.getElementById('thumbLiveText').style.display = 'none';
-        closeThumbnailSheet();
-    }
-    function onThumbAlbumFileSelected(input) {
-        const pickedThumbFile = input.files?.[0]; if (!pickedThumbFile) return;
-        const thumbValidationError = validateCreateThumbnailFile(pickedThumbFile);
-        if (thumbValidationError) { alert(thumbValidationError); input.value = ''; return; }
-        try { if (window.PickleMedia?.validateImageFile) window.PickleMedia.validateImageFile(pickedThumbFile); } catch (err) { alert(err.message || '이미지를 선택할 수 없습니다.'); input.value = ''; return; }
-        applyThumbPreviewFromFile(pickedThumbFile); input.value = '';
-    }
+    function validateCreateThumbnailFile(file) { if (!file || typeof File === 'undefined' || !(file instanceof File)) { return '썸네일 파일이 올바르지 않습니다.'; } if (!file.size) { return '비어 있는 파일은 업로드할 수 없습니다.'; } if (file.size > CREATE_THUMB_MAX_BYTES) { return '사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.'; } if (!CREATE_THUMB_ALLOWED_TYPES.includes(file.type)) { return 'JPG, PNG, WEBP, GIF 이미지만 썸네일로 업로드할 수 있습니다.'; } return null; }
+    function applyThumbPreviewFromFile(file) { const box = document.getElementById('thumbPreviewBox'); if (!box || !file) return; const objectUrl = URL.createObjectURL(file); setCreateThumbnailState('file', file); applyThumbPreviewToBox(box, 'url', objectUrl); closeThumbnailSheet(); }
+    function onThumbAlbumFileSelected(input) { const pickedThumbFile = input.files?.[0]; if (!pickedThumbFile) return; const thumbValidationError = validateCreateThumbnailFile(pickedThumbFile); if (thumbValidationError) { alert(thumbValidationError); input.value = ''; return; } applyThumbPreviewFromFile(pickedThumbFile); input.value = ''; }
 
-    function resetUploadState() {
-        uploadStatus = { single: false, vsA: false, vsB: false }; uploadFiles = { single: null, vsA: null, vsB: null };
-    }
-    function getMediaLayout() {
-        const checked = document.querySelector('input[name="media_layout"]:checked'); return checked?.value === 'vertical' ? 'vertical' : 'horizontal';
-    }
+    function resetUploadState() { uploadStatus = { single: false, vsA: false, vsB: false }; uploadFiles = { single: null, vsA: null, vsB: null }; }
+    function getMediaLayout() { const checked = document.querySelector('input[name="media_layout"]:checked'); return checked?.value === 'vertical' ? 'vertical' : 'horizontal'; }
     function onMediaLayoutChange() { currentOri = getMediaLayout(); renderUploadArea(); }
 
     function setMainMode(mode) {
@@ -765,112 +607,70 @@
         if(mode === 'single') document.getElementById('btnSingle').classList.add('active', 'highlight');
         if(mode === 'vs') document.getElementById('btnVs').classList.add('active', 'highlight');
         if(mode === 'text') document.getElementById('btnText').classList.add('active', 'highlight');
-
         const layoutGroup = document.getElementById('mediaLayoutGroup');
         if (layoutGroup) layoutGroup.style.display = (mode === 'text') ? 'none' : 'block';
         renderUploadArea();
     }
 
-    window.selectTextCardColor = function(color) {
-        selectedTextCardColor = color; renderUploadArea();
-    };
-
-    // 💡 텍스트 카드 UI 및 미디어 업로드 통합 렌더링
+    // 💡 [수정] 18쌍 환상의 짝꿍 테마가 적용된 렌더링 엔진
     function renderUploadArea() {
         const container = document.getElementById('uploadContainer');
         container.innerHTML = ''; 
 
         if (currentMode === 'text') {
-            const paletteHtml = TEXT_CARD_COLORS.map((c) => {
-                const border = c === selectedTextCardColor ? '#fff' : 'transparent';
-                return `<div class="text-color-dot" style="width:34px;height:34px;border-radius:10px;background:${c};cursor:pointer;border:2px solid ${border};box-sizing:border-box;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05);" onclick="selectTextCardColor('${c}')"></div>`;
+            const theme = TEXT_CARD_THEMES[selectedTextThemeIndex] || TEXT_CARD_THEMES[0];
+            const paletteHtml = TEXT_CARD_THEMES.map((t, idx) => {
+                const border = idx === selectedTextThemeIndex ? '#fff' : 'transparent';
+                const bg = t.a.includes('gradient') ? t.a : `linear-gradient(135deg, ${t.a} 0%, ${t.b} 100%)`;
+                return `<div style="width:100%; aspect-ratio:1; border-radius:50%; background:${bg}; cursor:pointer; border:2px solid ${border}; box-sizing:border-box; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05);" onclick="selectTextCardTheme(${idx})"></div>`;
             }).join('');
 
             container.innerHTML = `
                 <div style="margin-bottom:16px;">
-                    <span class="text-card-label">텍스트 카드 테마 컬러</span>
-                    <div class="text-color-grid">${paletteHtml}</div>
+                    <span style="font-size:0.8rem; font-weight:700; color:var(--text-sub); display:block; margin-bottom:8px;">환상의 짝꿍 (A/B 테마 컬러)</span>
+                    <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:8px;">${paletteHtml}</div>
                 </div>
                 <div class="vs-upload-group media-layout-vertical" style="gap:10px; flex-direction:row; align-items:stretch; margin-top:8px;">
-                    <div style="flex:1;aspect-ratio:9/16;background:${selectedTextCardColor};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardA">
+                    <div style="flex:1;aspect-ratio:9/16;background:${theme.a};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardA">
                         <div id="textPreviewInnerA" style="color:#0a0a0c;font-size:1.15rem;font-weight:900;text-align:center;word-break:keep-all;line-height:1.4;">A 선택지</div>
                     </div>
                     <div class="vs-badge-upload">VS</div>
-                    <div style="flex:1;aspect-ratio:9/16;background:${selectedTextCardColor};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardB">
+                    <div style="flex:1;aspect-ratio:9/16;background:${theme.b};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardB">
                         <div id="textPreviewInnerB" style="color:#0a0a0c;font-size:1.15rem;font-weight:900;text-align:center;word-break:keep-all;line-height:1.4;">B 선택지</div>
                     </div>
                 </div>
             `;
-            updateLivePreviews();
+            if(typeof updateLivePreviews === 'function') updateLivePreviews();
             return;
         }
 
         const layout = getMediaLayout(); currentOri = layout;
         const sizeHint = '<p class="upload-size-hint">(※ 최대 10MB · 업로드 시 자동 압축)</p>';
-
         const makeSlot = (id, label, ratioClass, iconColor) => `
             <div class="media-input-wrap">
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="file_${id}" onchange="onPhotoSelected('${id}', this)">
-                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}', this)">
+                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}')">
                     <div class="icon-plus" style="color:${iconColor || 'var(--text-sub)'};">➕</div>
                     <div class="upload-txt">${label} 사진 첨부</div>
                 </div>
                 <input type="url" class="url-input" id="url_${id}" placeholder="🔗 또는 영상 URL 입력" oninput="checkUrlInput('${id}')">
             </div>
         `;
-
-        if (currentMode === 'single') {
-            const ratioClass = layout === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
-            container.innerHTML = sizeHint + makeSlot('single', '미디어', ratioClass);
-        }
-
+        if (currentMode === 'single') { const ratioClass = layout === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16'; container.innerHTML = sizeHint + makeSlot('single', '미디어', ratioClass); }
         if (currentMode === 'vs') {
             const layoutClass = layout === 'vertical' ? 'media-layout-vertical vertical' : 'media-layout-horizontal';
             const ratioClass = layout === 'vertical' ? 'ratio-9-16' : 'ratio-16-9';
-            container.innerHTML = sizeHint + `
-                <div class="vs-upload-group ${layoutClass}">
-                    ${makeSlot('vsA', 'A', ratioClass, 'var(--point-blue)')}
-                    <div class="vs-badge-upload">VS</div>
-                    ${makeSlot('vsB', 'B', ratioClass, 'var(--point-pink)')}
-                </div>`;
+            container.innerHTML = sizeHint + `<div class="vs-upload-group ${layoutClass}">${makeSlot('vsA', 'A', ratioClass, 'var(--neon-blue)')}<div class="vs-badge-upload">VS</div>${makeSlot('vsB', 'B', ratioClass, 'var(--neon-pink)')}</div>`;
         }
     }
+    renderUploadArea();
 
-    function mockUpload(type) {
-        const urlInput = document.getElementById('url_' + type);
-        if (urlInput && urlInput.value.trim() !== '') { alert('이미 영상 URL이 입력되어 있습니다.\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.'); return; }
-        document.getElementById('file_' + type)?.click();
-    }
+    function mockUpload(type) { const urlInput = document.getElementById('url_' + type); if (urlInput && urlInput.value.trim() !== '') { alert('이미 영상 URL이 입력되어 있습니다.\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.'); return; } document.getElementById('file_' + type)?.click(); }
+    function onPhotoSelected(type, input) { const file = input.files?.[0]; if (!file) return; const MAX_BYTES = 10 * 1024 * 1024; if (file.size > MAX_BYTES) { alert('사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.'); input.value = ''; return; } uploadFiles[type] = file; uploadStatus[type] = true; const box = document.getElementById('box_' + type); box.classList.add('uploaded'); box.style.opacity = '1'; box.style.border = ''; box.innerHTML = '<div class="icon-plus">✅</div><div class="upload-txt">사진 첨부 완료!</div>'; }
+    function checkUrlInput(type) { const urlInput = document.getElementById('url_' + type); const box = document.getElementById('box_' + type); const fileInput = document.getElementById('file_' + type); if(urlInput.value.trim() !== '') { uploadStatus[type] = false; uploadFiles[type] = null; if (fileInput) fileInput.value = ''; box.classList.remove('uploaded'); box.style.border = '2px dashed #3f3f46'; box.style.opacity = '0.4'; box.innerHTML = '<div class="icon-plus">🔗</div><div class="upload-txt">영상 링크 적용됨</div>'; } else { box.style.opacity = '1'; box.style.border = '2px dashed #52525b'; let iconColor = type === 'vsA' ? 'var(--neon-blue)' : (type === 'vsB' ? 'var(--neon-pink)' : 'var(--text-sub)'); let label = type === 'vsA' ? 'A' : (type === 'vsB' ? 'B' : '가로/세로'); box.innerHTML = `<div class="icon-plus" style="color:${iconColor};">➕</div><div class="upload-txt">${label} 사진 첨부</div>`; } }
 
-    function onPhotoSelected(type, input) {
-        const file = input.files?.[0]; if (!file) return;
-        const MAX_BYTES = 10 * 1024 * 1024;
-        if (file.size > MAX_BYTES) { alert('사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.'); input.value = ''; return; }
-        try { if (window.PickleMedia?.validateImageFile) window.PickleMedia.validateImageFile(file); } catch (err) { alert(err.message || '이미지를 선택할 수 없습니다.'); input.value = ''; return; }
-        uploadFiles[type] = file; uploadStatus[type] = true;
-        const box = document.getElementById('box_' + type);
-        box.classList.add('uploaded'); box.style.opacity = '1'; box.style.border = '';
-        box.innerHTML = '<div class="icon-plus" style="color:var(--point-green);">✅</div><div class="upload-txt" style="color:var(--point-green);">첨부 완료!</div>';
-    }
-
-    function checkUrlInput(type) {
-        const urlInput = document.getElementById('url_' + type); const box = document.getElementById('box_' + type); const fileInput = document.getElementById('file_' + type);
-        if(urlInput.value.trim() !== '') {
-            uploadStatus[type] = false; uploadFiles[type] = null; if (fileInput) fileInput.value = '';
-            box.classList.remove('uploaded'); box.style.border = '2px dashed #3f3f46'; box.style.opacity = '0.4';
-            box.innerHTML = '<div class="icon-plus" style="color:var(--text-sub);">🔗</div><div class="upload-txt" style="color:var(--text-sub);">링크 적용됨</div>';
-        } else {
-            box.style.opacity = '1'; box.style.border = '2px dashed #52525b';
-            let iconColor = type === 'vsA' ? 'var(--point-blue)' : (type === 'vsB' ? 'var(--point-pink)' : 'var(--text-sub)');
-            let label = type === 'vsA' ? 'A' : (type === 'vsB' ? 'B' : '가로/세로');
-            box.innerHTML = `<div class="icon-plus" style="color:${iconColor};">➕</div><div class="upload-txt" style="color:var(--text-main);">${label} 사진 첨부</div>`;
-        }
-    }
-
-    // ==========================================
-    // 3. Canvas 텍스트 이미지 변환 및 Supabase 제출 코어
-    // ==========================================
-    function makeCanvasImage(text, bgColor, width, height, fontStr) {
+    // 💡 [추가] 텍스트를 진짜 이미지로 변환해주는 마법의 엔진
+    function makeCanvasImage(text, bgColor, width, height) {
         return new Promise(resolve => {
             const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d');
             if (bgColor.includes('gradient')) {
@@ -881,7 +681,7 @@
                 ctx.fillStyle = grad;
             } else { ctx.fillStyle = bgColor; }
             ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = '#0a0a0c'; ctx.font = fontStr || '700 36px Pretendard, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#0a0a0c'; ctx.font = '800 36px Pretendard, "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             const textStr = text || ''; const words = textStr.split(''); let line = ''; const lines = [];
             for (let n = 0; n < words.length; n++) {
                 if (ctx.measureText(line + words[n]).width > (width * 0.8) && n > 0) { lines.push(line); line = words[n]; } else { line += words[n]; }
@@ -894,41 +694,25 @@
     }
 
     async function buildMediaPayload(userId) {
-        // 1. 썸네일이 '배경색' 기반이면 이미지를 실시간으로 그려서 업로드
-        if (createThumbnailState.type === 'css') {
-            const title = document.getElementById('inputTitle').value.trim() || '불판 제목';
-            const fontMap = { 'Pretendard': '800 32px Pretendard', 'Nanum Myeongjo': '800 30px "Nanum Myeongjo"', 'Nanum Pen Script': '400 48px "Nanum Pen Script"' };
-            const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, fontMap[selectedThumbFont] || fontMap['Pretendard']);
-            const uploadedThumbUrl = await window.PickleMedia.uploadPostImage(thumbFile, userId, { aspectRatio: 16/9 });
-            createThumbnailState = { type: 'url', file: null, url: uploadedThumbUrl, css: null };
-        }
-
-        // 2. 미디어 모드가 '텍스트 카드'일 경우 A, B 각각 이미지를 그려서 업로드
+        // 텍스트 모드일 때 서버에 텍스트가 아닌, 직접 그려낸 이미지 2장을 던져줍니다.
         if (currentMode === 'text') {
+            const theme = TEXT_CARD_THEMES[selectedTextThemeIndex] || TEXT_CARD_THEMES[0];
             const valA = document.getElementById('inputA').value.trim() || 'A';
             const valB = document.getElementById('inputB').value.trim() || 'B';
-            const fileA = await makeCanvasImage(valA, selectedTextCardColor, 540, 960);
-            const fileB = await makeCanvasImage(valB, selectedTextCardColor, 540, 960);
+            const fileA = await makeCanvasImage(valA, theme.a, 540, 960);
+            const fileB = await makeCanvasImage(valB, theme.b, 540, 960);
             const urlA = await window.PickleMedia.uploadPostImage(fileA, userId, { aspectRatio: 9/16 });
             const urlB = await window.PickleMedia.uploadPostImage(fileB, userId, { aspectRatio: 9/16 });
             return { media_mode: 'vs', media_orientation: 'vertical', media_url_1: urlA, media_url_2: urlB };
         }
 
         const layout = getMediaLayout(); const uploadOpts = { aspectRatio: layout === 'vertical' ? 9 / 16 : 16 / 9 };
-        if (currentMode === 'single') {
-            const urlVal = document.getElementById('url_single')?.value.trim() || '';
-            if (urlVal) return { media_mode: 'single', media_orientation: layout, media_url_1: urlVal };
-            if (uploadFiles.single) {
-                const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts);
-                return { media_mode: 'single', media_orientation: layout, media_url_1: uploadedUrl };
-            }
-        }
+        if (currentMode === 'single') { const urlVal = document.getElementById('url_single')?.value.trim() || ''; if (urlVal) { return { media_mode: 'single', media_orientation: layout, media_url_1: urlVal, }; } if (uploadFiles.single) { const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts); return { media_mode: 'single', media_orientation: layout, media_url_1: uploadedUrl, }; } }
         if (currentMode === 'vs') {
-            const urlA = document.getElementById('url_vsA')?.value.trim() || ''; const urlB = document.getElementById('url_vsB')?.value.trim() || '';
-            let mediaUrl1 = urlA || null; let mediaUrl2 = urlB || null;
-            if (!urlA && uploadFiles.vsA) mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts);
-            if (!urlB && uploadFiles.vsB) mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts);
-            return { media_mode: 'vs', media_orientation: layout, media_url_1: mediaUrl1, media_url_2: mediaUrl2 };
+            const urlA = document.getElementById('url_vsA')?.value.trim() || ''; const urlB = document.getElementById('url_vsB')?.value.trim() || ''; let mediaUrl1 = urlA || null; let mediaUrl2 = urlB || null;
+            if (!urlA && uploadFiles.vsA) { mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts); }
+            if (!urlB && uploadFiles.vsB) { mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts); }
+            return { media_mode: 'vs', media_orientation: layout, media_url_1: mediaUrl1, media_url_2: mediaUrl2, };
         }
         throw new Error('미디어 정보를 구성할 수 없습니다.');
     }
@@ -938,30 +722,15 @@
         if (e && typeof e.preventDefault === 'function') { e.preventDefault(); e.stopPropagation(); }
         if (isSubmitting) return false;
 
-        // 🚨 [수정 9] 동의 체크박스 필수 제동 장치
-        const agree = document.getElementById('legalAgreeCheck').checked;
-        if (!agree) { alert('불판 등록 전 주의사항을 확인하고 동의해주세요.'); return false; }
-
         const categorySlug = getSelectedCategorySlug();
-        if (!categorySlug) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
+        if (!categorySlug) { alert('"🔥 어떤 주제로 불판을 지펴볼까요?"를 선택해주세요.'); return; }
         if (window.PickleCategories && !PickleCategories.isValidCategorySlug(categorySlug)) { alert('유효한 카테고리를 선택해 주세요.'); return; }
+
         const titleVal = document.getElementById('inputTitle').value.trim();
         if (titleVal === '') { alert('불판 제목을 입력해주세요!'); return; }
 
-        // 썸네일 필수 체크
-        if (createThumbnailState.type === 'none' || (!createThumbnailState.file && !createThumbnailState.url && !createThumbnailState.css)) {
-            alert('리스트 노출용 썸네일 이미지를 필수로 지정해주세요!'); return;
-        }
-
-        if (currentMode === 'single') {
-            const urlVal = document.getElementById('url_single') ? document.getElementById('url_single').value.trim() : '';
-            if (!uploadStatus.single && urlVal === '') { alert('사진을 첨부하거나 영상 URL을 입력해주세요!'); return; }
-        } else if (currentMode === 'vs') {
-            const urlA = document.getElementById('url_vsA') ? document.getElementById('url_vsA').value.trim() : '';
-            const urlB = document.getElementById('url_vsB') ? document.getElementById('url_vsB').value.trim() : '';
-            const hasA = uploadStatus.vsA || urlA !== ''; const hasB = uploadStatus.vsB || urlB !== '';
-            if (!hasA || !hasB) { alert('A와 B 각각 사진을 첨부하거나 영상 URL을 입력해주세요!'); return; }
-        }
+        if (currentMode === 'single') { const urlVal = document.getElementById('url_single') ? document.getElementById('url_single').value.trim() : ''; if (!uploadStatus.single && urlVal === '') { alert('사진을 첨부하거나 영상 URL을 입력해주세요!'); return; } } 
+        else if (currentMode === 'vs') { const urlA = document.getElementById('url_vsA') ? document.getElementById('url_vsA').value.trim() : ''; const urlB = document.getElementById('url_vsB') ? document.getElementById('url_vsB').value.trim() : ''; const hasA = uploadStatus.vsA || urlA !== ''; const hasB = uploadStatus.vsB || urlB !== ''; if (!hasA || !hasB) { alert('A와 B 각각 사진을 첨부하거나 영상 URL을 입력해주세요!'); return; } }
 
         const aVal = document.getElementById('inputA').value.trim(); const bVal = document.getElementById('inputB').value.trim();
         if (aVal === '' || bVal === '') { alert('A/B 선택지 내용을 완성해주세요!'); return; }
@@ -975,36 +744,17 @@
         try {
             const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
             if (result?.cancelled) return false;
-            if (result?.ok) {
-                submitSucceeded = true;
-                alert('🔥 불판이 활활 타오르기 시작했습니다!');
-                location.href = 'index.html'; return false;
-            }
-        } catch (err) {
-            if (!window.PickleCreatePage.handleInsertError(err)) alert('DB 저장 에러: ' + (err.message || String(err)));
-        } finally {
-            isSubmitting = false;
-            if (!submitSucceeded) { btnSubmit.disabled = false; btnSubmit.textContent = '🚀 불판 지피기 (등록)'; }
-        }
+            if (result?.ok) { submitSucceeded = true; alert('🔥 불판이 활활 타오르기 시작했습니다!'); location.href = 'index.html'; return false; }
+        } catch (err) { if (!window.PickleCreatePage.handleInsertError(err)) { alert('DB 저장 에러: ' + (err.message || String(err))); }
+        } finally { isSubmitting = false; if (!submitSucceeded) { btnSubmit.disabled = false; btnSubmit.textContent = '불판 지피기 (등록)'; } }
         return false;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        window.PickleAuth?.init?.();
-        refreshEndDateMin();
-        const endInput = document.getElementById('inputEndDate');
-        if (endInput) endInput.addEventListener('focus', refreshEndDateMin);
-
-        // 기본 상태를 텍스트 모드로 초기화
-        setMainMode('text');
-        initThumbnailUi();
-
+        window.PickleAuth?.init?.(); refreshEndDateMin();
+        const endInput = document.getElementById('inputEndDate'); if (endInput) { endInput.addEventListener('focus', refreshEndDateMin); }
         const createForm = document.getElementById('createPostForm');
-        if (createForm) {
-            createForm.addEventListener('submit', function (e) {
-                e.preventDefault(); e.stopPropagation(); validateAndSubmit(e); return false;
-            });
-        }
+        if (createForm) { createForm.addEventListener('submit', function (e) { e.preventDefault(); e.stopPropagation(); validateAndSubmit(e); return false; }); }
     });
 </script>
 
