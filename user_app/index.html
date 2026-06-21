@@ -178,34 +178,43 @@
     .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
     .list-card { margin-bottom: 16px !important; }
 
-    /* 📱 [초초슬림 다이어트] 하단바 높이를 불판 생성 버튼의 절반 수준(38px)으로 한 번 더 전면 압축 */
+    /* 📱 하단 네비게이션 바 레이아웃 규격 고정 */
     .bottom-nav { 
         background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
         display: flex !important; justify-content: space-around !important; align-items: center !important; 
-        padding: 2px 0 6px 0 !important; /* 🛠️ 슬림 배치를 위해 내부 여백 최소화 */
-        height: 38px !important;        /* 🛠️ 하단바의 절대적인 높이를 버튼의 정확한 절반 수준인 38px로 고정 */
+        padding: 0 !important;         /* 🛠️ 완벽한 제어를 위해 내외부 여백 제로 세팅 */
+        height: 38px !important;        /* 🛠️ 대표님이 딱 좋아하신 완벽한 슬림 높이 고정 */
         position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
     }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
+    
+    /* 🛠️ [디테일 조정] 일반 메뉴 버튼만 조형미 있게 아래로 살짝 하향 이동 정렬 */
+    .bottom-nav .nav-btn { 
+        display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;
+    }
+    .bottom-nav .nav-btn:not(.fire-btn) {
+        transform: translateY(3px) !important; /* 🛠️ 글씨와 아이콘이 위로 쏠려 보이지 않도록 아래로 살짝 밀어 내리기 */
+    }
     .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
     
-    /* 일반 메뉴 아이콘 크기 미세 최적화 */
+    /* 일반 메뉴 아이콘 규격 */
     .bottom-nav .nav-icon { 
-        font-size: 1.05rem !important; /* 하단바가 얇아진 만큼 조화롭도록 일반 아이콘 스케일 다운 */
+        font-size: 1.05rem !important; 
         filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;
     }
     .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
     
-    /* 🛠️ [대변신 적용] 불판 생성 플로팅 버튼 20% 확대 및 하단 안정적 밀착 배치 */
-    .bottom-nav .fire-btn { transform: translateY(-10px) !important; } /* 🛠️ 붕 뜨지 않고 바닥에 안정감 있게 반쯤 걸치도록 하향 이동 조정 */
+    /* 🛠️ [위치 최적화] 불판 생성 플로팅 버튼 바닥에 붙지 않게 상향 조정 */
+    .bottom-nav .fire-btn { 
+        transform: translateY(-22px) !important; /* 🛠️ 바닥에 완전히 붙지 않고 엣지 있게 위로 톡 튀어 오르도록 상향 기프트 */
+    } 
     .bottom-nav .fire-btn .nav-icon { 
         background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; 
         color: #1c1c1e !important; 
-        width: 66px !important; height: 66px !important; border-radius: 50% !important; /* 🛠️ 지름을 기존 54px에서 약 20% 더 키운 66px 정밀 세팅 */
+        width: 66px !important; height: 66px !important; border-radius: 50% !important; 
         display: flex !important; justify-content: center !important; align-items: center !important;
         border: none !important; 
         box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; 
-        font-size: 1.65rem !important; /* 🛠️ 원이 커진 만큼 내부 불꽃 아이콘도 시원하게 확대 */
+        font-size: 1.65rem !important; 
     }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -267,7 +276,7 @@
     </section>
 </main>
 
-<!-- 📱 완벽 보완된 초슬림 팝아웃 네비게이션 구조 -->
+<!-- 📱 하단바 공간 밸런싱 네비게이션 구조 -->
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph-fill ph-house nav-icon"></i><span>홈</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
@@ -288,8 +297,8 @@
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<!-- 💡 완벽 폰 배포 동기화를 위한 v=0626 강제 캐시 격파 조치 -->
-<script src="../js/pickle-feed.js?v=0626"></script>
+<!-- 💡 하단 레이아웃 밸런싱 동기화를 위한 캐시 폭파 버전 업데이트 -->
+<script src="../js/pickle-feed.js?v=0627"></script>
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
