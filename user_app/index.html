@@ -56,10 +56,10 @@
     }
     .header-actions { display: flex; align-items: center; gap: 16px; }
     
-    /* 🛠️ [디테일 업그레이드] 상단 전체불판 버튼 명도 구분 및 정돈 */
+    /* 상단 전체불판 버튼 명도 구분 및 정돈 */
     .btn-category {
-        background-color: #222225 !important;   /* 헤더 블랙보다 명확히 한 톤 밝은 다크 그레이 */
-        border: 1px solid #3a3a3c !important;   /* 버튼 테두리를 주어 확실하게 독립된 알약 형태로 인지 */
+        background-color: #222225 !important;   
+        border: 1px solid #3a3a3c !important;   
         color: var(--text-main) !important; 
         padding: 6px 14px !important; 
         border-radius: 999px; 
@@ -126,7 +126,7 @@
     /* 전체 피드에서 궁금증 유발을 위한 A/B 선택지 텍스트창 완전 숨김 */
     .king-ab-box, .text-vs-box { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important; } 
 
-    /* 👑 오늘의 픽클 버튼 스타일 정의 (세로 볼륨 추가 확장) */
+    /* 👑 오늘의 픽클 버튼 스타일 정의 */
     .king-card .btn-pick {
         order: 4 !important; 
         width: 100% !important; 
@@ -178,33 +178,34 @@
     .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
     .list-card { margin-bottom: 16px !important; }
 
-    /* 📱 [초강력 다이어트] 하단바 공간 전면 압축 */
+    /* 📱 [초초슬림 다이어트] 하단바 높이를 불판 생성 버튼의 절반 수준(38px)으로 한 번 더 전면 압축 */
     .bottom-nav { 
         background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
         display: flex !important; justify-content: space-around !important; align-items: center !important; 
-        padding: 4px 0 10px 0 !important; /* 🛠️ 상하 간격을 극한으로 줄여 두께를 완전 슬림하게 세팅 */
-        height: auto !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
+        padding: 2px 0 6px 0 !important; /* 🛠️ 슬림 배치를 위해 내부 여백 최소화 */
+        height: 38px !important;        /* 🛠️ 하단바의 절대적인 높이를 버튼의 정확한 절반 수준인 38px로 고정 */
+        position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
     }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 1px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
+    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
     .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
     
-    /* 일반 아이콘 크기 최적화 */
+    /* 일반 메뉴 아이콘 크기 미세 최적화 */
     .bottom-nav .nav-icon { 
-        font-size: 1.15rem !important; 
+        font-size: 1.05rem !important; /* 하단바가 얇아진 만큼 조화롭도록 일반 아이콘 스케일 다운 */
         filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;
     }
-    .bottom-nav span:not(.nav-icon) { font-size: 0.6rem !important; font-weight: 700 !important; }
+    .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
     
-    /* 🛠️ [대변신] 불판 생성 플로팅 버튼 극대화 및 파스텔톤 그라데이션 적용 */
-    .bottom-nav .fire-btn { transform: translateY(-20px) !important; } /* 슬림해진 바 위로 눈에 띄게 파격 노출 */
+    /* 🛠️ [대변신 적용] 불판 생성 플로팅 버튼 20% 확대 및 하단 안정적 밀착 배치 */
+    .bottom-nav .fire-btn { transform: translateY(-10px) !important; } /* 🛠️ 붕 뜨지 않고 바닥에 안정감 있게 반쯤 걸치도록 하향 이동 조정 */
     .bottom-nav .fire-btn .nav-icon { 
-        background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; /* 영롱한 파스텔 옐로우/핑크 스펙트럼 */
-        color: #1c1c1e !important; /* 화사한 배경색과 완벽히 명도 대비를 이루는 어두운 아이콘 매칭 */
-        width: 54px !important; height: 54px !important; border-radius: 50% !important; /* 지름을 약 1.3배 대폭 확장 */
+        background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; 
+        color: #1c1c1e !important; 
+        width: 66px !important; height: 66px !important; border-radius: 50% !important; /* 🛠️ 지름을 기존 54px에서 약 20% 더 키운 66px 정밀 세팅 */
         display: flex !important; justify-content: center !important; align-items: center !important;
-        border: none !important; /* 투박했던 외곽선 완벽 제거 */
-        box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; /* 은은하게 퍼지는 파스텔 코랄 핑크 글로우 효과 */
-        font-size: 1.45rem !important;
+        border: none !important; 
+        box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; 
+        font-size: 1.65rem !important; /* 🛠️ 원이 커진 만큼 내부 불꽃 아이콘도 시원하게 확대 */
     }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -221,7 +222,6 @@
     <div class="top-row" id="headerTopRow">
         <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
         <div class="header-actions">
-            <!-- 🛠️ 요청 사항 반영: 앞쪽 햄버거 아이콘 삭제하고 오직 텍스트만 깔끔하게 노출 -->
             <button type="button" class="btn-category" onclick="toggleCategorySheet()">전체 불판</button>
             <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
             <i class="ph ph-bell noti-bell" onclick="alert('알림 기능은 준비 중입니다.')"></i>
@@ -267,7 +267,7 @@
     </section>
 </main>
 
-<!-- 📱 초슬림 피드 최적화 하단 네비게이션 구조 -->
+<!-- 📱 완벽 보완된 초슬림 팝아웃 네비게이션 구조 -->
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph-fill ph-house nav-icon"></i><span>홈</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
@@ -288,8 +288,8 @@
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<!-- 💡 캐시 완벽 강제 격파를 위한 고유 버전 업데이트 부착 -->
-<script src="../js/pickle-feed.js?v=0625"></script>
+<!-- 💡 완벽 폰 배포 동기화를 위한 v=0626 강제 캐시 격파 조치 -->
+<script src="../js/pickle-feed.js?v=0626"></script>
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
@@ -332,3 +332,4 @@
 </script>
 </body>
 </html>
+<!-- 테스트 -->
