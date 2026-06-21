@@ -2245,4 +2245,167 @@ function renderCommentsList(comments, sortType) {
       startDetail();
     }
   });
+
+  // =========================================================================
+  // 💡 [수정 4] 프로필 팝업 호출, 실시간 통계 조회, '나의 픽' 기능 통합 로직
+  // =========================================================================
+
+  // 1) 팝업창 내 '나의 픽' 버튼 클릭 실행 함수
+  window.handlePopupFollow = async function() {
+    var btn = document.getElementById('popupFollowBtn');
+    if (!btn) return;
+    var targetUid = btn.getAttribute('data-user-id');
+    if (!targetUid) return;
+
+    // pickle-follows.js 에 있는 핵심 팔로우 모듈 호출
+    if (window.PickleFollows && typeof window.PickleFollows.toggleFollow === 'function') {
+      btn.disabled = true;
+      try {
+        var nowFollowing = await window.PickleFollows.toggleFollow(targetUid);
+        if (nowFollowing === null) return; // 미로그인 상태 등
+
+        // 버튼 색상 및 텍스트 즉시 변경 (파스텔톤)
+        btn.style.background = nowFollowing ? '#2c2c2e' : 'linear-gradient(135deg, #4ADE80, #22c55e)';
+        btn.style.color = nowFollowing ? '#fff' : '#0a0a0c';
+        btn.innerHTML = nowFollowing ? '✓ 팔로잉 중' : '<i class="ph ph-plus-bold"></i> 나의 픽';
+        
+        // 팔로워 숫자 통계 즉시 새로고침
+        if (typeof window.loadProfilePopupCounts === 'function') {
+          window.loadProfilePopupCounts(targetUid);
+        }
+      } catch (err) {
+        console.error('[P!CKLE Detail] 팝업 팔로우 에러', err);
+        alert('픽 처리에 실패했습니다.');
+      } finally {
+        btn.disabled = false;
+      }
+    } else {
+      alert('팔로우 기능이 로드되지 않았습니다.');
+    }
+  };
+
+  // 2) 프로필 팝업의 레벨 및 나를 픽한 수(팔로워) 실시간 계산
+  window.loadProfilePopupCounts = async function(uid) {
+    var followerEl = document.getElementById('popupFollowerCount');
+    var followingEl = document.getElementById('popupFollowingCount');
+    var badgeEl = document.getElementById('popupUserBadge');
+
+    // 초기화
+    if (followerEl) followerEl.textContent = '0';
+    if (followingEl) followingEl.textContent = '0';
+    if (badgeEl) {
+      badgeEl.textContent = '일반 픽클러';
+      badgeEl.style.background = 'linear-gradient(90deg, #ff007f, #aa00ff)';
+    }
+    
+    if (!uid) return;
+
+    try {
+      var sb = window.PickleSupabase ? window.PickleSupabase.getClient() : null;
+      if (!sb) return;
+
+      // 나를 픽한 유저 (팔로워) - user_follows 테이블 사용
+      sb.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', uid)
+        .then(function(res) {
+          if (!res.error && res.count !== null && followerEl) followerEl.textContent = res.count;
+        });
+
+      // 내가 픽한 유저 (팔로잉)
+      sb.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', uid)
+        .then(function(res) {
+          if (!res.error && res.count !== null && followingEl) followingEl.textContent = res.count;
+        });
+
+      // 유저 레벨 조회
+      sb.from('users').select('points').eq('id', uid).maybeSingle()
+        .then(function(res) {
+          if (!res.error && res.data && badgeEl) {
+            var pts = Number(res.data.points || 0);
+            var lv = 1;
+            if (pts >= 5000) lv = 5;
+            else if (pts >= 3000) lv = 4;
+            else if (pts >= 1500) lv = 3;
+            else if (pts >= 500) lv = 2;
+            badgeEl.textContent = 'Lv.' + lv + ' 픽클러';
+            badgeEl.style.background = 'linear-gradient(90deg, #4ADE80, #73A5FF)';
+          }
+        });
+    } catch (err) {
+      console.warn('[P!CKLE Detail] 통계 로드 실패', err);
+    }
+  };
+
+  // 3) 댓글 프사 & 본문 상단 프사 클릭 시 모달창 열기 이벤트
+  document.addEventListener('click', function(e) {
+    var target = e.target.closest('.author-pic, .comment-user span, #detailAuthorName');
+    if (!target) return;
+
+    var commentItem = target.closest('.comment-item');
+    var authorBox = target.closest('.post-author-box');
+    
+    var name = '픽클러';
+    var pic = '👤';
+    var uid = '';
+
+    if (commentItem) {
+      e.preventDefault();
+      name = commentItem.getAttribute('data-author-name') || '픽클러';
+      var picEl = commentItem.querySelector('.author-pic');
+      pic = picEl ? picEl.innerHTML : '👤';
+      uid = commentItem.getAttribute('data-user-id') || '';
+    } else if (authorBox) {
+      e.preventDefault();
+      var nameEl = document.getElementById('detailAuthorName');
+      name = nameEl ? nameEl.textContent : '픽클러';
+      var mainPicEl = document.getElementById('detailAuthorPic');
+      pic = mainPicEl ? mainPicEl.innerHTML : '🔥';
+      var followBtn = document.getElementById('detailFollowBtn');
+      uid = followBtn ? followBtn.getAttribute('data-user-id') : '';
+    } else {
+      return;
+    }
+
+    if (!uid) return;
+
+    // 모달창에 정보 대입
+    var popupName = document.getElementById('popupUserName');
+    var popupPic = document.getElementById('popupUserPic');
+    var popupFollowBtn = document.getElementById('popupFollowBtn');
+
+    if (popupName) popupName.textContent = name;
+    if (popupPic) popupPic.innerHTML = pic;
+    
+    if (popupFollowBtn) {
+      popupFollowBtn.setAttribute('data-user-id', uid);
+      
+      // 팝업을 열 때 이 유저를 이미 팔로우 중인지 체크해서 버튼 상태 사전 변경
+      (async function checkFollow() {
+        if (window.PickleFollows && window.PickleAuth) {
+          var user = await window.PickleAuth.resolveAuthUser();
+          if (user) {
+            var isF = await window.PickleFollows.isFollowing(user.id, uid);
+            popupFollowBtn.style.background = isF ? '#2c2c2e' : 'linear-gradient(135deg, #4ADE80, #22c55e)';
+            popupFollowBtn.style.color = isF ? '#fff' : '#0a0a0c';
+            popupFollowBtn.innerHTML = isF ? '✓ 팔로잉 중' : '<i class="ph ph-plus-bold"></i> 나의 픽';
+          } else {
+            popupFollowBtn.style.background = 'linear-gradient(135deg, #4ADE80, #22c55e)';
+            popupFollowBtn.style.color = '#0a0a0c';
+            popupFollowBtn.innerHTML = '<i class="ph ph-plus-bold"></i> 나의 픽';
+          }
+        }
+      })();
+    }
+
+    // 통계 및 레벨 실시간 로드
+    if (typeof window.loadProfilePopupCounts === 'function') {
+      window.loadProfilePopupCounts(uid);
+    }
+
+    // 모달 열기 애니메이션
+    var sheet = document.getElementById('userProfileSheet');
+    var overlay = document.getElementById('commonOverlay');
+    if (overlay) overlay.classList.add('open');
+    if (sheet) sheet.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
 })();
