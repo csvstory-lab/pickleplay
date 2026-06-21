@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,6 +15,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 불판 상세</title>
 
+<!-- 🎨 폰트 및 모던 2D 라인 아이콘(Phosphor) 패키지 로드 -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -78,20 +80,20 @@
     /* 1단: 작성자 프로필 */
     .post-author-box { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; }
     .author-info { display: flex; align-items: center; gap: 12px; }
-    .author-pic { width: 38px; height: 38px; border-radius: 50%; background-color: var(--bg-card); display: flex; justify-content: center; align-items: center; font-size: 1.1rem; border: 1.5px solid var(--point-pink); }
+    .author-pic { width: 38px; height: 38px; border-radius: 50%; background-color: var(--bg-card); display: flex; justify-content: center; align-items: center; font-size: 1.1rem; border: 1.5px solid var(--point-pink); cursor: pointer; }
     .author-text { display: flex; flex-direction: column; gap: 1px; }
     .author-text .name { font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 6px; }
-    .grade-badge { background: linear-gradient(90deg, var(--point-pink), #aa00ff); font-size: 0.6rem; padding: 1px 5px; border-radius: 4px; font-weight: 900; color: #fff; }
+    .grade-badge { background: linear-gradient(90deg, var(--point-pink), #aa00ff); font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 900; color: #fff; text-transform: uppercase; }
     .btn-mypick { background-color: transparent; color: var(--point-green); border: 1px solid var(--point-green); padding: 4px 12px; border-radius: 16px; font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .btn-mypick.active { background-color: var(--point-green); color: #000; }
 
-    /* 🛠️ 2단: 카테고리 / 남은시간 구성 (지저분한 해시태그 완전 노출 제거 및 미니멀 정돈) */
+    /* 🛠️ 2단: 카테고리명 완벽 디테일 연동 무대 */
     .issue-header-box { padding: 10px 20px 14px; }
     .issue-title { font-size: 1.3rem; font-weight: 900; line-height: 1.45; margin: 0 0 12px 0; word-break: keep-all; }
     .meta-row-top { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); }
     .meta-timer-badge { display: inline-flex; align-items: center; gap: 4px; color: var(--point-gold); }
     
-    /* 🛠️ 해시태그 동적 생성 태그 박스 숨김 처리 */
+    /* 해시태그 강제 노출 방어 차단선 */
     #detailMetaTags, .meta-hashtag, [class*="hashtag"] { display: none !important; }
 
     /* 3단: 본문 미디어 레이아웃 구조 */
@@ -123,7 +125,7 @@
     .opt-label-a { color: var(--point-blue); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
     .opt-label-b { color: var(--point-pink); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
 
-    /* 🏁 투표 완료 즉시 피드백 안내 디자인 */
+    /* 투표 완료 즉시 피드백 안내 디자인 */
     .blind-feedback-wrapper { padding: 0 20px; margin-bottom: 16px; display: none; }
     .blind-feedback-wrapper.show { display: block; animation: slideDown 0.4s ease; }
     .blind-card { background: linear-gradient(135deg, #1c1c1e, #2c2c2e); border-radius: 16px; padding: 22px 20px; text-align: center; border: 1px solid var(--point-green); box-shadow: 0 4px 15px rgba(74, 222, 128, 0.15); }
@@ -131,7 +133,7 @@
     .blind-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--point-green); margin-bottom: 6px; }
     .blind-desc { font-size: 0.9rem; font-weight: 600; color: var(--text-main); line-height: 1.5; }
 
-    /* 실시간 통계 롤러 보드 */
+    /* 실시간 통계 보드 */
     .result-view { padding: 0 20px 16px; display: none; }
     .result-view.show { display: block; }
     .result-container { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 20px; }
@@ -140,26 +142,32 @@
     .bar-fill-a { background: var(--point-blue); }
     .bar-fill-b { background: var(--point-pink); margin-left: auto; }
 
-    /* 📱 [황금 비율 대변신] 5:3:2 비율 하단 인터랙션 컨트롤 바 */
+    /* 하단 인터랙션 컨트롤 바 */
     .issue-footer-box { padding: 0 20px 20px; }
     .action-bar-v2 { display: flex; gap: 8px; width: 100%; box-sizing: border-box; }
     .btn-action-v2 { border: none; padding: 13px 0; border-radius: 12px; font-size: 0.85rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; color: #fff; transition: 0.15s; }
     
-    /* 🛠️ 화력지원요청 -> 친구소환하기 5:3:2 전폭 분할 스펙 */
     .btn-share-v2 { flex: 5 !important; background: linear-gradient(135deg, var(--point-blue), #5b86e5); box-shadow: 0 4px 12px rgba(115, 165, 255, 0.2); }
     .btn-like-v2 { flex: 3 !important; background-color: var(--bg-elevated); border: 1px solid var(--border-soft); }
     .btn-like-v2.is-liked { background-color: rgba(255, 133, 161, 0.15); border-color: var(--point-pink); color: var(--point-pink); }
     .btn-report-v2 { flex: 2 !important; background-color: #2a1a1d; border: 1px solid rgba(255, 77, 77, 0.2); color: var(--alert-red); }
 
-    /* === 💬 댓글/답글 다크 미니멀 파스텔 테마 전면 교사 === */
+    /* === 💬 댓글/답글 다크 미니멀 파스텔 영역 === */
     .comments-section { padding: 20px 20px 40px; border-top: 1px solid var(--border-soft); position: relative; }
     .comments-header { font-size: 1rem; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
     
-    /* 슬림 드롭다운 정렬 셀렉터 커스텀 스타일 */
-    .sort-select-wrapper { position: relative; display: flex; align-items: center; }
-    .comment-sort-select { background: transparent !important; color: var(--text-sub) !important; border: none !important; font-size: 0.82rem !important; font-weight: 700 !important; font-family: inherit !important; outline: none !important; cursor: pointer !important; padding-right: 4px; -webkit-appearance: none !important; appearance: none !important; }
+    /* 🛠️ [순정 탈피] 100% 프론트 통제형 다크 커스텀 드롭다운 인프라 */
+    .custom-sort-dropdown { position: relative; width: 85px; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); cursor: pointer; user-select: none; }
+    .sort-trigger-btn { display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 4px 0; color: var(--text-sub); transition: 0.2s; }
+    .sort-trigger-btn:hover { color: var(--text-main); }
+    .sort-dropdown-menu { display: none; position: absolute; top: 110%; right: 0; background-color: #1c1c1e; border: 1px solid var(--border-card); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 150; overflow: hidden; min-width: 95px; }
+    .sort-dropdown-menu.active-show { display: block; animation: slideDown 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
+    .sort-menu-item { padding: 10px 14px; text-align: center; color: var(--text-sub); font-size: 0.8rem; font-weight: 700; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .sort-menu-item:last-child { border-bottom: none; }
+    .sort-menu-item:hover { background-color: var(--bg-elevated); color: var(--text-main); }
+    .sort-menu-item.current-active { color: var(--point-green); font-weight: 800; background-color: rgba(74, 222, 128, 0.05); }
 
-    /* 자물쇠 스크린 장막 */
+    /* 자물쇠 장막 스크린 */
     .comment-lock-screen { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); background: linear-gradient(to bottom, rgba(10,10,12,0.95), #0a0a0c 95%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; gap: 8px; padding-top: 40px;}
     .lock-icon { font-size: 2.2rem; margin-bottom: 4px; }
     .lock-text { font-size: 0.95rem; font-weight: 800; color: var(--point-pink); }
@@ -179,13 +187,11 @@
     .comment-user { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; }
     .comment-text { font-size: 0.9rem; line-height: 1.45; color: var(--text-main); }
 
-    /* 🛠️ 하트(0) 및 답글 액션 버튼 다크 테마 커스텀 기획 정렬 */
     .comment-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-soft); }
     .comment-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-soft) !important; background: var(--bg-elevated) !important; color: var(--text-sub) !important; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; -webkit-appearance: none; }
     .comment-action-btn:active { transform: scale(0.95); }
     .comment-action-btn.is-liked { color: var(--point-pink) !important; border-color: var(--point-pink) !important; background: rgba(255, 133, 161, 0.1) !important; }
     
-    /* 🛠️ 답글 입력 폼 기본 완전 숨김 및 파스텔 조형화 */
     .comment-replies { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 0 16px; padding-left: 10px; border-left: 2px solid var(--border-soft); }
     .comment-reply-form { display: none; gap: 8px; margin-top: 6px; width: 100%; }
     .comment-reply-form.show { display: flex !important; }
@@ -193,7 +199,7 @@
     .comment-reply-input:focus { border-color: var(--point-green); }
     .comment-reply-submit { background: var(--point-green) !important; color: #0a0a0c !important; border: none !important; border-radius: 10px; padding: 0 14px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
 
-    /* === 📱 글로벌 하단 네비게이션 바 고정 연동 시스템 === */
+    /* === 📱 글로벌 하단 슬림 네비게이션 === */
     .bottom-nav { 
         background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
         display: flex !important; justify-content: space-around !important; align-items: center !important; 
@@ -211,7 +217,7 @@
         width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; border: none !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; 
     }
 
-    /* 팝업 및 모달 핵심 오버레이 */
+    /* 팝업 오버레이 및 모달 시트 하부 */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: 0.2s; }
     .overlay.open { opacity: 1; pointer-events: auto; }
     .share-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--bg-card); border-radius: 24px 24px 0 0; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: 0.25s ease-out; border-top: 1px solid var(--border-soft); }
@@ -219,6 +225,7 @@
     .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .sheet-title { font-weight: 800; font-size: 1.1rem; }
     .btn-close-sheet { background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer; }
+    
     .share-grid { display: flex; justify-content: space-around; }
     .share-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
     .share-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; }
@@ -229,7 +236,6 @@
     .report-modal .modal-title { font-size: 1rem; font-weight: 800; color: var(--alert-red); }
     .report-modal .modal-body { padding: 10px 20px 20px; }
     
-    /* 🛠️ 신고 모달창 X 버튼 배경 박스 제거 및 단일 순수 흰색 세팅 */
     .report-modal .btn-close { 
         background: none !important; border: none !important; color: #ffffff !important; 
         font-size: 1.4rem !important; cursor: pointer !important; padding: 0 !important; line-height: 1 !important; 
@@ -266,6 +272,7 @@
 
 <div class="overlay" id="commonOverlay" onclick="closeModals()"></div>
 
+<!-- 공유하기 모달 -->
 <div class="share-sheet" id="shareSheet">
     <div class="sheet-header">
         <h2 class="sheet-title">🔥 이 불판 친구에게 소환하기</h2>
@@ -287,6 +294,26 @@
     </div>
 </div>
 
+<!-- 🛠️ [신규대작] 인스타 스타일 소셜 프로필 전용 소환 모달 바텀 시트 -->
+<div class="share-sheet" id="userProfileSheet">
+    <div class="sheet-header">
+        <h2 class="sheet-title" style="color: var(--point-green);">🥒 픽클러 프로필</h2>
+        <button class="btn-close-sheet" onclick="closeModals()">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:15px 0 25px 0;">
+        <div id="popupUserPic" style="width:76px; height:76px; border-radius:50%; background:#2c2c2e; border:2.5px solid var(--point-pink); display:flex; justify-content:center; align-items:center; font-size:2.2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">👤</div>
+        <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:5px;">
+            <div id="popupUserName" style="font-size:1.15rem; font-weight:900; color:#fff; letter-spacing:-0.3px;">유저 닉네임</div>
+            <span class="grade-badge" id="popupUserBadge">일반 픽클러</span>
+        </div>
+    </div>
+    <div style="display:flex; gap:10px; width:100%; box-sizing:border-box;">
+        <button class="btn-action-v2" id="popupFollowBtn" style="flex:1 !important; background:linear-gradient(135deg, var(--point-green), #22c55e); color:#0a0a0c; font-weight:900;" onclick="handlePopupFollow()"><i class="ph ph-plus-bold"></i> 나의 픽</button>
+        <button class="btn-action-v2" style="flex:1 !important; background-color:var(--bg-elevated); border:1px solid var(--border-soft); color:#fff;" onclick="alert('메시지 전송 기능은 빌드 중입니다.')"><i class="ph-fill ph-paper-plane-tilt"></i> 메시지 보내기</button>
+    </div>
+</div>
+
+<!-- 신고하기 모달 -->
 <div class="report-modal" id="reportModal">
     <div class="modal-header">
         <h3 class="modal-title">🚨 이 불판 신고하기</h3>
@@ -299,12 +326,14 @@
             <option value="abuse">욕설 / 혐오 / 비방</option>
             <option value="nsfw">음란물 / 선정성</option>
         </select>
-        <textarea class="form-textarea" id="reportDetail" placeholder="상세 사유를 필수적으로 입력해주세요. (필수 기재 항목)"></textarea>
+        <!-- 🛠️ 문구 초슬림 다이어트 완료 (필수) -->
+        <textarea class="form-textarea" id="reportDetail" placeholder="상세 사유를 입력해주세요. (필수)"></textarea>
         <button class="btn-submit-report" onclick="submitReport()">신고 접수</button>
     </div>
 </div>
 
 <main>
+    <!-- 1단: 작성자 프로필 -->
     <div class="post-author-box">
         <div class="author-info">
             <div class="author-pic" id="detailAuthorPic">🔥</div>
@@ -315,10 +344,11 @@
         <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ 나의 픽</button>
     </div>
 
+    <!-- 🛠️ 2단: 카테고리명 구체화 연동 앵커 -->
     <div class="issue-header-box">
         <h2 class="issue-title" id="detailTitle">불판 불러오는 중…</h2>
         <div class="meta-row-top">
-            <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;">카테고리</span>
+            <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;">연예 / 썸 / 이별</span>
             <span>/</span>
             <div class="meta-timer-badge"><i class="ph ph-clock"></i> <span id="detailTimer">00:00:00 남음</span></div>
         </div>
@@ -326,10 +356,12 @@
 
     <p class="detail-desc post-content-area" id="detailDescription" hidden></p>
 
+    <!-- 3단: 본문 미디어 콘텐츠 -->
     <div class="master-media-container post-content-area" id="videoContainer">
         <div class="detail-media-empty"><span>⏳</span><p>미디어 로딩 중…</p></div>
     </div>
 
+    <!-- 4단: A/B 텍스트 선택지 -->
     <div class="options-box vote-content" id="optionsBox">
         <div class="opt-item" id="optBtnA" onclick="castVote('A', event, this)">
             <span class="opt-label-a">A</span> <span id="optTextA">…</span>
@@ -339,6 +371,7 @@
         </div>
     </div>
 
+    <!-- 투표 완료 즉시 피드백 레이어 -->
     <div class="blind-feedback-wrapper" id="blindFeedback">
         <div class="blind-card">
             <div class="blind-icon">🤫🔒</div>
@@ -358,6 +391,7 @@
         </div>
     </div>
 
+    <!-- 하단 액션 컨트롤 바 -->
     <div class="issue-footer-box">
         <div class="action-bar-v2">
             <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 친구 소환하기</button>
@@ -366,23 +400,31 @@
         </div>
     </div>
 
+    <!-- 댓글 섹션 -->
     <div class="comments-section">
         <div class="comments-header">
             <span id="detailCommentCount" style="font-weight:800;">댓글 (0)</span>
-            <div class="sort-select-wrapper">
-                <select class="comment-sort-select" id="commentSortSelect" onchange="handleCommentSortChange(this.value)">
-                    <option value="latest">최신순 ▾</option>
-                    <option value="popular">인기순 ▾</option>
-                </select>
+            
+            <!-- 🛠️ [순정 탈치 전면 개정] 고급 다크 테마 커스텀 드롭다운 교체 완수 -->
+            <div class="custom-sort-dropdown" id="customSortDropdown">
+                <div class="sort-trigger-btn" onclick="toggleSortDropdownMenu(event)">
+                    <span id="sortLabelText">최신순</span> <i class="ph ph-caret-down-bold" style="font-size:0.75rem;"></i>
+                </div>
+                <div class="sort-dropdown-menu" id="sortDropdownMenu">
+                    <div class="sort-menu-item current-active" id="sortOptLatest" onclick="selectCommentSort('latest')">최신순</div>
+                    <div class="sort-menu-item" id="sortOptPopular" onclick="selectCommentSort('popular')">인기순</div>
+                </div>
             </div>
         </div>
         
+        <!-- 투표 장막 스크린 장치 -->
         <div class="comment-lock-screen" id="commentLock">
             <div class="lock-icon">🔒</div>
             <div class="lock-text">투표 후 댓글을 볼 수 있어요!</div>
             <div class="lock-subtext">지금 참전하고 훈수를 확인하세요.</div>
         </div>
         
+        <!-- 댓글 활성 실존 구역 -->
         <div class="comment-active-area" id="commentActive">
             <div class="comment-input-box">
                 <input type="text" class="comment-input" id="detailCommentInput" placeholder="훈수를 자유롭게 남겨보세요." maxlength="2000">
@@ -419,11 +461,9 @@
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
-<script src="../js/pickle-detail.js?v=0628_detailv2"></script>
+<script src="../js/pickle-detail.js?v=0621_detailv3"></script>
 
 <script>
-    // 🛠️ 구형 인앱 브라우저 호환성을 위해 Optional Chaining(?.)을 ES5 문법으로 완벽 제거
-
     function ensureKakaoReady() {
         if (!window.Kakao) return false;
         if (!window.Kakao.isInitialized()) {
@@ -436,6 +476,7 @@
         document.getElementById('commonOverlay').classList.remove('open');
         document.getElementById('shareSheet').classList.remove('open');
         document.getElementById('reportModal').classList.remove('open');
+        document.getElementById('userProfileSheet').classList.remove('open');
         document.body.style.overflow = '';
     }
     function openShareSheet() {
@@ -448,8 +489,90 @@
         document.getElementById('reportModal').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
+    function openUserProfileSheet() {
+        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('userProfileSheet').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
 
-    // 🛠️ 답글(대댓글) 토글 시 스르륵 열리게 만드는 전역 하이브리드 이벤트 리스너 세팅
+    // 🛠️ [커스텀 드롭다운 핸들러] 활성화 스위칭
+    function toggleSortDropdownMenu(e) {
+        e.stopPropagation();
+        document.getElementById('sortDropdownMenu').classList.toggle('active-show');
+    }
+
+    // 🛠️ [정렬 코어 픽스] 인기순 클릭 시 UUID 변수 꼬임 전면 복구 버스 매핑 완료
+    function selectCommentSort(sortType) {
+        document.getElementById('sortDropdownMenu').classList.remove('active-show');
+        
+        var label = sortType === 'latest' ? '최신순' : '인기순';
+        document.getElementById('sortLabelText').textContent = label;
+        
+        document.getElementById('sortOptLatest').classList.toggle('current-active', sortType === 'latest');
+        document.getElementById('sortOptPopular').classList.toggle('current-active', sortType === 'popular');
+
+        try {
+            var postId = new URLSearchParams(window.location.search).get('id');
+            if (window.PickleDetail) {
+                if (typeof window.PickleDetail.loadComments === 'function') {
+                    window.PickleDetail.loadComments(postId, sortType);
+                } else if (typeof window.PickleDetail.fetchComments === 'function') {
+                    window.PickleDetail.fetchComments(postId, sortType);
+                }
+            }
+        } catch (err) {
+            console.error("댓글 로드 정렬 크래시 방어:", err);
+        }
+    }
+
+    // 바깥 영역 클릭 시 드롭다운 자율 폐쇄
+    document.addEventListener('click', function() {
+        var menu = document.getElementById('sortDropdownMenu');
+        if(menu) menu.classList.remove('active-show');
+    });
+
+    // 🛠️ [인스타 스타일 런타임 수신반] 댓글 내 프사/닉네임 클릭 연동 위임 리스너
+    document.addEventListener('click', function(e) {
+        var target = e.target.closest('.author-pic, .comment-user span');
+        if (!target) return;
+        
+        // 메인 작성자 상단 박스는 기존 나의픽 연동 기능 보존용 패스
+        if (target.closest('.post-author-box')) return; 
+
+        var commentItem = target.closest('.comment-item');
+        if (commentItem) {
+            e.preventDefault();
+            
+            // 데이터 세트 획득 및 팝업 대입
+            var name = commentItem.getAttribute('data-author-name') || '픽클러';
+            var pic = commentItem.querySelector('.author-pic') ? commentItem.querySelector('.author-pic').textContent : '👤';
+            var uid = commentItem.getAttribute('data-user-id') || '';
+
+            document.getElementById('popupUserName').textContent = name;
+            document.getElementById('popupUserPic').textContent = pic;
+            document.getElementById('popupFollowBtn').setAttribute('data-user-id', uid);
+
+            openUserProfileSheet();
+        }
+    });
+
+    // 🛠️ 소셜 팝업창 전용 팔로우 제어 브릿지
+    function handlePopupFollow() {
+        var btn = document.getElementById('popupFollowBtn');
+        var targetUid = btn.getAttribute('data-user-id');
+        if(!targetUid) return;
+
+        if (window.PickleFollows && typeof window.PickleFollows.toggleFollow === 'function') {
+            window.PickleFollows.toggleFollow(targetUid).then(function(isFollowing) {
+                btn.style.background = isFollowing ? '#2c2c2e' : 'linear-gradient(135deg, var(--point-green), #22c55e)';
+                btn.style.color = isFollowing ? '#fff' : '#0a0a0c';
+                btn.innerHTML = isFollowing ? '✓ 팔로잉 중' : '<i class="ph ph-plus-bold"></i> 나의 픽';
+            });
+        } else {
+            alert('팔로우 기능 모듈 준비 중');
+        }
+    }
+
     document.addEventListener('click', function(e) {
         var replyBtn = e.target.closest('.comment-action-btn');
         if (replyBtn && replyBtn.textContent.indexOf('답글') !== -1) {
@@ -464,20 +587,6 @@
         }
     });
 
-    // 🛠️ 정렬 기능 전환 시 발생하는 꼬임 복구 필터 브릿지
-    function handleCommentSortChange(sortType) {
-        try {
-            if (window.PickleDetail && typeof window.PickleDetail.loadComments === 'function') {
-                window.PickleDetail.loadComments(sortType);
-            } else if (window.PickleDetail && typeof window.PickleDetail.fetchComments === 'function') {
-                window.PickleDetail.fetchComments(sortType);
-            }
-        } catch (err) {
-            console.error("정렬 예외 트래킹:", err);
-        }
-    }
-
-    // 🛠️ 좋아요 클릭 수 연동형 실시간 리얼타임 숫자 업그레이드 스크립트
     function handleLikeToggle() {
         var likeBtn = document.getElementById('detailLikeBtn');
         var likeTextSpan = document.getElementById('likeCountText');
@@ -506,7 +615,6 @@
         }
     }
 
-    // 🛠️ 상세사유 필수 기재 정책 밸리데이션 고도화 반영
     async function submitReport() {
         var reason = document.getElementById('reportReason').value;
         var detailEl = document.getElementById('reportDetail');
@@ -517,7 +625,7 @@
             return;
         }
         if (!detail) {
-            alert('신고 상세 내용을 필히 입력해주세요. (누락 시 접수 불가)');
+            alert('신고 상세 내용을 입력해주세요. (필수)');
             return;
         }
 
