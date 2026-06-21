@@ -17,322 +17,216 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
+    /* 🎨 메인 피드와 완벽 동일한 트렌디 뉴트럴 파스텔톤 지정 */
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FF85A1;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
-        --border-color: #27272a;
-        --alert-red: #ff3333;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
+        --alert-red: #ff4d4d;
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        margin: 0; padding: 0; background-color: var(--bg-base) !important; color: var(--text-main) !important;
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
-        -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 상단 헤더 === */
+    /* === 🌍 글로벌 상단 헤더 (메인과 완벽 동기화) === */
     header {
-        position: sticky; top: 0; width: 100%;
-        background-color: rgba(9, 9, 11, 0.9); backdrop-filter: blur(10px);
-        z-index: 900; padding: 15px 0; border-bottom: 1px solid var(--border-color);
-        transition: top 0.3s ease-in-out;
+        position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
+        z-index: 120; border-bottom: 1px solid var(--border-soft); transition: top 0.3s ease-in-out;
     }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
     .logo {
-        font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent; margin: 0; cursor: pointer;
+        font-family: 'Black Han Sans', sans-serif; font-size: 1.7rem;
+        background: linear-gradient(90deg, var(--point-green), #86efac);
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        cursor: pointer; margin: 0; filter: none;
     }
-    .header-actions { display: flex; align-items: center; gap: 15px; }
-    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .noti-bell { font-size: 1.45rem !important; color: var(--text-main); position: relative; cursor: pointer; display: flex; align-items: center; }
 
-    /* === 본문 (불판 생성 폼) === */
-    main { padding: 20px 20px 120px 20px; }
+    /* === 본문 스크롤 컨테이너 === */
+    main { padding: 20px 20px 100px 20px; }
     
-    .page-title { font-weight: 800; font-size: 1.5rem; margin: 0 0 20px 0; color: #fff; letter-spacing: -0.5px; }
+    /* 🛠️ [수정 2] 타이틀 크기 메인화면 섹션 규격(1.25rem)으로 슬림 최적화 */
+    .page-title { font-weight: 800; font-size: 1.25rem; margin: 0 0 20px 0; color: #fff; letter-spacing: -0.5px; }
     
-    .form-group { margin-bottom: 25px; }
-    .form-label { font-size: 0.9rem; font-weight: 800; margin-bottom: 10px; display: block; color: #d4d4d8; }
-    .form-hint { font-size: 0.75rem; color: var(--neon-pink); font-weight: 600; margin-left: 5px; }
+    .form-group { margin-bottom: 24px; }
+    .form-label { font-size: 0.88rem; font-weight: 800; margin-bottom: 10px; display: block; color: #d4d4d8; }
+    .form-hint { font-size: 0.75rem; color: var(--point-pink); font-weight: 600; margin-left: 4px; }
     
     .btn-open-category {
-        width: 100%; box-sizing: border-box;
-        background-color: rgba(39, 39, 42, 0.85); color: #fff; border: 1px solid #3f3f46;
-        padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; font-weight: 800;
-        cursor: pointer; transition: 0.2s; font-family: inherit;
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-open-category:active { transform: scale(0.98); background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
-    .btn-open-category.selected {
-        background-color: rgba(57, 255, 20, 0.12); color: var(--neon-green);
-        border-color: var(--neon-green);
+        width: 100%; box-sizing: border-box; background-color: #222225; color: #fff; border: 1px solid #3a3a3c;
+        padding: 14px; border-radius: 14px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;
     }
 
-    /* 공통 입력 박스 */
+    /* 공통 입력 인풋 요소 */
     .input-box {
-        width: 100%; box-sizing: border-box; background-color: var(--card-bg); border: 1px solid var(--border-color);
-        color: #fff; padding: 15px; border-radius: 20px; font-size: 1rem; font-family: 'Pretendard', sans-serif;
-        transition: all 0.2s; margin-bottom: 10px; color-scheme: dark; accent-color: var(--neon-green);
+        width: 100%; box-sizing: border-box; background-color: var(--bg-card); border: 1px solid var(--border-card);
+        color: #fff; padding: 14px 16px; border-radius: 14px; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; margin-bottom: 8px;
     }
-    .input-box:focus { outline: none; border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+    .input-box:focus { outline: none; border-color: var(--point-blue); box-shadow: 0 0 10px rgba(115, 165, 255, 0.15); }
     .input-box::placeholder { color: #52525b; }
-    textarea.input-box { resize: none; line-height: 1.4; padding: 15px; border-radius: 16px; }
+    textarea.input-box { resize: none; line-height: 1.45; }
 
-    /* 단추 버튼 (미디어 형태) */
-    .toggle-wrapper { display: flex; background: rgba(39, 39, 42, 0.5); border-radius: 12px; padding: 4px; margin-bottom: 10px; }
-    .toggle-btn { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; border: none; background: transparent; transition: all 0.2s; }
-    .toggle-btn.active { background: #3f3f46; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-    .toggle-btn.active.highlight { background: var(--neon-green); color: #000; }
+    /* 🛠️ [수정 6] 미디어 토글 스위치 랩 (파스텔톤 적용 및 폰트 굵기 완화) */
+    .toggle-wrapper { display: flex; background: #1c1c1e; border-radius: 12px; padding: 4px; margin-bottom: 12px; border: 1px solid var(--border-soft); }
+    .toggle-btn { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.82rem; color: var(--text-sub); cursor: pointer; border: none; background: transparent; transition: all 0.2s; font-family: inherit; }
+    .toggle-btn.active.highlight { background: rgba(115, 165, 255, 0.15); color: var(--point-blue); font-weight: 800; border: 1px solid var(--point-blue); }
+    .toggle-btn.active:not(.highlight) { background: rgba(255, 133, 161, 0.15); color: var(--point-pink); font-weight: 800; border: 1px solid var(--point-pink); }
 
-    .sub-toggle-wrapper { display: none; background: transparent; gap: 10px; padding: 0; margin-bottom: 15px; }
-    .sub-toggle-wrapper.show { display: flex; }
-    .sub-toggle-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-sub); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
-    .sub-toggle-btn.active { border-color: var(--neon-blue); color: var(--neon-blue); background: rgba(0, 240, 255, 0.1); }
-
-    .media-layout-group { margin-bottom: 14px; }
-    .media-layout-radios { display: flex; flex-direction: column; gap: 10px; }
-    .media-layout-option {
-        display: flex; align-items: center; gap: 10px;
-        background: rgba(39, 39, 42, 0.45); border: 1px solid var(--border-color);
-        border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: 0.2s;
-        box-sizing: border-box; max-width: 100%;
-    }
-    .media-layout-option:has(input:checked) {
-        border-color: var(--neon-green); background: rgba(57, 255, 20, 0.08);
-    }
-    .media-layout-option input { accent-color: var(--neon-green); width: 18px; height: 18px; flex-shrink: 0; }
-    .media-layout-label { font-size: 0.85rem; font-weight: 700; color: #e4e4e7; line-height: 1.35; }
-
-    /* 불판 진행 기간 버튼 UI */
+    /* 불판 마감 기간 설정 버튼 */
     .duration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 5px; }
-    .duration-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); padding: 12px 0; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif; }
-    .duration-btn.active { background: rgba(57, 255, 20, 0.1); border-color: var(--neon-green); color: var(--neon-green); }
+    .duration-btn { background: var(--bg-card); border: 1px solid var(--border-card); color: var(--text-sub); padding: 12px 0; border-radius: 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .duration-btn.active { background: rgba(115, 165, 255, 0.15); border-color: var(--point-blue); color: var(--point-blue); }
+    #customDateWrap { background: #121214; padding: 16px; border-radius: 16px; margin-top: 10px; border: 1px dashed #3f3f46; }
 
-    #customDateWrap { background: rgba(39, 39, 42, 0.4); padding: 20px; border-radius: 24px; margin-top: 10px; border: 1px dashed #52525b; }
-    .date-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 800; margin-bottom: 8px; display: block; margin-left: 5px; }
-    .date-input-row { display: flex; flex-direction: column; gap: 15px; }
-
-    /* 동적 업로드 영역 */
+    /* 동적 비주얼 크리에이터 영역 */
     #uploadContainer { transition: all 0.3s ease; }
     .media-input-wrap { display: flex; flex-direction: column; gap: 8px; width: 100%; position: relative; }
     .upload-box {
-        width: 100%; border: 2px dashed #52525b; border-radius: 16px;
-        background-color: rgba(39, 39, 42, 0.3); display: flex; justify-content: center; align-items: center;
-        flex-direction: column; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
-        color: var(--text-sub); box-sizing: border-box;
+        width: 100%; border: 2px dashed #3a3a3c; border-radius: 16px; background-color: rgba(28, 28, 30, 0.4);
+        display: flex; justify-content: center; align-items: center; flex-direction: column; cursor: pointer;
+        transition: all 0.25s; position: relative; overflow: hidden; color: var(--text-sub); box-sizing: border-box;
     }
-    .upload-box:active { transform: scale(0.98); }
-    .upload-box.uploaded { border-color: var(--neon-green); color: var(--neon-green); background-color: rgba(57, 255, 20, 0.1); border-style: solid; }
-
-    .url-input { 
-        width: 100%; background-color: rgba(39, 39, 42, 0.5); border: 1px solid #52525b; 
-        color: #fff; padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; 
-        box-sizing: border-box; outline: none; transition: 0.2s; font-family: 'Pretendard', sans-serif;
-    }
-    .url-input:focus { border-color: var(--neon-green); background-color: #18181b; }
-    .url-input::placeholder { color: #71717a; }
+    .upload-box.uploaded { border-color: var(--point-green); color: var(--point-green); background-color: rgba(74, 222, 128, 0.05); border-style: solid; }
+    .url-input { width: 100%; background-color: #121214; border: 1px solid #2c2c2e; color: #fff; padding: 12px; border-radius: 10px; font-size: 0.85rem; box-sizing: border-box; outline: none; font-family: inherit; }
+    .url-input:focus { border-color: var(--point-blue); }
 
     .upload-box.ratio-16-9 { aspect-ratio: 16 / 9; }
-    .upload-box.ratio-9-16 { aspect-ratio: 9 / 16; width: 100%; margin: 0; max-width: 100%; box-sizing: border-box; }
-    .vs-upload-group.media-layout-vertical .upload-box.ratio-9-16 { width: 100%; margin: 0; }
+    .upload-box.ratio-9-16 { aspect-ratio: 9 / 16; width: 100%; }
     
-    .vs-upload-group {
-        display: flex; gap: 10px; width: 100%; max-width: 100%;
-        box-sizing: border-box; position: relative; overflow: hidden;
-    }
+    .vs-upload-group { display: flex; gap: 10px; width: 100%; box-sizing: border-box; position: relative; }
     .vs-upload-group.media-layout-horizontal { flex-direction: column; }
-    .vs-upload-group.media-layout-vertical,
-    .vs-upload-group.vertical { flex-direction: row; align-items: stretch; }
-    .vs-upload-group.media-layout-vertical .media-input-wrap,
-    .vs-upload-group.vertical .media-input-wrap {
-        width: calc(50% - 5px);
-        flex: 0 0 calc(50% - 5px);
-        max-width: calc(50% - 5px);
-        min-width: 0;
-        box-sizing: border-box;
-        flex-shrink: 0;
-    }
-    .vs-upload-group.media-layout-vertical .upload-box.ratio-9-16,
-    .vs-upload-group.vertical .upload-box.ratio-9-16 {
-        width: 100%;
-        max-width: 100%;
-        aspect-ratio: 9 / 16;
-        object-fit: cover;
-        flex-shrink: 0;
-        margin: 0;
-        box-sizing: border-box;
-    }
+    .vs-upload-group.media-layout-vertical { flex-direction: row; }
+    .vs-upload-group.media-layout-vertical .media-input-wrap { width: calc(50% - 5px); }
 
+    /* 🛠️ [수정 8] 미디어 이미지 사이 VS 뱃지 파스텔 톤앤매너로 수정 */
     .vs-badge-upload {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: linear-gradient(145deg, #09090b 0%, #ff007f 120%);
-        color: #fff; font-family: 'Black Han Sans', sans-serif;
-        width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;
-        border-radius: 50%; border: 2px solid var(--neon-pink); z-index: 10;
-        box-shadow: 0 0 14px rgba(255, 0, 127, 0.45);
+        background: linear-gradient(135deg, var(--point-blue) 0%, var(--point-pink) 100%);
+        color: #0a0a0c; font-family: 'Black Han Sans', sans-serif; font-size: 0.95rem;
+        width: 38px; height: 38px; display: flex; justify-content: center; align-items: center;
+        border-radius: 50%; border: 3px solid var(--bg-base); z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    .icon-plus { font-size: 2rem; margin-bottom: 5px; }
-    .upload-txt { font-size: 0.9rem; font-weight: 700; text-align: center; line-height: 1.4; }
-    .upload-size-hint {
-        font-size: 0.72rem;
-        color: #71717a;
-        margin: 0 0 8px 0;
-        line-height: 1.4;
-        font-weight: 500;
-    }
+    .icon-plus { font-size: 1.6rem; margin-bottom: 4px; }
+    .upload-txt { font-size: 0.85rem; font-weight: 700; text-align: center; }
+    .upload-size-hint { font-size: 0.75rem; color: var(--text-sub); margin: 0 0 8px 0; font-weight: 500; }
 
-    .form-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-        margin: 28px 0;
-    }
+    .form-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-soft), transparent); margin: 24px 0; }
 
-    .form-group-thumbnail .upload-size-hint { margin-bottom: 10px; }
-
-    /* 썸네일 미리보기 박스 */
+    /* 썸네일 대형 액션 보드 */
     .thumb-preview-box {
-        width: 100%; aspect-ratio: 16 / 9; border-radius: 16px;
-        border: 2px dashed #52525b; background-color: rgba(39, 39, 42, 0.35);
-        background-size: cover; background-position: center; background-repeat: no-repeat;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: 0.2s; overflow: hidden; position: relative;
-        box-sizing: border-box;
+        width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; border: 2px dashed #3a3a3c;
+        background-color: rgba(28, 28, 30, 0.4); display: flex; justify-content: center; align-items: center;
+        cursor: pointer; transition: 0.2s; overflow: hidden; position: relative; box-sizing: border-box; margin-top: 8px;
     }
-    .thumb-preview-box:active { transform: scale(0.98); }
-    .thumb-preview-box.has-preview { border-style: solid; border-color: var(--neon-green); }
-    .thumb-preview-placeholder {
-        display: flex; flex-direction: column; align-items: center; gap: 8px;
-        color: var(--text-sub); pointer-events: none; padding: 16px; text-align: center;
-    }
-    .thumb-preview-box.has-preview .thumb-preview-placeholder { display: none; }
-    .thumb-preview-icon { font-size: 2rem; }
-    .thumb-preview-label { font-size: 0.9rem; font-weight: 700; line-height: 1.4; }
+    .thumb-preview-box.has-preview { border-style: solid; border-color: var(--point-blue); }
+    .thumb-preview-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-sub); pointer-events: none; padding: 16px; text-align: center; }
+    
+    .thumb-live-text { position: absolute; width: 85%; height: 75%; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 1.15rem; font-weight: 800; color: #000; word-break: keep-all; line-height: 1.4; padding: 10px; box-sizing: border-box; z-index: 5; }
 
-    /* 썸네일 바텀 시트 */
-    #thumbnailSheet { z-index: 10001; }
-    #thumbnailOverlay { z-index: 10000; }
-    .thumb-tabs {
-        display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px;
-        scrollbar-width: none; padding-bottom: 4px;
-    }
-    .thumb-tabs::-webkit-scrollbar { display: none; }
-    .thumb-tab {
-        flex-shrink: 0; padding: 8px 14px; border-radius: 999px;
-        border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
-        color: var(--text-sub); font-size: 0.78rem; font-weight: 800;
-        cursor: pointer; transition: 0.2s; font-family: inherit; white-space: nowrap;
-    }
-    .thumb-tab.active {
-        border-color: var(--neon-green); background: var(--neon-green); color: #000;
-        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
-    }
-    .thumb-tab-panel { display: none; }
-    .thumb-tab-panel.active { display: block; }
-    .thumb-grid {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-        max-height: 50vh; overflow-y: auto; scrollbar-width: none; padding-bottom: 8px;
-    }
-    .thumb-grid::-webkit-scrollbar { display: none; }
-    .thumb-grid-item {
-        aspect-ratio: 1; border-radius: 12px; overflow: hidden; cursor: pointer;
-        border: 2px solid transparent; background: #27272a; transition: 0.2s;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .thumb-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .thumb-grid-item:active { transform: scale(0.95); border-color: var(--neon-green); }
-    .thumb-grid-item--picker {
-        flex-direction: column; gap: 6px; color: var(--text-sub);
-        font-size: 0.75rem; font-weight: 800; border: 2px dashed #52525b;
-    }
-    .thumb-grid-item--picker span:first-child { font-size: 1.6rem; }
-    .thumb-color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .thumb-color-item {
-        aspect-ratio: 1; border-radius: 12px; cursor: pointer;
-        border: 2px solid rgba(255,255,255,0.08); transition: 0.2s;
-    }
-    .thumb-color-item:active { transform: scale(0.92); border-color: var(--neon-green); }
-
-    .thumb-search-wrap { margin-bottom: 12px; }
-    .thumb-search-input {
-        width: 100%; box-sizing: border-box; margin-bottom: 0;
-        padding: 12px 15px; font-size: 0.9rem;
-    }
-    .thumb-search-hint, .thumb-search-status {
-        color: #71717a; font-size: 0.8rem; text-align: center;
-        margin: 12px 0 0; line-height: 1.45;
-    }
-    .thumb-search-status.is-loading { color: var(--neon-green); }
-    .thumb-search-status.is-error { color: var(--alert-red); }
-
-    /* A/B 입력 필드 */
-    .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
-    .ab-input-wrapper { position: relative; }
-    .ab-badge { position: absolute; top: 50%; left: 15px; transform: translateY(-50%); font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; }
-    .ab-badge.a { color: var(--neon-blue); }
-    .ab-badge.b { color: var(--neon-pink); }
-    .ab-input { padding-left: 45px; }
-    .ab-input-wrapper.a .input-box:focus { border-color: var(--neon-blue); }
-    .ab-input-wrapper.b .input-box:focus { border-color: var(--neon-pink); }
-
-    /* 🚨 법적 책임 경고 영역 (새로 추가) */
-    .legal-warning-box {
-        background: rgba(255, 51, 51, 0.05);
-        border: 1px solid rgba(255, 51, 51, 0.3);
-        border-radius: 12px;
-        padding: 15px;
-        margin-top: 25px;
-        margin-bottom: 10px;
-    }
-    .legal-warning-title {
-        font-size: 0.85rem;
-        font-weight: 900;
-        color: var(--alert-red);
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .legal-warning-text {
-        font-size: 0.75rem;
-        color: #a1a1aa;
-        line-height: 1.5;
-        word-break: keep-all;
-    }
-    .legal-warning-text strong {
-        color: #d4d4d8;
-    }
-
-    /* 등록 버튼 */
-    .btn-submit {
-        width: 100%; padding: 18px; border-radius: 20px; border: none;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000;
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; letter-spacing: 1px;
-        cursor: pointer; box-shadow: 0 5px 20px rgba(57, 255, 20, 0.3); transition: transform 0.2s;
-        margin-top: 15px;
-    }
-    .btn-submit:active { transform: scale(0.95); }
-    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
-
-    /* 바텀 시트 */
-    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-    .overlay.open { opacity: 1; pointer-events: auto; }
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: #121214; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px 20px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); height: auto; max-height: 85vh; overflow-y: auto; }
+    /* 🛠️ [수정 3, 5] 바텀시트 UI (폰트 교체, 탭 디자인 파스텔톤, 얇은 폰트) */
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--bg-card); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-soft); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); max-height: 80vh; overflow-y: auto; }
     .bottom-sheet.open { transform: translateY(0); }
     .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .sheet-title { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: var(--neon-green); }
+    .sheet-title { font-family: 'Pretendard', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text-main); }
     .btn-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 4px; }
-    .grid-item { background-color: #27272a; padding: 12px; border-radius: 12px; text-align: center; font-size: 0.9rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
-    .grid-item:active { background-color: var(--neon-green); color: #000; transform: scale(0.95); }
-    .grid-item.highlight { border: 1px solid var(--neon-pink); color: var(--neon-pink); }
+    
+    .thumb-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; scrollbar-width: none; }
+    .thumb-tabs::-webkit-scrollbar { display: none; }
+    .thumb-tab { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1px solid #3a3a3c; background: transparent; color: var(--text-sub); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .thumb-tab.active { border-color: var(--point-blue); background: rgba(115, 165, 255, 0.15); color: var(--point-blue); font-weight: 700; }
+    
+    .thumb-tab-panel { display: none; }
+    .thumb-tab-panel.active { display: block; }
+    
+    /* 🛠️ [수정 5] 컬러 박스 5x5 구성 */
+    .thumb-color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+    .thumb-color-item { aspect-ratio: 1; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: 0.15s; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+    
+    /* 🛠️ [수정 7] 텍스트 카드 테마 컬러 (4x2 배열용) 및 라벨 폰트 얇게 조절 */
+    .text-color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 8px; }
+    .text-card-label { font-size: 0.8rem; font-weight: 600; margin-bottom: 5px; display: block; color: var(--text-sub); }
+
+    .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 45vh; overflow-y: auto; scrollbar-width: none; }
+    .thumb-grid::-webkit-scrollbar { display: none; }
+    .thumb-grid-item { aspect-ratio: 1; border-radius: 12px; overflow: hidden; cursor: pointer; border: 2px solid transparent; background: #222225; display: flex; align-items: center; justify-content: center; }
+    .thumb-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb-grid-item--picker { flex-direction: column; gap: 4px; color: var(--text-sub); font-size: 0.72rem; font-weight: 800; border: 2px dashed #48484a; }
+
+    /* 타이포그래피 폰트 칩 */
+    .font-chip-group { display: flex; gap: 6px; margin-bottom: 12px; }
+    .font-chip { background: var(--bg-elevated); border: 1px solid var(--border-soft); color: var(--text-sub); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: 0.2s;}
+    .font-chip.active { background: rgba(115, 165, 255, 0.15); color: var(--point-blue); border-color: var(--point-blue); font-weight: 700; }
+
+    /* A/B 인풋 배지 박스 */
+    .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
+    .ab-input-wrapper { position: relative; }
+    .ab-badge { position: absolute; top: 50%; left: 16px; transform: translateY(-50%); font-family: 'Black Han Sans', sans-serif; font-size: 1.15rem; }
+    .ab-badge.a { color: var(--point-blue); }
+    .ab-badge.b { color: var(--point-pink); }
+    .ab-input { padding-left: 45px; }
+
+    /* 법적 서약 정보 경고 */
+    .legal-warning-box { background: rgba(255, 77, 77, 0.04); border: 1px solid rgba(255, 77, 77, 0.2); border-radius: 14px; padding: 16px; margin-top: 22px; }
+    .legal-warning-title { font-size: 0.85rem; font-weight: 900; color: var(--alert-red); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .legal-warning-text { font-size: 0.75rem; color: var(--text-sub); line-height: 1.5; word-break: keep-all; }
+    
+    /* 🛠️ [수정 9] 동의 체크박스 UI 디자인 */
+    .legal-check-wrap { display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer; }
+    .legal-check-wrap input[type="checkbox"] { 
+        appearance: none; width: 22px; height: 22px; border: 2px solid var(--border-soft); 
+        border-radius: 6px; background: var(--bg-base); cursor: pointer; position: relative; transition: 0.2s;
+    }
+    .legal-check-wrap input[type="checkbox"]:checked { background: var(--point-blue); border-color: var(--point-blue); }
+    .legal-check-wrap input[type="checkbox"]:checked::after { 
+        content: '✔'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        color: #000; font-size: 0.85rem; font-weight: 900; 
+    }
+    .legal-check-label { font-size: 0.85rem; font-weight: 700; color: #fff; }
+
+    /* 🛠️ [수정 10] 등록 버튼 파스텔톤 및 폰트 변경 */
+    .btn-submit {
+        width: 100%; padding: 18px; border-radius: 16px; border: none;
+        background: linear-gradient(135deg, var(--point-blue) 0%, var(--point-pink) 100%); color: #0a0a0c;
+        font-family: 'Pretendard', sans-serif; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px;
+        cursor: pointer; box-shadow: 0 4px 15px rgba(115, 165, 255, 0.25); transition: transform 0.15s, opacity 0.2s; margin-top: 15px;
+    }
+    .btn-submit:active { transform: scale(0.97); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* 🌍 [수정 1] 글로벌 하단 네비게이션 시스템 완벽 동기화 (index.html 기준) */
+    .bottom-nav { 
+        background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
+        display: flex !important; justify-content: space-around !important; align-items: center !important; 
+        padding: 0 !important; height: 38px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
+    }
+    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
+    .bottom-nav .nav-btn:not(.fire-btn) { transform: translateY(3px) !important; }
+    .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
+    .bottom-nav .nav-icon { font-size: 1.05rem !important; filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;}
+    .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
+    
+    .bottom-nav .fire-btn { transform: translateY(-22px) !important; } 
+    .bottom-nav .fire-btn .nav-icon { 
+        background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; color: #1c1c1e !important; 
+        width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; border: none !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; 
+    }
+
+    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .grid-item { background-color: #222225; padding: 14px; border-radius: 12px; text-align: center; font-size: 0.88rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.15s; }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
@@ -358,7 +252,7 @@
 <div class="overlay" id="categoryOverlay" onclick="toggleCategorySheet()"></div>
 <div class="bottom-sheet" id="categorySheet">
     <div class="sheet-header">
-        <div class="sheet-title">모든 불판 탐험 🚀</div>
+        <div class="sheet-title">카테고리 선택</div>
         <button type="button" class="btn-close" onclick="toggleCategorySheet()">✕</button>
     </div>
     <div class="category-grid" id="categoryGrid"></div>
@@ -367,7 +261,7 @@
 <div class="overlay" id="thumbnailOverlay" onclick="closeThumbnailSheet()"></div>
 <div class="bottom-sheet" id="thumbnailSheet">
     <div class="sheet-header">
-        <div class="sheet-title">썸네일 선택 🖼️</div>
+        <div class="sheet-title">썸네일 만들기 🖼️</div>
         <button type="button" class="btn-close" onclick="closeThumbnailSheet()">✕</button>
     </div>
     <div class="thumb-tabs" role="tablist" aria-label="썸네일 소스">
@@ -376,7 +270,15 @@
         <button type="button" class="thumb-tab" data-tab="free" onclick="switchThumbTab('free')">🔍 무료 사진</button>
         <button type="button" class="thumb-tab" data-tab="gif" onclick="switchThumbTab('gif')">🎞️ 움짤</button>
     </div>
-    <div class="thumb-tab-panel active" id="thumbPanelAlbum" role="tabpanel"></div>
+    
+    <div class="thumb-tab-panel active" id="thumbPanelColor" role="tabpanel">
+        <div class="font-chip-group" id="thumbFontGroup">
+            <button type="button" class="font-chip active" data-font="Pretendard" onclick="setThumbLiveFont('Pretendard', this)">고딕</button>
+            <button type="button" class="font-chip" data-font="'Nanum Myeongjo'" onclick="setThumbLiveFont('Nanum Myeongjo', this)">명조</button>
+            <button type="button" class="font-chip" data-font="'Nanum Pen Script'" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
+        </div>
+        </div>
+    <div class="thumb-tab-panel" id="thumbPanelAlbum" role="tabpanel"></div>
     <div class="thumb-tab-panel" id="thumbPanelFree" role="tabpanel">
         <div class="thumb-search-wrap">
             <input type="search" class="thumb-search-input input-box" id="thumbFreeSearch" placeholder="무료 사진 검색 (Enter)" autocomplete="off">
@@ -391,12 +293,11 @@
         <div class="thumb-grid" id="thumbGifGrid"></div>
         <p class="thumb-search-hint" id="thumbGifHint">Giphy에서 움짤을 검색해 보세요.</p>
     </div>
-    <div class="thumb-tab-panel" id="thumbPanelColor" role="tabpanel"></div>
 </div>
 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="thumbAlbumInput" onchange="onThumbAlbumFileSelected(this)">
 
 <main>
-    <h1 class="page-title">🔥 새로운 불판 지피기</h1>
+    <h2 class="page-title">🔥 새로운 불판 지피기</h2>
 
     <form id="createPostForm" novalidate>
     <div class="form-group">
@@ -416,18 +317,13 @@
     </div>
 
     <div class="form-group form-group-thumbnail">
-        <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint">(선택)</span></label>
-        <div style="display: flex; gap: 6px; margin-bottom: 12px;" id="thumbFontGroup">
-            <button type="button" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setThumbLiveFont('Pretendard', this)">고딕</button>
-            <button type="button" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setThumbLiveFont('Nanum Myeongjo', this)">명조</button>
-            <button type="button" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
-        </div>
+        <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint" style="color:var(--point-blue);">(필수)</span></label>
         <p class="upload-size-hint">(※ 리스트에만 노출 · 터치해서 썸네일을 선택하세요)</p>
         <div class="thumb-preview-box ratio-16-9" id="thumbPreviewBox" onclick="openThumbnailSheet()" role="button" tabindex="0" aria-label="썸네일 선택">
-            <div id="thumbLiveText" style="position: absolute; width: 85%; height: 75%; display: none; justify-content: center; align-items: center; text-align: center; font-size: 1.15rem; font-weight: 800; color: #000; word-break: keep-all; line-height: 1.4; padding: 10px; z-index: 5;"></div>
+            <div id="thumbLiveText" class="thumb-live-text" style="display: none;"></div>
             <div class="thumb-preview-placeholder" id="thumbPreviewPlaceholder">
                 <span class="thumb-preview-icon">🖼️</span>
-                <span class="thumb-preview-label">터치하여 서식 및 소스 지정</span>
+                <span class="thumb-preview-label">터치하여 썸네일 만들기</span>
             </div>
         </div>
     </div>
@@ -446,8 +342,8 @@
         <div id="customDateWrap" style="display: none;">
             <div class="date-input-row">
                 <div>
-                    <label class="date-label">🔴 종료(마감) 일시</label>
-                    <input type="datetime-local" id="inputEndDate" class="input-box" style="margin: 0; padding: 12px;">
+                    <label class="date-label" style="color:var(--text-sub); margin-bottom:8px; display:block; font-size:0.8rem;">🔴 종료(마감) 일시</label>
+                    <input type="datetime-local" id="inputEndDate" class="input-box">
                 </div>
             </div>
         </div>
@@ -462,16 +358,16 @@
             <button type="button" class="toggle-btn" id="btnVs" onclick="setMainMode('vs')">미디어 2개 (VS)</button>
         </div>
 
-        <div class="media-layout-group" id="mediaLayoutGroup">
+        <div class="media-layout-group" id="mediaLayoutGroup" style="display: none;">
             <label class="form-label">미디어 배치 선택</label>
             <div class="media-layout-radios">
-                <label class="media-layout-option">
-                    <input type="radio" name="media_layout" value="horizontal" checked onchange="onMediaLayoutChange()">
-                    <span class="media-layout-label">① 가로형 (16:9) — 위/아래 배치</span>
+                <label class="media-layout-option" style="background:var(--bg-card); border:1px solid var(--border-card); padding:12px; border-radius:12px; display:flex; gap:8px; margin-bottom:8px; cursor:pointer;">
+                    <input type="radio" name="media_layout" value="horizontal" checked onchange="onMediaLayoutChange()" style="accent-color:var(--point-blue);">
+                    <span class="media-layout-label" style="color:var(--text-main); font-size:0.85rem;">① 가로형 (16:9) — 위/아래 배치</span>
                 </label>
-                <label class="media-layout-option">
-                    <input type="radio" name="media_layout" value="vertical" onchange="onMediaLayoutChange()">
-                    <span class="media-layout-label">② 세로형 (9:16) — 좌/우 배치</span>
+                <label class="media-layout-option" style="background:var(--bg-card); border:1px solid var(--border-card); padding:12px; border-radius:12px; display:flex; gap:8px; cursor:pointer;">
+                    <input type="radio" name="media_layout" value="vertical" onchange="onMediaLayoutChange()" style="accent-color:var(--point-blue);">
+                    <span class="media-layout-label" style="color:var(--text-main); font-size:0.85rem;">② 세로형 (9:16) — 좌/우 배치</span>
                 </label>
             </div>
         </div>
@@ -480,7 +376,7 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label">A/B 선택지</label>
+        <label class="form-label">A/B 선택지 설정</label>
         <div class="ab-input-group">
             <div class="ab-input-wrapper a">
                 <span class="ab-badge a">A</span>
@@ -495,15 +391,18 @@
 
     <div class="form-group">
         <label class="form-label">해시태그 <span class="form-hint">(선택사항, 최대 3개)</span></label>
-        <input type="text" id="inputHashtag" class="input-box" placeholder="#블박 #과실비율 (띄어쓰기로 구분, 최대 3개 입력)">
+        <input type="text" id="inputHashtag" class="input-box" placeholder="#과실비율 #소개팅 (띄어쓰기 구분)">
     </div>
 
-    <!-- 💡 법적 책임 경고 영역 추가 -->
     <div class="legal-warning-box">
         <div class="legal-warning-title">🚨 불판 등록 전 확인해주세요!</div>
         <div class="legal-warning-text">
             음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
         </div>
+        <label class="legal-check-wrap">
+            <input type="checkbox" id="legalAgreeCheck">
+            <span class="legal-check-label">위 내용을 확인하였으며, 이에 동의합니다.</span>
+        </label>
     </div>
 
     <button type="submit" class="btn-submit" id="btnSubmitPost">🚀 불판 지피기 (등록)</button>
@@ -512,11 +411,11 @@
 </main>
 
 <nav class="bottom-nav">
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn active" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph ph-house nav-icon"></i><span>홈</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
+    <div class="nav-btn fire-btn active" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><i class="ph-fill ph-fire nav-icon"></i></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><i class="ph ph-gift nav-icon"></i><span>이벤트</span></div>
+    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><i class="ph ph-user nav-icon"></i><span>마이</span></div>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -535,16 +434,15 @@
 <script src="../js/pickle-points.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
+    // ==========================================
+    // 1. 기초 설정 및 카테고리/기간 로직 (원본 유지)
+    // ==========================================
     async function loadCategories() {
         if (!window.PickleCategories || !window.PickleCategories.loadCategoriesForCreate) {
             console.warn('[create] PickleCategories 모듈 없음');
             return;
         }
-
-        const isSuperAdmin = window.PickleCategories.resolveIsSuperAdmin
-            ? await window.PickleCategories.resolveIsSuperAdmin()
-            : false;
-
+        const isSuperAdmin = window.PickleCategories.resolveIsSuperAdmin ? await window.PickleCategories.resolveIsSuperAdmin() : false;
         try {
             await window.PickleCategories.loadCategoriesForCreate(isSuperAdmin);
         } catch (err) {
@@ -554,10 +452,7 @@
 
     window.__pickleSelectedCategorySlug = '';
     window.__pickleSelectedCategoryLabel = '';
-
-    function getSelectedCategorySlug() {
-        return (window.__pickleSelectedCategorySlug || document.getElementById('selectedCategorySlug')?.value || '').trim();
-    }
+    function getSelectedCategorySlug() { return (window.__pickleSelectedCategorySlug || document.getElementById('selectedCategorySlug')?.value || '').trim(); }
     window.getSelectedCategorySlug = getSelectedCategorySlug;
 
     let lastScrollTop = 0;
@@ -572,33 +467,21 @@
     window.getPickleCreateDuration = function () { return selectedDuration; };
 
     function toDatetimeLocalValue(date) {
-        const d = date || new Date();
-        const pad = (n) => String(n).padStart(2, '0');
+        const d = date || new Date(); const pad = (n) => String(n).padStart(2, '0');
         return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
-
-    function getMaxEndDate() {
-        return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    }
-
+    function getMaxEndDate() { return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); }
     function refreshEndDateMin() {
-        const el = document.getElementById('inputEndDate');
-        if (!el) return;
-        el.min = toDatetimeLocalValue(new Date());
-        el.max = toDatetimeLocalValue(getMaxEndDate());
+        const el = document.getElementById('inputEndDate'); if (!el) return;
+        el.min = toDatetimeLocalValue(new Date()); el.max = toDatetimeLocalValue(getMaxEndDate());
     }
-
     function resetCustomEndDateIfInvalid() {
-        const endInput = document.getElementById('inputEndDate');
-        if (!endInput || !endInput.value) return;
-        const end = new Date(endInput.value);
-        const maxMs = getMaxEndDate().getTime();
+        const endInput = document.getElementById('inputEndDate'); if (!endInput || !endInput.value) return;
+        const end = new Date(endInput.value); const maxMs = getMaxEndDate().getTime();
         if (!Number.isNaN(end.getTime()) && end.getTime() > maxMs) {
-            alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.');
-            endInput.value = '';
+            alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.'); endInput.value = '';
         }
     }
-
     function setDuration(btn, val) {
         document.querySelectorAll('.duration-btn').forEach(el => el.classList.remove('active'));
         btn.classList.add('active'); selectedDuration = val;
@@ -607,99 +490,76 @@
         if (val === 'custom') {
             refreshEndDateMin();
             const endInput = document.getElementById('inputEndDate');
-            if (endInput && !endInput.value) {
-                endInput.value = toDatetimeLocalValue(new Date(Date.now() + 60 * 60 * 1000));
-            }
+            if (endInput && !endInput.value) endInput.value = toDatetimeLocalValue(new Date(Date.now() + 60 * 60 * 1000));
         }
     }
-
     function validateCustomEndDate() {
         if (selectedDuration !== 'custom') return true;
-        const endInput = document.getElementById('inputEndDate');
-        const endVal = endInput?.value?.trim();
-        if (!endVal) {
-            alert('마감 일시를 선택해 주세요.');
-            return false;
-        }
+        const endInput = document.getElementById('inputEndDate'); const endVal = endInput?.value?.trim();
+        if (!endVal) { alert('마감 일시를 선택해 주세요.'); return false; }
         const end = new Date(endVal);
-        if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
-            alert('마감 일시는 현재 시간 이후로만 설정할 수 있습니다.');
-            return false;
-        }
-        const maxMs = getMaxEndDate().getTime();
-        if (end.getTime() > maxMs) {
-            alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.');
-            if (endInput) endInput.value = '';
-            return false;
-        }
+        if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) { alert('마감 일시는 현재 시간 이후로만 설정할 수 있습니다.'); return false; }
+        if (end.getTime() > getMaxEndDate().getTime()) { alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.'); if (endInput) endInput.value = ''; return false; }
         return true;
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        refreshEndDateMin();
-        loadCategories();
-        renderThumbMockGrids();
-        const endInput = document.getElementById('inputEndDate');
-        if (endInput) {
-            endInput.addEventListener('change', resetCustomEndDateIfInvalid);
-            endInput.addEventListener('input', resetCustomEndDateIfInvalid);
-        }
-    });
-
-    // 💡 미디어 업로드 관리 변수
-    let currentMode = 'text';
+    // ==========================================
+    // 2. 미디어 업로드 및 썸네일 팔레트 엔진 튜닝
+    // ==========================================
+    let currentMode = 'text'; // 기본값을 텍스트 카드로 세팅
     let currentOri = 'horizontal';
     let uploadStatus = { single: false, vsA: false, vsB: false };
     let uploadFiles = { single: null, vsA: null, vsB: null };
     const PIXABAY_API_KEY = '40186208-724589fd7d554bc2fef7a0b7b';
     const GIPHY_API_KEY = 'QkcJRijkCEnyAQ7Q2tJ1g81hVQh6zvSY';
 
-    /** @type {{ type: 'none'|'file'|'url'|'css', file: File|null, url: string|null, css: string|null }} */
     let createThumbnailState = { type: 'none', file: null, url: null, css: null };
+    let selectedThumbFont = 'Pretendard';
+    let selectedTextCardColor = '#BAE1FF';
 
+    // 🎨 5x5 파스텔톤 썸네일 전용 25색 팔레트 (블랙/그레이 제외)
     const THUMB_COLOR_PRESETS = [
-        '#09090b', '#18181b', '#27272a', '#39ff14',
-        '#ff007f', '#00f0ff', '#ffcc00', '#a855f7',
-        '#ef4444', '#3b82f6', '#14b8a6', '#f97316',
-        'linear-gradient(135deg, #39ff14 0%, #aaff00 100%)',
-        'linear-gradient(135deg, #ff007f 0%, #ffcc00 100%)',
-        'linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%)',
-        'linear-gradient(135deg, #09090b 0%, #27272a 100%)',
+        '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF',
+        '#E6B3FF', '#FFB3E6', '#FFD1B3', '#E6FFB3', '#B3FFE6',
+        '#B3D1FF', '#D1B3FF', '#FFC4C4', '#F4DFCD', '#D4F0F0',
+        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+        'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+        'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
+        'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',
+        'linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)',
+        'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+        'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+        'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+        'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
+    ];
+
+    // 🎨 4x2 파스텔톤 텍스트 카드 전용 8색 팔레트
+    const TEXT_CARD_COLORS = [
+        '#FFB3BA', '#BAE1FF', '#BAFFC9', '#E6B3FF',
+        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+        'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+        'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+        'linear-gradient(135deg, #f6d365 0%, #fda085 100%)'
     ];
 
     function setCreateThumbnailState(type, payload) {
         createThumbnailState = { type: type || 'none', file: null, url: null, css: null };
-        if (type === 'file' && payload instanceof File) {
-            createThumbnailState.file = payload;
-        } else if (type === 'url' && payload) {
-            createThumbnailState.url = String(payload).trim();
-        } else if (type === 'css' && payload) {
-            createThumbnailState.css = String(payload).trim();
-        }
+        if (type === 'file' && payload instanceof File) createThumbnailState.file = payload;
+        else if (type === 'url' && payload) createThumbnailState.url = String(payload).trim();
+        else if (type === 'css' && payload) createThumbnailState.css = String(payload).trim();
     }
-
     window.getPickleCreateThumbnailState = function () {
-        return {
-            type: createThumbnailState.type,
-            file: createThumbnailState.file,
-            url: createThumbnailState.url,
-            css: createThumbnailState.css,
-        };
+        return { type: createThumbnailState.type, file: createThumbnailState.file, url: createThumbnailState.url, css: createThumbnailState.css };
     };
 
-    function resetThumbPreviewBoxStyles(box) {
-        box.style.background = '';
-        box.style.backgroundColor = '';
-        box.style.backgroundImage = '';
-    }
+    function resetThumbPreviewBoxStyles(box) { box.style.background = ''; box.style.backgroundColor = ''; box.style.backgroundImage = ''; }
 
     function applyThumbPreviewToBox(box, mode, value) {
         resetThumbPreviewBoxStyles(box);
         if (mode === 'url') {
-            box.style.backgroundColor = '#0f0f11';
-            box.style.backgroundImage = 'url("' + value + '")';
-            box.style.backgroundSize = 'cover';
-            box.style.backgroundPosition = 'center';
+            box.style.backgroundColor = '#0f0f11'; box.style.backgroundImage = 'url("' + value + '")';
+            box.style.backgroundSize = 'cover'; box.style.backgroundPosition = 'center';
         } else if (mode === 'css') {
             box.style.background = value;
         }
@@ -707,367 +567,44 @@
     }
 
     function closeAllCreateSheets() {
-        const categorySheet = document.getElementById('categorySheet');
-        const categoryOverlay = document.getElementById('categoryOverlay');
-        if (categorySheet) categorySheet.classList.remove('open');
-        if (categoryOverlay) categoryOverlay.classList.remove('open');
-        closeThumbnailSheet(false);
-        document.body.style.overflow = '';
+        const categorySheet = document.getElementById('categorySheet'); const categoryOverlay = document.getElementById('categoryOverlay');
+        if (categorySheet) categorySheet.classList.remove('open'); if (categoryOverlay) categoryOverlay.classList.remove('open');
+        closeThumbnailSheet(false); document.body.style.overflow = '';
     }
-
     function toggleCategorySheet() {
-        const overlay = document.getElementById('categoryOverlay');
-        const sheet = document.getElementById('categorySheet');
-        const willOpen = !sheet.classList.contains('open');
-        closeThumbnailSheet(false);
-        sheet.classList.toggle('open');
-        overlay.classList.toggle('open');
-        document.body.style.overflow = willOpen ? 'hidden' : '';
+        const overlay = document.getElementById('categoryOverlay'); const sheet = document.getElementById('categorySheet');
+        const willOpen = !sheet.classList.contains('open'); closeThumbnailSheet(false);
+        sheet.classList.toggle('open'); overlay.classList.toggle('open'); document.body.style.overflow = willOpen ? 'hidden' : '';
     }
-
     function openThumbnailSheet() {
-        closeAllCreateSheets();
-        document.getElementById('thumbnailOverlay').classList.add('open');
-        document.getElementById('thumbnailSheet').classList.add('open');
-        document.body.style.overflow = 'hidden';
+        closeAllCreateSheets(); document.getElementById('thumbnailOverlay').classList.add('open');
+        document.getElementById('thumbnailSheet').classList.add('open'); document.body.style.overflow = 'hidden';
     }
-
     function closeThumbnailSheet(restoreScroll) {
-        const overlay = document.getElementById('thumbnailOverlay');
-        const sheet = document.getElementById('thumbnailSheet');
-        if (overlay) overlay.classList.remove('open');
-        if (sheet) sheet.classList.remove('open');
+        const overlay = document.getElementById('thumbnailOverlay'); const sheet = document.getElementById('thumbnailSheet');
+        if (overlay) overlay.classList.remove('open'); if (sheet) sheet.classList.remove('open');
         if (restoreScroll !== false) {
             const categoryOpen = document.getElementById('categorySheet')?.classList.contains('open');
             document.body.style.overflow = categoryOpen ? 'hidden' : '';
         }
     }
-
     function switchThumbTab(tabKey) {
-        document.querySelectorAll('.thumb-tab').forEach(function (btn) {
-            btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey);
-        });
-        document.querySelectorAll('.thumb-tab-panel').forEach(function (panel) {
-            panel.classList.remove('active');
-        });
-        const panelMap = {
-            album: 'thumbPanelAlbum',
-            free: 'thumbPanelFree',
-            gif: 'thumbPanelGif',
-            color: 'thumbPanelColor',
-        };
-        const panel = document.getElementById(panelMap[tabKey]);
-        if (panel) panel.classList.add('active');
+        document.querySelectorAll('.thumb-tab').forEach(function (btn) { btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey); });
+        document.querySelectorAll('.thumb-tab-panel').forEach(function (panel) { panel.classList.remove('active'); });
+        const panelMap = { album: 'thumbPanelAlbum', free: 'thumbPanelFree', gif: 'thumbPanelGif', color: 'thumbPanelColor' };
+        const panel = document.getElementById(panelMap[tabKey]); if (panel) panel.classList.add('active');
     }
 
-    function initThumbnailUi() {
-        renderThumbAlbumPanel();
-        renderThumbColorGrid('thumbPanelColor', THUMB_COLOR_PRESETS);
-        bindThumbSearchInputs();
-    }
-
-    function renderThumbAlbumPanel() {
-        renderThumbImageGrid('thumbPanelAlbum', [{ type: 'picker' }], true);
-    }
-
-    function bindThumbSearchInputs() {
-        const freeInput = document.getElementById('thumbFreeSearch');
-        const gifInput = document.getElementById('thumbGifSearch');
-        if (freeInput) {
-            freeInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    searchPixabayPhotos(freeInput.value);
-                }
-            });
-        }
-        if (gifInput) {
-            gifInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    searchGiphyGifs(gifInput.value);
-                }
-            });
-        }
-    }
-
-    function setThumbSearchStatus(elementId, message, variant) {
-        const el = document.getElementById(elementId);
-        if (!el) return;
-        el.textContent = message;
-        el.classList.remove('is-loading', 'is-error', 'thumb-search-hint');
-        el.classList.add('thumb-search-status');
-        if (variant === 'loading') el.classList.add('is-loading');
-        if (variant === 'error') el.classList.add('is-error');
-        if (!variant) el.classList.add('thumb-search-hint');
-    }
-
-    async function searchPixabayPhotos(query) {
-        const q = String(query || '').trim();
-        const grid = document.getElementById('thumbFreeGrid');
-        if (!q) {
-            setThumbSearchStatus('thumbFreeHint', '검색어를 입력해 주세요.', 'error');
-            return;
-        }
-        if (!PIXABAY_API_KEY || PIXABAY_API_KEY === 'YOUR_PIXABAY_KEY') {
-            setThumbSearchStatus('thumbFreeHint', 'Pixabay API 키를 설정해 주세요.', 'error');
-            return;
-        }
-        if (grid) grid.innerHTML = '';
-        setThumbSearchStatus('thumbFreeHint', '무료 사진 검색 중...', 'loading');
-        try {
-            const apiUrl =
-                'https://pixabay.com/api/?key=' + encodeURIComponent(PIXABAY_API_KEY) +
-                '&q=' + encodeURIComponent(q) +
-                '&image_type=photo&orientation=horizontal&per_page=20&safesearch=true';
-            const res = await fetch(apiUrl);
-            if (!res.ok) throw new Error('Pixabay API 오류 (' + res.status + ')');
-            const data = await res.json();
-            const urls = (data.hits || [])
-                .map(function (hit) { return hit.webformatURL || hit.largeImageURL || hit.previewURL; })
-                .filter(Boolean);
-            renderThumbSearchResults('thumbFreeGrid', urls);
-            if (!urls.length) {
-                setThumbSearchStatus('thumbFreeHint', '"' + q + '" 검색 결과가 없습니다.', 'error');
-                return;
-            }
-            setThumbSearchStatus('thumbFreeHint', urls.length + '개의 무료 사진을 찾았습니다.', null);
-        } catch (err) {
-            console.error('[create] Pixabay search failed:', err);
-            setThumbSearchStatus('thumbFreeHint', err.message || '무료 사진 검색에 실패했습니다.', 'error');
-        }
-    }
-
-    async function searchGiphyGifs(query) {
-        const q = String(query || '').trim();
-        const grid = document.getElementById('thumbGifGrid');
-        if (!q) {
-            setThumbSearchStatus('thumbGifHint', '검색어를 입력해 주세요.', 'error');
-            return;
-        }
-        if (!GIPHY_API_KEY || GIPHY_API_KEY === 'YOUR_GIPHY_KEY') {
-            setThumbSearchStatus('thumbGifHint', 'Giphy API 키를 설정해 주세요.', 'error');
-            return;
-        }
-        if (grid) grid.innerHTML = '';
-        setThumbSearchStatus('thumbGifHint', '움짤 검색 중...', 'loading');
-        try {
-            const apiUrl =
-                'https://api.giphy.com/v1/gifs/search?api_key=' + encodeURIComponent(GIPHY_API_KEY) +
-                '&q=' + encodeURIComponent(q) +
-                '&limit=20&rating=pg&lang=ko';
-            const res = await fetch(apiUrl);
-            if (!res.ok) throw new Error('Giphy API 오류 (' + res.status + ')');
-            const data = await res.json();
-            const urls = (data.data || [])
-                .map(function (gif) {
-                    return (gif.images && (gif.images.fixed_height_small?.url || gif.images.fixed_height?.url || gif.images.original?.url)) || '';
-                })
-                .filter(Boolean);
-            renderThumbSearchResults('thumbGifGrid', urls, 'GIF');
-            if (!urls.length) {
-                setThumbSearchStatus('thumbGifHint', '"' + q + '" 검색 결과가 없습니다.', 'error');
-                return;
-            }
-            setThumbSearchStatus('thumbGifHint', urls.length + '개의 움짤을 찾았습니다.', null);
-        } catch (err) {
-            console.error('[create] Giphy search failed:', err);
-            setThumbSearchStatus('thumbGifHint', err.message || '움짤 검색에 실패했습니다.', 'error');
-        }
-    }
-
-    function renderThumbSearchResults(gridId, urls, badge) {
-        const grid = document.getElementById(gridId);
-        if (!grid) return;
-        grid.innerHTML = '';
-        urls.forEach(function (url) {
-            const cell = document.createElement('button');
-            cell.type = 'button';
-            cell.className = 'thumb-grid-item';
-            cell.style.position = 'relative';
-            cell.innerHTML =
-                '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' +
-                (badge ? '<span style="position:absolute;bottom:6px;right:6px;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + badge + '</span>' : '');
-            cell.addEventListener('click', function () {
-                applyThumbPreviewImage(url);
-            });
-            grid.appendChild(cell);
-        });
-    }
-
-    function renderThumbMockGrids() {
-        initThumbnailUi();
-    }
-
-    function renderThumbImageGrid(panelId, items, includePicker) {
-        const panel = document.getElementById(panelId);
-        if (!panel) return;
-        panel.innerHTML = '<div class="thumb-grid"></div>';
-        const grid = panel.querySelector('.thumb-grid');
-
-        items.forEach(function (item) {
-            if (item.type === 'picker') {
-                const picker = document.createElement('button');
-                picker.type = 'button';
-                picker.className = 'thumb-grid-item thumb-grid-item--picker';
-                picker.innerHTML = '<span>📷</span><span>앨범에서<br>선택</span>';
-                picker.addEventListener('click', function () {
-                    document.getElementById('thumbAlbumInput')?.click();
-                });
-                grid.appendChild(picker);
-                return;
-            }
-
-            const cell = document.createElement('button');
-            cell.type = 'button';
-            cell.className = 'thumb-grid-item';
-            cell.innerHTML = '<img src="' + item.url + '" alt="" loading="lazy">' +
-                (item.badge ? '<span style="position:absolute;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + item.badge + '</span>' : '');
-            cell.style.position = 'relative';
-            cell.addEventListener('click', function () {
-                applyThumbPreviewImage(item.url);
-            });
-            grid.appendChild(cell);
-        });
-
-        if (!includePicker && !items.length) {
-            panel.innerHTML = '<p style="color:#71717a;font-size:0.85rem;text-align:center;margin:0;">표시할 항목이 없습니다.</p>';
-        }
-    }
-
-    function renderThumbColorGrid(panelId, colors) {
-        const panel = document.getElementById(panelId);
-        if (!panel) return;
-        panel.innerHTML = '<div class="thumb-color-grid"></div>';
-        const grid = panel.querySelector('.thumb-color-grid');
-        colors.forEach(function (color) {
-            const swatch = document.createElement('button');
-            swatch.type = 'button';
-            swatch.className = 'thumb-color-item';
-            swatch.style.background = color;
-            swatch.setAttribute('aria-label', '배경 ' + color);
-            swatch.addEventListener('click', function () {
-                applyThumbPreviewCss(color);
-            });
-            grid.appendChild(swatch);
-        });
-    }
-
-    function applyThumbPreviewImage(url) {
-        const box = document.getElementById('thumbPreviewBox');
-        if (!box || !url) return;
-        setCreateThumbnailState('url', url);
-        applyThumbPreviewToBox(box, 'url', url);
-        closeThumbnailSheet();
-    }
-
-    function applyThumbPreviewCss(cssValue) {
-        const box = document.getElementById('thumbPreviewBox');
-        if (!box || !cssValue) return;
-        setCreateThumbnailState('css', cssValue);
-        applyThumbPreviewToBox(box, 'css', cssValue);
-        
-        document.getElementById('thumbPreviewPlaceholder').style.display = 'none';
-        document.getElementById('thumbLiveText').style.display = 'flex';
-        
-        if (typeof updateLivePreviews === 'function') updateLivePreviews();
-        closeThumbnailSheet();
-    }
-
-    const CREATE_THUMB_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const CREATE_THUMB_MAX_BYTES = 10 * 1024 * 1024;
-
-    function validateCreateThumbnailFile(file) {
-        if (!file || typeof File === 'undefined' || !(file instanceof File)) {
-            return '썸네일 파일이 올바르지 않습니다.';
-        }
-        if (!file.size) {
-            return '비어 있는 파일은 업로드할 수 없습니다.';
-        }
-        if (file.size > CREATE_THUMB_MAX_BYTES) {
-            return '사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.';
-        }
-        if (!CREATE_THUMB_ALLOWED_TYPES.includes(file.type)) {
-            return 'JPG, PNG, WEBP, GIF 이미지만 썸네일로 업로드할 수 있습니다.';
-        }
-        return null;
-    }
-
-    function applyThumbPreviewFromFile(file) {
-        const box = document.getElementById('thumbPreviewBox');
-        if (!box || !file) return;
-        const objectUrl = URL.createObjectURL(file);
-        setCreateThumbnailState('file', file);
-        applyThumbPreviewToBox(box, 'url', objectUrl);
-        closeThumbnailSheet();
-    }
-
-    function onThumbAlbumFileSelected(input) {
-        const pickedThumbFile = input.files?.[0];
-        if (!pickedThumbFile) return;
-        const thumbValidationError = validateCreateThumbnailFile(pickedThumbFile);
-        if (thumbValidationError) {
-            alert(thumbValidationError);
-            input.value = '';
-            return;
-        }
-        try {
-            if (window.PickleMedia?.validateImageFile) {
-                window.PickleMedia.validateImageFile(pickedThumbFile);
-            }
-        } catch (err) {
-            alert(err.message || '이미지를 선택할 수 없습니다.');
-            input.value = '';
-            return;
-        }
-        applyThumbPreviewFromFile(pickedThumbFile);
-        input.value = '';
-    }
-
-    function resetUploadState() {
-        uploadStatus = { single: false, vsA: false, vsB: false };
-        uploadFiles = { single: null, vsA: null, vsB: null };
-    }
-
-    function getMediaLayout() {
-        const checked = document.querySelector('input[name="media_layout"]:checked');
-        return checked?.value === 'vertical' ? 'vertical' : 'horizontal';
-    }
-
-    function onMediaLayoutChange() {
-        currentOri = getMediaLayout();
-        renderUploadArea();
-    }
-
-    function setMainMode(mode) {
-        currentMode = mode;
-        resetUploadState(); 
-        document.getElementById('btnSingle').classList.remove('active', 'highlight');
-        document.getElementById('btnVs').classList.remove('active', 'highlight');
-        document.getElementById('btnText').classList.remove('active', 'highlight');
-        if(mode === 'single') document.getElementById('btnSingle').classList.add('active', 'highlight');
-        if(mode === 'vs') document.getElementById('btnVs').classList.add('active', 'highlight');
-        if(mode === 'text') document.getElementById('btnText').classList.add('active', 'highlight');
-
-        const layoutGroup = document.getElementById('mediaLayoutGroup');
-        if (layoutGroup) layoutGroup.style.display = (mode === 'text') ? 'none' : 'block';
-        renderUploadArea();
-    }
-
-    let selectedTextCardColor = '#18181b';
-    let selectedThumbFont = 'Pretendard';
-
-    function setThumbLiveFont(fontFamily, btn) {
-        document.querySelectorAll('#thumbFontGroup button').forEach(el => {
-            el.style.background = 'var(--card-bg)'; el.style.color = 'var(--text-main)';
-        });
-        btn.style.background = '#fff'; btn.style.color = '#000';
-        selectedThumbFont = fontFamily;
+    // 💡 썸네일 라이브 폰트 적용
+    window.setThumbLiveFont = function(fontFamily, btn) {
+        document.querySelectorAll('#thumbFontGroup .font-chip').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active'); selectedThumbFont = fontFamily;
         const txtEl = document.getElementById('thumbLiveText');
         if (txtEl) txtEl.style.fontFamily = fontFamily;
-    }
+    };
 
-    function updateLivePreviews() {
+    // 💡 텍스트 카드 라이브 실시간 입력 연동
+    window.updateLivePreviews = function() {
         const title = document.getElementById('inputTitle').value.trim();
         const txtEl = document.getElementById('thumbLiveText');
         if (txtEl && createThumbnailState.type === 'css') {
@@ -1079,37 +616,188 @@
             if (document.getElementById('textPreviewInnerA')) document.getElementById('textPreviewInnerA').textContent = valA;
             if (document.getElementById('textPreviewInnerB')) document.getElementById('textPreviewInnerB').textContent = valB;
         }
+    };
+
+    function initThumbnailUi() {
+        renderThumbAlbumPanel();
+        renderThumbColorGrid('thumbPanelColor', THUMB_COLOR_PRESETS);
+        bindThumbSearchInputs();
+    }
+    function renderThumbAlbumPanel() { renderThumbImageGrid('thumbPanelAlbum', [{ type: 'picker' }], true); }
+
+    function bindThumbSearchInputs() {
+        const freeInput = document.getElementById('thumbFreeSearch'); const gifInput = document.getElementById('thumbGifSearch');
+        if (freeInput) freeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchPixabayPhotos(freeInput.value); } });
+        if (gifInput) gifInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchGiphyGifs(gifInput.value); } });
+    }
+    function setThumbSearchStatus(elementId, message, variant) {
+        const el = document.getElementById(elementId); if (!el) return;
+        el.textContent = message; el.classList.remove('is-loading', 'is-error', 'thumb-search-hint'); el.classList.add('thumb-search-status');
+        if (variant === 'loading') el.classList.add('is-loading'); if (variant === 'error') el.classList.add('is-error');
+        if (!variant) el.classList.add('thumb-search-hint');
+    }
+    async function searchPixabayPhotos(query) {
+        const q = String(query || '').trim(); const grid = document.getElementById('thumbFreeGrid');
+        if (!q) { setThumbSearchStatus('thumbFreeHint', '검색어를 입력해 주세요.', 'error'); return; }
+        if (!PIXABAY_API_KEY || PIXABAY_API_KEY === 'YOUR_PIXABAY_KEY') { setThumbSearchStatus('thumbFreeHint', 'Pixabay API 키를 설정해 주세요.', 'error'); return; }
+        if (grid) grid.innerHTML = ''; setThumbSearchStatus('thumbFreeHint', '무료 사진 검색 중...', 'loading');
+        try {
+            const apiUrl = 'https://pixabay.com/api/?key=' + encodeURIComponent(PIXABAY_API_KEY) + '&q=' + encodeURIComponent(q) + '&image_type=photo&orientation=horizontal&per_page=20&safesearch=true';
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error('Pixabay API 오류 (' + res.status + ')');
+            const data = await res.json();
+            const urls = (data.hits || []).map(hit => hit.webformatURL || hit.largeImageURL || hit.previewURL).filter(Boolean);
+            renderThumbSearchResults('thumbFreeGrid', urls);
+            if (!urls.length) { setThumbSearchStatus('thumbFreeHint', '"' + q + '" 검색 결과가 없습니다.', 'error'); return; }
+            setThumbSearchStatus('thumbFreeHint', urls.length + '개의 무료 사진을 찾았습니다.', null);
+        } catch (err) { setThumbSearchStatus('thumbFreeHint', err.message || '무료 사진 검색에 실패했습니다.', 'error'); }
+    }
+    async function searchGiphyGifs(query) {
+        const q = String(query || '').trim(); const grid = document.getElementById('thumbGifGrid');
+        if (!q) { setThumbSearchStatus('thumbGifHint', '검색어를 입력해 주세요.', 'error'); return; }
+        if (!GIPHY_API_KEY || GIPHY_API_KEY === 'YOUR_GIPHY_KEY') { setThumbSearchStatus('thumbGifHint', 'Giphy API 키를 설정해 주세요.', 'error'); return; }
+        if (grid) grid.innerHTML = ''; setThumbSearchStatus('thumbGifHint', '움짤 검색 중...', 'loading');
+        try {
+            const apiUrl = 'https://api.giphy.com/v1/gifs/search?api_key=' + encodeURIComponent(GIPHY_API_KEY) + '&q=' + encodeURIComponent(q) + '&limit=20&rating=pg&lang=ko';
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error('Giphy API 오류 (' + res.status + ')');
+            const data = await res.json();
+            const urls = (data.data || []).map(gif => (gif.images && (gif.images.fixed_height_small?.url || gif.images.fixed_height?.url || gif.images.original?.url)) || '').filter(Boolean);
+            renderThumbSearchResults('thumbGifGrid', urls, 'GIF');
+            if (!urls.length) { setThumbSearchStatus('thumbGifHint', '"' + q + '" 검색 결과가 없습니다.', 'error'); return; }
+            setThumbSearchStatus('thumbGifHint', urls.length + '개의 움짤을 찾았습니다.', null);
+        } catch (err) { setThumbSearchStatus('thumbGifHint', err.message || '움짤 검색에 실패했습니다.', 'error'); }
+    }
+    function renderThumbSearchResults(gridId, urls, badge) {
+        const grid = document.getElementById(gridId); if (!grid) return; grid.innerHTML = '';
+        urls.forEach(function (url) {
+            const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item'; cell.style.position = 'relative';
+            cell.innerHTML = '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' + (badge ? '<span style="position:absolute;bottom:6px;right:6px;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + badge + '</span>' : '');
+            cell.addEventListener('click', function () { applyThumbPreviewImage(url); });
+            grid.appendChild(cell);
+        });
     }
 
-    function selectTextCardColor(color) {
-        selectedTextCardColor = color;
-        document.querySelectorAll('.text-color-dot').forEach(el => el.style.borderColor = 'transparent');
-        if(event) event.target.style.borderColor = '#fff';
-        if (document.getElementById('textPreviewCardA')) document.getElementById('textPreviewCardA').style.background = color;
-        if (document.getElementById('textPreviewCardB')) document.getElementById('textPreviewCardB').style.background = color;
+    function renderThumbImageGrid(panelId, items, includePicker) {
+        const panel = document.getElementById(panelId); if (!panel) return;
+        panel.innerHTML = '<div class="thumb-grid"></div>'; const grid = panel.querySelector('.thumb-grid');
+        items.forEach(function (item) {
+            if (item.type === 'picker') {
+                const picker = document.createElement('button'); picker.type = 'button'; picker.className = 'thumb-grid-item thumb-grid-item--picker';
+                picker.innerHTML = '<span>📷</span><span>앨범에서<br>선택</span>';
+                picker.addEventListener('click', function () { document.getElementById('thumbAlbumInput')?.click(); });
+                grid.appendChild(picker); return;
+            }
+            const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item';
+            cell.innerHTML = '<img src="' + item.url + '" alt="" loading="lazy">' + (item.badge ? '<span style="position:absolute;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + item.badge + '</span>' : '');
+            cell.style.position = 'relative'; cell.addEventListener('click', function () { applyThumbPreviewImage(item.url); });
+            grid.appendChild(cell);
+        });
     }
 
+    function renderThumbColorGrid(panelId, colors) {
+        const panel = document.getElementById(panelId); if (!panel) return;
+        let existingGrid = panel.querySelector('.thumb-color-grid');
+        if (!existingGrid) {
+            existingGrid = document.createElement('div');
+            existingGrid.className = 'thumb-color-grid';
+            panel.appendChild(existingGrid);
+        }
+        existingGrid.innerHTML = '';
+        colors.forEach(function (color) {
+            const swatch = document.createElement('button'); swatch.type = 'button'; swatch.className = 'thumb-color-item'; swatch.style.background = color; swatch.setAttribute('aria-label', '배경 ' + color);
+            swatch.addEventListener('click', function () { applyThumbPreviewCss(color); });
+            existingGrid.appendChild(swatch);
+        });
+    }
+
+    function applyThumbPreviewImage(url) {
+        const box = document.getElementById('thumbPreviewBox'); if (!box || !url) return;
+        setCreateThumbnailState('url', url); applyThumbPreviewToBox(box, 'url', url);
+        document.getElementById('thumbLiveText').style.display = 'none';
+        closeThumbnailSheet();
+    }
+
+    // 💡 썸네일 색상 선택 시 라이브 텍스트 보이기 연동
+    function applyThumbPreviewCss(cssValue) {
+        const box = document.getElementById('thumbPreviewBox'); if (!box || !cssValue) return;
+        setCreateThumbnailState('css', cssValue); applyThumbPreviewToBox(box, 'css', cssValue);
+        document.getElementById('thumbPreviewPlaceholder').style.display = 'none';
+        document.getElementById('thumbLiveText').style.display = 'flex';
+        updateLivePreviews(); closeThumbnailSheet();
+    }
+
+    const CREATE_THUMB_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const CREATE_THUMB_MAX_BYTES = 10 * 1024 * 1024;
+    function validateCreateThumbnailFile(file) {
+        if (!file || typeof File === 'undefined' || !(file instanceof File)) return '썸네일 파일이 올바르지 않습니다.';
+        if (!file.size) return '비어 있는 파일은 업로드할 수 없습니다.';
+        if (file.size > CREATE_THUMB_MAX_BYTES) return '사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.';
+        if (!CREATE_THUMB_ALLOWED_TYPES.includes(file.type)) return 'JPG, PNG, WEBP, GIF 이미지만 썸네일로 업로드할 수 있습니다.';
+        return null;
+    }
+    function applyThumbPreviewFromFile(file) {
+        const box = document.getElementById('thumbPreviewBox'); if (!box || !file) return;
+        const objectUrl = URL.createObjectURL(file); setCreateThumbnailState('file', file);
+        applyThumbPreviewToBox(box, 'url', objectUrl);
+        document.getElementById('thumbLiveText').style.display = 'none';
+        closeThumbnailSheet();
+    }
+    function onThumbAlbumFileSelected(input) {
+        const pickedThumbFile = input.files?.[0]; if (!pickedThumbFile) return;
+        const thumbValidationError = validateCreateThumbnailFile(pickedThumbFile);
+        if (thumbValidationError) { alert(thumbValidationError); input.value = ''; return; }
+        try { if (window.PickleMedia?.validateImageFile) window.PickleMedia.validateImageFile(pickedThumbFile); } catch (err) { alert(err.message || '이미지를 선택할 수 없습니다.'); input.value = ''; return; }
+        applyThumbPreviewFromFile(pickedThumbFile); input.value = '';
+    }
+
+    function resetUploadState() {
+        uploadStatus = { single: false, vsA: false, vsB: false }; uploadFiles = { single: null, vsA: null, vsB: null };
+    }
+    function getMediaLayout() {
+        const checked = document.querySelector('input[name="media_layout"]:checked'); return checked?.value === 'vertical' ? 'vertical' : 'horizontal';
+    }
+    function onMediaLayoutChange() { currentOri = getMediaLayout(); renderUploadArea(); }
+
+    function setMainMode(mode) {
+        currentMode = mode; resetUploadState(); 
+        document.getElementById('btnSingle').classList.remove('active', 'highlight'); document.getElementById('btnVs').classList.remove('active', 'highlight'); document.getElementById('btnText').classList.remove('active', 'highlight');
+        if(mode === 'single') document.getElementById('btnSingle').classList.add('active', 'highlight');
+        if(mode === 'vs') document.getElementById('btnVs').classList.add('active', 'highlight');
+        if(mode === 'text') document.getElementById('btnText').classList.add('active', 'highlight');
+
+        const layoutGroup = document.getElementById('mediaLayoutGroup');
+        if (layoutGroup) layoutGroup.style.display = (mode === 'text') ? 'none' : 'block';
+        renderUploadArea();
+    }
+
+    window.selectTextCardColor = function(color) {
+        selectedTextCardColor = color; renderUploadArea();
+    };
+
+    // 💡 텍스트 카드 UI 및 미디어 업로드 통합 렌더링
     function renderUploadArea() {
         const container = document.getElementById('uploadContainer');
         container.innerHTML = ''; 
-        const layout = document.querySelector('input[name="media_layout"]:checked')?.value || 'horizontal';
-        currentOri = layout;
 
         if (currentMode === 'text') {
-            const paletteHtml = THUMB_COLOR_PRESETS.map((c, idx) => {
-                const border = idx === 0 ? '#fff' : 'transparent';
-                return `<div class="text-color-dot" style="width:30px;height:30px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${border};" onclick="selectTextCardColor('${c}')"></div>`;
+            const paletteHtml = TEXT_CARD_COLORS.map((c) => {
+                const border = c === selectedTextCardColor ? '#fff' : 'transparent';
+                return `<div class="text-color-dot" style="width:34px;height:34px;border-radius:10px;background:${c};cursor:pointer;border:2px solid ${border};box-sizing:border-box;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05);" onclick="selectTextCardColor('${c}')"></div>`;
             }).join('');
 
             container.innerHTML = `
-                <div style="margin-bottom:12px;"><span class="form-label" style="margin-bottom:5px;">텍스트 카드 테마 컬러</span><div style="display:flex;gap:8px;flex-wrap:wrap;">${paletteHtml}</div></div>
-                <div class="vs-upload-group media-layout-vertical" style="gap:10px;margin-top:10px; flex-direction:row;">
+                <div style="margin-bottom:16px;">
+                    <span class="text-card-label">텍스트 카드 테마 컬러</span>
+                    <div class="text-color-grid">${paletteHtml}</div>
+                </div>
+                <div class="vs-upload-group media-layout-vertical" style="gap:10px; flex-direction:row; align-items:stretch; margin-top:8px;">
                     <div style="flex:1;aspect-ratio:9/16;background:${selectedTextCardColor};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardA">
-                        <div id="textPreviewInnerA" style="color:#0a0a0c;font-size:1.1rem;font-weight:900;text-align:center;word-break:keep-all;">A 선택지</div>
+                        <div id="textPreviewInnerA" style="color:#0a0a0c;font-size:1.15rem;font-weight:900;text-align:center;word-break:keep-all;line-height:1.4;">A 선택지</div>
                     </div>
-                    <div class="vs-badge-upload" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:linear-gradient(135deg,var(--neon-blue),var(--neon-pink)); color:#000; width:40px;height:40px; display:flex; justify-content:center; align-items:center; border-radius:50%; font-family:'Black Han Sans', sans-serif; font-size:0.9rem; z-index:10;">VS</div>
+                    <div class="vs-badge-upload">VS</div>
                     <div style="flex:1;aspect-ratio:9/16;background:${selectedTextCardColor};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardB">
-                        <div id="textPreviewInnerB" style="color:#0a0a0c;font-size:1.1rem;font-weight:900;text-align:center;word-break:keep-all;">B 선택지</div>
+                        <div id="textPreviewInnerB" style="color:#0a0a0c;font-size:1.15rem;font-weight:900;text-align:center;word-break:keep-all;line-height:1.4;">B 선택지</div>
                     </div>
                 </div>
             `;
@@ -1117,209 +805,153 @@
             return;
         }
 
+        const layout = getMediaLayout(); currentOri = layout;
         const sizeHint = '<p class="upload-size-hint">(※ 최대 10MB · 업로드 시 자동 압축)</p>';
+
         const makeSlot = (id, label, ratioClass, iconColor) => `
             <div class="media-input-wrap">
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="file_${id}" onchange="onPhotoSelected('${id}', this)">
-                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}')">
+                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}', this)">
                     <div class="icon-plus" style="color:${iconColor || 'var(--text-sub)'};">➕</div>
                     <div class="upload-txt">${label} 사진 첨부</div>
                 </div>
-                <input type="url" class="url-input" id="url_${id}" placeholder="🔗 또는 영상 URL 입력 (유튜브 등)" oninput="checkUrlInput('${id}')">
+                <input type="url" class="url-input" id="url_${id}" placeholder="🔗 또는 영상 URL 입력" oninput="checkUrlInput('${id}')">
             </div>
         `;
 
         if (currentMode === 'single') {
             const ratioClass = layout === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
             container.innerHTML = sizeHint + makeSlot('single', '미디어', ratioClass);
-        } else if (currentMode === 'vs') {
+        }
+
+        if (currentMode === 'vs') {
             const layoutClass = layout === 'vertical' ? 'media-layout-vertical vertical' : 'media-layout-horizontal';
             const ratioClass = layout === 'vertical' ? 'ratio-9-16' : 'ratio-16-9';
             container.innerHTML = sizeHint + `
                 <div class="vs-upload-group ${layoutClass}">
-                    ${makeSlot('vsA', 'A', ratioClass, 'var(--neon-blue)')}
+                    ${makeSlot('vsA', 'A', ratioClass, 'var(--point-blue)')}
                     <div class="vs-badge-upload">VS</div>
-                    ${makeSlot('vsB', 'B', ratioClass, 'var(--neon-pink)')}
+                    ${makeSlot('vsB', 'B', ratioClass, 'var(--point-pink)')}
                 </div>`;
         }
     }
-    renderUploadArea();
 
-    // 💡 사진 업로드 클릭 시 로직 (URL이 있으면 차단)
     function mockUpload(type) {
         const urlInput = document.getElementById('url_' + type);
-        if (urlInput && urlInput.value.trim() !== '') {
-            alert('이미 영상 URL이 입력되어 있습니다.\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.');
-            return;
-        }
+        if (urlInput && urlInput.value.trim() !== '') { alert('이미 영상 URL이 입력되어 있습니다.\n사진을 첨부하시려면 먼저 입력된 URL을 지워주세요.'); return; }
         document.getElementById('file_' + type)?.click();
     }
 
     function onPhotoSelected(type, input) {
-        const file = input.files?.[0];
-        if (!file) return;
-
+        const file = input.files?.[0]; if (!file) return;
         const MAX_BYTES = 10 * 1024 * 1024;
-        if (file.size > MAX_BYTES) {
-            alert('사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.');
-            input.value = '';
-            return;
-        }
-
-        try {
-            if (window.PickleMedia?.validateImageFile) {
-                window.PickleMedia.validateImageFile(file);
-            }
-        } catch (err) {
-            alert(err.message || '이미지를 선택할 수 없습니다.');
-            input.value = '';
-            return;
-        }
-
-        uploadFiles[type] = file;
-        uploadStatus[type] = true;
-
+        if (file.size > MAX_BYTES) { alert('사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.'); input.value = ''; return; }
+        try { if (window.PickleMedia?.validateImageFile) window.PickleMedia.validateImageFile(file); } catch (err) { alert(err.message || '이미지를 선택할 수 없습니다.'); input.value = ''; return; }
+        uploadFiles[type] = file; uploadStatus[type] = true;
         const box = document.getElementById('box_' + type);
-        box.classList.add('uploaded');
-        box.style.opacity = '1';
-        box.style.border = '';
-        box.innerHTML = '<div class="icon-plus">✅</div><div class="upload-txt">사진 첨부 완료!</div>';
+        box.classList.add('uploaded'); box.style.opacity = '1'; box.style.border = '';
+        box.innerHTML = '<div class="icon-plus" style="color:var(--point-green);">✅</div><div class="upload-txt" style="color:var(--point-green);">첨부 완료!</div>';
     }
 
-    // 💡 영상 URL 입력 시 로직 (사진 업로드 상자 비활성화 디자인)
     function checkUrlInput(type) {
-        const urlInput = document.getElementById('url_' + type);
-        const box = document.getElementById('box_' + type);
-        const fileInput = document.getElementById('file_' + type);
-        
+        const urlInput = document.getElementById('url_' + type); const box = document.getElementById('box_' + type); const fileInput = document.getElementById('file_' + type);
         if(urlInput.value.trim() !== '') {
-            uploadStatus[type] = false;
-            uploadFiles[type] = null;
-            if (fileInput) fileInput.value = '';
-            box.classList.remove('uploaded');
-            box.style.border = '2px dashed #3f3f46';
-            box.style.opacity = '0.4';
-            box.innerHTML = '<div class="icon-plus">🔗</div><div class="upload-txt">영상 링크 적용됨</div>';
+            uploadStatus[type] = false; uploadFiles[type] = null; if (fileInput) fileInput.value = '';
+            box.classList.remove('uploaded'); box.style.border = '2px dashed #3f3f46'; box.style.opacity = '0.4';
+            box.innerHTML = '<div class="icon-plus" style="color:var(--text-sub);">🔗</div><div class="upload-txt" style="color:var(--text-sub);">링크 적용됨</div>';
         } else {
-            box.style.opacity = '1';
-            box.style.border = '2px dashed #52525b';
-            let iconColor = type === 'vsA' ? 'var(--neon-blue)' : (type === 'vsB' ? 'var(--neon-pink)' : 'var(--text-sub)');
+            box.style.opacity = '1'; box.style.border = '2px dashed #52525b';
+            let iconColor = type === 'vsA' ? 'var(--point-blue)' : (type === 'vsB' ? 'var(--point-pink)' : 'var(--text-sub)');
             let label = type === 'vsA' ? 'A' : (type === 'vsB' ? 'B' : '가로/세로');
-            box.innerHTML = `<div class="icon-plus" style="color:${iconColor};">➕</div><div class="upload-txt">${label} 사진 첨부</div>`;
+            box.innerHTML = `<div class="icon-plus" style="color:${iconColor};">➕</div><div class="upload-txt" style="color:var(--text-main);">${label} 사진 첨부</div>`;
         }
     }
 
-    // 🎨 캔버스 렌더링 코어 로직 (이미지 굽기)
+    // ==========================================
+    // 3. Canvas 텍스트 이미지 변환 및 Supabase 제출 코어
+    // ==========================================
     function makeCanvasImage(text, bgColor, width, height, fontStr) {
         return new Promise(resolve => {
-            const canvas = document.createElement('canvas');
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext('2d');
-
+            const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d');
             if (bgColor.includes('gradient')) {
                 const grad = ctx.createLinearGradient(0, 0, width, height);
-                grad.addColorStop(0, '#39ff14'); grad.addColorStop(1, '#aaff00');
-                if(bgColor.includes('#ff007f')) { grad.addColorStop(0, '#ff007f'); grad.addColorStop(1, '#ffcc00'); }
-                else if(bgColor.includes('#00f0ff')) { grad.addColorStop(0, '#00f0ff'); grad.addColorStop(1, '#3b82f6'); }
-                else if(bgColor.includes('#09090b')) { grad.addColorStop(0, '#09090b'); grad.addColorStop(1, '#27272a'); }
+                const hexMatch = bgColor.match(/#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}/ig);
+                if(hexMatch && hexMatch.length >= 2) { grad.addColorStop(0, hexMatch[0]); grad.addColorStop(1, hexMatch[1]); }
+                else { grad.addColorStop(0, '#ff9a9e'); grad.addColorStop(1, '#fecfef'); }
                 ctx.fillStyle = grad;
-            } else {
-                ctx.fillStyle = bgColor;
-            }
+            } else { ctx.fillStyle = bgColor; }
             ctx.fillRect(0, 0, width, height);
-
-            ctx.fillStyle = '#0a0a0c'; // 글자색
-            ctx.font = fontStr || '700 36px Pretendard, sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            
-            const words = text.split(''); let line = ''; const lines = [];
+            ctx.fillStyle = '#0a0a0c'; ctx.font = fontStr || '700 36px Pretendard, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const textStr = text || ''; const words = textStr.split(''); let line = ''; const lines = [];
             for (let n = 0; n < words.length; n++) {
-                if (ctx.measureText(line + words[n]).width > (width * 0.8) && n > 0) {
-                    lines.push(line); line = words[n];
-                } else { line += words[n]; }
+                if (ctx.measureText(line + words[n]).width > (width * 0.8) && n > 0) { lines.push(line); line = words[n]; } else { line += words[n]; }
             }
             lines.push(line);
-
-            const lineHeight = height > 500 ? 50 : 40;
-            const startY = (height / 2) - ((lines.length - 1) * (lineHeight / 2));
+            const lineHeight = height > 500 ? 50 : 40; const startY = (height / 2) - ((lines.length - 1) * (lineHeight / 2));
             lines.forEach((ln, i) => ctx.fillText(ln, width / 2, startY + (i * lineHeight)));
-
             canvas.toBlob(blob => resolve(new File([blob], 'generated.png', { type: 'image/png' })), 'image/png');
         });
     }
 
     async function buildMediaPayload(userId) {
-        // 1. 썸네일이 '컬러' 기반이면 실시간 캡처하여 업로드 처리
+        // 1. 썸네일이 '배경색' 기반이면 이미지를 실시간으로 그려서 업로드
         if (createThumbnailState.type === 'css') {
             const title = document.getElementById('inputTitle').value.trim() || '불판 제목';
-            const fontMap = { 'Pretendard': '700 32px Pretendard', 'Nanum Myeongjo': '700 30px "Nanum Myeongjo"', 'Nanum Pen Script': '400 44px "Nanum Pen Script"' };
-            const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, fontMap[selectedThumbFont]);
+            const fontMap = { 'Pretendard': '800 32px Pretendard', 'Nanum Myeongjo': '800 30px "Nanum Myeongjo"', 'Nanum Pen Script': '400 48px "Nanum Pen Script"' };
+            const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, fontMap[selectedThumbFont] || fontMap['Pretendard']);
             const uploadedThumbUrl = await window.PickleMedia.uploadPostImage(thumbFile, userId, { aspectRatio: 16/9 });
             createThumbnailState = { type: 'url', file: null, url: uploadedThumbUrl, css: null };
         }
 
-        // 2. 미디어 형태가 '텍스트 카드'일 경우 캔버스로 이미지 2장 생성 후 업로드
+        // 2. 미디어 모드가 '텍스트 카드'일 경우 A, B 각각 이미지를 그려서 업로드
         if (currentMode === 'text') {
             const valA = document.getElementById('inputA').value.trim() || 'A';
             const valB = document.getElementById('inputB').value.trim() || 'B';
-            
             const fileA = await makeCanvasImage(valA, selectedTextCardColor, 540, 960);
             const fileB = await makeCanvasImage(valB, selectedTextCardColor, 540, 960);
-
             const urlA = await window.PickleMedia.uploadPostImage(fileA, userId, { aspectRatio: 9/16 });
             const urlB = await window.PickleMedia.uploadPostImage(fileB, userId, { aspectRatio: 9/16 });
-
             return { media_mode: 'vs', media_orientation: 'vertical', media_url_1: urlA, media_url_2: urlB };
         }
 
-        // 기존 단일/VS 모드 처리 로직 유지
-        const layout = getMediaLayout();
-        const uploadOpts = { aspectRatio: layout === 'vertical' ? 9 / 16 : 16 / 9 };
-
+        const layout = getMediaLayout(); const uploadOpts = { aspectRatio: layout === 'vertical' ? 9 / 16 : 16 / 9 };
         if (currentMode === 'single') {
             const urlVal = document.getElementById('url_single')?.value.trim() || '';
             if (urlVal) return { media_mode: 'single', media_orientation: layout, media_url_1: urlVal };
             if (uploadFiles.single) {
-                const url = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts);
-                return { media_mode: 'single', media_orientation: layout, media_url_1: url };
+                const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts);
+                return { media_mode: 'single', media_orientation: layout, media_url_1: uploadedUrl };
             }
         }
-
         if (currentMode === 'vs') {
-            const urlA = document.getElementById('url_vsA')?.value.trim() || '';
-            const urlB = document.getElementById('url_vsB')?.value.trim() || '';
-            let m1 = urlA || null; let m2 = urlB || null;
-
-            if (!urlA && uploadFiles.vsA) m1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts);
-            if (!urlB && uploadFiles.vsB) m2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts);
-
-            return { media_mode: 'vs', media_orientation: layout, media_url_1: m1, media_url_2: m2 };
+            const urlA = document.getElementById('url_vsA')?.value.trim() || ''; const urlB = document.getElementById('url_vsB')?.value.trim() || '';
+            let mediaUrl1 = urlA || null; let mediaUrl2 = urlB || null;
+            if (!urlA && uploadFiles.vsA) mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts);
+            if (!urlB && uploadFiles.vsB) mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts);
+            return { media_mode: 'vs', media_orientation: layout, media_url_1: mediaUrl1, media_url_2: mediaUrl2 };
         }
         throw new Error('미디어 정보를 구성할 수 없습니다.');
     }
 
-    // 💡 등록 전 밸리데이션 + Supabase posts 저장
     let isSubmitting = false;
-
     async function validateAndSubmit(e) {
-        if (e && typeof e.preventDefault === 'function') {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+        if (e && typeof e.preventDefault === 'function') { e.preventDefault(); e.stopPropagation(); }
         if (isSubmitting) return false;
 
-        const categorySlug = getSelectedCategorySlug();
-        if (!categorySlug) {
-            alert('"어느 전장으로 갈까요?"를 선택해주세요.');
-            return;
-        }
-        if (window.PickleCategories && !PickleCategories.isValidCategorySlug(categorySlug)) {
-            alert('유효한 카테고리를 선택해 주세요.');
-            return;
-        }
+        // 🚨 [수정 9] 동의 체크박스 필수 제동 장치
+        const agree = document.getElementById('legalAgreeCheck').checked;
+        if (!agree) { alert('불판 등록 전 주의사항을 확인하고 동의해주세요.'); return false; }
 
+        const categorySlug = getSelectedCategorySlug();
+        if (!categorySlug) { alert('"어느 전장으로 갈까요?"를 선택해주세요.'); return; }
+        if (window.PickleCategories && !PickleCategories.isValidCategorySlug(categorySlug)) { alert('유효한 카테고리를 선택해 주세요.'); return; }
         const titleVal = document.getElementById('inputTitle').value.trim();
         if (titleVal === '') { alert('불판 제목을 입력해주세요!'); return; }
+
+        // 썸네일 필수 체크
+        if (createThumbnailState.type === 'none' || (!createThumbnailState.file && !createThumbnailState.url && !createThumbnailState.css)) {
+            alert('리스트 노출용 썸네일 이미지를 필수로 지정해주세요!'); return;
+        }
 
         if (currentMode === 'single') {
             const urlVal = document.getElementById('url_single') ? document.getElementById('url_single').value.trim() : '';
@@ -1327,47 +959,33 @@
         } else if (currentMode === 'vs') {
             const urlA = document.getElementById('url_vsA') ? document.getElementById('url_vsA').value.trim() : '';
             const urlB = document.getElementById('url_vsB') ? document.getElementById('url_vsB').value.trim() : '';
-
-            const hasA = uploadStatus.vsA || urlA !== '';
-            const hasB = uploadStatus.vsB || urlB !== '';
-
+            const hasA = uploadStatus.vsA || urlA !== ''; const hasB = uploadStatus.vsB || urlB !== '';
             if (!hasA || !hasB) { alert('A와 B 각각 사진을 첨부하거나 영상 URL을 입력해주세요!'); return; }
         }
 
-        const aVal = document.getElementById('inputA').value.trim();
-        const bVal = document.getElementById('inputB').value.trim();
+        const aVal = document.getElementById('inputA').value.trim(); const bVal = document.getElementById('inputB').value.trim();
         if (aVal === '' || bVal === '') { alert('A/B 선택지 내용을 완성해주세요!'); return; }
         if (aVal === bVal) { alert('A와 B 선택지는 서로 달라야 합니다!'); return; }
         if (!validateCustomEndDate()) return;
 
         const btnSubmit = document.getElementById('btnSubmitPost');
-        isSubmitting = true;
-        btnSubmit.disabled = true;
-        btnSubmit.textContent = '불판 지피는 중...🔥';
+        isSubmitting = true; btnSubmit.disabled = true; btnSubmit.textContent = '불판 지피는 중...🔥';
         let submitSucceeded = false;
 
         try {
             const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
             if (result?.cancelled) return false;
-
             if (result?.ok) {
                 submitSucceeded = true;
                 alert('🔥 불판이 활활 타오르기 시작했습니다!');
-                location.href = 'index.html';
-                return false;
+                location.href = 'index.html'; return false;
             }
         } catch (err) {
-            if (!window.PickleCreatePage.handleInsertError(err)) {
-                alert('DB 저장 에러: ' + (err.message || String(err)));
-            }
+            if (!window.PickleCreatePage.handleInsertError(err)) alert('DB 저장 에러: ' + (err.message || String(err)));
         } finally {
             isSubmitting = false;
-            if (!submitSucceeded) {
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = '🚀 불판 지피기 (등록)';
-            }
+            if (!submitSucceeded) { btnSubmit.disabled = false; btnSubmit.textContent = '🚀 불판 지피기 (등록)'; }
         }
-
         return false;
     }
 
@@ -1375,17 +993,16 @@
         window.PickleAuth?.init?.();
         refreshEndDateMin();
         const endInput = document.getElementById('inputEndDate');
-        if (endInput) {
-            endInput.addEventListener('focus', refreshEndDateMin);
-        }
+        if (endInput) endInput.addEventListener('focus', refreshEndDateMin);
+
+        // 기본 상태를 텍스트 모드로 초기화
+        setMainMode('text');
+        initThumbnailUi();
 
         const createForm = document.getElementById('createPostForm');
         if (createForm) {
             createForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                validateAndSubmit(e);
-                return false;
+                e.preventDefault(); e.stopPropagation(); validateAndSubmit(e); return false;
             });
         }
     });
