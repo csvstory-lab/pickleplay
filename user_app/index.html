@@ -55,11 +55,23 @@
         cursor: pointer; margin: 0; filter: none;
     }
     .header-actions { display: flex; align-items: center; gap: 16px; }
+    
+    /* 🛠️ [디테일 업그레이드] 상단 전체불판 버튼 명도 구분 및 정돈 */
     .btn-category {
-        background-color: transparent; color: var(--text-main); border: 1px solid var(--border-soft);
-        padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
-        cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+        background-color: #222225 !important;   /* 헤더 블랙보다 명확히 한 톤 밝은 다크 그레이 */
+        border: 1px solid #3a3a3c !important;   /* 버튼 테두리를 주어 확실하게 독립된 알약 형태로 인지 */
+        color: var(--text-main) !important; 
+        padding: 6px 14px !important; 
+        border-radius: 999px; 
+        font-size: 0.8rem; 
+        font-weight: 700;
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        gap: 5px; 
+        transition: 0.2s;
     }
+    
     .icon-search-top { font-size: 1.35rem !important; color: var(--text-main); cursor: pointer; }
     .noti-bell { font-size: 1.45rem !important; color: var(--text-main); position: relative; cursor: pointer; display: flex; align-items: center; }
     .noti-bell[data-count]::after { 
@@ -84,7 +96,7 @@
     .section-header { margin-bottom: 16px; padding: 0 20px; }
     .section-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
 
-    /* 👑 오늘의 픽클 & 실시간 불판 공통 구조 */
+    /* 오늘의 픽클 & 실시간 불판 공통 구조 */
     .horizontal-scroll-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding: 0 20px 20px 20px; scrollbar-width: none; }
     .horizontal-scroll-container::-webkit-scrollbar { display: none; }
 
@@ -111,15 +123,15 @@
     /* 2. 제목 영역 */
     .king-card .title, .list-card .title { order: 2 !important; font-size: 1.15rem !important; font-weight: 800 !important; line-height: 1.4 !important; margin: 4px 0 2px 0 !important; color: var(--text-main) !important; word-break: keep-all; }
 
-    /* ❌ [기획 변경] 메인페이지 전체에서 A/B 텍스트 결과 박스를 완전 숨김 (궁금증 유발) */
+    /* 전체 피드에서 궁금증 유발을 위한 A/B 선택지 텍스트창 완전 숨김 */
     .king-ab-box, .text-vs-box { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important; } 
 
-    /* 👑 [오늘의 픽클] 내 픽 남기기 버튼 - 세로 높이 +5px 키우기 및 스타일 업그레이드 */
+    /* 👑 오늘의 픽클 버튼 스타일 정의 (세로 볼륨 추가 확장) */
     .king-card .btn-pick {
         order: 4 !important; 
         width: 100% !important; 
         box-sizing: border-box !important;
-        padding: 19px 16px !important; /* 🛠️ 기존 14px에서 19px로 세로 5px 확장 */
+        padding: 19px 16px !important; 
         border-radius: 14px !important; 
         border: none !important;
         background: var(--bg-elevated) !important; 
@@ -131,13 +143,13 @@
         display: flex !important; 
         justify-content: center !important; 
         align-items: center !important; 
-        gap: 8px !important; /* 아이콘과 텍스트 간격 */
+        gap: 8px !important; 
         transition: 0.2s !important; 
         margin-top: 4px !important;
     }
     .king-card .btn-pick:active { background: #3a3a3c !important; }
 
-    /* 🛠️ [기획 반영] 작은 원형 안의 체크 아이콘 스타일 정의 */
+    /* 원형 미니 체크 배지 디자인 */
     .king-card .btn-pick-icon-circle {
         display: flex !important;
         align-items: center !important;
@@ -145,13 +157,13 @@
         width: 18px !important;
         height: 18px !important;
         border-radius: 50% !important;
-        background-color: var(--point-green) !important; /* 산뜻한 파스텔 민트색 원 */
-        color: #0a0a0c !important; /* 체크 아이콘은 진한 배경색 */
+        background-color: var(--point-green) !important; 
+        color: #0a0a0c !important; 
         font-size: 0.7rem !important;
         font-weight: 900 !important;
     }
 
-    /* 🔥 [지금 뜨거운 불판] 리스트에서는 버튼을 완전히 제거하여 공간 절약 및 클릭 유도 */
+    /* 🔥 지금 뜨거운 불판 리스트 - 버튼 가리기 전술 적용 */
     .list-card .btn-pick { display: none !important; }
     .list-card { cursor: pointer; transition: transform 0.2s; }
     .list-card:active { transform: scale(0.98); }
@@ -166,26 +178,33 @@
     .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
     .list-card { margin-bottom: 16px !important; }
 
-    /* 📱 [기획 변경] 하단 네비게이션 바 슬림화 (기존 크기의 2/3로 다이어트) */
+    /* 📱 [초강력 다이어트] 하단바 공간 전면 압축 */
     .bottom-nav { 
         background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
         display: flex !important; justify-content: space-around !important; align-items: center !important; 
-        padding: 6px 0 14px 0 !important; /* 🛠️ 상하 패딩을 줄여 전체 높이를 2/3 수준으로 축소 */
+        padding: 4px 0 10px 0 !important; /* 🛠️ 상하 간격을 극한으로 줄여 두께를 완전 슬림하게 세팅 */
         height: auto !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
     }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 2px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
+    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 1px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
     .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
-    .bottom-nav .nav-icon { font-size: 1.25rem !important; /* 🛠️ 아이콘 크기도 하단바에 맞게 살짝 축소 */
-    filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;}
-    .bottom-nav span:not(.nav-icon) { font-size: 0.65rem !important; font-weight: 700 !important; }
     
-    /* 🛠️ 불판 생성 버튼 (슬림해진 바 외부로 톡 튀어나오는 플로팅 효과 극대화) */
-    .bottom-nav .fire-btn { transform: translateY(-16px) !important; } /* 🛠️ 바가 얇아진 만큼 위로 더 팝아웃 되도록 조정 */
+    /* 일반 아이콘 크기 최적화 */
+    .bottom-nav .nav-icon { 
+        font-size: 1.15rem !important; 
+        filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;
+    }
+    .bottom-nav span:not(.nav-icon) { font-size: 0.6rem !important; font-weight: 700 !important; }
+    
+    /* 🛠️ [대변신] 불판 생성 플로팅 버튼 극대화 및 파스텔톤 그라데이션 적용 */
+    .bottom-nav .fire-btn { transform: translateY(-20px) !important; } /* 슬림해진 바 위로 눈에 띄게 파격 노출 */
     .bottom-nav .fire-btn .nav-icon { 
-        background: linear-gradient(135deg, var(--point-green) 0%, #20c997 100%) !important;
-        color: #000 !important; width: 44px !important; height: 44px !important; border-radius: 50% !important;
+        background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; /* 영롱한 파스텔 옐로우/핑크 스펙트럼 */
+        color: #1c1c1e !important; /* 화사한 배경색과 완벽히 명도 대비를 이루는 어두운 아이콘 매칭 */
+        width: 54px !important; height: 54px !important; border-radius: 50% !important; /* 지름을 약 1.3배 대폭 확장 */
         display: flex !important; justify-content: center !important; align-items: center !important;
-        border: 4px solid var(--bg-base) !important; box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3) !important; font-size: 1.25rem !important;
+        border: none !important; /* 투박했던 외곽선 완벽 제거 */
+        box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; /* 은은하게 퍼지는 파스텔 코랄 핑크 글로우 효과 */
+        font-size: 1.45rem !important;
     }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -202,7 +221,8 @@
     <div class="top-row" id="headerTopRow">
         <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
         <div class="header-actions">
-            <button type="button" class="btn-category" onclick="toggleCategorySheet()"><i class="ph ph-list"></i> 전체 불판</button>
+            <!-- 🛠️ 요청 사항 반영: 앞쪽 햄버거 아이콘 삭제하고 오직 텍스트만 깔끔하게 노출 -->
+            <button type="button" class="btn-category" onclick="toggleCategorySheet()">전체 불판</button>
             <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
             <i class="ph ph-bell noti-bell" onclick="alert('알림 기능은 준비 중입니다.')"></i>
         </div>
@@ -247,7 +267,7 @@
     </section>
 </main>
 
-<!-- 📱 2/3 슬림 다이어트 & 중앙 불판생성 팝아웃 하단바 -->
+<!-- 📱 초슬림 피드 최적화 하단 네비게이션 구조 -->
 <nav class="bottom-nav">
     <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph-fill ph-house nav-icon"></i><span>홈</span></div>
     <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
@@ -268,8 +288,8 @@
 <script src="../js/media-upload.js"></script>
 <script src="../js/pickle-media-view.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<!-- 💡 어제보다 하나 더 올린 캐시 파괴 스크립트 버전 적용! -->
-<script src="../js/pickle-feed.js?v=0624"></script>
+<!-- 💡 캐시 완벽 강제 격파를 위한 고유 버전 업데이트 부착 -->
+<script src="../js/pickle-feed.js?v=0625"></script>
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
