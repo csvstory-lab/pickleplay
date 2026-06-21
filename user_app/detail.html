@@ -43,7 +43,7 @@
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 🌍 글로벌 상단 헤더 (완벽 디자인 통일) === */
+    /* === 🌍 글로벌 상단 헤더 === */
     header {
         position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
         z-index: 120; border-bottom: 1px solid var(--border-soft);
@@ -87,13 +87,12 @@
     .btn-mypick { background-color: transparent; color: var(--point-green); border: 1px solid var(--point-green); padding: 4px 12px; border-radius: 16px; font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .btn-mypick.active { background-color: var(--point-green); color: #000; }
 
-    /* 🛠️ 2단: 카테고리명 완벽 디테일 연동 무대 */
+    /* 2단: 카테고리명 구체화 */
     .issue-header-box { padding: 10px 20px 14px; }
     .issue-title { font-size: 1.3rem; font-weight: 900; line-height: 1.45; margin: 0 0 12px 0; word-break: keep-all; }
     .meta-row-top { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); }
     .meta-timer-badge { display: inline-flex; align-items: center; gap: 4px; color: var(--point-gold); }
     
-    /* 해시태그 강제 노출 방어 차단선 */
     #detailMetaTags, .meta-hashtag, [class*="hashtag"] { display: none !important; }
 
     /* 3단: 본문 미디어 레이아웃 구조 */
@@ -125,7 +124,7 @@
     .opt-label-a { color: var(--point-blue); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
     .opt-label-b { color: var(--point-pink); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
 
-    /* 투표 완료 즉시 피드백 안내 디자인 */
+    /* 투표 완료 피드백 */
     .blind-feedback-wrapper { padding: 0 20px; margin-bottom: 16px; display: none; }
     .blind-feedback-wrapper.show { display: block; animation: slideDown 0.4s ease; }
     .blind-card { background: linear-gradient(135deg, #1c1c1e, #2c2c2e); border-radius: 16px; padding: 22px 20px; text-align: center; border: 1px solid var(--point-green); box-shadow: 0 4px 15px rgba(74, 222, 128, 0.15); }
@@ -152,11 +151,11 @@
     .btn-like-v2.is-liked { background-color: rgba(255, 133, 161, 0.15); border-color: var(--point-pink); color: var(--point-pink); }
     .btn-report-v2 { flex: 2 !important; background-color: #2a1a1d; border: 1px solid rgba(255, 77, 77, 0.2); color: var(--alert-red); }
 
-    /* === 💬 댓글/답글 다크 미니멀 파스텔 영역 === */
+    /* === 💬 댓글/답글 영역 === */
     .comments-section { padding: 20px 20px 40px; border-top: 1px solid var(--border-soft); position: relative; }
     .comments-header { font-size: 1rem; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
     
-    /* 🛠️ [순정 탈피] 100% 프론트 통제형 다크 커스텀 드롭다운 인프라 */
+    /* 고급 다크 테마 커스텀 드롭다운 인프라 */
     .custom-sort-dropdown { position: relative; width: 85px; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); cursor: pointer; user-select: none; }
     .sort-trigger-btn { display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 4px 0; color: var(--text-sub); transition: 0.2s; }
     .sort-trigger-btn:hover { color: var(--text-main); }
@@ -217,7 +216,7 @@
         width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; border: none !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; 
     }
 
-    /* 팝업 오버레이 및 모달 시트 하부 */
+    /* 팝업 오버레이 및 모달 시트 */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: 0.2s; }
     .overlay.open { opacity: 1; pointer-events: auto; }
     .share-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--bg-card); border-radius: 24px 24px 0 0; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: 0.25s ease-out; border-top: 1px solid var(--border-soft); }
@@ -294,7 +293,7 @@
     </div>
 </div>
 
-<!-- 🛠️ [신규대작] 인스타 스타일 소셜 프로필 전용 소환 모달 바텀 시트 -->
+<!-- 인스타 스타일 소셜 프로필 바텀 시트 -->
 <div class="share-sheet" id="userProfileSheet">
     <div class="sheet-header">
         <h2 class="sheet-title" style="color: var(--point-green);">🥒 픽클러 프로필</h2>
@@ -309,7 +308,22 @@
     </div>
     <div style="display:flex; gap:10px; width:100%; box-sizing:border-box;">
         <button class="btn-action-v2" id="popupFollowBtn" style="flex:1 !important; background:linear-gradient(135deg, var(--point-green), #22c55e); color:#0a0a0c; font-weight:900;" onclick="handlePopupFollow()"><i class="ph ph-plus-bold"></i> 나의 픽</button>
-        <button class="btn-action-v2" style="flex:1 !important; background-color:var(--bg-elevated); border:1px solid var(--border-soft); color:#fff;" onclick="alert('메시지 전송 기능은 빌드 중입니다.')"><i class="ph-fill ph-paper-plane-tilt"></i> 메시지 보내기</button>
+        <!-- 🛠️ 실시간 쪽지 모달 트리거 바인딩 완수 -->
+        <button class="btn-action-v2" style="flex:1 !important; background-color:var(--bg-elevated); border:1px solid var(--border-soft); color:#fff;" onclick="openMessageModal()"><i class="ph-fill ph-paper-plane-tilt"></i> 메시지 보내기</button>
+    </div>
+</div>
+
+<!-- 🛠️ [신규 추가] 초정밀 다크 스퀘어 스타일 쪽지 작성 팝업창 -->
+<div class="report-modal" id="messageModal">
+    <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--point-green); display: flex; align-items: center; gap: 6px;">
+            <i class="ph-fill ph-paper-plane-tilt"></i> <span id="messageTargetNickname" style="color:#fff;">유저</span>님께 메시지
+        </h3>
+        <button class="btn-close" onclick="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+        <textarea class="form-textarea" id="messageContent" placeholder="상대방에게 보낼 훈수 쪽지 내용을 입력해주세요. (비방/위험 문구 입력 시 제재를 받을 수 있습니다)" style="height: 110px; font-size:0.85rem; line-height:1.4;"></textarea>
+        <button class="btn-submit-report" style="background: linear-gradient(135deg, var(--point-green), #22c55e); color: #0a0a0c;" onclick="submitDirectMessage()">보내기</button>
     </div>
 </div>
 
@@ -326,7 +340,6 @@
             <option value="abuse">욕설 / 혐오 / 비방</option>
             <option value="nsfw">음란물 / 선정성</option>
         </select>
-        <!-- 🛠️ 문구 초슬림 다이어트 완료 (필수) -->
         <textarea class="form-textarea" id="reportDetail" placeholder="상세 사유를 입력해주세요. (필수)"></textarea>
         <button class="btn-submit-report" onclick="submitReport()">신고 접수</button>
     </div>
@@ -344,7 +357,7 @@
         <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ 나의 픽</button>
     </div>
 
-    <!-- 🛠️ 2단: 카테고리명 구체화 연동 앵커 -->
+    <!-- 2단: 카테고리명 동적 연동 -->
     <div class="issue-header-box">
         <h2 class="issue-title" id="detailTitle">불판 불러오는 중…</h2>
         <div class="meta-row-top">
@@ -371,7 +384,7 @@
         </div>
     </div>
 
-    <!-- 투표 완료 즉시 피드백 레이어 -->
+    <!-- 투표 완료 피드백 레이어 -->
     <div class="blind-feedback-wrapper" id="blindFeedback">
         <div class="blind-card">
             <div class="blind-icon">🤫🔒</div>
@@ -405,7 +418,7 @@
         <div class="comments-header">
             <span id="detailCommentCount" style="font-weight:800;">댓글 (0)</span>
             
-            <!-- 🛠️ [순정 탈치 전면 개정] 고급 다크 테마 커스텀 드롭다운 교체 완수 -->
+            <!-- 고급 커스텀 드롭다운 메뉴 -->
             <div class="custom-sort-dropdown" id="customSortDropdown">
                 <div class="sort-trigger-btn" onclick="toggleSortDropdownMenu(event)">
                     <span id="sortLabelText">최신순</span> <i class="ph ph-caret-down-bold" style="font-size:0.75rem;"></i>
@@ -417,7 +430,7 @@
             </div>
         </div>
         
-        <!-- 투표 장막 스크린 장치 -->
+        <!-- 투표 장막 스크린 -->
         <div class="comment-lock-screen" id="commentLock">
             <div class="lock-icon">🔒</div>
             <div class="lock-text">투표 후 댓글을 볼 수 있어요!</div>
@@ -477,6 +490,7 @@
         document.getElementById('shareSheet').classList.remove('open');
         document.getElementById('reportModal').classList.remove('open');
         document.getElementById('userProfileSheet').classList.remove('open');
+        document.getElementById('messageModal').classList.remove('open');
         document.body.style.overflow = '';
     }
     function openShareSheet() {
@@ -495,16 +509,86 @@
         document.body.style.overflow = 'hidden';
     }
 
-    // 🛠️ [커스텀 드롭다운 핸들러] 활성화 스위칭
+    // 🛠️ 쪽지 작성 전용 레이어 모달 소환술
+    function openMessageModal() {
+        var btn = document.getElementById('popupFollowBtn');
+        var targetUid = btn ? btn.getAttribute('data-user-id') : null;
+        var targetName = document.getElementById('popupUserName').textContent;
+        
+        if (!targetUid) {
+            alert('상대 유저의 고유 정보가 올바르지 않습니다.');
+            return;
+        }
+
+        // 프로필 바텀시트는 자연스럽게 회수
+        document.getElementById('userProfileSheet').classList.remove('open');
+
+        // 메시지 폼 내용 세팅 및 세부 정돈
+        document.getElementById('messageTargetNickname').textContent = targetName;
+        document.getElementById('messageContent').value = ''; 
+        
+        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('messageModal').classList.add('open');
+    }
+
+    // 🛠️ [실시간 코어] Supabase 실시간 인서트 데이터 송신부
+    async function submitDirectMessage() {
+        var contentEl = document.getElementById('messageContent');
+        var content = contentEl ? contentEl.value.trim() : '';
+        var btn = document.getElementById('popupFollowBtn');
+        var targetUid = btn ? btn.getAttribute('data-user-id') : null;
+
+        if (!content) {
+            alert('메시지 내용을 입력해주세요.');
+            return;
+        }
+        if (!targetUid) {
+            alert('수신인 대상 식별 정보가 유실되었습니다.');
+            return;
+        }
+
+        try {
+            // 1. 현재 세션 로그인 클라이언트 계정 체크
+            const { data: { user }, error: authErr } = await supabase.auth.getUser();
+            if (authErr || !user) {
+                alert('로그인한 회원만 쪽지를 발송할 수 있습니다.');
+                return;
+            }
+
+            // 자가 전송 브레이커 장치
+            if (user.id === targetUid) {
+                alert('나 자신에게는 메시지를 보낼 수 없습니다. 🥒');
+                return;
+            }
+
+            // 2. messages 테이블에 실시간 로우 인서트 파이프 트래킹
+            const { error: dbErr } = await supabase
+                .from('messages')
+                .insert([
+                    {
+                        sender_id: user.id,
+                        receiver_id: targetUid,
+                        content: content
+                    }
+                ]);
+
+            if (dbErr) throw dbErr;
+
+            alert('🚀 ' + document.getElementById('messageTargetNickname').textContent + '님께 쪽지가 안전하게 전달되었습니다!');
+            closeModals();
+        } catch (err) {
+            console.error('쪽지 전송 치명적 에러:', err);
+            alert('메시지 발송 오류가 발생했습니다. (Supabase 테이블 설정을 다시 확인해주세요)');
+        }
+    }
+
     function toggleSortDropdownMenu(e) {
         e.stopPropagation();
         document.getElementById('sortDropdownMenu').classList.toggle('active-show');
     }
 
-    // 🛠️ [정렬 코어 픽스] 인기순 클릭 시 UUID 변수 꼬임 전면 복구 버스 매핑 완료
     function selectCommentSort(sortType) {
         document.getElementById('sortDropdownMenu').classList.remove('active-show');
-        
         var label = sortType === 'latest' ? '최신순' : '인기순';
         document.getElementById('sortLabelText').textContent = label;
         
@@ -525,25 +609,19 @@
         }
     }
 
-    // 바깥 영역 클릭 시 드롭다운 자율 폐쇄
     document.addEventListener('click', function() {
         var menu = document.getElementById('sortDropdownMenu');
         if(menu) menu.classList.remove('active-show');
     });
 
-    // 🛠️ [인스타 스타일 런타임 수신반] 댓글 내 프사/닉네임 클릭 연동 위임 리스너
     document.addEventListener('click', function(e) {
         var target = e.target.closest('.author-pic, .comment-user span');
         if (!target) return;
-        
-        // 메인 작성자 상단 박스는 기존 나의픽 연동 기능 보존용 패스
         if (target.closest('.post-author-box')) return; 
 
         var commentItem = target.closest('.comment-item');
         if (commentItem) {
             e.preventDefault();
-            
-            // 데이터 세트 획득 및 팝업 대입
             var name = commentItem.getAttribute('data-author-name') || '픽클러';
             var pic = commentItem.querySelector('.author-pic') ? commentItem.querySelector('.author-pic').textContent : '👤';
             var uid = commentItem.getAttribute('data-user-id') || '';
@@ -556,7 +634,6 @@
         }
     });
 
-    // 🛠️ 소셜 팝업창 전용 팔로우 제어 브릿지
     function handlePopupFollow() {
         var btn = document.getElementById('popupFollowBtn');
         var targetUid = btn.getAttribute('data-user-id');
@@ -568,8 +645,6 @@
                 btn.style.color = isFollowing ? '#fff' : '#0a0a0c';
                 btn.innerHTML = isFollowing ? '✓ 팔로잉 중' : '<i class="ph ph-plus-bold"></i> 나의 픽';
             });
-        } else {
-            alert('팔로우 기능 모듈 준비 중');
         }
     }
 
@@ -595,9 +670,7 @@
         likeBtn.classList.toggle('is-liked');
         var currentCount = 0;
         var match = likeTextSpan.textContent.match(/\d+/);
-        if (match) {
-            currentCount = parseInt(match[0], 10);
-        }
+        if (match) currentCount = parseInt(match[0], 10);
         
         if (likeBtn.classList.contains('is-liked')) {
             currentCount += 1;
@@ -620,42 +693,22 @@
         var detailEl = document.getElementById('reportDetail');
         var detail = detailEl ? detailEl.value.trim() : '';
 
-        if (!reason) {
-            alert('신고 사유를 선택해주세요.');
-            return;
-        }
-        if (!detail) {
-            alert('신고 상세 내용을 입력해주세요. (필수)');
-            return;
-        }
+        if (!reason) { alert('신고 사유를 선택해주세요.'); return; }
+        if (!detail) { alert('신고 상세 내용을 입력해주세요. (필수)'); return; }
 
         var postId = window.PickleDetail && typeof window.PickleDetail.getCurrentPostId === 'function'
-            ? window.PickleDetail.getCurrentPostId()
-            : new URLSearchParams(window.location.search).get('id');
+            ? window.PickleDetail.getCurrentPostId() : new URLSearchParams(window.location.search).get('id');
 
-        if (!postId) {
-            alert('불판 정보를 찾을 수 없습니다.');
-            return;
-        }
+        if (!postId) { alert('불판 정보를 찾을 수 없습니다.'); return; }
 
         try {
             var result = await window.PicklePenalties.submitContentReport({
-                targetType: 'post',
-                targetId: postId,
-                reason: reason,
-                detail: detail,
+                targetType: 'post', targetId: postId, reason: reason, detail: detail,
             });
-
-            if (!result.ok) {
-                alert('신고 접수에 실패했습니다.');
-                return;
-            }
-
+            if (!result.ok) { alert('신고 접수에 실패했습니다.'); return; }
             alert('🚨 신고가 정상적으로 접수되었습니다. 깨끗한 픽클을 만들어주셔서 감사합니다!');
             closeModals();
-        } catch (err) {
-            alert('신고 접수 실패');
-        }
+        } catch (err) { alert('신고 접수 실패'); }
     }
 
     function getSharePayload() {
@@ -676,28 +729,21 @@
     }
 
     function sendKakaoMessage() {
-        if (!ensureKakaoReady()) {
-            alert('카카오톡 모듈 로딩 중...');
-            return;
-        }
+        if (!ensureKakaoReady()) { alert('카카오톡 모듈 로딩 중...'); return; }
         var share = getSharePayload();
         var shareUrl = window.location.href;
         try {
             Kakao.Share.sendDefault({
                 objectType: 'feed',
                 content: {
-                    title: share.title,
-                    description: share.text,
-                    imageUrl: share.imageUrl,
+                    title: share.title, description: share.text, imageUrl: share.imageUrl,
                     link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
                 },
                 buttons: [{ title: '🔥 참전하러 가기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
             });
             recordDetailShare('kakao');
             closeModals();
-        } catch (e) {
-            alert('카카오 공유 실패');
-        }
+        } catch (e) { alert('카카오 공유 실패'); }
     }
 
     function copyLink() {
@@ -713,9 +759,7 @@
         if (navigator.share) {
             navigator.share({ title: share.title, text: share.text, url: window.location.href }).catch(console.error);
             recordDetailShare('native');
-        } else {
-            alert('링크 복사를 이용해주세요.');
-        }
+        } else { alert('링크 복사를 이용해주세요.'); }
         closeModals();
     }
 
