@@ -371,10 +371,10 @@
         <button type="button" class="btn-close" onclick="closeThumbnailSheet()">✕</button>
     </div>
     <div class="thumb-tabs" role="tablist" aria-label="썸네일 소스">
-        <button type="button" class="thumb-tab active" data-tab="album" onclick="switchThumbTab('album')">📁 내 앨범</button>
+        <button type="button" class="thumb-tab active" data-tab="color" onclick="switchThumbTab('color')">🎨 배경색</button>
+        <button type="button" class="thumb-tab" data-tab="album" onclick="switchThumbTab('album')">📁 내 앨범</button>
         <button type="button" class="thumb-tab" data-tab="free" onclick="switchThumbTab('free')">🔍 무료 사진</button>
         <button type="button" class="thumb-tab" data-tab="gif" onclick="switchThumbTab('gif')">🎞️ 움짤</button>
-        <button type="button" class="thumb-tab" data-tab="color" onclick="switchThumbTab('color')">🎨 배경색</button>
     </div>
     <div class="thumb-tab-panel active" id="thumbPanelAlbum" role="tabpanel"></div>
     <div class="thumb-tab-panel" id="thumbPanelFree" role="tabpanel">
@@ -407,7 +407,7 @@
 
     <div class="form-group">
         <label class="form-label">불판 제목</label>
-        <input type="text" id="inputTitle" class="input-box" placeholder="유저들의 도파민을 자극할 제목을 적어주세요!">
+        <input type="text" id="inputTitle" class="input-box" placeholder="유저들의 도파민을 자극할 제목을 적어주세요!" oninput="if(typeof updateLivePreviews === 'function') updateLivePreviews();">
     </div>
 
     <div class="form-group">
@@ -417,11 +417,17 @@
 
     <div class="form-group form-group-thumbnail">
         <label class="form-label">리스트 노출용 썸네일 이미지 <span class="form-hint">(선택)</span></label>
+        <div style="display: flex; gap: 6px; margin-bottom: 12px;" id="thumbFontGroup">
+            <button type="button" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setThumbLiveFont('Pretendard', this)">고딕</button>
+            <button type="button" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setThumbLiveFont('Nanum Myeongjo', this)">명조</button>
+            <button type="button" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer;" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
+        </div>
         <p class="upload-size-hint">(※ 리스트에만 노출 · 터치해서 썸네일을 선택하세요)</p>
         <div class="thumb-preview-box ratio-16-9" id="thumbPreviewBox" onclick="openThumbnailSheet()" role="button" tabindex="0" aria-label="썸네일 선택">
+            <div id="thumbLiveText" style="position: absolute; width: 85%; height: 75%; display: none; justify-content: center; align-items: center; text-align: center; font-size: 1.15rem; font-weight: 800; color: #000; word-break: keep-all; line-height: 1.4; padding: 10px; z-index: 5;"></div>
             <div class="thumb-preview-placeholder" id="thumbPreviewPlaceholder">
                 <span class="thumb-preview-icon">🖼️</span>
-                <span class="thumb-preview-label">썸네일을 선택해 주세요</span>
+                <span class="thumb-preview-label">터치하여 서식 및 소스 지정</span>
             </div>
         </div>
     </div>
@@ -451,9 +457,9 @@
         <label class="form-label">불판에 올릴 미디어 형태</label>
         
         <div class="toggle-wrapper">
-            <button type="button" class="toggle-btn active highlight" id="btnSingle" onclick="setMainMode('single')">미디어 1개</button>
+            <button type="button" class="toggle-btn active highlight" id="btnText" onclick="setMainMode('text')">🎨 텍스트 카드</button>
+            <button type="button" class="toggle-btn" id="btnSingle" onclick="setMainMode('single')">미디어 1개</button>
             <button type="button" class="toggle-btn" id="btnVs" onclick="setMainMode('vs')">미디어 2개 (VS)</button>
-            <button type="button" class="toggle-btn" id="btnText" onclick="setMainMode('text')">영상/이미지 없음</button>
         </div>
 
         <div class="media-layout-group" id="mediaLayoutGroup">
@@ -478,11 +484,11 @@
         <div class="ab-input-group">
             <div class="ab-input-wrapper a">
                 <span class="ab-badge a">A</span>
-                <input type="text" id="inputA" class="input-box ab-input" maxlength="20" placeholder="A 선택지 내용을 적어주세요">
+                <input type="text" id="inputA" class="input-box ab-input" maxlength="20" placeholder="A 선택지 내용을 적어주세요" oninput="if(typeof updateLivePreviews === 'function') updateLivePreviews();">
             </div>
             <div class="ab-input-wrapper b">
                 <span class="ab-badge b">B</span>
-                <input type="text" id="inputB" class="input-box ab-input" maxlength="20" placeholder="B 선택지 내용을 적어주세요">
+                <input type="text" id="inputB" class="input-box ab-input" maxlength="20" placeholder="B 선택지 내용을 적어주세요" oninput="if(typeof updateLivePreviews === 'function') updateLivePreviews();">
             </div>
         </div>
     </div>
@@ -641,7 +647,7 @@
     });
 
     // 💡 미디어 업로드 관리 변수
-    let currentMode = 'single';
+    let currentMode = 'text';
     let currentOri = 'horizontal';
     let uploadStatus = { single: false, vsA: false, vsB: false };
     let uploadFiles = { single: null, vsA: null, vsB: null };
@@ -960,6 +966,11 @@
         if (!box || !cssValue) return;
         setCreateThumbnailState('css', cssValue);
         applyThumbPreviewToBox(box, 'css', cssValue);
+        
+        document.getElementById('thumbPreviewPlaceholder').style.display = 'none';
+        document.getElementById('thumbLiveText').style.display = 'flex';
+        
+        if (typeof updateLivePreviews === 'function') updateLivePreviews();
         closeThumbnailSheet();
     }
 
@@ -1043,20 +1054,74 @@
         renderUploadArea();
     }
 
+    let selectedTextCardColor = '#18181b';
+    let selectedThumbFont = 'Pretendard';
+
+    function setThumbLiveFont(fontFamily, btn) {
+        document.querySelectorAll('#thumbFontGroup button').forEach(el => {
+            el.style.background = 'var(--card-bg)'; el.style.color = 'var(--text-main)';
+        });
+        btn.style.background = '#fff'; btn.style.color = '#000';
+        selectedThumbFont = fontFamily;
+        const txtEl = document.getElementById('thumbLiveText');
+        if (txtEl) txtEl.style.fontFamily = fontFamily;
+    }
+
+    function updateLivePreviews() {
+        const title = document.getElementById('inputTitle').value.trim();
+        const txtEl = document.getElementById('thumbLiveText');
+        if (txtEl && createThumbnailState.type === 'css') {
+            txtEl.textContent = title || '불판 제목 미리보기';
+        }
+        if (currentMode === 'text') {
+            const valA = document.getElementById('inputA').value.trim() || 'A 선택지';
+            const valB = document.getElementById('inputB').value.trim() || 'B 선택지';
+            if (document.getElementById('textPreviewInnerA')) document.getElementById('textPreviewInnerA').textContent = valA;
+            if (document.getElementById('textPreviewInnerB')) document.getElementById('textPreviewInnerB').textContent = valB;
+        }
+    }
+
+    function selectTextCardColor(color) {
+        selectedTextCardColor = color;
+        document.querySelectorAll('.text-color-dot').forEach(el => el.style.borderColor = 'transparent');
+        if(event) event.target.style.borderColor = '#fff';
+        if (document.getElementById('textPreviewCardA')) document.getElementById('textPreviewCardA').style.background = color;
+        if (document.getElementById('textPreviewCardB')) document.getElementById('textPreviewCardB').style.background = color;
+    }
+
     function renderUploadArea() {
         const container = document.getElementById('uploadContainer');
         container.innerHTML = ''; 
-        if (currentMode === 'text') return;
-
-        const layout = getMediaLayout();
+        const layout = document.querySelector('input[name="media_layout"]:checked')?.value || 'horizontal';
         currentOri = layout;
-        const sizeHint = '<p class="upload-size-hint">(※ 최대 10MB · 업로드 시 자동 압축)</p>';
 
-        // 슬롯 생성 함수
+        if (currentMode === 'text') {
+            const paletteHtml = THUMB_COLOR_PRESETS.map((c, idx) => {
+                const border = idx === 0 ? '#fff' : 'transparent';
+                return `<div class="text-color-dot" style="width:30px;height:30px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${border};" onclick="selectTextCardColor('${c}')"></div>`;
+            }).join('');
+
+            container.innerHTML = `
+                <div style="margin-bottom:12px;"><span class="form-label" style="margin-bottom:5px;">텍스트 카드 테마 컬러</span><div style="display:flex;gap:8px;flex-wrap:wrap;">${paletteHtml}</div></div>
+                <div class="vs-upload-group media-layout-vertical" style="gap:10px;margin-top:10px; flex-direction:row;">
+                    <div style="flex:1;aspect-ratio:9/16;background:${selectedTextCardColor};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardA">
+                        <div id="textPreviewInnerA" style="color:#0a0a0c;font-size:1.1rem;font-weight:900;text-align:center;word-break:keep-all;">A 선택지</div>
+                    </div>
+                    <div class="vs-badge-upload" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:linear-gradient(135deg,var(--neon-blue),var(--neon-pink)); color:#000; width:40px;height:40px; display:flex; justify-content:center; align-items:center; border-radius:50%; font-family:'Black Han Sans', sans-serif; font-size:0.9rem; z-index:10;">VS</div>
+                    <div style="flex:1;aspect-ratio:9/16;background:${selectedTextCardColor};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardB">
+                        <div id="textPreviewInnerB" style="color:#0a0a0c;font-size:1.1rem;font-weight:900;text-align:center;word-break:keep-all;">B 선택지</div>
+                    </div>
+                </div>
+            `;
+            updateLivePreviews();
+            return;
+        }
+
+        const sizeHint = '<p class="upload-size-hint">(※ 최대 10MB · 업로드 시 자동 압축)</p>';
         const makeSlot = (id, label, ratioClass, iconColor) => `
             <div class="media-input-wrap">
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden id="file_${id}" onchange="onPhotoSelected('${id}', this)">
-                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}', this)">
+                <div class="upload-box ${ratioClass}" id="box_${id}" onclick="mockUpload('${id}')">
                     <div class="icon-plus" style="color:${iconColor || 'var(--text-sub)'};">➕</div>
                     <div class="upload-txt">${label} 사진 첨부</div>
                 </div>
@@ -1067,12 +1132,8 @@
         if (currentMode === 'single') {
             const ratioClass = layout === 'horizontal' ? 'ratio-16-9' : 'ratio-9-16';
             container.innerHTML = sizeHint + makeSlot('single', '미디어', ratioClass);
-        }
-
-        if (currentMode === 'vs') {
-            const layoutClass = layout === 'vertical'
-                ? 'media-layout-vertical vertical'
-                : 'media-layout-horizontal';
+        } else if (currentMode === 'vs') {
+            const layoutClass = layout === 'vertical' ? 'media-layout-vertical vertical' : 'media-layout-horizontal';
             const ratioClass = layout === 'vertical' ? 'ratio-9-16' : 'ratio-16-9';
             container.innerHTML = sizeHint + `
                 <div class="vs-upload-group ${layoutClass}">
@@ -1148,55 +1209,92 @@
         }
     }
 
+    // 🎨 캔버스 렌더링 코어 로직 (이미지 굽기)
+    function makeCanvasImage(text, bgColor, width, height, fontStr) {
+        return new Promise(resolve => {
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            if (bgColor.includes('gradient')) {
+                const grad = ctx.createLinearGradient(0, 0, width, height);
+                grad.addColorStop(0, '#39ff14'); grad.addColorStop(1, '#aaff00');
+                if(bgColor.includes('#ff007f')) { grad.addColorStop(0, '#ff007f'); grad.addColorStop(1, '#ffcc00'); }
+                else if(bgColor.includes('#00f0ff')) { grad.addColorStop(0, '#00f0ff'); grad.addColorStop(1, '#3b82f6'); }
+                else if(bgColor.includes('#09090b')) { grad.addColorStop(0, '#09090b'); grad.addColorStop(1, '#27272a'); }
+                ctx.fillStyle = grad;
+            } else {
+                ctx.fillStyle = bgColor;
+            }
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = '#0a0a0c'; // 글자색
+            ctx.font = fontStr || '700 36px Pretendard, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            
+            const words = text.split(''); let line = ''; const lines = [];
+            for (let n = 0; n < words.length; n++) {
+                if (ctx.measureText(line + words[n]).width > (width * 0.8) && n > 0) {
+                    lines.push(line); line = words[n];
+                } else { line += words[n]; }
+            }
+            lines.push(line);
+
+            const lineHeight = height > 500 ? 50 : 40;
+            const startY = (height / 2) - ((lines.length - 1) * (lineHeight / 2));
+            lines.forEach((ln, i) => ctx.fillText(ln, width / 2, startY + (i * lineHeight)));
+
+            canvas.toBlob(blob => resolve(new File([blob], 'generated.png', { type: 'image/png' })), 'image/png');
+        });
+    }
+
     async function buildMediaPayload(userId) {
-        if (currentMode === 'text') {
-            return { media_mode: 'text' };
+        // 1. 썸네일이 '컬러' 기반이면 실시간 캡처하여 업로드 처리
+        if (createThumbnailState.type === 'css') {
+            const title = document.getElementById('inputTitle').value.trim() || '불판 제목';
+            const fontMap = { 'Pretendard': '700 32px Pretendard', 'Nanum Myeongjo': '700 30px "Nanum Myeongjo"', 'Nanum Pen Script': '400 44px "Nanum Pen Script"' };
+            const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, fontMap[selectedThumbFont]);
+            const uploadedThumbUrl = await window.PickleMedia.uploadPostImage(thumbFile, userId, { aspectRatio: 16/9 });
+            createThumbnailState = { type: 'url', file: null, url: uploadedThumbUrl, css: null };
         }
 
+        // 2. 미디어 형태가 '텍스트 카드'일 경우 캔버스로 이미지 2장 생성 후 업로드
+        if (currentMode === 'text') {
+            const valA = document.getElementById('inputA').value.trim() || 'A';
+            const valB = document.getElementById('inputB').value.trim() || 'B';
+            
+            const fileA = await makeCanvasImage(valA, selectedTextCardColor, 540, 960);
+            const fileB = await makeCanvasImage(valB, selectedTextCardColor, 540, 960);
+
+            const urlA = await window.PickleMedia.uploadPostImage(fileA, userId, { aspectRatio: 9/16 });
+            const urlB = await window.PickleMedia.uploadPostImage(fileB, userId, { aspectRatio: 9/16 });
+
+            return { media_mode: 'vs', media_orientation: 'vertical', media_url_1: urlA, media_url_2: urlB };
+        }
+
+        // 기존 단일/VS 모드 처리 로직 유지
         const layout = getMediaLayout();
-        const mediaAspectRatio = layout === 'vertical' ? 9 / 16 : 16 / 9;
-        const uploadOpts = { aspectRatio: mediaAspectRatio };
+        const uploadOpts = { aspectRatio: layout === 'vertical' ? 9 / 16 : 16 / 9 };
 
         if (currentMode === 'single') {
             const urlVal = document.getElementById('url_single')?.value.trim() || '';
-            if (urlVal) {
-                return {
-                    media_mode: 'single',
-                    media_orientation: layout,
-                    media_url_1: urlVal,
-                };
-            }
+            if (urlVal) return { media_mode: 'single', media_orientation: layout, media_url_1: urlVal };
             if (uploadFiles.single) {
-                const uploadedUrl = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts);
-                return {
-                    media_mode: 'single',
-                    media_orientation: layout,
-                    media_url_1: uploadedUrl,
-                };
+                const url = await window.PickleMedia.uploadPostImage(uploadFiles.single, userId, uploadOpts);
+                return { media_mode: 'single', media_orientation: layout, media_url_1: url };
             }
         }
 
         if (currentMode === 'vs') {
             const urlA = document.getElementById('url_vsA')?.value.trim() || '';
             const urlB = document.getElementById('url_vsB')?.value.trim() || '';
-            let mediaUrl1 = urlA || null;
-            let mediaUrl2 = urlB || null;
+            let m1 = urlA || null; let m2 = urlB || null;
 
-            if (!urlA && uploadFiles.vsA) {
-                mediaUrl1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts);
-            }
-            if (!urlB && uploadFiles.vsB) {
-                mediaUrl2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts);
-            }
+            if (!urlA && uploadFiles.vsA) m1 = await window.PickleMedia.uploadPostImage(uploadFiles.vsA, userId, uploadOpts);
+            if (!urlB && uploadFiles.vsB) m2 = await window.PickleMedia.uploadPostImage(uploadFiles.vsB, userId, uploadOpts);
 
-            return {
-                media_mode: 'vs',
-                media_orientation: layout,
-                media_url_1: mediaUrl1,
-                media_url_2: mediaUrl2,
-            };
+            return { media_mode: 'vs', media_orientation: layout, media_url_1: m1, media_url_2: m2 };
         }
-
         throw new Error('미디어 정보를 구성할 수 없습니다.');
     }
 
