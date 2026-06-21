@@ -45,7 +45,20 @@
         position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
         z-index: 120; border-bottom: 1px solid var(--border-soft); transition: top 0.3s ease-in-out;
     }
+    /* 📱 상/하단바 index.html 완벽 동기화 */
     .top-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .btn-category { background-color: #222225 !important; border: 1px solid #3a3a3c !important; color: #fcfcfc !important; padding: 6px 14px !important; border-radius: 999px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+    .icon-search-top { font-size: 1.35rem !important; color: #fcfcfc; cursor: pointer; }
+    .noti-bell { font-size: 1.45rem !important; color: #fcfcfc; cursor: pointer; }
+
+    .bottom-nav { background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid rgba(255, 255, 255, 0.08) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; padding: 0 !important; height: 38px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; }
+    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: #a1a1aa !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: translateY(3px) !important; }
+    .bottom-nav .nav-btn.active { color: #fcfcfc !important; }
+    .bottom-nav .nav-icon { font-size: 1.05rem !important; display: block !important; }
+    .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
+    .bottom-nav .fire-btn { transform: translateY(-22px) !important; } 
+    .bottom-nav .fire-btn .nav-icon { background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; color: #1c1c1e !important; width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; }
     .logo {
         font-family: 'Black Han Sans', sans-serif; font-size: 1.7rem;
         background: linear-gradient(90deg, var(--point-green), #86efac);
@@ -245,7 +258,9 @@
     <div class="top-row">
         <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
         <div class="header-actions">
-            <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
+            <button type="button" class="btn-category" onclick="toggleCategorySheet()">전체 불판</button>
+            <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
+            <i class="ph ph-bell noti-bell" onclick="alert('알림 기능은 준비 중입니다.')"></i>
         </div>
     </div>
 </header>
@@ -391,7 +406,7 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label">해시태그 <span class="form-hint">(선택사항, 최대 3개)</span></label>
+        <label class="form-label">해시태그 <span class="form-hint">(선택, 최대 3개)</span></label>
         <input type="text" id="inputHashtag" class="input-box" placeholder="#블박 #과실비율 (띄어쓰기로 구분, 최대 3개 입력)">
     </div>
 
@@ -400,6 +415,11 @@
         <div class="legal-warning-text">
             음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
         </div>
+        <!-- 잃어버린 체크박스 복구 -->
+        <label class="legal-check-wrap" style="display:flex; align-items:center; gap:8px; margin-top:12px; cursor:pointer;">
+            <input type="checkbox" id="legalAgreeCheck" style="accent-color:var(--point-pink); width:18px; height:18px;">
+            <span class="legal-check-label" style="font-size:0.85rem; color:var(--text-main); font-weight:700;">위 내용을 확인하였으며, 이에 동의합니다.</span>
+        </label>
     </div>
 
     <button type="submit" class="btn-submit" id="btnSubmitPost">불판 지피기 (등록)</button>
@@ -506,11 +526,12 @@
 
     let createThumbnailState = { type: 'none', file: null, url: null, css: null };
 
-    // 🎨 썸네일 색상도 부드러운 파스텔톤/그라데이션으로 변경
+    // 🎨 썸네일 색상 20개 꽉 채운 프리셋
     const THUMB_COLOR_PRESETS = [
         '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E6B3FF', '#FFB3E6', '#FFD1B3', '#E6FFB3', '#B3FFE6',
         '#B3D1FF', '#D1B3FF', '#FFC4C4', '#F4DFCD', '#D4F0F0',
-        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
+        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)', 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)'
     ];
 
     // 🎨 [추가] 환상의 짝꿍 (A/B) 18개 파스텔 테마 (9칸 x 2줄)
@@ -721,6 +742,10 @@
     async function validateAndSubmit(e) {
         if (e && typeof e.preventDefault === 'function') { e.preventDefault(); e.stopPropagation(); }
         if (isSubmitting) return false;
+
+        // 🚨 체크박스 방어 로직 추가
+        const agree = document.getElementById('legalAgreeCheck')?.checked;
+        if (!agree) { alert('불판 등록 전 주의사항을 확인하고 동의해주세요.'); return false; }
 
         const categorySlug = getSelectedCategorySlug();
         if (!categorySlug) { alert('"🔥 어떤 주제로 불판을 지펴볼까요?"를 선택해주세요.'); return; }
