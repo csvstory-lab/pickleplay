@@ -12,7 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>P!CKLE - 마이 페이지 (권리침해 및 법무 기능 완벽 통합)</title>
+<title>P!CKLE - 마이 페이지</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -21,132 +21,210 @@
     *, *::before, *::after { box-sizing: border-box; }
 
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --theme-gold: #ffcc00;
-        --kakao-yellow: #FEE500;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FF85A1;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
-        --border-color: #27272a;
-        --alert-red: #ff3333;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
+        --alert-red: #ff4d4d;
+        --kakao-yellow: #FEE500;
+        --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+        --glow-peach: 0 4px 20px rgba(255, 133, 161, 0.22);
+        /* legacy aliases — 기존 클래스·인라인 스타일 호환 */
+        --bg-color: var(--bg-base);
+        --card-bg: var(--bg-card);
+        --neon-green: var(--point-green);
+        --neon-pink: var(--point-pink);
+        --neon-blue: var(--point-blue);
+        --theme-gold: var(--point-gold);
+        --border-color: var(--border-card);
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
-        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
-        -webkit-tap-highlight-color: transparent; overflow-x: hidden; position: relative;
+        margin: 0; padding: 0;
+        background-color: var(--bg-base) !important;
+        color: var(--text-main) !important;
+        font-family: 'Pretendard', sans-serif;
+        max-width: 480px; margin: 0 auto;
+        -webkit-tap-highlight-color: transparent;
+        overflow-x: hidden; position: relative;
+        min-height: 100vh;
     }
 
-    /* === 메인 컨텐츠 === */
-    main { padding: 0 0 120px 0; }
+    main { padding: 0 0 110px 0; position: relative; z-index: 1; }
 
     /* 1. 프로필 상단 영역 */
     .profile-header {
-        padding: 30px 20px 20px 20px;
-        background: linear-gradient(180deg, rgba(57, 255, 20, 0.05) 0%, var(--bg-color) 100%);
-        border-bottom: 1px solid var(--border-color);
+        margin: 16px 20px 0;
+        padding: 24px 20px 20px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 24px;
+        box-shadow: var(--shadow-card);
         position: relative;
     }
-    .btn-settings { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-sub); font-size: 1.6rem; cursor: pointer; transition: 0.2s; z-index: 10;}
-    .btn-settings:active { transform: rotate(45deg) scale(0.9); }
-    
-    .profile-info-row { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
-    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; border: 3px solid var(--neon-green); flex-shrink: 0; box-shadow: 0 0 20px rgba(57, 255, 20, 0.2); overflow: hidden; }
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-text { flex: 1; }
-    .profile-name { font-weight: 900; font-size: 1.5rem; color: #fff; display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-    .grade-badge { background: linear-gradient(90deg, #ff8c00, #ff0055); font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; font-weight: 900; color: #fff; vertical-align: middle; }
-    .profile-bio { font-size: 0.9rem; color: var(--text-sub); line-height: 1.4; word-break: keep-all; }
+    .btn-settings {
+        position: absolute; top: 14px; right: 16px;
+        background: var(--bg-elevated); border: 1px solid var(--border-soft);
+        color: var(--text-sub); font-size: 1.25rem;
+        width: 40px; height: 40px; border-radius: 12px;
+        cursor: pointer; transition: 0.2s; z-index: 10;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .btn-settings:active { transform: rotate(45deg) scale(0.92); color: var(--point-pink); border-color: rgba(255, 133, 161, 0.35); }
 
-    /* 포인트 요약 위젯 */
+    .profile-info-row { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+    .profile-avatar {
+        width: 80px; height: 80px; border-radius: 50%;
+        background-color: var(--bg-elevated);
+        display: flex; justify-content: center; align-items: center;
+        font-size: 2.5rem;
+        border: 3px solid var(--point-pink);
+        flex-shrink: 0;
+        box-shadow: var(--glow-peach);
+        overflow: hidden;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-text { flex: 1; min-width: 0; }
+    .profile-name {
+        font-weight: 800; font-size: 1.35rem; color: var(--text-main);
+        display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+    .grade-badge {
+        background: linear-gradient(135deg, var(--point-pink) 0%, var(--point-blue) 100%);
+        font-size: 0.72rem; padding: 3px 9px; border-radius: 999px;
+        font-weight: 800; color: #0a0a0c;
+    }
+    .profile-bio { font-size: 0.88rem; color: var(--text-sub); line-height: 1.45; word-break: keep-all; }
+
     .point-summary-box {
         display: flex; align-items: center; justify-content: space-between;
-        background: linear-gradient(135deg, rgba(255,204,0,0.15), rgba(255,0,127,0.05));
-        border: 1px solid rgba(255,204,0,0.4); border-radius: 16px; 
-        padding: 18px 20px; margin-bottom: 20px; cursor: pointer; transition: 0.2s;
-        box-shadow: 0 4px 15px rgba(255, 204, 0, 0.05);
+        background: linear-gradient(135deg, rgba(252, 211, 77, 0.12), rgba(255, 133, 161, 0.08));
+        border: 1px solid rgba(252, 211, 77, 0.28);
+        border-radius: 16px;
+        padding: 16px 18px; margin-bottom: 18px;
+        cursor: pointer; transition: 0.2s;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     }
-    /* 포인트 UI — 관리자 활성화 시 .feature-hidden 클래스 제거 */
     .point-summary-box.feature-hidden { display: none !important; }
-    .point-summary-box:active { transform: scale(0.97); background: rgba(255,204,0,0.25); }
+    .point-summary-box:active { transform: scale(0.98); border-color: rgba(252, 211, 77, 0.45); }
     .point-left { display: flex; flex-direction: column; gap: 4px; }
-    .point-val { font-family: 'Black Han Sans', sans-serif; font-size: 1.6rem; color: var(--theme-gold); letter-spacing: 1px; }
-    .point-val span { font-size: 1.2rem; }
-    .point-expire { font-size: 0.75rem; color: var(--neon-pink); font-weight: 800; background: rgba(255,0,127,0.15); padding: 3px 8px; border-radius: 6px; display: inline-block; width: fit-content; border: 1px solid rgba(255,0,127,0.3); }
-    .point-right { color: var(--text-sub); font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; gap: 5px; }
+    .point-val { font-family: 'Black Han Sans', sans-serif; font-size: 1.5rem; color: var(--point-gold); letter-spacing: 0.5px; }
+    .point-val span { font-size: 1.1rem; }
+    .point-expire {
+        font-size: 0.72rem; color: var(--point-pink); font-weight: 700;
+        background: rgba(255, 133, 161, 0.12); padding: 3px 8px; border-radius: 8px;
+        display: inline-block; width: fit-content; border: 1px solid rgba(255, 133, 161, 0.25);
+    }
+    .point-right { color: var(--text-sub); font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
 
-    /* 팬덤 지표 */
-    .fandom-stats { display: flex; gap: 25px; margin-bottom: 20px; }
-    .stat-box { display: flex; flex-direction: column; cursor: pointer; transition: 0.2s; padding: 5px; border-radius: 8px; }
-    .stat-box:active { background-color: rgba(255,255,255,0.1); transform: scale(0.95); }
-    .stat-num { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: #fff; }
-    .stat-label { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); }
+    .fandom-stats { display: flex; gap: 20px; margin-bottom: 18px; }
+    .stat-box {
+        display: flex; flex-direction: column; cursor: pointer; transition: 0.2s;
+        padding: 8px 12px; border-radius: 12px;
+        background: var(--bg-elevated); border: 1px solid var(--border-soft);
+        min-width: 0; flex: 1;
+    }
+    .stat-box:active { background-color: rgba(255, 255, 255, 0.06); transform: scale(0.97); }
+    .stat-num { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--text-main); }
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-top: 2px; }
 
-    /* 랭킹 & 경험치 바 */
-    .exp-container { background-color: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
-    .exp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .private-rank { font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 6px; }
-    .private-rank .highlight { color: var(--neon-green); font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; }
-    .btn-guide { background: rgba(255,255,255,0.1); border: 1px solid #52525b; color: var(--text-sub); font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.2s; margin-left: 5px; }
-    .btn-guide:active { background: var(--neon-green); color: #000; border-color: var(--neon-green); }
-    .exp-text { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); margin-left: auto; }
-    
-    .progress-track { width: 100%; height: 10px; background-color: #333; border-radius: 10px; overflow: hidden; position: relative; }
-    .progress-fill { position: absolute; top: 0; left: 0; height: 100%; width: 75%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-green)); border-radius: 10px; }
+    .exp-container {
+        background-color: var(--bg-elevated);
+        padding: 14px 16px; border-radius: 16px;
+        border: 1px solid var(--border-soft);
+    }
+    .exp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
+    .private-rank { font-weight: 700; font-size: 0.88rem; color: var(--text-main); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .private-rank .highlight { color: var(--point-green); font-family: 'Black Han Sans', sans-serif; font-size: 1.1rem; }
+    .btn-guide {
+        background: var(--bg-card); border: 1px solid var(--border-soft);
+        color: var(--text-sub); font-size: 0.68rem; padding: 4px 9px;
+        border-radius: 999px; cursor: pointer; font-weight: 700; transition: 0.2s; margin-left: 4px;
+    }
+    .btn-guide:active { background: var(--point-green); color: #0a0a0c; border-color: var(--point-green); }
+    .exp-text { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); }
+
+    .progress-track { width: 100%; height: 8px; background-color: var(--bg-base); border-radius: 999px; overflow: hidden; position: relative; }
+    .progress-fill {
+        position: absolute; top: 0; left: 0; height: 100%; width: 75%;
+        background: linear-gradient(90deg, var(--point-blue), var(--point-green));
+        border-radius: 999px;
+    }
 
     /* 2. 내 활동 탭 */
-    .my-tab-wrapper { display: flex; border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); position: sticky; top: 65px; z-index: 700; }
-    .my-tab { flex: 1; text-align: center; padding: 15px 0; font-weight: 800; font-size: 0.95rem; color: var(--text-sub); cursor: pointer; border: none; background: transparent; position: relative; transition: 0.2s; }
-    .my-tab.active { color: var(--neon-green); }
-    .my-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 20%; width: 60%; height: 3px; background-color: var(--neon-green); border-radius: 3px 3px 0 0; }
+    .my-tab-wrapper {
+        display: flex; border-bottom: 1px solid var(--border-soft);
+        background: rgba(10, 10, 12, 0.88);
+        backdrop-filter: blur(14px);
+        position: sticky; top: 65px; z-index: 700;
+        margin-top: 16px; padding: 0 8px;
+    }
+    .my-tab {
+        flex: 1; text-align: center; padding: 14px 4px;
+        font-weight: 700; font-size: 0.82rem; color: var(--text-sub);
+        cursor: pointer; border: none; background: transparent;
+        position: relative; transition: 0.2s; font-family: inherit;
+        white-space: nowrap;
+    }
+    .my-tab.active { color: var(--point-green); }
+    .my-tab.active::after {
+        content: ''; position: absolute; bottom: 0; left: 18%; width: 64%; height: 3px;
+        background: linear-gradient(90deg, var(--point-blue), var(--point-pink));
+        border-radius: 3px 3px 0 0;
+    }
 
     /* 3. 리스트 영역 */
-    .list-container { padding: 15px 20px; display: flex; flex-direction: column; gap: 15px; }
+    .list-container { padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 14px; }
     .empty-state {
         text-align: center; padding: 48px 20px;
-        color: var(--text-sub); font-size: 0.9rem; font-weight: 700;
-        line-height: 1.5;
+        color: var(--text-sub); font-size: 0.88rem; font-weight: 600;
+        line-height: 1.55;
+        background: var(--bg-card); border-radius: 20px;
+        border: 1px dashed var(--border-soft);
     }
     .hidden { display: none !important; }
-    
-    .record-card { background-color: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 15px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative; }
-    .record-card:active { transform: scale(0.98); border-color: var(--neon-green); }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.75rem; font-weight: 800; gap: 8px; }
+
+    .record-card {
+        background-color: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-card);
+        padding: 16px 18px;
+        cursor: pointer;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        position: relative;
+        box-shadow: var(--shadow-card);
+    }
+    .record-card:active { transform: scale(0.98); border-color: rgba(115, 165, 255, 0.35); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.75rem; font-weight: 700; gap: 8px; }
     .card-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
     .btn-edit-post {
-        flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
-        background: transparent; cursor: pointer; transition: 0.2s; line-height: 1.2;
+        flex-shrink: 0; padding: 5px 11px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+        background: var(--bg-elevated); cursor: pointer; transition: 0.2s; line-height: 1.2;
+        font-family: inherit; border: 1px solid var(--border-soft);
     }
-    .btn-edit-post.ing {
-        color: var(--neon-green); border: 1px solid var(--neon-green);
-    }
-    .btn-edit-post.ing:active { background: rgba(57, 255, 20, 0.12); }
-    .btn-edit-post.done {
-        color: #a1a1aa; border: 1px solid #52525b;
-    }
+    .btn-edit-post.ing { color: var(--point-green); border-color: rgba(74, 222, 128, 0.45); }
+    .btn-edit-post.ing:active { background: rgba(74, 222, 128, 0.12); }
+    .btn-edit-post.done { color: var(--text-sub); border-color: var(--border-soft); }
     .btn-share-post {
-        flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
-        background: transparent; cursor: pointer; transition: 0.2s; line-height: 1.2;
+        flex-shrink: 0; padding: 5px 11px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+        background: var(--bg-elevated); cursor: pointer; transition: 0.2s; line-height: 1.2;
+        font-family: inherit; border: 1px solid var(--border-soft);
     }
-    .btn-share-post.ing {
-        color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.55);
-    }
-    .btn-share-post.ing:active {
-        background: rgba(0, 240, 255, 0.12); border-color: var(--neon-blue);
-    }
+    .btn-share-post.ing { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.45); }
+    .btn-share-post.ing:active { background: rgba(115, 165, 255, 0.12); }
     .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
-    .status-badge.ing { color: var(--neon-blue); }
-    .status-badge.done { color: var(--neon-pink); }
-    .card-date {
-        color: #52525b;
-        white-space: nowrap;
-        flex-shrink: 0;
-        margin-left: 8px;
-    }
-    .card-title { font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 12px; line-height: 1.4; word-break: keep-all; }
+    .status-badge.ing { color: var(--point-blue); }
+    .status-badge.done { color: var(--point-pink); }
+    .card-date { color: var(--text-sub); white-space: nowrap; flex-shrink: 0; margin-left: 8px; opacity: 0.85; }
+    .card-title { font-size: 1.02rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; line-height: 1.4; word-break: keep-all; }
     .card-footer-stats { display: flex; gap: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
     .card-footer-stats--created {
         justify-content: space-between;
@@ -163,13 +241,13 @@
     .stat-fire { color: var(--theme-gold); }
 
     .record-card.comment-card .comment-preview {
-        font-size: 0.88rem; font-weight: 600; color: #d4d4d8; line-height: 1.45;
-        margin-bottom: 12px; padding: 10px 12px; border-radius: 10px;
-        background: #09090b; border: 1px solid #3f3f46;
-        border-left: 3px solid var(--neon-green); word-break: break-all;
+        font-size: 0.86rem; font-weight: 500; color: var(--text-main); line-height: 1.45;
+        margin-bottom: 12px; padding: 10px 12px; border-radius: 12px;
+        background: var(--bg-elevated); border: 1px solid var(--border-soft);
+        border-left: 3px solid var(--point-green); word-break: break-all;
     }
     .record-card.comment-card .comment-preview-label {
-        display: block; font-size: 0.68rem; font-weight: 800; color: var(--neon-green);
+        display: block; font-size: 0.68rem; font-weight: 700; color: var(--point-green);
         margin-bottom: 6px; letter-spacing: -0.02em;
     }
 
@@ -223,16 +301,14 @@
     .result-win { font-family: 'Black Han Sans', sans-serif; color: var(--neon-green); font-size: 1.1rem; text-shadow: 0 0 5px rgba(57, 255, 20, 0.3); }
 
     .record-card.creator-live {
-        border-color: rgba(57, 255, 20, 0.35);
-        box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.08);
+        border-color: rgba(74, 222, 128, 0.3);
+        box-shadow: var(--shadow-card), 0 0 0 1px rgba(74, 222, 128, 0.06);
     }
     .vote-result-box.creator-live-stats {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(57, 255, 20, 0.25);
-        background: linear-gradient(180deg, rgba(57, 255, 20, 0.06), #27272a);
+        flex-direction: column; align-items: stretch; gap: 8px; margin-bottom: 12px;
+        border: 1px solid rgba(74, 222, 128, 0.22);
+        background: linear-gradient(180deg, rgba(74, 222, 128, 0.06), var(--bg-elevated));
+        border-radius: 14px; padding: 12px 14px;
     }
     .creator-live-ab {
         display: flex;
@@ -254,26 +330,19 @@
         text-shadow: none;
     }
 
-    /* 보관함 — 네오브루탈리즘 쿠폰 카드 */
+    /* 보관함 — 다크 소프트 글로우 쿠폰 카드 */
     .coupon-card {
-        background: #0a0a0c;
-        border: 3px solid #fff;
-        border-radius: 4px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 20px;
         padding: 18px 16px 16px;
-        box-shadow: 5px 5px 0 var(--neon-green), 0 0 24px rgba(57, 255, 20, 0.08);
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.25s ease;
+        box-shadow: var(--shadow-card);
+        display: flex; flex-direction: column; gap: 14px;
+        cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.25s ease;
     }
-    .coupon-card:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--neon-green); }
-    .coupon-card.is-used {
-        opacity: 0.62;
-        box-shadow: 4px 4px 0 #3f3f46;
-        border-color: #52525b;
-    }
-    .coupon-card.is-used .coupon-title { color: #a1a1aa; }
+    .coupon-card:active { transform: scale(0.98); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35); }
+    .coupon-card.is-used { opacity: 0.62; border-color: var(--border-soft); }
+    .coupon-card.is-used .coupon-title { color: var(--text-sub); }
     .coupon-card-header {
         display: flex;
         justify-content: space-between;
@@ -294,16 +363,16 @@
         line-height: 1.2;
     }
     .coupon-status-badge.badge-unused {
-        color: #000;
-        background: var(--neon-blue);
-        border-color: #fff;
-        box-shadow: 2px 2px 0 #000;
+        color: #0a0a0c;
+        background: linear-gradient(135deg, var(--point-blue), var(--point-green));
+        border-color: transparent;
+        box-shadow: none;
     }
     .coupon-status-badge.badge-used {
-        color: #71717a;
-        background: #27272a;
-        border-color: #52525b;
-        box-shadow: 2px 2px 0 #000;
+        color: var(--text-sub);
+        background: var(--bg-elevated);
+        border-color: var(--border-soft);
+        box-shadow: none;
     }
     .coupon-date {
         font-size: 0.72rem;
@@ -312,62 +381,37 @@
         flex-shrink: 0;
     }
     .coupon-title {
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.12rem;
-        font-weight: 400;
-        color: #fff;
-        line-height: 1.35;
-        margin: 0;
-        word-break: keep-all;
-        text-shadow: 2px 2px 0 rgba(255, 0, 127, 0.35);
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1.05rem; font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.35; margin: 0; word-break: keep-all;
     }
     .coupon-pin-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #111;
-        border: 2px solid #fff;
-        border-radius: 4px;
+        display: flex; align-items: center; gap: 10px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-soft);
+        border-radius: 12px;
         padding: 12px 12px 12px 14px;
-        box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.45);
     }
-    .coupon-card.is-used .coupon-pin-row {
-        border-color: #52525b;
-        background: #18181b;
-    }
+    .coupon-card.is-used .coupon-pin-row { border-color: var(--border-soft); background: var(--bg-base); }
     .coupon-pin-value {
-        flex: 1;
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.35rem;
-        color: var(--neon-green);
-        letter-spacing: 0.12em;
-        text-shadow: 0 0 12px rgba(57, 255, 20, 0.35);
-        word-break: break-all;
-        line-height: 1.2;
+        flex: 1; font-family: 'Black Han Sans', sans-serif;
+        font-size: 1.2rem; color: var(--point-green);
+        letter-spacing: 0.1em; word-break: break-all; line-height: 1.2;
     }
-    .coupon-card.is-used .coupon-pin-value {
-        color: #71717a;
-        text-shadow: none;
-    }
+    .coupon-card.is-used .coupon-pin-value { color: var(--text-sub); }
     .btn-coupon-copy {
-        flex-shrink: 0;
-        padding: 8px 14px;
-        border: 2px solid #fff;
-        border-radius: 4px;
-        background: var(--neon-pink);
-        color: #000;
-        font-size: 0.78rem;
-        font-weight: 900;
-        cursor: pointer;
-        box-shadow: 3px 3px 0 #000;
-        transition: transform 0.12s ease;
-        font-family: 'Pretendard', sans-serif;
+        flex-shrink: 0; padding: 8px 14px;
+        border: none; border-radius: 10px;
+        background: linear-gradient(135deg, var(--point-pink), #ff9eb5);
+        color: #0a0a0c; font-size: 0.78rem; font-weight: 800;
+        cursor: pointer; transition: transform 0.12s ease;
+        font-family: inherit;
     }
-    .btn-coupon-copy:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+    .btn-coupon-copy:active { transform: scale(0.96); }
     .coupon-card.is-used .btn-coupon-copy {
-        background: #3f3f46;
-        color: #a1a1aa;
-        border-color: #52525b;
+        background: var(--bg-elevated); color: var(--text-sub);
+        border: 1px solid var(--border-soft);
     }
 
     /* ============================================== */
@@ -377,32 +421,56 @@
         position: fixed; top: 0; right: 0; width: 100%; height: 100%;
         max-width: min(480px, 100vw);
         margin: 0 auto;
-        background-color: var(--bg-color); transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+        background-color: var(--bg-base);
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
         display: flex; flex-direction: column;
         overflow-x: hidden;
     }
     .slide-panel.open { transform: translateX(0); }
-    
-    /* Depth 1 (Settings) */
-    #settingsPanel { z-index: 9100; }
-    /* Depth 2 (Sub menus) */
-    .depth-2-panel { z-index: 9200; background-color: #121214; min-width: 0; overflow-x: hidden; }
 
-    .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); }
+    #settingsPanel { z-index: 9100; }
+    .depth-2-panel { z-index: 9200; background-color: var(--bg-base); min-width: 0; overflow-x: hidden; }
+
+    .panel-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border-soft);
+        background-color: rgba(10, 10, 12, 0.92);
+        backdrop-filter: blur(14px);
+    }
     .header-left { display: flex; align-items: center; }
-    .btn-back { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 0; margin-right: 15px; }
-    .panel-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; margin: 0; letter-spacing: -0.5px; }
+    .btn-back {
+        background: var(--bg-elevated); border: 1px solid var(--border-soft);
+        color: var(--text-main); font-size: 1.2rem;
+        width: 36px; height: 36px; border-radius: 10px;
+        cursor: pointer; padding: 0; margin-right: 12px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .panel-title {
+        font-family: 'Pretendard', sans-serif; font-weight: 800;
+        font-size: 1.15rem; color: var(--text-main); margin: 0; letter-spacing: -0.3px;
+    }
     
     /* 설정 메뉴 리스트 스타일 */
     .settings-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 20px 40px 20px; min-width: 0; max-width: 100%; }
     .settings-group { margin-top: 30px; }
-    .settings-group-title { font-size: 0.85rem; font-weight: 800; color: var(--neon-green); margin-bottom: 10px; padding-left: 5px; }
-    .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 5px; border-bottom: 1px solid #222; font-size: 1.05rem; font-weight: 600; color: #d4d4d8; cursor: pointer; transition: 0.2s; }
-    .settings-item:not(.no-click):active { background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; }
+    .settings-group-title { font-size: 0.82rem; font-weight: 800; color: var(--point-green); margin-bottom: 10px; padding-left: 5px; }
+    .settings-item {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 16px 8px; border-bottom: 1px solid var(--border-soft);
+        font-size: 0.98rem; font-weight: 600; color: var(--text-main);
+        cursor: pointer; transition: 0.2s;
+    }
+    .settings-item:not(.no-click):active { background-color: rgba(255, 255, 255, 0.04); border-radius: 10px; }
     .settings-item:last-child { border-bottom: none; }
     .settings-item.no-click { cursor: default; }
-    .arrow-icon { color: #52525b; font-weight: 900; font-size: 1.1rem; }
-    .item-subtext { font-size: 0.85rem; color: var(--neon-blue); font-weight: 700; background: rgba(0, 240, 255, 0.1); padding: 4px 8px; border-radius: 8px; }
+    .arrow-icon { color: var(--text-sub); font-weight: 700; font-size: 1rem; }
+    .item-subtext {
+        font-size: 0.8rem; color: var(--point-blue); font-weight: 700;
+        background: rgba(115, 165, 255, 0.12); padding: 4px 9px; border-radius: 8px;
+        border: 1px solid rgba(115, 165, 255, 0.2);
+    }
     .text-danger { color: var(--alert-red); }
 
     /* 약관/정책 문서 패널 */
@@ -468,8 +536,17 @@
     .edit-avatar { width: 100px; height: 100px; border-radius: 50%; background-color: #27272a; display: flex; justify-content: center; align-items: center; font-size: 3rem; border: 2px solid var(--border-color); overflow: hidden; flex-shrink: 0; }
     .edit-avatar img { width: 100%; height: 100%; object-fit: cover; max-width: 100%; }
     .avatar-action-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; justify-content: center; max-width: 100%; }
-    .btn-avatar-action { background-color: #27272a; color: #fff; border: 1px solid #3f3f46; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
-    .btn-avatar-action:active { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); transform: scale(0.95); }
+    .btn-avatar-action {
+        background-color: var(--bg-elevated); color: var(--text-main);
+        border: 1px solid var(--border-soft);
+        padding: 8px 16px; border-radius: 999px;
+        font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        display: flex; align-items: center; gap: 5px; font-family: inherit;
+    }
+    .btn-avatar-action:active {
+        background: linear-gradient(135deg, var(--point-pink), var(--point-blue));
+        color: #0a0a0c; border-color: transparent; transform: scale(0.96);
+    }
     .input-group { margin-bottom: 25px; min-width: 0; width: 100%; max-width: 100%; }
     .input-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 800; color: #d4d4d8; margin-bottom: 10px; padding-left: 5px; }
     .char-count { color: #52525b; font-weight: 600; font-size: 0.8rem; flex-shrink: 0; }
@@ -488,9 +565,18 @@
         border-radius: 12px;
         outline: none;
     }
-    .input-field:focus { border-color: var(--neon-green); }
-    .btn-check-dup { background-color: #27272a; color: #fff; border: 1px solid #3f3f46; border-radius: 12px; padding: 0 15px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
-    .btn-check-dup:active { background-color: var(--neon-green); color: #000; border-color: var(--neon-green); }
+    .input-field:focus { border-color: var(--point-green); box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25); }
+    .btn-check-dup {
+        background-color: var(--bg-elevated); color: var(--text-main);
+        border: 1px solid var(--border-soft); border-radius: 12px;
+        padding: 0 15px; font-weight: 700; font-size: 0.88rem;
+        cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0;
+        font-family: inherit;
+    }
+    .btn-check-dup:active {
+        background: linear-gradient(135deg, var(--point-blue), var(--point-green));
+        color: #0a0a0c; border-color: transparent;
+    }
     .textarea-field {
         width: 100%;
         max-width: 100%;
@@ -504,7 +590,7 @@
         outline: none;
         resize: none;
     }
-    .textarea-field:focus { border-color: var(--neon-green); }
+    .textarea-field:focus { border-color: var(--point-green); box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25); }
 
     .profile-demographics {
         margin-top: 4px;
@@ -617,21 +703,32 @@
     /* === 공통 오버레이 & 바텀 시트 (마이페이지용) === */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .overlay.open { opacity: 1; pointer-events: auto; }
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: #121214; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px 20px 40px 20px; z-index: 9999; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); border-top: 1px solid var(--border-color); box-shadow: 0 -10px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column; max-height: 80vh; }
+    .bottom-sheet {
+        position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
+        background-color: var(--bg-card);
+        border-top-left-radius: 24px; border-top-right-radius: 24px;
+        padding: 25px 20px 40px 20px; z-index: 9999;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+        border-top: 1px solid var(--border-card);
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.65);
+        display: flex; flex-direction: column; max-height: 80vh;
+    }
     .bottom-sheet.open { transform: translateY(0); }
     .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .sheet-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; letter-spacing: -0.5px; }
-    .btn-close-sheet { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+    .sheet-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--text-main); letter-spacing: -0.3px; }
+    .btn-close-sheet {
+        background: var(--bg-elevated); border: 1px solid var(--border-soft);
+        color: var(--text-main); font-size: 1.1rem; cursor: pointer;
+        width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
 
-    /* 팬덤 리스트 시트 — 다크 네오브루탈 (픽클 톤앤매너) */
     #fandomSheet.fandom-sheet-neo {
-        background: #121214;
-        border-top: 1px solid var(--border-color);
-        border-left: none;
-        border-right: none;
-        border-bottom: none;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-card);
         border-radius: 24px 24px 0 0;
-        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.65);
         color: var(--text-main);
         max-height: 78vh;
     }
@@ -854,8 +951,59 @@
     .agree-box input { width: 20px; height: 20px; accent-color: var(--alert-red); flex-shrink: 0; margin-top: 2px; }
     .agree-text { font-size: 0.8rem; color: #d4d4d8; line-height: 1.5; font-weight: 500; word-break: keep-all; min-width: 0; }
 
-    .btn-submit-legal { width: 100%; max-width: 100%; background: var(--alert-red); color: #fff; border: none; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 900; font-family: 'Pretendard', sans-serif; cursor: pointer; transition: 0.2s; }
+    .btn-submit-legal {
+        width: 100%; max-width: 100%;
+        background: linear-gradient(135deg, #ff6b6b, var(--alert-red));
+        color: #fff; border: none; padding: 16px; border-radius: 14px;
+        font-size: 1rem; font-weight: 800; font-family: 'Pretendard', sans-serif;
+        cursor: pointer; transition: 0.2s;
+        box-shadow: 0 4px 16px rgba(255, 77, 77, 0.25);
+    }
     .btn-submit-legal:active { transform: scale(0.98); }
+
+    /* === 모던 다크 테마 보조 패치 === */
+    .vote-result-box {
+        background-color: var(--bg-elevated); border-radius: 12px;
+        padding: 10px 14px; border: 1px solid var(--border-soft);
+    }
+    .my-pick-info { color: var(--text-main); }
+    .result-win { color: var(--point-green); text-shadow: none; }
+    .guide-modal {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-card) !important;
+        box-shadow: var(--shadow-card) !important;
+    }
+    .guide-modal-title { color: var(--text-main) !important; }
+    .guide-section-title { color: var(--point-green) !important; }
+    .top-tab.active {
+        background: var(--bg-elevated) !important;
+        color: var(--point-green) !important;
+        border: 1px solid var(--border-soft) !important;
+    }
+    .tab-wrapper { background: var(--bg-elevated) !important; }
+    .notice-badge {
+        background: rgba(74, 222, 128, 0.1) !important;
+        color: var(--point-green) !important;
+        border-color: rgba(74, 222, 128, 0.35) !important;
+    }
+    .fandom-lvl, .fandom-name-wrap .grade-badge {
+        background: linear-gradient(135deg, var(--point-pink), var(--point-blue)) !important;
+        color: #0a0a0c !important;
+    }
+    #fandomSheet .btn-follow.match-pick,
+    #fandomSheet .btn-follow.follow.match-pick {
+        background: linear-gradient(135deg, var(--point-pink), #ff9eb5) !important;
+        color: #0a0a0c !important;
+        border: none !important;
+    }
+    .btn-save-profile {
+        background: linear-gradient(135deg, var(--point-blue), var(--point-pink)) !important;
+        color: #0a0a0c !important;
+        border: none !important;
+        font-weight: 800 !important;
+        border-radius: 14px !important;
+    }
+    input:checked + .toggle-slider { background: var(--point-green) !important; }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
