@@ -150,6 +150,10 @@
     if (window.PickleHeaderLegacyCleanup && window.PickleHeaderLegacyCleanup.run) {
       window.PickleHeaderLegacyCleanup.run();
     }
+
+    if (window.PickleProfileModal && window.PickleProfileModal.ensure) {
+      window.PickleProfileModal.ensure();
+    }
   }
 
   window.closeAllDrawers = closeAllDrawers;

@@ -1,6 +1,8 @@
 /**
  * P!CKLE — 공통 상단바 · 하단바 (index.html 기준)
  */
+@import url('pickle-profile-modal.css');
+
 :root {
   --bg-base: #0a0a0c;
   --bg-card: #1c1c1e;

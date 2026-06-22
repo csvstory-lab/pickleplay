@@ -1,0 +1,238 @@
+/**
+ * P!CKLE — 공통 유저 프로필 바텀시트 (모던 다크 · 파스텔)
+ */
+.pickle-profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10100;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  max-width: 480px;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+}
+
+.pickle-profile-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pickle-profile-modal-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background-color: #18181b;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px calc(28px + env(safe-area-inset-bottom));
+  z-index: 10101;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45), 0 -1px 0 rgba(115, 165, 255, 0.06);
+  font-family: 'Pretendard', sans-serif;
+}
+
+.pickle-profile-modal-sheet.open {
+  transform: translateY(0);
+}
+
+.pickle-profile-modal-sheet .sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pickle-profile-modal-sheet .sheet-title {
+  margin: 0;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pickle-profile-modal-sheet .sheet-title .ph {
+  color: #73a5ff;
+  font-size: 1.1rem;
+}
+
+.pickle-profile-modal-sheet .btn-close-sheet {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #27272a;
+  color: #a1a1aa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.pickle-profile-modal-sheet .btn-close-sheet:active {
+  background: #3f3f46;
+  color: #ffffff;
+}
+
+.profile-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 22px;
+}
+
+.profile-modal-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #27272a;
+  border: 2px solid rgba(115, 165, 255, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  color: #a1a1aa;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(74, 222, 128, 0.08);
+  overflow: hidden;
+}
+
+.profile-modal-identity {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-modal-name {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.pickle-profile-modal-sheet .profile-modal-bio {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #a1a1aa;
+  line-height: 1.45;
+  max-width: 280px;
+  text-align: center;
+  word-break: keep-all;
+  margin: 0;
+}
+
+.profile-modal-stats {
+  display: flex;
+  gap: 18px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-modal-stats .stat-value {
+  font-weight: 800;
+  margin-left: 3px;
+}
+
+.profile-modal-stats .stat-value--mint {
+  color: #4ade80;
+}
+
+.profile-modal-stats .stat-value--blue {
+  color: #73a5ff;
+}
+
+.profile-modal-stats-divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  align-self: center;
+}
+
+.profile-modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pickle-profile-modal-sheet .btn-action-v2 {
+  flex: 1;
+  padding: 13px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 800;
+  font-size: 0.86rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.pickle-profile-modal-sheet .btn-action-v2:active {
+  transform: scale(0.97);
+}
+
+.pickle-profile-modal-sheet #popupFollowBtn {
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(74, 222, 128, 0.32);
+  color: #4ade80;
+  box-shadow: 0 2px 12px rgba(74, 222, 128, 0.1);
+}
+
+.pickle-profile-modal-sheet #popupFollowBtn.is-following {
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+  box-shadow: none;
+}
+
+.pickle-profile-modal-sheet #popupMessageBtn {
+  display: none;
+  background: #27272a;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+body[data-nav-page="detail"] .pickle-profile-modal-sheet #popupMessageBtn {
+  display: inline-flex;
+}
+
+/* 프로필 클릭 가능 영역 */
+.post-author-box .author-pic,
+.post-author-box #detailAuthorName,
+.comment-item .author-pic,
+.comment-item .comment-user span:first-of-type,
+.comments-list .comment-author,
+.comments-list .comment-author-avatar {
+  cursor: pointer;
+}

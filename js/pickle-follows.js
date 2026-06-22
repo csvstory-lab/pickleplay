@@ -828,18 +828,27 @@
 
   function getProfileOverlay() {
     return (
+      document.getElementById('profileModalOverlay') ||
+      document.getElementById('rankingProfileOverlay') ||
       document.getElementById('detailOverlay') ||
-      document.getElementById('commonOverlay') ||
-      document.getElementById('rankingProfileOverlay')
+      document.getElementById('commonOverlay')
     );
   }
 
   function closeUserProfileModal() {
     var sheet = document.getElementById('userProfileSheet');
-    var overlay = getProfileOverlay();
-    if (overlay) overlay.classList.remove('open');
-    if (sheet) sheet.classList.remove('open');
-    document.body.style.overflow = '';
+    var overlay = document.getElementById('profileModalOverlay');
+    if (overlay) {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    if (sheet) {
+      sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden', 'true');
+    }
+    if (!document.querySelector('.overlay.open, .pickle-profile-modal-overlay.open, .report-modal.open')) {
+      document.body.style.overflow = '';
+    }
   }
 
   function normalizeUserBio(raw) {
@@ -895,7 +904,9 @@
 
   function setPopupFollowButtonState(btn, isFollowingUser) {
     if (!btn) return;
-    var isRankingSheet = btn.closest && btn.closest('.ranking-profile-sheet');
+    var isRankingSheet =
+      (btn.closest && btn.closest('.pickle-profile-modal-sheet')) ||
+      (btn.closest && btn.closest('.ranking-profile-sheet'));
     if (isRankingSheet) {
       btn.classList.toggle('is-following', !!isFollowingUser);
       btn.style.background = '';
@@ -925,6 +936,10 @@
     options = options || {};
     var uid = userId ? String(userId).trim() : '';
     if (!uid) return;
+
+    if (window.PickleProfileModal && window.PickleProfileModal.ensure) {
+      window.PickleProfileModal.ensure();
+    }
 
     var sheet = document.getElementById('userProfileSheet');
     if (!sheet) {
@@ -993,9 +1008,15 @@
 
     await loadProfilePopupCounts(uid);
 
-    var overlay = getProfileOverlay();
-    if (overlay) overlay.classList.add('open');
+    var overlay = document.getElementById('profileModalOverlay') || getProfileOverlay();
+    if (overlay) {
+      overlay.classList.add('open');
+      if (overlay.id === 'profileModalOverlay') {
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+    }
     sheet.classList.add('open');
+    sheet.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
   }
 
@@ -1017,6 +1038,7 @@
     loadProfilePopupCounts: loadProfilePopupCounts,
     applyProfileModalBio: applyProfileModalBio,
     loadProfileModalBio: loadProfileModalBio,
+    setPopupFollowButtonState: setPopupFollowButtonState,
   };
 
   window.openFandomSheet = openFandomSheet;

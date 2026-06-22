@@ -296,32 +296,6 @@
     </div>
 </div>
 
-<!-- 인스타 스타일 소셜 프로필 바텀 시트 -->
-<div class="share-sheet" id="userProfileSheet">
-    <div class="sheet-header">
-        <h2 class="sheet-title" style="color: var(--point-green);">🥒 픽클러 프로필</h2>
-        <button class="btn-close-sheet" onclick="closeModals()">✕</button>
-    </div>
-    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:10px 0 25px 0;">
-        <div id="popupUserPic" style="width:76px; height:76px; border-radius:50%; background:#2c2c2e; border:2.5px solid var(--point-pink); display:flex; justify-content:center; align-items:center; font-size:2.2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">👤</div>
-        <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:5px;">
-            <div id="popupUserName" style="font-size:1.15rem; font-weight:900; color:#fff; letter-spacing:-0.3px;">유저 닉네임</div>
-            <p class="profile-modal-bio" id="popupUserBadge" hidden style="margin:0; font-size:0.82rem; font-weight:500; color:var(--text-sub); line-height:1.45; max-width:280px; text-align:center; word-break:keep-all;"></p>
-        </div>
-        
-        <!-- 🛠️ [신규 추가] 실시간 픽(팔로우) 통계 현황판 UI 디자인 스퀘어 -->
-        <div style="display:flex; gap:20px; margin-top:10px; font-size:0.82rem; font-weight:700; color:var(--text-sub); background: rgba(255,255,255,0.03); padding: 6px 20px; border-radius: 20px; border: 1px solid var(--border-soft);">
-            <div>나를 픽한 <span id="popupFollowerCount" style="color:var(--point-green); font-weight:900; margin-left:2px;">0</span></div>
-            <div style="width:1px; height:12px; background:var(--border-soft); align-self:center;"></div>
-            <div>내가 픽한 <span id="popupFollowingCount" style="color:var(--point-blue); font-weight:900; margin-left:2px;">0</span></div>
-        </div>
-    </div>
-    <div style="display:flex; gap:10px; width:100%; box-sizing:border-box;">
-        <button class="btn-action-v2" id="popupFollowBtn" style="flex:1 !important; background:linear-gradient(135deg, var(--point-green), #22c55e); color:#0a0a0c; font-weight:900;" onclick="handlePopupFollow()"><i class="ph ph-plus-bold"></i> 나의 픽</button>
-        <button class="btn-action-v2" style="flex:1 !important; background-color:var(--bg-elevated); border:1px solid var(--border-soft); color:#fff;" onclick="openMessageModal()"><i class="ph-fill ph-paper-plane-tilt"></i> 메시지 보내기</button>
-    </div>
-</div>
-
 <!-- 쪽지 작성 팝업창 -->
 <div class="report-modal" id="messageModal">
     <div class="modal-header">
@@ -477,6 +451,7 @@
 <script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-ranking-events.js"></script>
+<script src="../js/pickle-profile-modal.js?v=20260617_profile1"></script>
 <script src="../js/pickle-follows.js"></script>
 <script src="../js/pickle-comment-clean.js?v=20260617_bannedkw2"></script>
 <script src="../js/pickle-user-sanction.js"></script>
@@ -498,8 +473,12 @@
         document.getElementById('detailOverlay').classList.remove('open');
         document.getElementById('shareSheet').classList.remove('open');
         document.getElementById('reportModal').classList.remove('open');
-        document.getElementById('userProfileSheet').classList.remove('open');
         document.getElementById('messageModal').classList.remove('open');
+        if (window.PickleFollows && typeof window.PickleFollows.closeUserProfileModal === 'function') {
+            window.PickleFollows.closeUserProfileModal();
+        } else if (window.PickleProfileModal && typeof window.PickleProfileModal.close === 'function') {
+            window.PickleProfileModal.close();
+        }
         document.body.style.overflow = '';
     }
     function openShareSheet() {
@@ -512,12 +491,6 @@
         document.getElementById('reportModal').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
-    function openUserProfileSheet() {
-        document.getElementById('detailOverlay').classList.add('open');
-        document.getElementById('userProfileSheet').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-
     function openMessageModal() {
         var btn = document.getElementById('popupFollowBtn');
         var targetUid = btn ? btn.getAttribute('data-user-id') : null;
@@ -528,12 +501,15 @@
             return;
         }
 
-        document.getElementById('userProfileSheet').classList.remove('open');
+        if (window.PickleFollows && typeof window.PickleFollows.closeUserProfileModal === 'function') {
+            window.PickleFollows.closeUserProfileModal();
+        }
         document.getElementById('messageTargetNickname').textContent = targetName;
         document.getElementById('messageContent').value = ''; 
         
         document.getElementById('detailOverlay').classList.add('open');
         document.getElementById('messageModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
 
     async function submitDirectMessage() {
@@ -629,56 +605,6 @@
         var menu = document.getElementById('sortDropdownMenu');
         if(menu) menu.classList.remove('active-show');
     });
-
-    // 🛠️ [프로필 통합 위임 본부] 댓글창 프로필 및 본문 상단 프로필 연동 전면 통합 수술 완료
-    document.addEventListener('click', function(e) {
-        var target = e.target.closest('.author-pic, .comment-user span, #detailAuthorName');
-        if (!target) return;
-
-        var commentItem = target.closest('.comment-item');
-        if (commentItem) {
-            // A. 댓글 리스트 프로필 클릭 시
-            e.preventDefault();
-            var name = commentItem.getAttribute('data-author-name') || '픽클러';
-            var pic = commentItem.querySelector('.author-pic') ? commentItem.querySelector('.author-pic').textContent : '👤';
-            var uid = commentItem.getAttribute('data-user-id') || '';
-
-            document.getElementById('popupUserName').textContent = name;
-            document.getElementById('popupUserPic').textContent = pic;
-            document.getElementById('popupFollowBtn').setAttribute('data-user-id', uid);
-
-            loadProfilePopupCounts(uid);
-            openUserProfileSheet();
-        } else if (target.closest('.post-author-box')) {
-            // B. 🛠️ [기획안 완벽 이식] 본문 최상단 불판 작성자 프로필/닉네임 클릭 시 동일 모달 개방
-            e.preventDefault();
-            var name = document.getElementById('detailAuthorName').textContent || '픽클러';
-            var pic = document.getElementById('detailAuthorPic').textContent || '🔥';
-            var uid = document.getElementById('detailFollowBtn').getAttribute('data-user-id') || '';
-
-            document.getElementById('popupUserName').textContent = name;
-            document.getElementById('popupUserPic').textContent = pic;
-            document.getElementById('popupFollowBtn').setAttribute('data-user-id', uid);
-
-            loadProfilePopupCounts(uid);
-            openUserProfileSheet();
-        }
-    });
-
-    function handlePopupFollow() {
-        var btn = document.getElementById('popupFollowBtn');
-        var targetUid = btn.getAttribute('data-user-id');
-        if(!targetUid) return;
-
-        if (window.PickleFollows && typeof window.PickleFollows.toggleFollow === 'function') {
-            window.PickleFollows.toggleFollow(targetUid).then(function(isFollowing) {
-                btn.style.background = isFollowing ? '#2c2c2e' : 'linear-gradient(135deg, var(--point-green), #22c55e)';
-                btn.style.color = isFollowing ? '#fff' : '#0a0a0c';
-                btn.innerHTML = isFollowing ? '✓ 팔로잉 중' : '<i class="ph ph-plus-bold"></i> 나의 픽';
-                loadProfilePopupCounts(targetUid); // 통계 새로고침 리로드
-            });
-        }
-    }
 
     document.addEventListener('click', function(e) {
         var replyBtn = e.target.closest('.comment-action-btn');

@@ -117,8 +117,9 @@
     const name = authorLabel(comment);
     const blinded = isCommentBlinded(comment);
     const bodyClass = blinded ? 'comment-body comment-body--blinded' : 'comment-body';
+    const userId = comment.user_id ? String(comment.user_id) : '';
     return `
-      <li class="comment-item" data-comment-id="${comment.id}">
+      <li class="comment-item" data-comment-id="${comment.id}" data-user-id="${escapeHtml(userId)}" data-author-name="${escapeHtml(name)}">
         <div class="comment-author-avatar">${authorAvatarInner(comment)}</div>
         <div class="comment-meta">
           <span class="comment-author">${escapeHtml(name)}</span>
