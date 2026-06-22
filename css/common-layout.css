@@ -1,0 +1,272 @@
+/**
+ * P!CKLE — 공통 상단바 · 하단바 (index.html 기준)
+ */
+:root {
+  --bg-base: #0a0a0c;
+  --bg-card: #1c1c1e;
+  --point-green: #4ade80;
+  --point-pink: #ff85a1;
+  --text-main: #fcfcfc;
+  --text-sub: #a1a1aa;
+  --border-soft: rgba(255, 255, 255, 0.08);
+}
+
+/* === 상단 헤더 === */
+header#mainHeader {
+  position: sticky;
+  top: 0;
+  background-color: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(15px);
+  z-index: 120;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+}
+
+.logo {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.7rem;
+  background: linear-gradient(90deg, var(--point-green), #86efac);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  cursor: pointer;
+  margin: 0;
+  filter: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-category {
+  background-color: #222225 !important;
+  border: 1px solid #3a3a3c !important;
+  color: var(--text-main) !important;
+  padding: 6px 14px !important;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: 0.2s;
+}
+
+.icon-search-top {
+  font-size: 1.35rem !important;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.noti-bell {
+  font-size: 1.45rem !important;
+  color: var(--text-main);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.noti-bell[data-count]::after {
+  content: attr(data-count);
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background-color: var(--point-pink);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 2px 5px;
+  border-radius: 10px;
+  border: 2px solid var(--bg-base);
+}
+
+/* === 오버레이 & 카테고리 바텀시트 === */
+.noti-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.noti-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background-color: var(--bg-card);
+  border-radius: 24px 24px 0 0;
+  padding: 25px 20px 40px;
+  z-index: 9999;
+  transform: translateY(100%);
+  transition: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+  border-top: 1px solid var(--border-soft);
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sheet-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.2rem;
+  color: var(--point-green);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.grid-item {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-soft);
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* === 하단 네비게이션 바 (다크 테마) === */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-sizing: border-box;
+  height: calc(65px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #242428;
+  border-top: none;
+  overflow: visible;
+}
+
+.bottom-nav .nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  height: 65px;
+  padding: 0 4px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: #8e8e93;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+.bottom-nav .nav-btn.active {
+  color: #ffffff;
+}
+
+.bottom-nav .nav-btn .nav-label {
+  display: block;
+  white-space: nowrap;
+}
+
+.bottom-nav .nav-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: inherit;
+  stroke: currentColor;
+  fill: none;
+}
+
+.bottom-nav .nav-btn.active .nav-icon {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+/* 중앙 플로팅 불판 생성 FAB */
+.bottom-nav .nav-btn.fire-btn {
+  justify-content: flex-end;
+  padding-bottom: 8px;
+  overflow: visible;
+}
+
+.bottom-nav .nav-fab {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffde9e 0%, #ffa092 100%);
+  box-shadow: 0 4px 16px rgba(255, 160, 146, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.bottom-nav .nav-icon--fire {
+  width: 26px;
+  height: 26px;
+  color: #242428;
+  stroke: #242428;
+  fill: #242428;
+}
+
+.bottom-nav .fire-btn.active {
+  color: #8e8e93;
+}

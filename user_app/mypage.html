@@ -15,6 +15,7 @@
 <title>P!CKLE - 마이 페이지 (권리침해 및 법무 기능 완벽 통합)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 
 <style>
     *, *::before, *::after { box-sizing: border-box; }
@@ -38,41 +39,6 @@
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         -webkit-tap-highlight-color: transparent; overflow-x: hidden; position: relative;
     }
-
-    /* === [고정] 상단 헤더 === */
-    header {
-        position: sticky; top: 0; width: 100%; max-width: 480px; margin: 0 auto;
-        background-color: rgba(9, 9, 11, 0.9); backdrop-filter: blur(10px);
-        z-index: 800; padding: 15px 0; border-bottom: 1px solid var(--border-color);
-        transition: top 0.3s ease-in-out;
-    }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
-    .logo { font-family: 'Black Han Sans', sans-serif; font-size: 2rem; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer; }
-    .header-actions { display: flex; align-items: center; gap: 15px; }
-    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-    .noti-bell:active { transform: scale(0.9); }
-    .noti-bell.noti-bell--unread::after { content: none !important; display: none !important; }
-    #notiCountBadge {
-        display: none;
-        position: absolute;
-        top: -5px;
-        right: -8px;
-        min-width: 18px;
-        height: 18px;
-        padding: 0 5px;
-        background: #ff0033;
-        color: #fff;
-        font-size: 0.58rem;
-        font-weight: 900;
-        line-height: 18px;
-        text-align: center;
-        border-radius: 999px;
-        border: 2px solid var(--bg-color);
-        box-shadow: 0 0 8px rgba(255, 0, 51, 0.85);
-        pointer-events: none;
-        font-family: 'Pretendard', sans-serif;
-    }
-    #notiCountBadge.is-visible { display: block; }
 
     /* === 메인 컨텐츠 === */
     main { padding: 0 0 120px 0; }
@@ -891,31 +857,22 @@
     .btn-submit-legal { width: 100%; max-width: 100%; background: var(--alert-red); color: #fff; border: none; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 900; font-family: 'Pretendard', sans-serif; cursor: pointer; transition: 0.2s; }
     .btn-submit-legal:active { transform: scale(0.98); }
 </style>
+<link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
-<link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
-<body>
+<body data-nav-page="mypage">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
     <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
     <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
-<header id="mainHeader">
-    <div class="top-row">
-        <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
-        <div class="header-actions">
-            <div class="noti-bell" role="button" tabindex="0" aria-label="알림" style="position: relative;" onclick="clickNotiBell()">
-                🔔
-                <span id="notiCountBadge">0</span>
-            </div>
-        </div>
-    </div>
-</header>
+<div id="common-header"></div>
+<script src="../js/common-layout.js"></script>
 
-<div class="overlay" id="commonOverlay" onclick="closeAllModals()"></div>
+<div class="overlay" id="mypageOverlay" onclick="closeAllModals()"></div>
 
 <!-- 모달/시트 영역 생략 없이 모두 유지 -->
 <div class="guide-modal" id="guideModal">
@@ -1475,13 +1432,7 @@
     </div>
 </div>
 
-<nav class="bottom-nav">
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
-</nav>
+<div id="common-footer"></div>
 
 <script>
     // --- 헤더 스크롤 ---
@@ -1538,7 +1489,7 @@
     }
 
     // --- 바텀 시트 및 모달 팝업 제어 ---
-    const overlay = document.getElementById('commonOverlay');
+    const overlay = document.getElementById('mypageOverlay');
     function closeAllModals() {
         overlay.classList.remove('open');
         document.querySelectorAll('.bottom-sheet, .guide-modal').forEach(el => el.classList.remove('open'));
@@ -1659,6 +1610,7 @@
 <script src="../js/pickle-policies.js"></script>
 <script src="../js/mypage-page.js?v=20260617_profile_grid"></script>
 <script src="../js/pickle-legal-report.js"></script>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <script>
     function clickNotiBell() {

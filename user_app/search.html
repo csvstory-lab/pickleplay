@@ -15,6 +15,7 @@
 <title>P!CKLE - 검색 및 탐험 (검색 결과 리스트 통합)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 
 <style>
     :root {
@@ -36,20 +37,13 @@
         -webkit-tap-highlight-color: transparent; overflow-x: hidden;
     }
 
-    /* === 상단 헤더 & 검색바 === */
-    header {
-        position: sticky; top: 0; width: 100%;
-        background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px);
-        z-index: 900; padding: 15px 20px; border-bottom: 1px solid var(--border-color);
-        box-sizing: border-box; transition: top 0.3s ease-in-out;
-    }
-    
     /* 💡 검색바 모서리 둥글게 최신 스타일 적용 */
     .search-bar-container {
         position: relative;
         display: flex; align-items: center; background-color: var(--search-bar-bg);
         border: 1px solid var(--border-color); border-radius: 20px; padding: 12px 18px;
         transition: border-color 0.2s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
     }
     .search-bar-container:focus-within { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
     
@@ -123,27 +117,28 @@
     .hidden { display: none !important; }
 
 </style>
+<link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
-<link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
-<body>
+<body data-nav-page="search">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
     <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
     <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
-<header id="mainHeader">
+<div id="common-header"></div>
+<script src="../js/common-layout.js"></script>
+
+<main>
     <div class="search-bar-container">
         <span class="search-icon">🔍</span>
         <input type="text" class="search-input" id="searchInput" placeholder="관심있는 논쟁거리를 검색해보세요" oninput="toggleClearBtn()" onkeypress="handleEnter(event)">
         <button class="btn-clear" id="clearBtn" onclick="clearSearch()">✕</button>
     </div>
-</header>
 
-<main>
     <!-- ========================================== -->
     <!-- 🟢 기본 탐험(Discovery) UI (검색 전 노출) -->
     <!-- ========================================== -->
@@ -177,30 +172,9 @@
 
 </main>
 
-<nav class="bottom-nav">
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn active" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
-</nav>
+<div id="common-footer"></div>
 
 <script>
-    // 상단 검색바 스크롤 애니메이션
-    let lastScrollTop = 0;
-    window.addEventListener('scroll', function() {
-        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const header = document.getElementById('mainHeader');
-        
-        if (scrollTop > lastScrollTop && scrollTop > 50) {
-            header.style.top = '-80px'; 
-        } else {
-            header.style.top = '0';
-        }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-    });
-
-    // 검색창 입력 시 'X' 초기화 버튼 제어
     function toggleClearBtn() {
         const input = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearBtn');
@@ -264,8 +238,10 @@
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
+<script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-search.js?v=20260613_search1"></script>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 </body>
 </html>

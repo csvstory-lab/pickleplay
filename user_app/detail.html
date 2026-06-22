@@ -43,37 +43,6 @@
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 🌍 글로벌 상단 헤더 === */
-    header {
-        position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
-        z-index: 120; border-bottom: 1px solid var(--border-soft);
-    }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
-    .logo {
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.7rem;
-        background: linear-gradient(90deg, var(--point-green), #86efac);
-        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-        cursor: pointer; margin: 0; filter: none;
-    }
-    .header-actions { display: flex; align-items: center; gap: 16px; }
-    
-    .btn-category {
-        background-color: #222225 !important;   
-        border: 1px solid #3a3a3c !important;   
-        color: var(--text-main) !important; 
-        padding: 6px 14px !important; 
-        border-radius: 999px; 
-        font-size: 0.8rem; 
-        font-weight: 700;
-        cursor: pointer; 
-        display: flex; 
-        align-items: center; 
-        gap: 5px; 
-        transition: 0.2s;
-    }
-    .icon-search-top { font-size: 1.35rem !important; color: var(--text-main); cursor: pointer; }
-    .noti-bell { font-size: 1.45rem !important; color: var(--text-main); position: relative; cursor: pointer; display: flex; align-items: center; }
-
     /* === 메인 스크롤 영역 메인 패딩 === */
     main { padding: 10px 0 110px 0; position: relative; z-index: 1; }
 
@@ -202,24 +171,6 @@
     .comment-reply-input:focus { border-color: var(--point-green); }
     .comment-reply-submit { background: var(--point-green) !important; color: #0a0a0c !important; border: none !important; border-radius: 10px; padding: 0 14px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
 
-    /* === 📱 글로벌 하단 슬림 네비게이션 === */
-    .bottom-nav { 
-        background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
-        display: flex !important; justify-content: space-around !important; align-items: center !important; 
-        padding: 2px 0 6px 0 !important; height: 38px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
-    }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
-    .bottom-nav .nav-btn:not(.fire-btn) { transform: translateY(3px) !important; }
-    .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
-    .bottom-nav .nav-icon { font-size: 1.05rem !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;}
-    .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
-    
-    .bottom-nav .fire-btn { transform: translateY(-22px) !important; } 
-    .bottom-nav .fire-btn .nav-icon { 
-        background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; color: #1c1c1e !important; 
-        width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; border: none !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; 
-    }
-
     /* 모달 및 시트 구조 */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: 0.2s; }
     .overlay.open { opacity: 1; pointer-events: auto; }
@@ -250,11 +201,12 @@
 
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+<link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
 </head>
-<body>
+<body data-nav-page="detail">
 
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
     <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
@@ -262,18 +214,10 @@
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
-<header id="mainHeader">
-    <div class="top-row">
-        <h1 class="logo" onclick="location.href='index.html'">P!CKLE</h1>
-        <div class="header-actions">
-            <button type="button" class="btn-category" onclick="location.href='index.html'">전체 불판</button>
-            <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
-            <i class="ph ph-bell noti-bell" onclick="alert('알림 기능은 준비 중입니다.')"></i>
-        </div>
-    </div>
-</header>
+<div id="common-header"></div>
+<script src="../js/common-layout.js"></script>
 
-<div class="overlay" id="commonOverlay" onclick="closeModals()"></div>
+<div class="overlay" id="detailOverlay" onclick="closeModals()"></div>
 
 <!-- 공유하기 모달 -->
 <div class="share-sheet" id="shareSheet">
@@ -455,13 +399,7 @@
     </div>
 </main>
 
-<nav class="bottom-nav">
-    <div class="nav-btn" onclick="location.href='index.html'"><i class="ph ph-house nav-icon"></i><span>홈</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
-    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><i class="ph-fill ph-fire nav-icon"></i></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><i class="ph ph-gift nav-icon"></i><span>이벤트</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><i class="ph-fill ph-user nav-icon"></i><span>마이</span></div>
-</nav>
+<div id="common-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
@@ -482,6 +420,7 @@
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
 <script src="../js/pickle-detail.js?v=0621_detailv3"></script>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <script>
     function ensureKakaoReady() {
@@ -493,7 +432,7 @@
     }
 
     function closeModals() {
-        document.getElementById('commonOverlay').classList.remove('open');
+        document.getElementById('detailOverlay').classList.remove('open');
         document.getElementById('shareSheet').classList.remove('open');
         document.getElementById('reportModal').classList.remove('open');
         document.getElementById('userProfileSheet').classList.remove('open');
@@ -501,17 +440,17 @@
         document.body.style.overflow = '';
     }
     function openShareSheet() {
-        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('detailOverlay').classList.add('open');
         document.getElementById('shareSheet').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
     function openReportModal() {
-        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('detailOverlay').classList.add('open');
         document.getElementById('reportModal').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
     function openUserProfileSheet() {
-        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('detailOverlay').classList.add('open');
         document.getElementById('userProfileSheet').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
@@ -530,7 +469,7 @@
         document.getElementById('messageTargetNickname').textContent = targetName;
         document.getElementById('messageContent').value = ''; 
         
-        document.getElementById('commonOverlay').classList.add('open');
+        document.getElementById('detailOverlay').classList.add('open');
         document.getElementById('messageModal').classList.add('open');
     }
 

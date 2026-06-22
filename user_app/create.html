@@ -40,34 +40,6 @@
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 🌍 글로벌 상단 헤더 (메인과 완벽 동기화) === */
-    header {
-        position: sticky; top: 0; background-color: rgba(10, 10, 12, 0.85); backdrop-filter: blur(15px);
-        z-index: 120; border-bottom: 1px solid var(--border-soft); transition: top 0.3s ease-in-out;
-    }
-    /* 📱 상/하단바 index.html 완벽 동기화 */
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
-    .header-actions { display: flex; align-items: center; gap: 16px; }
-    .btn-category { background-color: #222225 !important; border: 1px solid #3a3a3c !important; color: #fcfcfc !important; padding: 6px 14px !important; border-radius: 999px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
-    .icon-search-top { font-size: 1.35rem !important; color: #fcfcfc; cursor: pointer; }
-    .noti-bell { font-size: 1.45rem !important; color: #fcfcfc; cursor: pointer; }
-
-    .bottom-nav { background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid rgba(255, 255, 255, 0.08) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; padding: 0 !important; height: 38px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: #a1a1aa !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: translateY(3px) !important; }
-    .bottom-nav .nav-btn.active { color: #fcfcfc !important; }
-    .bottom-nav .nav-icon { font-size: 1.05rem !important; display: block !important; }
-    .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
-    .bottom-nav .fire-btn { transform: translateY(-22px) !important; } 
-    .bottom-nav .fire-btn .nav-icon { background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; color: #1c1c1e !important; width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; }
-    .logo {
-        font-family: 'Black Han Sans', sans-serif; font-size: 1.7rem;
-        background: linear-gradient(90deg, var(--point-green), #86efac);
-        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-        cursor: pointer; margin: 0; filter: none;
-    }
-    .header-actions { display: flex; align-items: center; gap: 16px; }
-    .noti-bell { font-size: 1.45rem !important; color: var(--text-main); position: relative; cursor: pointer; display: flex; align-items: center; }
-
     /* === 본문 스크롤 컨테이너 === */
     main { padding: 20px 20px 100px 20px; }
     
@@ -221,60 +193,35 @@
     .btn-submit:active { transform: scale(0.97); }
     .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* 🌍 [수정 1] 글로벌 하단 네비게이션 시스템 완벽 동기화 (index.html 기준) */
-    .bottom-nav { 
-        background: rgba(28, 28, 30, 0.96) !important; border-top: 1px solid var(--border-soft) !important; 
-        display: flex !important; justify-content: space-around !important; align-items: center !important; 
-        padding: 0 !important; height: 38px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 1000 !important; backdrop-filter: blur(15px) !important; 
-    }
-    .bottom-nav .nav-btn { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0px !important; color: var(--text-sub) !important; cursor: pointer !important; width: 20% !important; background: transparent !important; border: none !important; position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0 !important; font-family: inherit !important;}
-    .bottom-nav .nav-btn:not(.fire-btn) { transform: translateY(3px) !important; }
-    .bottom-nav .nav-btn.active { color: var(--text-main) !important; }
-    .bottom-nav .nav-icon { font-size: 1.05rem !important; filter: none !important; text-shadow: none !important; display: block !important; background: transparent !important; color: inherit !important; fill: currentColor !important;}
-    .bottom-nav span:not(.nav-icon) { font-size: 0.55rem !important; font-weight: 700 !important; }
-    
-    .bottom-nav .fire-btn { transform: translateY(-22px) !important; } 
-    .bottom-nav .fire-btn .nav-icon { 
-        background: linear-gradient(135deg, #FFE599 0%, #FFAAA6 100%) !important; color: #1c1c1e !important; 
-        width: 66px !important; height: 66px !important; border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; border: none !important; box-shadow: 0 6px 20px rgba(255, 170, 166, 0.4) !important; font-size: 1.65rem !important; 
+    #thumbnailOverlay.noti-overlay.open { opacity: 1; pointer-events: auto; }
+    #thumbnailSheet.bottom-sheet {
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        max-height: 80vh;
+        overflow-y: auto;
     }
 
-    .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .grid-item { background-color: #222225; padding: 14px; border-radius: 12px; text-align: center; font-size: 0.88rem; font-weight: 700; color: #d4d4d8; cursor: pointer; transition: 0.15s; }
+    header#mainHeader {
+        transition: top 0.3s ease-in-out;
+    }
 </style>
+<link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
-<link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
-<body data-page="create">
+<body data-nav-page="create" data-page="create">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
     <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
     <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
-<header id="mainHeader">
-    <div class="top-row">
-        <h1 class="logo" style="cursor:pointer;" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
-        <div class="header-actions">
-            <button type="button" class="btn-category" onclick="toggleCategorySheet()">전체 불판</button>
-            <i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady('search.html')"></i>
-            <i class="ph ph-bell noti-bell" onclick="alert('알림 기능은 준비 중입니다.')"></i>
-        </div>
-    </div>
-</header>
+<div id="common-header"></div>
+<script src="../js/common-layout.js"></script>
 
-<div class="overlay" id="categoryOverlay" onclick="toggleCategorySheet()"></div>
-<div class="bottom-sheet" id="categorySheet">
-    <div class="sheet-header">
-        <div class="sheet-title">카테고리 선택</div>
-        <button type="button" class="btn-close" onclick="toggleCategorySheet()">✕</button>
-    </div>
-    <div class="category-grid" id="categoryGrid"></div>
-</div>
-
-<div class="overlay" id="thumbnailOverlay" onclick="closeThumbnailSheet()"></div>
+<div class="noti-overlay" id="thumbnailOverlay" onclick="closeThumbnailSheet()"></div>
 <div class="bottom-sheet" id="thumbnailSheet">
     <div class="sheet-header">
         <div class="sheet-title">썸네일 만들기 🖼️</div>
@@ -427,13 +374,7 @@
     </form>
 </main>
 
-<nav class="bottom-nav">
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('index.html')"><i class="ph ph-house nav-icon"></i><span>홈</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><i class="ph ph-trophy nav-icon"></i><span>랭킹</span></div>
-    <div class="nav-btn fire-btn active" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><i class="ph-fill ph-fire nav-icon"></i></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><i class="ph ph-gift nav-icon"></i><span>이벤트</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><i class="ph ph-user nav-icon"></i><span>마이</span></div>
-</nav>
+<div id="common-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
@@ -559,12 +500,26 @@
     window.getPickleCreateThumbnailState = function () { return { type: createThumbnailState.type, file: createThumbnailState.file, url: createThumbnailState.url, css: createThumbnailState.css }; };
     function resetThumbPreviewBoxStyles(box) { box.style.background = ''; box.style.backgroundColor = ''; box.style.backgroundImage = ''; }
     function applyThumbPreviewToBox(box, mode, value) { resetThumbPreviewBoxStyles(box); if (mode === 'url') { box.style.backgroundColor = '#0f0f11'; box.style.backgroundImage = 'url("' + value + '")'; box.style.backgroundSize = 'cover'; box.style.backgroundPosition = 'center'; } else if (mode === 'css') { box.style.background = value; } box.classList.add('has-preview'); }
-    function closeAllCreateSheets() { const categorySheet = document.getElementById('categorySheet'); const categoryOverlay = document.getElementById('categoryOverlay'); if (categorySheet) categorySheet.classList.remove('open'); if (categoryOverlay) categoryOverlay.classList.remove('open'); closeThumbnailSheet(false); document.body.style.overflow = ''; }
-    
-    // 💡 [수정] 모달 열 때 loadCategories() 강제 호출하여 빈 화면 원천 차단
+    function closeAllCreateSheets() {
+        if (typeof closeAllDrawers === 'function') closeAllDrawers();
+        closeThumbnailSheet(false);
+        document.body.style.overflow = '';
+    }
+
     function toggleCategorySheet() {
-        loadCategories(); 
-        const overlay = document.getElementById('categoryOverlay'); const sheet = document.getElementById('categorySheet'); const willOpen = !sheet.classList.contains('open'); closeThumbnailSheet(false); sheet.classList.toggle('open'); overlay.classList.toggle('open'); document.body.style.overflow = willOpen ? 'hidden' : '';
+        loadCategories();
+        closeThumbnailSheet(false);
+        var overlay = document.getElementById('commonOverlay');
+        var sheet = document.getElementById('categorySheet');
+        if (!overlay || !sheet) return;
+        var willOpen = !sheet.classList.contains('open');
+        if (willOpen) {
+            overlay.classList.add('open');
+            sheet.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        } else if (typeof closeAllDrawers === 'function') {
+            closeAllDrawers();
+        }
     }
     
     function openThumbnailSheet() { closeAllCreateSheets(); document.getElementById('thumbnailOverlay').classList.add('open'); document.getElementById('thumbnailSheet').classList.add('open'); document.body.style.overflow = 'hidden'; }

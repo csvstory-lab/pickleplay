@@ -15,6 +15,7 @@
 <title>P!CKLE - 알림</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 <style>
     :root {
         --bg-color: #09090b;
@@ -150,9 +151,9 @@
     .noti-bell:active { transform: scale(0.9); }
 
 </style>
+<link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
-<link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
 <body>
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
@@ -181,13 +182,8 @@
     </ul>
 </main>
 
-<nav class="bottom-nav">
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
-</nav>
+<div id="common-footer"></div>
+<script src="../js/common-layout.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>

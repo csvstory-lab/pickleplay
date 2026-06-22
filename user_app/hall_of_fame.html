@@ -15,6 +15,7 @@
 <title>P!CKLE - 🏅 전당 후보작</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 <style>
     :root {
         --bg-color: #09090b;
@@ -33,21 +34,6 @@
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
-
-    header {
-        position: sticky; top: 0; background-color: rgba(9, 9, 11, 0.92); backdrop-filter: blur(12px);
-        z-index: 900; border-bottom: 1px solid var(--border-color); transition: top 0.3s ease-in-out;
-    }
-    .top-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 8px; }
-    .logo {
-        font-family: 'Black Han Sans', sans-serif; font-size: 2rem;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        cursor: pointer; margin: 0; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.4));
-    }
-    .header-actions { display: flex; align-items: center; gap: 15px; }
-    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s;}
-    .noti-bell:active { transform: scale(0.9); }
 
     .category-nav-scroll {
         display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
@@ -216,10 +202,10 @@
     .feed-error { color: var(--neon-pink); }
 
 </style>
+<link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
-<link rel="stylesheet" href="../css/bottom-nav.css">
 </head>
 <body data-nav-page="hall">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
@@ -228,16 +214,9 @@
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
-<header id="mainHeader">
-    <div class="top-row">
-        <h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady('index.html')">P!CKLE</h1>
-        <div class="header-actions">
-            <div class="noti-bell" role="button" tabindex="0" aria-label="알림">🔔</div>
-        </div>
-    </div>
-    <nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
-</header>
-<script src="../js/pickle-header-legacy-cleanup.js"></script>
+<div id="common-header"></div>
+<script src="../js/common-layout.js"></script>
+<nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
 
 <main>
     <div class="page-header">
@@ -261,13 +240,7 @@
     </section>
 </main>
 
-<nav class="bottom-nav">
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('ranking.html')"><span class="nav-icon">🏆</span><span>랭킹</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('event.html')"><span class="nav-icon">🎁</span><span>이벤트</span></div>
-    <div class="nav-btn fire-btn" onclick="PickleAuth.navigateWhenAuthReady('create.html')"><span class="nav-icon">🔥</span><span>불판 생성</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('search.html')"><span class="nav-icon">🔍</span><span>검색</span></div>
-    <div class="nav-btn" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')"><span class="nav-icon">👤</span><span>마이</span></div>
-</nav>
+<div id="common-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
@@ -282,6 +255,7 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-feed.js"></script>
 <script src="../js/pickle-hall-of-fame.js"></script>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
 <script>
     var lastScrollTop = 0;
     window.addEventListener('scroll', function () {

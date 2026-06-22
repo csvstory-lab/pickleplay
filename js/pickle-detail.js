@@ -2403,7 +2403,7 @@ function renderCommentsList(comments, sortType) {
 
     // 모달 열기 애니메이션
     var sheet = document.getElementById('userProfileSheet');
-    var overlay = document.getElementById('commonOverlay');
+    var overlay = document.getElementById('detailOverlay');
     if (overlay) overlay.classList.add('open');
     if (sheet) sheet.classList.add('open');
     document.body.style.overflow = 'hidden';
