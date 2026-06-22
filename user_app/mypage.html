@@ -1366,7 +1366,7 @@
             <div class="profile-text">
                 <div class="profile-name" id="mainNickname">
                     <span id="mainNicknameText">픽클러</span>
-                    <span class="grade-badge" id="nicknameLevelBadge">Lv.1</span>
+                    <span class="grade-badge" id="nicknameLevelBadge"></span>
                 </div>
                 <div class="profile-bio" id="mainBio"></div>
             </div>
@@ -1394,12 +1394,12 @@
         <div class="exp-container">
             <div class="exp-header">
                 <span class="level-rank-row">
-                    <span class="level-badge" id="mainUserLevel">Lv.1</span>
+                    <span class="level-badge" id="mainUserLevel"></span>
                     <button type="button" class="btn-level-guide" id="btnLevelGuide" aria-label="레벨 가이드">?</button>
                     <div id="levelGuidePopover" class="level-guide-popover hidden" role="tooltip">
                         <strong>레벨업 가이드</strong>
                         <p class="level-guide-desc">랭킹 포인트가 쌓이면 레벨이 올라갑니다. 투표·댓글·팬덤 활동으로 포인트를 모아보세요!</p>
-                        <ul class="level-guide-tiers">
+                        <ul class="level-guide-tiers" id="levelGuideTiersList">
                             <li>Lv.1 · 새내기 픽클러 (0~99점)</li>
                             <li>Lv.2 · 활동 시작 (100~299점)</li>
                             <li>Lv.3 · 인기 픽클러 (300~599점)</li>
@@ -2119,7 +2119,7 @@
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-follows.js?v=20260608_fandom3"></script>
 <script src="../js/pickle-policies.js"></script>
-<script src="../js/mypage-page.js?v=20260617_profile_grid"></script>
+<script src="../js/mypage-page.js?v=20260617_level_tiers"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 

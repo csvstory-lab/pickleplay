@@ -8,31 +8,83 @@
   var rankingPointsCache = new Map();
 
   /**
-   * 레벨업 구간 (기획 변경 시 숫자만 수정)
-   * 0~99 Lv.1 | 100~299 Lv.2 | 300~599 Lv.3 | 600~999 Lv.4 | 1000+ Lv.5
+   * 레벨 가이드 기준 (가이드 팝업·마이페이지 게이지와 동일)
+   * min: 해당 레벨 시작 점수(포함), max: 해당 레벨 상한(포함, Lv.5는 없음)
    */
-  function calculateLevel(points) {
-    var p = normalizeRankingPoints(points);
-
-    if (p < 100) {
-      return 1;
-    }
-    if (p < 300) {
-      return 2;
-    }
-    if (p < 600) {
-      return 3;
-    }
-    if (p < 1000) {
-      return 4;
-    }
-    return 5;
-  }
+  var LEVEL_TIERS = [
+    { level: 1, min: 0, max: 99, label: '새내기 픽클러' },
+    { level: 2, min: 100, max: 299, label: '활동 시작' },
+    { level: 3, min: 300, max: 599, label: '인기 픽클러' },
+    { level: 4, min: 600, max: 999, label: '영향력 확장' },
+    { level: 5, min: 1000, max: null, label: '명예의 전당' },
+  ];
 
   function normalizeRankingPoints(raw) {
     var n = Number(raw);
     if (!Number.isFinite(n) || n < 0) return 0;
     return Math.floor(n);
+  }
+
+  function getLevelTier(level) {
+    var lv = Number(level);
+    if (!Number.isFinite(lv) || lv < 1) lv = 1;
+    if (lv > LEVEL_TIERS.length) lv = LEVEL_TIERS.length;
+    return LEVEL_TIERS[lv - 1];
+  }
+
+  function calculateLevel(points) {
+    var p = normalizeRankingPoints(points);
+    var i = LEVEL_TIERS.length - 1;
+    while (i > 0 && p < LEVEL_TIERS[i].min) {
+      i -= 1;
+    }
+    return LEVEL_TIERS[i].level;
+  }
+
+  /**
+   * @returns {{
+   *   level: number,
+   *   points: number,
+   *   currentMin: number,
+   *   nextMin: number|null,
+   *   percent: number,
+   *   expText: string,
+   *   isMax: boolean
+   * }}
+   */
+  function getLevelProgress(points) {
+    var p = normalizeRankingPoints(points);
+    var level = calculateLevel(p);
+    var tier = getLevelTier(level);
+    var currentMin = tier.min;
+
+    if (level >= LEVEL_TIERS.length) {
+      return {
+        level: level,
+        points: p,
+        currentMin: currentMin,
+        nextMin: null,
+        percent: 100,
+        expText: p.toLocaleString() + ' / MAX',
+        isMax: true,
+      };
+    }
+
+    var nextTier = getLevelTier(level + 1);
+    var nextMin = nextTier.min;
+    var span = nextMin - currentMin;
+    var ratio = span > 0 ? (p - currentMin) / span : 0;
+    var percent = Math.min(100, Math.max(0, Math.round(ratio * 100)));
+
+    return {
+      level: level,
+      points: p,
+      currentMin: currentMin,
+      nextMin: nextMin,
+      percent: percent,
+      expText: p.toLocaleString() + ' / ' + nextMin.toLocaleString(),
+      isMax: false,
+    };
   }
 
   function extractRankingPointsFromRow(row) {
@@ -46,16 +98,13 @@
     if (row.rankingPoints != null && row.rankingPoints !== '') {
       return normalizeRankingPoints(row.rankingPoints);
     }
-    if (row.points != null && row.points !== '') {
-      return normalizeRankingPoints(row.points);
-    }
     return 0;
   }
 
   function buildLevelBadgeHtml(level) {
     var lv = Number(level);
     if (!Number.isFinite(lv) || lv < 1) lv = 1;
-    if (lv > 5) lv = 5;
+    if (lv > LEVEL_TIERS.length) lv = LEVEL_TIERS.length;
     return '<span class="grade-badge">Lv.' + Math.floor(lv) + '</span>';
   }
 
@@ -85,7 +134,7 @@
 
     var result = await sb
       .from('users')
-      .select('id, star_score, points')
+      .select('id, star_score')
       .eq('id', userId)
       .maybeSingle();
 
@@ -117,7 +166,7 @@
     if (missing.length) {
       var result = await sb
         .from('users')
-        .select('id, star_score, points')
+        .select('id, star_score')
         .in('id', missing);
 
       if (result.error) {
@@ -200,16 +249,13 @@
     if (user && user.ranking_points != null) {
       return calculateLevel(user.ranking_points);
     }
-    if (user && user.points != null) {
-      return calculateLevel(user.points);
-    }
     return 1;
   }
 
   function buildGradeBadgeHtml(userOrLevelOrPoints) {
     if (typeof userOrLevelOrPoints === 'number') {
       var n = userOrLevelOrPoints;
-      if (n >= 1 && n <= 5 && Math.floor(n) === n) {
+      if (n >= 1 && n <= LEVEL_TIERS.length && Math.floor(n) === n) {
         return buildLevelBadgeHtml(n);
       }
       return buildLevelBadgeFromPoints(n);
@@ -221,7 +267,10 @@
   }
 
   window.PickleProfile = {
+    LEVEL_TIERS: LEVEL_TIERS,
     calculateLevel: calculateLevel,
+    getLevelProgress: getLevelProgress,
+    getLevelTier: getLevelTier,
     normalizeRankingPoints: normalizeRankingPoints,
     extractRankingPointsFromRow: extractRankingPointsFromRow,
     getUserLevelFromPoints: getUserLevelFromPoints,

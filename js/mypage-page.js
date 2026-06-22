@@ -39,15 +39,45 @@
     return '<span class="grade-badge">Lv.' + level + '</span>';
   }
 
-  function updateNicknameLevelBadge(points) {
+  function updateNicknameLevelBadge(level) {
     var badgeEl = document.getElementById('nicknameLevelBadge');
     if (!badgeEl) return;
-
-    var level = 1;
-    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
-      level = window.PickleProfile.getUserLevelFromPoints(points);
-    }
     badgeEl.textContent = 'Lv.' + level;
+  }
+
+  function updateLevelExpUI(points) {
+    var progress =
+      window.PickleProfile && window.PickleProfile.getLevelProgress
+        ? window.PickleProfile.getLevelProgress(points)
+        : null;
+
+    if (!progress) {
+      var fallbackLevel = 1;
+      if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+        fallbackLevel = window.PickleProfile.getUserLevelFromPoints(points);
+      }
+      updateNicknameLevelBadge(fallbackLevel);
+      var levelEl = document.getElementById('mainUserLevel');
+      if (levelEl) levelEl.textContent = 'Lv.' + fallbackLevel;
+      return;
+    }
+
+    var levelLabel = 'Lv.' + progress.level;
+    var levelEl = document.getElementById('mainUserLevel');
+    if (levelEl) {
+      levelEl.textContent = levelLabel;
+    }
+    updateNicknameLevelBadge(progress.level);
+
+    var expEl = document.getElementById('expText');
+    if (expEl) {
+      expEl.textContent = progress.expText;
+    }
+
+    var fill = document.querySelector('.exp-container .progress-fill');
+    if (fill) {
+      fill.style.width = progress.percent + '%';
+    }
   }
 
   async function fetchCurrentUserRankingPoints(user) {
@@ -413,7 +443,6 @@
     } else if (nickEl) {
       nickEl.textContent = name;
     }
-    updateNicknameLevelBadge(currentUserRankingPoints);
 
     updateLevelExpUI(currentUserRankingPoints);
 
@@ -468,45 +497,25 @@
     return null;
   }
 
-  function updateLevelExpUI(points) {
-    var normalized = Number(points);
-    if (!Number.isFinite(normalized) || normalized < 0) normalized = 0;
-    normalized = Math.floor(normalized);
+  function syncLevelGuideList() {
+    var listEl = document.getElementById('levelGuideTiersList');
+    if (!listEl || !window.PickleProfile || !window.PickleProfile.LEVEL_TIERS) return;
 
-    var level = 1;
-    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
-      level = window.PickleProfile.getUserLevelFromPoints(normalized);
-    }
-
-    var levelEl = document.getElementById('mainUserLevel');
-    if (levelEl) {
-      levelEl.textContent = 'Lv.' + level;
-    }
-    updateNicknameLevelBadge(normalized);
-
-    var tiers = [0, 100, 300, 600, 1000];
-    var expEl = document.getElementById('expText');
-    var fill = document.querySelector('.exp-container .progress-fill');
-
-    if (level >= 5) {
-      if (expEl) {
-        expEl.textContent = normalized.toLocaleString() + '점 · MAX';
-      }
-      if (fill) fill.style.width = '100%';
-      return;
-    }
-
-    var prev = tiers[level - 1] || 0;
-    var next = tiers[level] || 1000;
-    if (expEl) {
-      expEl.textContent =
-        normalized.toLocaleString() + ' / ' + next.toLocaleString() + '점';
-    }
-    if (fill) {
-      var span = Math.max(1, next - prev);
-      var pct = Math.min(100, Math.max(0, Math.round(((normalized - prev) / span) * 100)));
-      fill.style.width = pct + '%';
-    }
+    listEl.innerHTML = window.PickleProfile.LEVEL_TIERS.map(function (tier) {
+      var range =
+        tier.max == null
+          ? tier.min.toLocaleString() + '점 이상'
+          : tier.min.toLocaleString() + '~' + tier.max.toLocaleString() + '점';
+      return (
+        '<li>Lv.' +
+        tier.level +
+        ' · ' +
+        tier.label +
+        ' (' +
+        range +
+        ')</li>'
+      );
+    }).join('');
   }
 
   function bindProfileAvatarClick() {
@@ -2338,6 +2347,7 @@
       await renderProfile(user);
       bindProfileEditOpen();
       bindProfileAvatarClick();
+      syncLevelGuideList();
       bindLevelGuide();
       bindProfileSelectFilledState();
       bindLogout();
