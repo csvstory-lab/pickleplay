@@ -205,6 +205,10 @@
   }
 
   async function resolveThumbnailForInsert(userId) {
+    if (typeof window.ensureCreateThumbnailUploaded === 'function') {
+      await window.ensureCreateThumbnailUploaded(userId);
+    }
+
     if (typeof window.getPickleCreateThumbnailState !== 'function') {
       return null;
     }

@@ -237,10 +237,11 @@
     <div class="thumb-tab-panel active" id="thumbPanelColor" role="tabpanel">
         <div class="font-chip-group" id="thumbFontGroup">
             <button type="button" class="font-chip active" data-font="Pretendard" onclick="setThumbLiveFont('Pretendard', this)">고딕</button>
-            <button type="button" class="font-chip" data-font="'Nanum Myeongjo'" onclick="setThumbLiveFont('Nanum Myeongjo', this)">명조</button>
-            <button type="button" class="font-chip" data-font="'Nanum Pen Script'" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
+            <button type="button" class="font-chip" data-font="Nanum Myeongjo" onclick="setThumbLiveFont('Nanum Myeongjo', this)">명조</button>
+            <button type="button" class="font-chip" data-font="Nanum Pen Script" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
         </div>
-        </div>
+        <div id="thumbColorGridWrap"></div>
+    </div>
     <div class="thumb-tab-panel" id="thumbPanelAlbum" role="tabpanel"></div>
     <div class="thumb-tab-panel" id="thumbPanelFree" role="tabpanel">
         <div class="thumb-search-wrap">
@@ -444,8 +445,13 @@
         return true;
     }
 
-    // 💡 [추가] 실시간 A/B 텍스트 입력 연동 함수
+    // 💡 실시간 A/B · 썸네일 텍스트 미리보기 연동
     window.updateLivePreviews = function() {
+        const title = document.getElementById('inputTitle')?.value.trim() || '';
+        const thumbTxtEl = document.getElementById('thumbLiveText');
+        if (thumbTxtEl && createThumbnailState.type === 'css') {
+            thumbTxtEl.textContent = title || '불판 제목 미리보기';
+        }
         const valA = document.getElementById('inputA')?.value.trim() || 'A 선택지';
         const valB = document.getElementById('inputB')?.value.trim() || 'B 선택지';
         if (document.getElementById('textPreviewInnerA')) document.getElementById('textPreviewInnerA').textContent = valA;
@@ -466,6 +472,26 @@
     const GIPHY_API_KEY = 'QkcJRijkCEnyAQ7Q2tJ1g81hVQh6zvSY';
 
     let createThumbnailState = { type: 'none', file: null, url: null, css: null };
+    let selectedThumbFont = 'Pretendard';
+    const THUMB_FONT_MAP = {
+        'Pretendard': '800 32px Pretendard, "Black Han Sans", sans-serif',
+        'Nanum Myeongjo': '700 30px "Nanum Myeongjo", serif',
+        'Nanum Pen Script': '400 44px "Nanum Pen Script", cursive'
+    };
+    const TEXT_CARD_CANVAS_FONT = '800 36px Pretendard, "Black Han Sans", sans-serif';
+
+    window.setThumbLiveFont = function(fontFamily, btn) {
+        selectedThumbFont = fontFamily;
+        document.querySelectorAll('#thumbFontGroup .font-chip').forEach(function (el) {
+            el.classList.toggle('active', el === btn);
+        });
+        const txtEl = document.getElementById('thumbLiveText');
+        if (txtEl) {
+            txtEl.style.fontFamily = fontFamily === 'Pretendard'
+                ? 'Pretendard, sans-serif'
+                : ('"' + fontFamily + '"');
+        }
+    };
 
     // 🎨 썸네일 색상 20개 꽉 채운 프리셋
     const THUMB_COLOR_PRESETS = [
@@ -525,7 +551,7 @@
     function openThumbnailSheet() { closeAllCreateSheets(); document.getElementById('thumbnailOverlay').classList.add('open'); document.getElementById('thumbnailSheet').classList.add('open'); document.body.style.overflow = 'hidden'; }
     function closeThumbnailSheet(restoreScroll) { const overlay = document.getElementById('thumbnailOverlay'); const sheet = document.getElementById('thumbnailSheet'); if (overlay) overlay.classList.remove('open'); if (sheet) sheet.classList.remove('open'); if (restoreScroll !== false) { const categoryOpen = document.getElementById('categorySheet')?.classList.contains('open'); document.body.style.overflow = categoryOpen ? 'hidden' : ''; } }
     function switchThumbTab(tabKey) { document.querySelectorAll('.thumb-tab').forEach(function (btn) { btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey); }); document.querySelectorAll('.thumb-tab-panel').forEach(function (panel) { panel.classList.remove('active'); }); const panelMap = { album: 'thumbPanelAlbum', free: 'thumbPanelFree', gif: 'thumbPanelGif', color: 'thumbPanelColor' }; const panel = document.getElementById(panelMap[tabKey]); if (panel) panel.classList.add('active'); }
-    function initThumbnailUi() { renderThumbAlbumPanel(); renderThumbColorGrid('thumbPanelColor', THUMB_COLOR_PRESETS); bindThumbSearchInputs(); }
+    function initThumbnailUi() { renderThumbAlbumPanel(); renderThumbColorGrid('thumbColorGridWrap', THUMB_COLOR_PRESETS); bindThumbSearchInputs(); }
     function renderThumbAlbumPanel() { renderThumbImageGrid('thumbPanelAlbum', [{ type: 'picker' }], true); }
     function bindThumbSearchInputs() { const freeInput = document.getElementById('thumbFreeSearch'); const gifInput = document.getElementById('thumbGifSearch'); if (freeInput) { freeInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchPixabayPhotos(freeInput.value); } }); } if (gifInput) { gifInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchGiphyGifs(gifInput.value); } }); } }
     function setThumbSearchStatus(elementId, message, variant) { const el = document.getElementById(elementId); if (!el) return; el.textContent = message; el.classList.remove('is-loading', 'is-error', 'thumb-search-hint'); el.classList.add('thumb-search-status'); if (variant === 'loading') el.classList.add('is-loading'); if (variant === 'error') el.classList.add('is-error'); if (!variant) el.classList.add('thumb-search-hint'); }
@@ -563,14 +589,65 @@
     function renderThumbSearchResults(gridId, urls, badge) { const grid = document.getElementById(gridId); if (!grid) return; grid.innerHTML = ''; urls.forEach(function (url) { const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item'; cell.style.position = 'relative'; cell.innerHTML = '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' + (badge ? '<span style="position:absolute;bottom:6px;right:6px;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + badge + '</span>' : ''); cell.addEventListener('click', function () { applyThumbPreviewImage(url); }); grid.appendChild(cell); }); }
     function renderThumbMockGrids() { initThumbnailUi(); }
     function renderThumbImageGrid(panelId, items, includePicker) { const panel = document.getElementById(panelId); if (!panel) return; panel.innerHTML = '<div class="thumb-grid"></div>'; const grid = panel.querySelector('.thumb-grid'); items.forEach(function (item) { if (item.type === 'picker') { const picker = document.createElement('button'); picker.type = 'button'; picker.className = 'thumb-grid-item thumb-grid-item--picker'; picker.innerHTML = '<span>📷</span><span>앨범에서<br>선택</span>'; picker.addEventListener('click', function () { document.getElementById('thumbAlbumInput')?.click(); }); grid.appendChild(picker); return; } const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'thumb-grid-item'; cell.innerHTML = '<img src="' + item.url + '" alt="" loading="lazy">' + (item.badge ? '<span style="position:absolute;font-size:0.65rem;font-weight:900;background:rgba(0,0,0,0.65);padding:2px 6px;border-radius:6px;">' + item.badge + '</span>' : ''); cell.style.position = 'relative'; cell.addEventListener('click', function () { applyThumbPreviewImage(item.url); }); grid.appendChild(cell); }); }
-    function renderThumbColorGrid(panelId, colors) { const panel = document.getElementById(panelId); if (!panel) return; panel.innerHTML = '<div class="thumb-color-grid"></div>'; const grid = panel.querySelector('.thumb-color-grid'); colors.forEach(function (color) { const swatch = document.createElement('button'); swatch.type = 'button'; swatch.className = 'thumb-color-item'; swatch.style.background = color; swatch.addEventListener('click', function () { applyThumbPreviewCss(color); }); grid.appendChild(swatch); }); }
-    function applyThumbPreviewImage(url) { const box = document.getElementById('thumbPreviewBox'); if (!box || !url) return; setCreateThumbnailState('url', url); applyThumbPreviewToBox(box, 'url', url); closeThumbnailSheet(); }
-    function applyThumbPreviewCss(cssValue) { const box = document.getElementById('thumbPreviewBox'); if (!box || !cssValue) return; setCreateThumbnailState('css', cssValue); applyThumbPreviewToBox(box, 'css', cssValue); closeThumbnailSheet(); }
+    function renderThumbColorGrid(containerId, colors) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '<div class="thumb-color-grid"></div>';
+        const grid = container.querySelector('.thumb-color-grid');
+        colors.forEach(function (color) {
+            const swatch = document.createElement('button');
+            swatch.type = 'button';
+            swatch.className = 'thumb-color-item';
+            swatch.style.background = color;
+            swatch.addEventListener('click', function () { applyThumbPreviewCss(color); });
+            grid.appendChild(swatch);
+        });
+    }
+    function applyThumbPreviewImage(url) {
+        const box = document.getElementById('thumbPreviewBox');
+        if (!box || !url) return;
+        setCreateThumbnailState('url', url);
+        applyThumbPreviewToBox(box, 'url', url);
+        const placeholder = document.getElementById('thumbPreviewPlaceholder');
+        const txtEl = document.getElementById('thumbLiveText');
+        if (placeholder) placeholder.style.display = 'none';
+        if (txtEl) txtEl.style.display = 'none';
+        closeThumbnailSheet();
+    }
+    function applyThumbPreviewCss(cssValue) {
+        const box = document.getElementById('thumbPreviewBox');
+        if (!box || !cssValue) return;
+        setCreateThumbnailState('css', cssValue);
+        applyThumbPreviewToBox(box, 'css', cssValue);
+        const placeholder = document.getElementById('thumbPreviewPlaceholder');
+        const txtEl = document.getElementById('thumbLiveText');
+        if (placeholder) placeholder.style.display = 'none';
+        if (txtEl) {
+            txtEl.style.display = 'flex';
+            txtEl.style.fontFamily = selectedThumbFont === 'Pretendard'
+                ? 'Pretendard, sans-serif'
+                : ('"' + selectedThumbFont + '"');
+            txtEl.textContent = document.getElementById('inputTitle')?.value.trim() || '불판 제목 미리보기';
+        }
+        if (typeof updateLivePreviews === 'function') updateLivePreviews();
+        closeThumbnailSheet();
+    }
     
     const CREATE_THUMB_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const CREATE_THUMB_MAX_BYTES = 10 * 1024 * 1024;
     function validateCreateThumbnailFile(file) { if (!file || typeof File === 'undefined' || !(file instanceof File)) { return '썸네일 파일이 올바르지 않습니다.'; } if (!file.size) { return '비어 있는 파일은 업로드할 수 없습니다.'; } if (file.size > CREATE_THUMB_MAX_BYTES) { return '사진 용량이 너무 큽니다. 10MB 이하의 파일을 올려주세요.'; } if (!CREATE_THUMB_ALLOWED_TYPES.includes(file.type)) { return 'JPG, PNG, WEBP, GIF 이미지만 썸네일로 업로드할 수 있습니다.'; } return null; }
-    function applyThumbPreviewFromFile(file) { const box = document.getElementById('thumbPreviewBox'); if (!box || !file) return; const objectUrl = URL.createObjectURL(file); setCreateThumbnailState('file', file); applyThumbPreviewToBox(box, 'url', objectUrl); closeThumbnailSheet(); }
+    function applyThumbPreviewFromFile(file) {
+        const box = document.getElementById('thumbPreviewBox');
+        if (!box || !file) return;
+        const objectUrl = URL.createObjectURL(file);
+        setCreateThumbnailState('file', file);
+        applyThumbPreviewToBox(box, 'url', objectUrl);
+        const placeholder = document.getElementById('thumbPreviewPlaceholder');
+        const txtEl = document.getElementById('thumbLiveText');
+        if (placeholder) placeholder.style.display = 'none';
+        if (txtEl) txtEl.style.display = 'none';
+        closeThumbnailSheet();
+    }
     function onThumbAlbumFileSelected(input) { const pickedThumbFile = input.files?.[0]; if (!pickedThumbFile) return; const thumbValidationError = validateCreateThumbnailFile(pickedThumbFile); if (thumbValidationError) { alert(thumbValidationError); input.value = ''; return; } applyThumbPreviewFromFile(pickedThumbFile); input.value = ''; }
 
     function resetUploadState() { uploadStatus = { single: false, vsA: false, vsB: false }; uploadFiles = { single: null, vsA: null, vsB: null }; }
@@ -696,12 +773,12 @@
         ctx.fillRect(0, 0, width, height);
     }
 
-    function drawCanvasWrappedText(ctx, text, width, height) {
+    function drawCanvasWrappedText(ctx, text, width, height, fontStr) {
         const safeText = String(text ?? '').trim();
         if (!safeText) return;
 
         ctx.fillStyle = CANVAS_TEXT_COLOR;
-        ctx.font = '800 36px Pretendard, "Black Han Sans", sans-serif';
+        ctx.font = fontStr || TEXT_CARD_CANVAS_FONT;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -723,19 +800,64 @@
         lines.forEach((ln, i) => ctx.fillText(ln, width / 2, startY + (i * lineHeight)));
     }
 
-    function makeCanvasImage(text, bgColor, width, height) {
-        return new Promise(resolve => {
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d', { alpha: false });
-
-            paintCanvasBackground(ctx, bgColor, width, height);
-            drawCanvasWrappedText(ctx, text, width, height);
-
-            canvas.toBlob(blob => resolve(new File([blob], 'generated.png', { type: 'image/png' })), 'image/png');
+    function canvasToValidFile(canvas, fileName) {
+        return new Promise(function (resolve, reject) {
+            if (!canvas || !canvas.width || !canvas.height) {
+                reject(new Error('캔버스 크기가 올바르지 않습니다.'));
+                return;
+            }
+            canvas.toBlob(function (blob) {
+                if (blob && blob.size > 0) {
+                    resolve(new File([blob], fileName, { type: blob.type || 'image/png' }));
+                    return;
+                }
+                try {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const parts = dataUrl.split(',');
+                    if (parts.length < 2) throw new Error('캔버스 데이터 변환에 실패했습니다.');
+                    const bin = atob(parts[1]);
+                    const arr = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                    const fallbackBlob = new Blob([arr], { type: 'image/png' });
+                    if (!fallbackBlob.size) throw new Error('캔버스 이미지가 비어 있습니다.');
+                    resolve(new File([fallbackBlob], fileName, { type: 'image/png' }));
+                } catch (err) {
+                    reject(err instanceof Error ? err : new Error('캔버스 이미지를 생성하지 못했습니다.'));
+                }
+            }, 'image/png', 0.92);
         });
     }
+
+    async function makeCanvasImage(text, bgColor, width, height, fontStr) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { alpha: false });
+        if (!ctx) throw new Error('캔버스를 초기화하지 못했습니다.');
+
+        paintCanvasBackground(ctx, bgColor, width, height);
+        drawCanvasWrappedText(ctx, text, width, height, fontStr);
+
+        const file = await canvasToValidFile(canvas, 'generated.png');
+        if (!(file instanceof File) || !file.size) {
+            throw new Error('썸네일 이미지 파일을 만들지 못했습니다.');
+        }
+        return file;
+    }
+
+    window.ensureCreateThumbnailUploaded = async function (userId) {
+        if (!userId || createThumbnailState.type !== 'css' || !createThumbnailState.css) return;
+
+        const title = String(document.getElementById('inputTitle')?.value ?? '').trim();
+        if (!title) throw new Error('썸네일 텍스트(불판 제목)을 입력해 주세요.');
+
+        const fontStr = THUMB_FONT_MAP[selectedThumbFont] || THUMB_FONT_MAP.Pretendard;
+        const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, fontStr);
+        const uploadedThumbUrl = await window.PickleMedia.uploadPostImage(thumbFile, userId, { aspectRatio: 16 / 9 });
+        if (!uploadedThumbUrl) throw new Error('썸네일 업로드에 실패했습니다.');
+
+        setCreateThumbnailState('url', uploadedThumbUrl);
+    };
 
     async function buildMediaPayload(userId) {
         // 텍스트 모드일 때 서버에 텍스트가 아닌, 직접 그려낸 이미지 2장을 던져줍니다.
@@ -743,10 +865,14 @@
             const theme = TEXT_CARD_THEMES[selectedTextThemeIndex] || TEXT_CARD_THEMES[0];
             const valA = document.getElementById('inputA').value.trim() || 'A';
             const valB = document.getElementById('inputB').value.trim() || 'B';
-            const fileA = await makeCanvasImage(valA, theme.a, 540, 960);
-            const fileB = await makeCanvasImage(valB, theme.b, 540, 960);
+            const fileA = await makeCanvasImage(valA, theme.a, 540, 960, TEXT_CARD_CANVAS_FONT);
+            const fileB = await makeCanvasImage(valB, theme.b, 540, 960, TEXT_CARD_CANVAS_FONT);
+            if (!fileA.size || !fileB.size) {
+                throw new Error('텍스트 카드 이미지를 생성하지 못했습니다.');
+            }
             const urlA = await window.PickleMedia.uploadPostImage(fileA, userId, { aspectRatio: 9/16 });
             const urlB = await window.PickleMedia.uploadPostImage(fileB, userId, { aspectRatio: 9/16 });
+            if (!urlA || !urlB) throw new Error('텍스트 카드 이미지 업로드에 실패했습니다.');
             return { media_mode: 'vs', media_orientation: 'vertical', media_url_1: urlA, media_url_2: urlB };
         }
 
@@ -776,6 +902,11 @@
 
         const titleVal = document.getElementById('inputTitle').value.trim();
         if (titleVal === '') { alert('불판 제목을 입력해주세요!'); return; }
+
+        if (!createThumbnailState.type || createThumbnailState.type === 'none') {
+            alert('리스트 노출용 썸네일을 선택해 주세요!');
+            return false;
+        }
 
         if (currentMode === 'single') { const urlVal = document.getElementById('url_single') ? document.getElementById('url_single').value.trim() : ''; if (!uploadStatus.single && urlVal === '') { alert('사진을 첨부하거나 영상 URL을 입력해주세요!'); return; } } 
         else if (currentMode === 'vs') { const urlA = document.getElementById('url_vsA') ? document.getElementById('url_vsA').value.trim() : ''; const urlB = document.getElementById('url_vsB') ? document.getElementById('url_vsB').value.trim() : ''; const hasA = uploadStatus.vsA || urlA !== ''; const hasB = uploadStatus.vsB || urlB !== ''; if (!hasA || !hasB) { alert('A와 B 각각 사진을 첨부하거나 영상 URL을 입력해주세요!'); return; } }
