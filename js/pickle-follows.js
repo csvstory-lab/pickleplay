@@ -844,10 +844,27 @@
 
   function setPopupFollowButtonState(btn, isFollowingUser) {
     if (!btn) return;
-    btn.style.background = isFollowingUser
-      ? '#2c2c2e'
-      : 'linear-gradient(135deg, #4ADE80, #22c55e)';
-    btn.style.color = isFollowingUser ? '#fff' : '#0a0a0c';
+    var isRankingSheet = btn.closest && btn.closest('.ranking-profile-sheet');
+    if (isRankingSheet) {
+      btn.classList.toggle('is-following', !!isFollowingUser);
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+      btn.style.boxShadow = '';
+    } else {
+      btn.classList.remove('is-following');
+      if (isFollowingUser) {
+        btn.style.background = '#27272a';
+        btn.style.color = '#a1a1aa';
+        btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        btn.style.boxShadow = 'none';
+      } else {
+        btn.style.background = 'rgba(74, 222, 128, 0.14)';
+        btn.style.color = '#4ADE80';
+        btn.style.border = '1px solid rgba(74, 222, 128, 0.32)';
+        btn.style.boxShadow = '0 2px 12px rgba(74, 222, 128, 0.1)';
+      }
+    }
     btn.innerHTML = isFollowingUser
       ? '✓ 팔로잉 중'
       : '<i class="ph ph-plus-bold"></i> 나의 픽';
@@ -897,7 +914,7 @@
           avatarHtml = String(meta.avatar_html);
         }
       }
-      if (badgeEl && window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
+      if (badgeEl && window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
         var pts = meta.star_score != null ? meta.star_score : meta.points;
         badgeEl.textContent =
           'Lv.' +
