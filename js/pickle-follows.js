@@ -842,6 +842,57 @@
     document.body.style.overflow = '';
   }
 
+  function normalizeUserBio(raw) {
+    if (raw == null) return '';
+    return String(raw).trim();
+  }
+
+  function applyProfileModalBio(bioEl, bioText) {
+    if (!bioEl) return;
+    var text = normalizeUserBio(bioText);
+    if (!text) {
+      bioEl.textContent = '';
+      bioEl.hidden = true;
+      bioEl.style.display = 'none';
+      return;
+    }
+    bioEl.textContent = text;
+    bioEl.hidden = false;
+    bioEl.style.display = '';
+  }
+
+  async function fetchUserProfileMeta(uid) {
+    var sb = getSupabaseClient();
+    if (!sb || !uid) return null;
+    var res = await sb
+      .from('users')
+      .select('nickname, avatar_html, avatar_url, bio, star_score, points')
+      .eq('id', uid)
+      .maybeSingle();
+    if (res.error) return null;
+    return res.data || null;
+  }
+
+  async function loadProfileModalBio(uid) {
+    var bioEl = document.getElementById('popupUserBadge');
+    if (!uid) {
+      applyProfileModalBio(bioEl, '');
+      return;
+    }
+    try {
+      var sb = getSupabaseClient();
+      if (!sb) {
+        applyProfileModalBio(bioEl, '');
+        return;
+      }
+      var res = await sb.from('users').select('bio').eq('id', uid).maybeSingle();
+      applyProfileModalBio(bioEl, res.data ? res.data.bio : '');
+    } catch (err) {
+      console.warn('[P!CKLE Follows] profile bio failed', err);
+      applyProfileModalBio(bioEl, '');
+    }
+  }
+
   function setPopupFollowButtonState(btn, isFollowingUser) {
     if (!btn) return;
     var isRankingSheet = btn.closest && btn.closest('.ranking-profile-sheet');
@@ -884,21 +935,20 @@
     var popupName = document.getElementById('popupUserName');
     var popupPic = document.getElementById('popupUserPic');
     var popupFollowBtn = document.getElementById('popupFollowBtn');
-    var badgeEl = document.getElementById('popupUserBadge');
+    var bioEl = document.getElementById('popupUserBadge');
+
+    applyProfileModalBio(bioEl, '');
 
     var nickname = options.nickname ? String(options.nickname).trim() : '';
     var avatarHtml = options.avatarHtml != null ? String(options.avatarHtml) : '';
     var meta = options.userMeta || null;
 
-    if (!meta && (!nickname || !avatarHtml)) {
-      var sb = getSupabaseClient();
-      if (sb) {
-        var userRes = await sb
-          .from('users')
-          .select('nickname, avatar_html, avatar_url, star_score, points')
-          .eq('id', uid)
-          .maybeSingle();
-        if (!userRes.error && userRes.data) meta = userRes.data;
+    if (!meta) {
+      meta = await fetchUserProfileMeta(uid);
+    } else if (meta.bio === undefined) {
+      var fetched = await fetchUserProfileMeta(uid);
+      if (fetched) {
+        meta = Object.assign({}, fetched, meta);
       }
     }
 
@@ -914,13 +964,9 @@
           avatarHtml = String(meta.avatar_html);
         }
       }
-      if (badgeEl && window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
-        var pts = meta.star_score != null ? meta.star_score : meta.points;
-        badgeEl.textContent =
-          'Lv.' +
-          window.PickleProfile.getUserLevelFromPoints(Number(pts) || 0) +
-          ' 픽클러';
-      }
+      applyProfileModalBio(bioEl, meta.bio);
+    } else {
+      await loadProfileModalBio(uid);
     }
 
     if (!nickname) nickname = FANDOM_NICKNAME_FALLBACK;
@@ -969,6 +1015,8 @@
     openUserProfileModal: openUserProfileModal,
     closeUserProfileModal: closeUserProfileModal,
     loadProfilePopupCounts: loadProfilePopupCounts,
+    applyProfileModalBio: applyProfileModalBio,
+    loadProfileModalBio: loadProfileModalBio,
   };
 
   window.openFandomSheet = openFandomSheet;

@@ -2372,51 +2372,39 @@ function renderCommentsList(comments, sortType) {
     }
   };
 
-  // 2) 프로필 팝업의 레벨 및 나를 픽한 수(팔로워) 실시간 계산
+  // 2) 프로필 팝업의 팔로워/팔로잉 수 및 한줄 소개(bio) 연동
   window.loadProfilePopupCounts = async function(uid) {
     var followerEl = document.getElementById('popupFollowerCount');
     var followingEl = document.getElementById('popupFollowingCount');
-    var badgeEl = document.getElementById('popupUserBadge');
 
-    // 초기화
     if (followerEl) followerEl.textContent = '0';
     if (followingEl) followingEl.textContent = '0';
-    if (badgeEl) {
-      badgeEl.textContent = '일반 픽클러';
-      badgeEl.style.background = 'linear-gradient(90deg, #ff007f, #aa00ff)';
+
+    if (window.PickleFollows && typeof window.PickleFollows.loadProfileModalBio === 'function') {
+      await window.PickleFollows.loadProfileModalBio(uid);
+    } else {
+      var bioEl = document.getElementById('popupUserBadge');
+      if (bioEl) {
+        bioEl.textContent = '';
+        bioEl.hidden = true;
+        bioEl.style.display = 'none';
+      }
     }
-    
+
     if (!uid) return;
 
     try {
       var sb = window.PickleSupabase ? window.PickleSupabase.getClient() : null;
       if (!sb) return;
 
-      // 나를 픽한 유저 (팔로워) - user_follows 테이블 사용
       sb.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', uid)
         .then(function(res) {
           if (!res.error && res.count !== null && followerEl) followerEl.textContent = res.count;
         });
 
-      // 내가 픽한 유저 (팔로잉)
       sb.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', uid)
         .then(function(res) {
           if (!res.error && res.count !== null && followingEl) followingEl.textContent = res.count;
-        });
-
-      // 유저 레벨 조회
-      sb.from('users').select('points').eq('id', uid).maybeSingle()
-        .then(function(res) {
-          if (!res.error && res.data && badgeEl) {
-            var pts = Number(res.data.points || 0);
-            var lv = 1;
-            if (pts >= 5000) lv = 5;
-            else if (pts >= 3000) lv = 4;
-            else if (pts >= 1500) lv = 3;
-            else if (pts >= 500) lv = 2;
-            badgeEl.textContent = 'Lv.' + lv + ' 픽클러';
-            badgeEl.style.background = 'linear-gradient(90deg, #4ADE80, #73A5FF)';
-          }
         });
     } catch (err) {
       console.warn('[P!CKLE Detail] 통계 로드 실패', err);
