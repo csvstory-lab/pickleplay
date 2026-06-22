@@ -32,7 +32,22 @@
     if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
       return window.PickleProfile.buildLevelBadgeFromPoints(points);
     }
-    return '<span class="grade-badge">Lv.1</span>';
+    var level = 1;
+    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+      level = window.PickleProfile.getUserLevelFromPoints(points);
+    }
+    return '<span class="grade-badge">Lv.' + level + '</span>';
+  }
+
+  function updateNicknameLevelBadge(points) {
+    var badgeEl = document.getElementById('nicknameLevelBadge');
+    if (!badgeEl) return;
+
+    var level = 1;
+    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+      level = window.PickleProfile.getUserLevelFromPoints(points);
+    }
+    badgeEl.textContent = 'Lv.' + level;
   }
 
   async function fetchCurrentUserRankingPoints(user) {
@@ -392,10 +407,13 @@
     var name = getDisplayName(user);
 
     var nickEl = document.getElementById('mainNickname');
-    if (nickEl) {
-      nickEl.innerHTML =
-        escapeHtml(name) + ' ' + buildGradeBadgeHtmlFromPoints(currentUserRankingPoints);
+    var nickTextEl = document.getElementById('mainNicknameText');
+    if (nickTextEl) {
+      nickTextEl.textContent = name;
+    } else if (nickEl) {
+      nickEl.textContent = name;
     }
+    updateNicknameLevelBadge(currentUserRankingPoints);
 
     updateLevelExpUI(currentUserRankingPoints);
 
@@ -464,6 +482,7 @@
     if (levelEl) {
       levelEl.textContent = 'Lv.' + level;
     }
+    updateNicknameLevelBadge(normalized);
 
     var tiers = [0, 100, 300, 600, 1000];
     var expEl = document.getElementById('expText');
@@ -510,9 +529,31 @@
     var pop = document.getElementById('levelGuidePopover');
     if (!btn || !pop) return;
 
+    function positionLevelGuidePopover() {
+      var rect = btn.getBoundingClientRect();
+      var popWidth = pop.offsetWidth || 260;
+      var left = Math.max(16, Math.min(rect.left, window.innerWidth - popWidth - 16));
+      var top = rect.bottom + 8;
+      if (top + pop.offsetHeight > window.innerHeight - 16) {
+        top = Math.max(16, rect.top - pop.offsetHeight - 8);
+      }
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+    }
+
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
+      var willOpen = pop.classList.contains('hidden');
       pop.classList.toggle('hidden');
+      if (willOpen) {
+        positionLevelGuidePopover();
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (!pop.classList.contains('hidden')) {
+        positionLevelGuidePopover();
+      }
     });
 
     document.addEventListener('click', function (e) {
@@ -1054,10 +1095,43 @@
 
   function buildActiveBlindedResultHtml() {
     return (
-      '<div class="vote-result-box">' +
-      '<div class="result-win" style="color:var(--neon-blue);font-size:0.9rem;">집계 중…</div>' +
+      '<div class="card-result-blind" aria-label="진행 중 결과 블라인드">' +
+      '<i class="ph ph-lock-simple" aria-hidden="true"></i>' +
+      '<span>진행 중 (결과 블라인드)</span>' +
       '</div>'
     );
+  }
+
+  function buildEditButtonHtml(post) {
+    if (!post || post.visibility_status !== 'visible') return '';
+    return (
+      '<button type="button" class="btn-edit-post ing" data-post-id="' +
+      escapeHtml(post.id) +
+      '" aria-label="불판 수정">수정</button>'
+    );
+  }
+
+  function buildShareButtonHtml(post, title) {
+    if (!post || post.visibility_status !== 'visible') return '';
+    return (
+      '<button type="button" class="btn-share-post ing" data-post-id="' +
+      escapeHtml(post.id) +
+      '" data-post-title="' +
+      escapeHtml(title) +
+      '" aria-label="공유">공유</button>'
+    );
+  }
+
+  function buildCardActionButtonsHtml(post, title, options) {
+    var opts = options || {};
+    var parts = [];
+    if (opts.includeEdit) {
+      parts.push(buildEditButtonHtml(post));
+    }
+    if (opts.includeShare) {
+      parts.push(buildShareButtonHtml(post, title));
+    }
+    return parts.filter(Boolean).join('');
   }
 
   function buildPostDetailShareUrl(postId) {
@@ -1146,13 +1220,21 @@
     );
   }
 
-  function buildCardStatsRow(post, stats, shareBtnHtml) {
+  function buildCardStatsRow(post, stats, options) {
+    var opts = options || {};
     var likeNum = Number(post && post.comment_count);
     if (!Number.isFinite(likeNum) || likeNum < 0) likeNum = 0;
     var voteNum = Number(stats && stats.total);
     if (!Number.isFinite(voteNum) || voteNum < 0) {
       voteNum = Number(post && post.vote_count) || 0;
     }
+
+    var voteStatHtml = opts.hideVoteStats
+      ? ''
+      : '<span class="card-stat-item card-stat-item--vote">' +
+        '<i class="ph ph-check-circle" aria-hidden="true"></i>' +
+        voteNum.toLocaleString() +
+        '</span>';
 
     return (
       '<div class="card-row-stats">' +
@@ -1161,41 +1243,21 @@
       '<i class="ph ph-heart" aria-hidden="true"></i>' +
       likeNum.toLocaleString() +
       '</span>' +
-      '<span class="card-stat-item card-stat-item--vote">' +
-      '<i class="ph ph-check-circle" aria-hidden="true"></i>' +
-      voteNum.toLocaleString() +
-      '</span>' +
+      voteStatHtml +
       '</div>' +
-      (shareBtnHtml || '') +
       '</div>'
     );
   }
 
-  function buildShareButtonHtml(post, title) {
-    if (!post || post.visibility_status !== 'visible') return '';
-    return (
-      '<button type="button" class="btn-share-post ing" data-post-id="' +
-      escapeHtml(post.id) +
-      '" data-post-title="' +
-      escapeHtml(title) +
-      '" aria-label="공유">' +
-      '<i class="ph ph-share-network" aria-hidden="true"></i>' +
-      '</button>'
-    );
-  }
-
   function buildRecordCard(post, stats, viewerUserId) {
-    var visible = post.visibility_status === 'visible';
     var expired = isPostTimeExpired(post.expires_at);
     var statusClass = expired ? 'done' : 'ing';
     var statusText = getRemainingTime(post.expires_at);
     var title = post.title || post.option_a_name || '제목 없음';
-    var editBtn = visible
-      ? '<button type="button" class="btn-edit-post ing" data-post-id="' +
-        escapeHtml(post.id) +
-        '" aria-label="불판 수정">수정</button>'
-      : '';
-    var shareBtn = buildShareButtonHtml(post, title);
+    var actionBtns = buildCardActionButtonsHtml(post, title, {
+      includeEdit: true,
+      includeShare: true,
+    });
 
     return (
       '<div class="record-card" data-id="' +
@@ -1214,14 +1276,14 @@
       escapeHtml(statusText) +
       '</span>' +
       '<div class="card-row-actions">' +
-      editBtn +
+      actionBtns +
       '</div>' +
       '</div>' +
       '<div class="card-title">' +
       escapeHtml(title) +
       '</div>' +
       buildVoteProgressBarHtml(post, stats) +
-      buildCardStatsRow(post, stats, shareBtn) +
+      buildCardStatsRow(post, stats) +
       '</div>'
     );
   }
@@ -1232,7 +1294,14 @@
     var statusClass = expired ? 'done' : 'ing';
     var statusText = getRemainingTime(post.expires_at);
     var title = post.title || post.option_a_name || '제목 없음';
-    var shareBtn = buildShareButtonHtml(post, title);
+    var actionBtns = buildCardActionButtonsHtml(post, title, {
+      includeEdit: false,
+      includeShare: true,
+    });
+    var resultHtml = expired
+      ? buildVoteProgressBarHtml(post, stats)
+      : buildActiveBlindedResultHtml();
+    var statsHtml = expired ? buildCardStatsRow(post, stats) : '';
 
     return (
       '<div class="record-card" data-id="' +
@@ -1250,12 +1319,15 @@
       '">' +
       escapeHtml(statusText) +
       '</span>' +
+      '<div class="card-row-actions">' +
+      actionBtns +
+      '</div>' +
       '</div>' +
       '<div class="card-title">' +
       escapeHtml(title) +
       '</div>' +
-      buildVoteProgressBarHtml(post, stats) +
-      buildCardStatsRow(post, stats, shareBtn) +
+      resultHtml +
+      statsHtml +
       '</div>'
     );
   }

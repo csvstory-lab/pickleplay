@@ -214,23 +214,27 @@
     .record-card:active { transform: scale(0.98); border-color: rgba(115, 165, 255, 0.35); }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.75rem; font-weight: 700; gap: 8px; }
     .card-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
-    .btn-edit-post {
-        flex-shrink: 0; padding: 5px 11px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
-        background: var(--bg-elevated); cursor: pointer; transition: 0.2s; line-height: 1.2;
-        font-family: inherit; border: 1px solid var(--border-soft);
+    .btn-edit-post,
+    .btn-share-post {
+        flex-shrink: 0;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: var(--bg-elevated);
+        cursor: pointer;
+        transition: 0.2s;
+        line-height: 1.2;
+        font-family: inherit;
+        border: 1px solid var(--border-soft);
+        white-space: nowrap;
     }
     .btn-edit-post.ing { color: var(--point-green); border-color: rgba(74, 222, 128, 0.45); }
     .btn-edit-post.ing:active { background: rgba(74, 222, 128, 0.12); }
     .btn-edit-post.done { color: var(--text-sub); border-color: var(--border-soft); }
-    .btn-share-post {
-        flex-shrink: 0;
-        width: 36px; height: 36px; padding: 0;
-        display: inline-flex; align-items: center; justify-content: center;
-        border-radius: 10px; font-size: 0.72rem; font-weight: 700;
-        background: var(--bg-elevated); cursor: pointer; transition: 0.2s; line-height: 1.2;
-        font-family: inherit; border: 1px solid var(--border-soft);
-    }
-    .btn-share-post i { font-size: 1.1rem; }
+    .btn-share-post.ing { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.45); }
+    .btn-share-post.ing:active { background: rgba(115, 165, 255, 0.12); }
+    .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
     .status-badge.ing { color: var(--point-blue); }
     .status-badge.done { color: var(--point-pink); }
     .card-date { color: var(--text-sub); white-space: nowrap; flex-shrink: 0; margin-left: 8px; opacity: 0.85; }
@@ -1030,6 +1034,7 @@
         gap: 6px;
         position: relative;
         flex-wrap: wrap;
+        z-index: 9998;
     }
     .level-badge {
         font-family: 'Black Han Sans', sans-serif;
@@ -1047,11 +1052,10 @@
         font-family: inherit;
     }
     .level-guide-popover {
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 0;
-        z-index: 20;
-        min-width: 220px;
+        position: fixed;
+        z-index: 9999;
+        min-width: 240px;
+        max-width: min(300px, calc(100vw - 32px));
         background: var(--bg-card);
         border: 1px solid var(--border-card);
         border-radius: 12px;
@@ -1062,7 +1066,28 @@
         color: var(--text-sub);
     }
     .level-guide-popover.hidden { display: none !important; }
-    .level-guide-popover strong { color: var(--text-main); font-weight: 700; }
+    .level-guide-popover strong { color: var(--text-main); font-weight: 700; display: block; margin-bottom: 6px; }
+    .level-guide-desc {
+        margin: 0 0 10px;
+        font-size: 0.7rem;
+        line-height: 1.5;
+        color: var(--text-sub);
+    }
+    .level-guide-tiers { margin: 0; padding: 0; list-style: none; }
+    .level-guide-tiers li { margin-bottom: 4px; }
+    .level-guide-tiers li:last-child { margin-bottom: 0; }
+    .level-guide-more {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 0;
+        border: none;
+        background: none;
+        color: var(--point-blue);
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+    }
 
     /* 리스트 카드 4행 레이아웃 */
     .card-row-meta {
@@ -1127,9 +1152,21 @@
     .card-stat-item i { font-size: 1rem; }
     .card-stat-item--like i { color: var(--point-pink); }
     .card-stat-item--vote i { color: var(--point-green); }
-    .btn-share-post.ing { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.45); }
-    .btn-share-post.ing:active { background: rgba(115, 165, 255, 0.12); }
-    .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
+    .card-result-blind {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px 12px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+        background: var(--bg-elevated);
+        border: 1px dashed var(--border-soft);
+        color: var(--text-sub);
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .card-result-blind i { font-size: 1rem; color: var(--point-gold); flex-shrink: 0; }
 
     /* 로그아웃 커스텀 모달 */
     .mypage-confirm-modal {
@@ -1318,7 +1355,10 @@
         <div class="profile-info-row">
             <div class="profile-avatar" id="mainAvatar">🥒</div>
             <div class="profile-text">
-                <div class="profile-name" id="mainNickname">픽클러</div>
+                <div class="profile-name" id="mainNickname">
+                    <span id="mainNicknameText">픽클러</span>
+                    <span class="grade-badge" id="nicknameLevelBadge">Lv.1</span>
+                </div>
                 <div class="profile-bio" id="mainBio"></div>
             </div>
         </div>
@@ -1348,12 +1388,16 @@
                     <span class="level-badge" id="mainUserLevel">Lv.1</span>
                     <button type="button" class="btn-level-guide" id="btnLevelGuide" aria-label="레벨 가이드">?</button>
                     <div id="levelGuidePopover" class="level-guide-popover hidden" role="tooltip">
-                        <strong>레벨업 가이드</strong><br>
-                        Lv.1 · 0~99점<br>
-                        Lv.2 · 100~299점<br>
-                        Lv.3 · 300~599점<br>
-                        Lv.4 · 600~999점<br>
-                        Lv.5 · 1,000점 이상
+                        <strong>레벨업 가이드</strong>
+                        <p class="level-guide-desc">랭킹 포인트가 쌓이면 레벨이 올라갑니다. 투표·댓글·팬덤 활동으로 포인트를 모아보세요!</p>
+                        <ul class="level-guide-tiers">
+                            <li>Lv.1 · 새내기 픽클러 (0~99점)</li>
+                            <li>Lv.2 · 활동 시작 (100~299점)</li>
+                            <li>Lv.3 · 인기 픽클러 (300~599점)</li>
+                            <li>Lv.4 · 영향력 확장 (600~999점)</li>
+                            <li>Lv.5 · 명예의 전당 (1,000점 이상)</li>
+                        </ul>
+                        <button type="button" class="level-guide-more" onclick="openGuideModal()">포인트 적립 자세히 보기 ›</button>
                     </div>
                 </span>
                 <span class="exp-text" id="expText">0 / 100 P</span>
@@ -1928,7 +1972,14 @@
     }
 
     function openPointSheet() { closeAllModals(); overlay.classList.add('open'); document.getElementById('pointSheet').classList.add('open'); document.body.style.overflow = 'hidden'; }
-    function openGuideModal() { closeAllModals(); overlay.classList.add('open'); document.getElementById('guideModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function openGuideModal() {
+        var pop = document.getElementById('levelGuidePopover');
+        if (pop) pop.classList.add('hidden');
+        closeAllModals();
+        overlay.classList.add('open');
+        document.getElementById('guideModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
     function openFandomSheet(type) {
         if (window.PickleFollows && window.PickleFollows.openFandomSheet) {
             window.PickleFollows.openFandomSheet(type);
