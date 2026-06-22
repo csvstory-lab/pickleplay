@@ -153,6 +153,14 @@
     .comment-submit { background-color: var(--point-green); color: #0a0a0c; border: none; font-weight: 800; padding: 0 16px; border-radius: 12px; cursor: pointer; font-size: 0.85rem; }
     
     .comment-list { display: flex; flex-direction: column; gap: 14px; }
+    .comments-empty-msg {
+        font-size: 0.85rem;
+        color: var(--text-sub);
+        text-align: center;
+        padding: 18px 12px;
+        margin: 0;
+        line-height: 1.5;
+    }
     .comment-item { display: flex; flex-direction: column; gap: 8px; }
     .comment-main-row { display: flex; gap: 10px; width: 100%; }
     .comment-content { flex: 1; background-color: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-soft); }
@@ -315,9 +323,9 @@
     <div class="issue-header-box">
         <h2 class="issue-title" id="detailTitle">불판 불러오는 중…</h2>
         <div class="meta-row-top">
-            <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;">연예 / 썸 / 이별</span>
+            <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;"></span>
             <span>/</span>
-            <div class="meta-timer-badge"><i class="ph ph-clock"></i> <span id="detailTimer">00:00:00 남음</span></div>
+            <div class="meta-timer-badge"><i class="ph ph-clock"></i> <span id="detailTimer"></span></div>
         </div>
     </div>
 

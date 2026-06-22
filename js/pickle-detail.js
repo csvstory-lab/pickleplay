@@ -360,9 +360,29 @@
     return '⏳ ' + diffDays + '일 남음';
   }
 
+  function formatDetailRemainingTime(expiresAt) {
+    if (expiresAt == null || expiresAt === '') return '마감된 불판';
+
+    var expireDate = new Date(expiresAt);
+    if (Number.isNaN(expireDate.getTime())) return '마감된 불판';
+
+    var diffMs = expireDate.getTime() - Date.now();
+    if (diffMs <= 0) return '종료된 불판';
+
+    var totalMins = Math.floor(diffMs / (1000 * 60));
+    var days = Math.floor(totalMins / (60 * 24));
+    if (days >= 1) return days + '일 남음';
+
+    var hours = Math.floor(totalMins / 60);
+    var mins = totalMins % 60;
+    return String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ' 남음';
+  }
+
   function parseExpiresAt(post) {
-    if (!post || post.expires_at == null || post.expires_at === '') return null;
-    var endDate = new Date(post.expires_at);
+    if (!post) return null;
+    var raw = post.expires_at || post.end_date || post.end_at || null;
+    if (raw == null || raw === '') return null;
+    var endDate = new Date(raw);
     return Number.isNaN(endDate.getTime()) ? null : endDate;
   }
 
@@ -376,13 +396,15 @@
       timerInterval = null;
     }
 
-    var expiresRaw = post && post.expires_at;
+    var expiresRaw =
+      post &&
+      (post.expires_at || post.end_date || post.end_at || null);
     var endsAt = parseExpiresAt(post);
     var timerEl = $('detailTimer');
     if (!timerEl) return;
 
     function tick() {
-      timerEl.textContent = getRemainingTime(expiresRaw);
+      timerEl.textContent = formatDetailRemainingTime(expiresRaw);
       if (endsAt && endsAt.getTime() - Date.now() <= 0) {
         timerEl.classList.add('is-ended');
       } else {
@@ -1109,7 +1131,7 @@ function renderCommentsList(comments, sortType) {
 
   if (!comments.length) {
     listEl.innerHTML =
-      '<p class="comments-empty-msg" id="detailCommentEmpty">아직 댓글이 없습니다. 첫 훈수를 남겨보세요!</p>';
+      '<p class="comments-empty-msg" id="detailCommentEmpty">첫 번째 댓글의 주인공이 되어보세요!</p>';
     return;
   }
 
@@ -1460,28 +1482,34 @@ function renderCommentsList(comments, sortType) {
   }
 
   function renderMeta(post) {
-    var metaEl = $('detailMetaTags');
-    if (!metaEl) return;
-
-    var html = [];
     var catLabel = categoryDisplay(post.category);
+    var catEl = $('detailCategoryText');
+    if (catEl) {
+      catEl.textContent = catLabel;
+    }
 
-    html.push(
-      '<span class="pickle-meta-cat">[ ' + escapeHtml(catLabel) + ' ]</span>'
-    );
+    var metaEl = $('detailMetaTags');
+    if (metaEl) {
+      var html = [];
 
-    formatHashtags(safeTagsValue(post)).forEach(function (tag) {
       html.push(
-        '<span class="pickle-meta-tag">' + escapeHtml(tag) + '</span>'
+        '<span class="pickle-meta-cat">[ ' + escapeHtml(catLabel) + ' ]</span>'
       );
-    });
 
-    html.push(
-      '<span class="pickle-meta-timer" id="detailTimer">⏳ --</span>'
-    );
+      formatHashtags(safeTagsValue(post)).forEach(function (tag) {
+        html.push(
+          '<span class="pickle-meta-tag">' + escapeHtml(tag) + '</span>'
+        );
+      });
 
-    metaEl.className = 'pickle-meta-row meta-row-top';
-    metaEl.innerHTML = html.join('');
+      html.push(
+        '<span class="pickle-meta-timer" id="detailTimer">⏳ --</span>'
+      );
+
+      metaEl.className = 'pickle-meta-row meta-row-top';
+      metaEl.innerHTML = html.join('');
+    }
+
     startTimer(post);
   }
 

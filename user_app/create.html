@@ -646,18 +646,65 @@
     function checkUrlInput(type) { const urlInput = document.getElementById('url_' + type); const box = document.getElementById('box_' + type); const fileInput = document.getElementById('file_' + type); if(urlInput.value.trim() !== '') { uploadStatus[type] = false; uploadFiles[type] = null; if (fileInput) fileInput.value = ''; box.classList.remove('uploaded'); box.style.border = '2px dashed #3f3f46'; box.style.opacity = '0.4'; box.innerHTML = '<div class="icon-plus">🔗</div><div class="upload-txt">영상 링크 적용됨</div>'; } else { box.style.opacity = '1'; box.style.border = '2px dashed #52525b'; let iconColor = type === 'vsA' ? 'var(--neon-blue)' : (type === 'vsB' ? 'var(--neon-pink)' : 'var(--text-sub)'); let label = type === 'vsA' ? 'A' : (type === 'vsB' ? 'B' : '가로/세로'); box.innerHTML = `<div class="icon-plus" style="color:${iconColor};">➕</div><div class="upload-txt">${label} 사진 첨부</div>`; } }
 
     // 💡 [추가] 텍스트를 진짜 이미지로 변환해주는 마법의 엔진
+    function normalizeCanvasColor(color) {
+        if (!color) return null;
+        const s = String(color).trim();
+        if (/^#[0-9a-fA-F]{3}$/.test(s)) {
+            return '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+        }
+        if (/^#[0-9a-fA-F]{6}$/.test(s) || /^rgba?\(/i.test(s) || /^hsla?\(/i.test(s)) return s;
+        return null;
+    }
+
+    function paintCanvasBackground(ctx, bgColor, width, height) {
+        const bg = String(bgColor || '').trim();
+        if (!bg) {
+            ctx.fillStyle = '#FFB3BA';
+            ctx.fillRect(0, 0, width, height);
+            return;
+        }
+        if (/gradient/i.test(bg)) {
+            let angle = 135;
+            const degMatch = bg.match(/(-?\d+(?:\.\d+)?)\s*deg/i);
+            if (degMatch) angle = parseFloat(degMatch[1]);
+            const rad = (angle - 90) * Math.PI / 180;
+            const cx = width / 2;
+            const cy = height / 2;
+            const len = Math.sqrt(width * width + height * height) / 2;
+            const x1 = cx - Math.cos(rad) * len;
+            const y1 = cy - Math.sin(rad) * len;
+            const x2 = cx + Math.cos(rad) * len;
+            const y2 = cy + Math.sin(rad) * len;
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            const colors = bg.match(/#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/gi) || [];
+            const stops = colors.map(normalizeCanvasColor).filter(Boolean);
+            if (stops.length >= 2) {
+                stops.forEach((c, i) => grad.addColorStop(i / (stops.length - 1), c));
+            } else if (stops.length === 1) {
+                grad.addColorStop(0, stops[0]);
+                grad.addColorStop(1, stops[0]);
+            } else {
+                grad.addColorStop(0, '#ff9a9e');
+                grad.addColorStop(1, '#fecfef');
+            }
+            ctx.fillStyle = grad;
+        } else {
+            ctx.fillStyle = normalizeCanvasColor(bg) || bg;
+        }
+        ctx.fillRect(0, 0, width, height);
+    }
+
     function makeCanvasImage(text, bgColor, width, height) {
         return new Promise(resolve => {
-            const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d');
-            if (bgColor.includes('gradient')) {
-                const grad = ctx.createLinearGradient(0, 0, width, height);
-                const hexMatch = bgColor.match(/#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}/ig);
-                if(hexMatch && hexMatch.length >= 2) { grad.addColorStop(0, hexMatch[0]); grad.addColorStop(1, hexMatch[1]); }
-                else { grad.addColorStop(0, '#ff9a9e'); grad.addColorStop(1, '#fecfef'); }
-                ctx.fillStyle = grad;
-            } else { ctx.fillStyle = bgColor; }
-            ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = '#0a0a0c'; ctx.font = '800 36px Pretendard, "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d', { alpha: false });
+            paintCanvasBackground(ctx, bgColor, width, height);
+            ctx.fillStyle = '#0a0a0c';
+            ctx.font = '800 36px Pretendard, "Black Han Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             const textStr = text || ''; const words = textStr.split(''); let line = ''; const lines = [];
             for (let n = 0; n < words.length; n++) {
                 if (ctx.measureText(line + words[n]).width > (width * 0.8) && n > 0) { lines.push(line); line = words[n]; } else { line += words[n]; }
