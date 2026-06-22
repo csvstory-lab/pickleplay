@@ -388,14 +388,16 @@
 
   async function renderProfile(user) {
     currentUser = user;
-    var name = getDisplayName(user);
     currentUserRankingPoints = await fetchCurrentUserRankingPoints(user);
+    var name = getDisplayName(user);
 
     var nickEl = document.getElementById('mainNickname');
     if (nickEl) {
       nickEl.innerHTML =
         escapeHtml(name) + ' ' + buildGradeBadgeHtmlFromPoints(currentUserRankingPoints);
     }
+
+    updateLevelExpUI(currentUserRankingPoints);
 
     var bioEl = document.getElementById('mainBio');
     if (bioEl) {
@@ -448,6 +450,78 @@
     return null;
   }
 
+  function updateLevelExpUI(points) {
+    var normalized = Number(points);
+    if (!Number.isFinite(normalized) || normalized < 0) normalized = 0;
+    normalized = Math.floor(normalized);
+
+    var level = 1;
+    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+      level = window.PickleProfile.getUserLevelFromPoints(normalized);
+    }
+
+    var levelEl = document.getElementById('mainUserLevel');
+    if (levelEl) {
+      levelEl.textContent = 'Lv.' + level;
+    }
+
+    var tiers = [0, 100, 300, 600, 1000];
+    var expEl = document.getElementById('expText');
+    var fill = document.querySelector('.exp-container .progress-fill');
+
+    if (level >= 5) {
+      if (expEl) expEl.textContent = normalized.toLocaleString() + ' P · MAX';
+      if (fill) fill.style.width = '100%';
+      return;
+    }
+
+    var prev = tiers[level - 1] || 0;
+    var next = tiers[level] || 1000;
+    if (expEl) {
+      expEl.textContent = normalized.toLocaleString() + ' / ' + next.toLocaleString() + ' P';
+    }
+    if (fill) {
+      var span = Math.max(1, next - prev);
+      var pct = Math.min(100, Math.max(0, Math.round(((normalized - prev) / span) * 100)));
+      fill.style.width = pct + '%';
+    }
+  }
+
+  function bindProfileAvatarClick() {
+    var avatarEl = document.getElementById('mainAvatar');
+    if (!avatarEl) return;
+    avatarEl.setAttribute('role', 'button');
+    avatarEl.setAttribute('tabindex', '0');
+    avatarEl.setAttribute('aria-label', '프로필 편집');
+    avatarEl.addEventListener('click', function () {
+      var editBtn = document.getElementById('btnOpenProfileEdit');
+      if (editBtn) editBtn.click();
+    });
+    avatarEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        avatarEl.click();
+      }
+    });
+  }
+
+  function bindLevelGuide() {
+    var btn = document.getElementById('btnLevelGuide');
+    var pop = document.getElementById('levelGuidePopover');
+    if (!btn || !pop) return;
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      pop.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!pop.classList.contains('hidden') && !pop.contains(e.target) && e.target !== btn) {
+        pop.classList.add('hidden');
+      }
+    });
+  }
+
   function bindProfileEditOpen() {
     var btn = document.getElementById('btnOpenProfileEdit');
     if (!btn) return;
@@ -467,19 +541,36 @@
 
   function bindLogout() {
     var btn = document.getElementById('btnLogout');
+    var confirmBtn = document.getElementById('btnLogoutConfirm');
     if (!btn) return;
 
-    btn.addEventListener('click', async function () {
-      if (!confirm('로그아웃 하시겠습니까?')) return;
-      try {
-        var sb = getSupabaseClient();
-        var result = await sb.auth.signOut();
-        if (result.error) throw result.error;
-        window.location.replace('login.html');
-      } catch (err) {
-        alert(err.message || '로그아웃에 실패했습니다.');
+    btn.addEventListener('click', function () {
+      if (typeof window.openLogoutConfirm === 'function') {
+        window.openLogoutConfirm();
+        return;
       }
+      performLogout();
     });
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', async function () {
+        await performLogout();
+      });
+    }
+  }
+
+  async function performLogout() {
+    try {
+      var sb = getSupabaseClient();
+      var result = await sb.auth.signOut();
+      if (result.error) throw result.error;
+      window.location.replace('login.html');
+    } catch (err) {
+      if (typeof window.closeLogoutConfirm === 'function') {
+        window.closeLogoutConfirm();
+      }
+      alert(err.message || '로그아웃에 실패했습니다.');
+    }
   }
 
   function bindWithdraw() {
@@ -1025,90 +1116,86 @@
     }
   }
 
+  function buildVoteProgressBarHtml(post, stats) {
+    var st = stats || { votesA: 0, votesB: 0, total: 0 };
+    var pct = calcVotePercent(st.votesA, st.votesB);
+    var labelA = (post && post.option_a_name) || 'A';
+    var labelB = (post && post.option_b_name) || 'B';
+
+    return (
+      '<div class="card-vote-progress">' +
+      '<div class="card-vote-progress__track">' +
+      '<div class="card-vote-progress__fill-a" style="width:' +
+      pct.pctA +
+      '%"></div>' +
+      '<div class="card-vote-progress__fill-b"></div>' +
+      '</div>' +
+      '<div class="card-vote-progress__labels">' +
+      '<span class="pick-a">A ' +
+      pct.pctA +
+      '% · ' +
+      escapeHtml(labelA) +
+      '</span>' +
+      '<span class="pick-b">B ' +
+      pct.pctB +
+      '% · ' +
+      escapeHtml(labelB) +
+      '</span>' +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function buildCardStatsRow(post, stats, shareBtnHtml) {
+    var likeNum = Number(post && post.comment_count);
+    if (!Number.isFinite(likeNum) || likeNum < 0) likeNum = 0;
+    var voteNum = Number(stats && stats.total);
+    if (!Number.isFinite(voteNum) || voteNum < 0) {
+      voteNum = Number(post && post.vote_count) || 0;
+    }
+
+    return (
+      '<div class="card-row-stats">' +
+      '<div class="card-stat-group">' +
+      '<span class="card-stat-item card-stat-item--like">' +
+      '<i class="ph ph-heart" aria-hidden="true"></i>' +
+      likeNum.toLocaleString() +
+      '</span>' +
+      '<span class="card-stat-item card-stat-item--vote">' +
+      '<i class="ph ph-check-circle" aria-hidden="true"></i>' +
+      voteNum.toLocaleString() +
+      '</span>' +
+      '</div>' +
+      (shareBtnHtml || '') +
+      '</div>'
+    );
+  }
+
+  function buildShareButtonHtml(post, title) {
+    if (!post || post.visibility_status !== 'visible') return '';
+    return (
+      '<button type="button" class="btn-share-post ing" data-post-id="' +
+      escapeHtml(post.id) +
+      '" data-post-title="' +
+      escapeHtml(title) +
+      '" aria-label="공유">' +
+      '<i class="ph ph-share-network" aria-hidden="true"></i>' +
+      '</button>'
+    );
+  }
+
   function buildRecordCard(post, stats, viewerUserId) {
     var visible = post.visibility_status === 'visible';
     var expired = isPostTimeExpired(post.expires_at);
-    var active = !expired;
-    var isCreator = isViewerPostCreator(post, viewerUserId);
-    var showCreatorLive = active && isCreator;
     var statusClass = expired ? 'done' : 'ing';
     var statusText = getRemainingTime(post.expires_at);
-    var total = stats && stats.total ? stats.total : 0;
     var title = post.title || post.option_a_name || '제목 없음';
     var editBtn = visible
       ? '<button type="button" class="btn-edit-post ing" data-post-id="' +
         escapeHtml(post.id) +
         '" aria-label="불판 수정">수정</button>'
       : '';
-    var shareBtn = visible
-      ? '<button type="button" class="btn-share-post ing" data-post-id="' +
-        escapeHtml(post.id) +
-        '" data-post-title="' +
-        escapeHtml(title) +
-        '" aria-label="참전 요청">🔗 참전 요청</button>'
-      : '';
-    var resultBoxHtml = '';
-    if (showCreatorLive) {
-      resultBoxHtml = buildCreatorLiveResultHtml(post, stats);
-    } else if (active && !isCreator) {
-      resultBoxHtml = buildActiveBlindedResultHtml();
-    }
-    var cardExtraClass = showCreatorLive ? ' creator-live' : '';
-    var footerStatsHtml =
-      active && !isCreator
-        ? ''
-        : '<span class="stat-fire">🔥 ' +
-          total.toLocaleString() +
-          '명 참전</span>';
-
-    return (
-      '<div class="record-card' +
-      cardExtraClass +
-      '" data-id="' +
-      escapeHtml(post.id) +
-      '" role="button" tabindex="0" aria-label="' +
-      escapeHtml(title) +
-      '">' +
-      '<div class="card-header">' +
-      '<div class="card-header-left">' +
-      '<span class="status-badge ' +
-      statusClass +
-      '">' +
-      escapeHtml(statusText) +
-      '</span>' +
-      editBtn +
-      '</div>' +
-      '<span class="card-date">' +
-      escapeHtml(formatCardDate(post.created_at)) +
-      '</span>' +
-      '</div>' +
-      '<div class="card-title">' +
-      escapeHtml(title) +
-      '</div>' +
-      resultBoxHtml +
-      '<div class="card-footer-stats card-footer-stats--created">' +
-      '<div class="card-footer-info">' +
-      footerStatsHtml +
-      '<span>' +
-      escapeHtml(categoryLabel(post.category)) +
-      '</span>' +
-      '</div>' +
-      shareBtn +
-      '</div>' +
-      '</div>'
-    );
-  }
-
-  function buildVotedRecordCard(voteRow, stats) {
-    var post = voteRow.post;
-    var choice = voteRow.choice;
-    var expired = isPostTimeExpired(post.expires_at);
-    var statusClass = expired ? 'done' : 'ing';
-    var statusText = getRemainingTime(post.expires_at);
-    var total = stats && stats.total ? stats.total : 0;
-    var title = post.title || post.option_a_name || '제목 없음';
-    var outcome = formatVoteOutcome(post, stats, choice);
-    var pickSideClass = choice === 'B' ? 'pick-b' : 'pick-a';
+    var shareBtn = buildShareButtonHtml(post, title);
 
     return (
       '<div class="record-card" data-id="' +
@@ -1116,39 +1203,59 @@
       '" role="button" tabindex="0" aria-label="' +
       escapeHtml(title) +
       '">' +
-      '<div class="card-header">' +
-      '<div class="card-header-left">' +
+      '<div class="card-row-meta">' +
+      '<span class="card-cat">' +
+      escapeHtml(categoryLabel(post.category)) +
+      '</span>' +
+      '<span class="card-meta-sep">|</span>' +
+      '<span class="status-badge ' +
+      statusClass +
+      '">' +
+      escapeHtml(statusText) +
+      '</span>' +
+      '<div class="card-row-actions">' +
+      editBtn +
+      '</div>' +
+      '</div>' +
+      '<div class="card-title">' +
+      escapeHtml(title) +
+      '</div>' +
+      buildVoteProgressBarHtml(post, stats) +
+      buildCardStatsRow(post, stats, shareBtn) +
+      '</div>'
+    );
+  }
+
+  function buildVotedRecordCard(voteRow, stats) {
+    var post = voteRow.post;
+    var expired = isPostTimeExpired(post.expires_at);
+    var statusClass = expired ? 'done' : 'ing';
+    var statusText = getRemainingTime(post.expires_at);
+    var title = post.title || post.option_a_name || '제목 없음';
+    var shareBtn = buildShareButtonHtml(post, title);
+
+    return (
+      '<div class="record-card" data-id="' +
+      escapeHtml(post.id) +
+      '" role="button" tabindex="0" aria-label="' +
+      escapeHtml(title) +
+      '">' +
+      '<div class="card-row-meta">' +
+      '<span class="card-cat">' +
+      escapeHtml(categoryLabel(post.category)) +
+      '</span>' +
+      '<span class="card-meta-sep">|</span>' +
       '<span class="status-badge ' +
       statusClass +
       '">' +
       escapeHtml(statusText) +
       '</span>' +
       '</div>' +
-      '<span class="card-date">' +
-      escapeHtml(formatCardDate(voteRow.votedAt || post.created_at)) +
-      '</span>' +
-      '</div>' +
       '<div class="card-title">' +
       escapeHtml(title) +
       '</div>' +
-      '<div class="vote-result-box">' +
-      '<div class="my-pick-info">내 픽: <span class="' +
-      pickSideClass +
-      '">' +
-      escapeHtml(formatMyPickLabel(post, choice)) +
-      '</span></div>' +
-      (outcome
-        ? '<div class="result-win">' + escapeHtml(outcome) + '</div>'
-        : '<div class="result-win" style="color:var(--neon-blue);font-size:0.9rem;">집계 중…</div>') +
-      '</div>' +
-      '<div class="card-footer-stats">' +
-      '<span class="stat-fire">🔥 ' +
-      total.toLocaleString() +
-      '명 참전</span>' +
-      '<span>' +
-      escapeHtml(categoryLabel(post.category)) +
-      '</span>' +
-      '</div>' +
+      buildVoteProgressBarHtml(post, stats) +
+      buildCardStatsRow(post, stats, shareBtn) +
       '</div>'
     );
   }
@@ -1665,7 +1772,7 @@
       var result = await sb
         .from('posts')
         .select(
-          'id, title, category, option_a_name, option_b_name, author_id, visibility_status, created_at, expires_at'
+          'id, title, category, option_a_name, option_b_name, author_id, visibility_status, created_at, expires_at, vote_count, comment_count'
         )
         .eq('author_id', viewerUserId || userId)
         .order('created_at', { ascending: false });
@@ -1708,7 +1815,7 @@
       var result = await sb
         .from('votes')
         .select(
-          'id, choice, created_at, post_id, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status )'
+          'id, choice, created_at, post_id, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status, vote_count, comment_count )'
         )
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -1723,7 +1830,7 @@
 
       if (!voteRows.length) {
         container.innerHTML =
-          '<div class="empty-state" id="votedEmpty">아직 참전한 불판이 없습니다.</div>';
+          '<div class="empty-state" id="votedEmpty">아직 참여한 불판이 없습니다.</div>';
         return;
       }
 
@@ -1743,7 +1850,7 @@
     } catch (err) {
       console.error('[P!CKLE Mypage] 참전 기록 로드 실패', err);
       container.innerHTML =
-        '<div class="empty-state" id="votedEmpty">참전 기록을 불러오지 못했습니다.</div>';
+        '<div class="empty-state" id="votedEmpty">참여 기록을 불러오지 못했습니다.</div>';
     }
   }
 
@@ -2155,6 +2262,8 @@
 
       await renderProfile(user);
       bindProfileEditOpen();
+      bindProfileAvatarClick();
+      bindLevelGuide();
       bindProfileSelectFilledState();
       bindLogout();
       bindWithdraw();

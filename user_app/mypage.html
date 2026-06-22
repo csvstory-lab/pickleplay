@@ -168,13 +168,22 @@
         margin-top: 16px; padding: 0 8px;
     }
     .my-tab {
-        flex: 1; text-align: center; padding: 14px 4px;
-        font-weight: 700; font-size: 0.82rem; color: var(--text-sub);
+        flex: 1; text-align: center; padding: 12px 4px;
+        font-weight: 700; font-size: 0.78rem; color: var(--text-sub);
         cursor: pointer; border: none; background: transparent;
         position: relative; transition: 0.2s; font-family: inherit;
-        white-space: nowrap;
+        display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
     }
-    .my-tab.active { color: var(--point-green); }
+    .my-tab .tab-icon { font-size: 1.15rem; line-height: 1; transition: 0.2s; }
+    .my-tab .tab-icon--created { color: #ff9a7a; }
+    .my-tab .tab-icon--voted { color: var(--point-blue); }
+    .my-tab .tab-icon--commented { color: var(--point-green); }
+    .my-tab .tab-icon--saved { color: var(--point-gold); }
+    .my-tab.active { color: var(--text-main); }
+    .my-tab.active .tab-icon--created { color: #ffb89e; }
+    .my-tab.active .tab-icon--voted { color: #9ec0ff; }
+    .my-tab.active .tab-icon--commented { color: #7ddea3; }
+    .my-tab.active .tab-icon--saved { color: #fde68a; }
     .my-tab.active::after {
         content: ''; position: absolute; bottom: 0; left: 18%; width: 64%; height: 3px;
         background: linear-gradient(90deg, var(--point-blue), var(--point-pink));
@@ -214,13 +223,14 @@
     .btn-edit-post.ing:active { background: rgba(74, 222, 128, 0.12); }
     .btn-edit-post.done { color: var(--text-sub); border-color: var(--border-soft); }
     .btn-share-post {
-        flex-shrink: 0; padding: 5px 11px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+        flex-shrink: 0;
+        width: 36px; height: 36px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 10px; font-size: 0.72rem; font-weight: 700;
         background: var(--bg-elevated); cursor: pointer; transition: 0.2s; line-height: 1.2;
         font-family: inherit; border: 1px solid var(--border-soft);
     }
-    .btn-share-post.ing { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.45); }
-    .btn-share-post.ing:active { background: rgba(115, 165, 255, 0.12); }
-    .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-share-post i { font-size: 1.1rem; }
     .status-badge.ing { color: var(--point-blue); }
     .status-badge.done { color: var(--point-pink); }
     .card-date { color: var(--text-sub); white-space: nowrap; flex-shrink: 0; margin-left: 8px; opacity: 0.85; }
@@ -1004,6 +1014,240 @@
         border-radius: 14px !important;
     }
     input:checked + .toggle-slider { background: var(--point-green) !important; }
+
+    /* 공통 헤더 고정 */
+    #common-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    /* 프로필 아바타 · 레벨 가이드 */
+    .profile-avatar { cursor: pointer; }
+    .level-rank-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+        flex-wrap: wrap;
+    }
+    .level-badge {
+        font-family: 'Black Han Sans', sans-serif;
+        font-size: 1rem;
+        color: var(--point-green);
+        font-weight: 400;
+    }
+    .btn-level-guide {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 1px solid var(--border-soft);
+        background: var(--bg-elevated);
+        color: var(--text-sub);
+        font-size: 0.72rem; font-weight: 800;
+        cursor: pointer; padding: 0; line-height: 1;
+        font-family: inherit;
+    }
+    .level-guide-popover {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 20;
+        min-width: 220px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 12px;
+        padding: 12px 14px;
+        box-shadow: var(--shadow-card);
+        font-size: 0.72rem;
+        line-height: 1.55;
+        color: var(--text-sub);
+    }
+    .level-guide-popover.hidden { display: none !important; }
+    .level-guide-popover strong { color: var(--text-main); font-weight: 700; }
+
+    /* 리스트 카드 4행 레이아웃 */
+    .card-row-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .card-cat { color: var(--point-green); flex-shrink: 0; }
+    .card-meta-sep { color: var(--text-sub); opacity: 0.5; }
+    .card-row-meta .status-badge { font-weight: 700; }
+    .card-row-meta .status-badge.ing { color: var(--point-gold); }
+    .card-row-meta .status-badge.done { color: var(--text-sub); }
+    .card-row-actions { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+    .card-vote-progress { margin-bottom: 12px; }
+    .card-vote-progress__track {
+        display: flex;
+        height: 8px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: var(--bg-elevated);
+    }
+    .card-vote-progress__fill-a {
+        background: linear-gradient(90deg, var(--point-blue), #9ec0ff);
+        height: 100%;
+        min-width: 0;
+        transition: width 0.3s ease;
+    }
+    .card-vote-progress__fill-b {
+        flex: 1;
+        background: linear-gradient(90deg, #ffb3c8, var(--point-pink));
+        height: 100%;
+        min-width: 0;
+    }
+    .card-vote-progress__labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-sub);
+    }
+    .card-vote-progress__labels .pick-a { color: var(--point-blue); }
+    .card-vote-progress__labels .pick-b { color: var(--point-pink); }
+    .card-row-stats {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-sub);
+    }
+    .card-stat-group { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .card-stat-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .card-stat-item i { font-size: 1rem; }
+    .card-stat-item--like i { color: var(--point-pink); }
+    .card-stat-item--vote i { color: var(--point-green); }
+    .btn-share-post.ing { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.45); }
+    .btn-share-post.ing:active { background: rgba(115, 165, 255, 0.12); }
+    .btn-share-post:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* 로그아웃 커스텀 모달 */
+    .mypage-confirm-modal {
+        position: fixed; inset: 0; z-index: 9500;
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px; opacity: 0; pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+    .mypage-confirm-modal.open { opacity: 1; pointer-events: auto; }
+    .mypage-confirm-backdrop {
+        position: absolute; inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+    }
+    .mypage-confirm-box {
+        position: relative; z-index: 1;
+        width: 100%; max-width: 320px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 20px;
+        padding: 24px 20px 18px;
+        box-shadow: var(--shadow-card);
+        text-align: center;
+    }
+    .mypage-confirm-box p {
+        margin: 0 0 20px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.45;
+    }
+    .mypage-confirm-actions { display: flex; gap: 10px; }
+    .mypage-confirm-actions button {
+        flex: 1; padding: 13px 12px; border-radius: 12px;
+        font-size: 0.92rem; font-weight: 800; cursor: pointer;
+        font-family: inherit; border: none;
+    }
+    #btnLogoutCancel {
+        background: var(--bg-elevated);
+        color: var(--text-sub);
+        border: 1px solid var(--border-soft) !important;
+    }
+    #btnLogoutConfirm {
+        background: linear-gradient(135deg, var(--point-blue), var(--point-pink));
+        color: #0a0a0c;
+    }
+
+    /* 설정 — 로그아웃 / 탈퇴 */
+    .settings-auth-group { margin-top: 28px; }
+    .settings-auth-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .btn-logout-pill {
+        flex: 1;
+        min-width: 140px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        border: 1px solid var(--border-soft);
+        background: var(--bg-elevated);
+        color: var(--text-main);
+        font-size: 0.95rem;
+        font-weight: 800;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .btn-withdraw-text {
+        background: none;
+        border: none;
+        color: var(--text-sub);
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 4px;
+        font-family: inherit;
+        opacity: 0.85;
+    }
+    .btn-withdraw-text:hover { opacity: 1; }
+
+    /* 사업자 정보 아코디언 */
+    .company-accordion { margin-top: 24px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
+    .company-accordion-toggle {
+        width: 100%;
+        background: none;
+        border: none;
+        color: var(--text-sub);
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 8px 4px;
+        text-align: left;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .company-accordion-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+        font-size: 0.72rem;
+        color: var(--text-sub);
+        line-height: 1.65;
+        padding: 0 4px;
+    }
+    .company-accordion.open .company-accordion-body { max-height: 200px; padding-bottom: 8px; }
+    .company-disclaimer {
+        margin: 12px 0 0;
+        font-size: 0.68rem;
+        color: var(--text-sub);
+        line-height: 1.55;
+        word-break: keep-all;
+        opacity: 0.9;
+    }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -1100,18 +1344,29 @@
 
         <div class="exp-container">
             <div class="exp-header">
-                <span class="private-rank">현재 상위 <span class="highlight" id="rankPercent">—</span> 픽클러 🚀 <button class="btn-guide" onclick="openGuideModal()">ⓘ 가이드</button></span>
-                <span class="exp-text" id="expText">—</span>
+                <span class="level-rank-row">
+                    <span class="level-badge" id="mainUserLevel">Lv.1</span>
+                    <button type="button" class="btn-level-guide" id="btnLevelGuide" aria-label="레벨 가이드">?</button>
+                    <div id="levelGuidePopover" class="level-guide-popover hidden" role="tooltip">
+                        <strong>레벨업 가이드</strong><br>
+                        Lv.1 · 0~99점<br>
+                        Lv.2 · 100~299점<br>
+                        Lv.3 · 300~599점<br>
+                        Lv.4 · 600~999점<br>
+                        Lv.5 · 1,000점 이상
+                    </div>
+                </span>
+                <span class="exp-text" id="expText">0 / 100 P</span>
             </div>
             <div class="progress-track"><div class="progress-fill" style="width:0%;"></div></div>
         </div>
     </div>
 
     <div class="my-tab-wrapper">
-        <button class="my-tab active" id="tabCreated" onclick="switchMyTab('created')">🔥 지핀 불판</button>
-        <button class="my-tab" id="tabVoted" onclick="switchMyTab('voted')">🥊 참전 기록</button>
-        <button class="my-tab" id="tabCommented" onclick="switchMyTab('commented')">💬 쓴 댓글</button>
-        <button class="my-tab" id="tabSaved" onclick="switchMyTab('saved')">🎁 보관함</button>
+        <button class="my-tab active" id="tabCreated" onclick="switchMyTab('created')"><i class="ph-fill ph-fire tab-icon tab-icon--created" aria-hidden="true"></i><span>지핀 불판</span></button>
+        <button class="my-tab" id="tabVoted" onclick="switchMyTab('voted')"><i class="ph ph-hand-fist tab-icon tab-icon--voted" aria-hidden="true"></i><span>참여 기록</span></button>
+        <button class="my-tab" id="tabCommented" onclick="switchMyTab('commented')"><i class="ph ph-chat-circle-dots tab-icon tab-icon--commented" aria-hidden="true"></i><span>쓴 댓글</span></button>
+        <button class="my-tab" id="tabSaved" onclick="switchMyTab('saved')"><i class="ph ph-gift tab-icon tab-icon--saved" aria-hidden="true"></i><span>보관함</span></button>
     </div>
 
     <div class="list-container" id="createdArea">
@@ -1119,7 +1374,7 @@
     </div>
 
     <div class="list-container hidden" id="votedArea">
-        <div class="empty-state" id="votedEmpty">아직 참전한 불판이 없습니다.</div>
+        <div class="empty-state" id="votedEmpty">아직 참여한 불판이 없습니다.</div>
     </div>
 
     <div class="list-container hidden" id="commentedArea">
@@ -1244,15 +1499,25 @@
             </div>
         </div>
 
-        <!-- 💡 로그아웃, 회원탈퇴 그룹 -->
-        <div class="settings-group">
-            <div class="settings-item text-danger" id="btnLogout">로그아웃</div>
-            <div class="settings-item text-danger" id="btnWithdraw">회원 탈퇴</div>
+        <div class="settings-group settings-auth-group">
+            <div class="settings-auth-row">
+                <button type="button" class="btn-logout-pill" id="btnLogout">로그아웃</button>
+                <button type="button" class="btn-withdraw-text" id="btnWithdraw">회원 탈퇴</button>
+            </div>
         </div>
 
-        <footer class="settings-company-footer">
-            (주)굿임팩트 | 대표: 이준수 | 사업자등록번호: 123-45-67890 | 주소: 서울특별시 강남구 테헤란로 123, 8층 | 통신판매업신고번호: 제2026-서울강남-0001호
-        </footer>
+        <div class="company-accordion" id="companyAccordion">
+            <button type="button" class="company-accordion-toggle" id="btnCompanyAccordion" onclick="toggleCompanyAccordion()">
+                <span>(주)굿임팩트 사업자 정보</span>
+                <span id="companyAccordionChevron">🔽</span>
+            </button>
+            <div class="company-accordion-body" id="companyAccordionBody">
+                대표: 이준수 · 사업자등록번호: 123-45-67890<br>
+                주소: 서울특별시 강남구 테헤란로 123, 8층<br>
+                통신판매업신고번호: 제2026-서울강남-0001호
+            </div>
+            <p class="company-disclaimer">P!CKLE은 사용자 간의 투표와 소통을 위한 플랫폼을 제공하며, 회원이 등록한 게시물 내용 및 이로 인해 발생하는 분쟁에 대하여 법적 책임을 지지 않습니다.</p>
+        </div>
     </div>
 </div>
 
@@ -1580,6 +1845,17 @@
     </div>
 </div>
 
+<div id="logoutConfirmModal" class="mypage-confirm-modal" aria-hidden="true" role="dialog" aria-labelledby="logoutConfirmTitle">
+    <div class="mypage-confirm-backdrop" onclick="closeLogoutConfirm()"></div>
+    <div class="mypage-confirm-box">
+        <p id="logoutConfirmTitle">로그아웃 하시겠습니까?</p>
+        <div class="mypage-confirm-actions">
+            <button type="button" id="btnLogoutCancel" onclick="closeLogoutConfirm()">취소</button>
+            <button type="button" id="btnLogoutConfirm">확인</button>
+        </div>
+    </div>
+</div>
+
 <div id="common-footer"></div>
 
 <script>
@@ -1660,6 +1936,35 @@
         }
         closeAllModals(); overlay.classList.add('open'); document.getElementById('fandomSheet').classList.add('open'); document.body.style.overflow = 'hidden';
     }
+
+    function toggleCompanyAccordion() {
+        var acc = document.getElementById('companyAccordion');
+        var chev = document.getElementById('companyAccordionChevron');
+        if (!acc) return;
+        acc.classList.toggle('open');
+        if (chev) chev.textContent = acc.classList.contains('open') ? '🔼' : '🔽';
+    }
+
+    function openLogoutConfirm() {
+        var modal = document.getElementById('logoutConfirmModal');
+        if (!modal) return;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeLogoutConfirm() {
+        var modal = document.getElementById('logoutConfirmModal');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        var settings = document.getElementById('settingsPanel');
+        if (!settings || !settings.classList.contains('open')) {
+            document.body.style.overflow = '';
+        }
+    }
+    window.openLogoutConfirm = openLogoutConfirm;
+    window.closeLogoutConfirm = closeLogoutConfirm;
+    window.toggleCompanyAccordion = toggleCompanyAccordion;
     function toggleFollow(btn) {
         if (window.PickleFollows && window.PickleFollows.toggleFollowFromButton) {
             window.PickleFollows.toggleFollowFromButton(btn);

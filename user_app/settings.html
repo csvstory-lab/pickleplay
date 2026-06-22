@@ -8,17 +8,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --theme-gold: #ffcc00;
-        --kakao-yellow: #FEE500;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FF85A1;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
-        --border-color: #27272a;
-        --alert-red: #ff3333;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
+        --alert-red: #ff4d4d;
+        --kakao-yellow: #FEE500;
+        --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+        --bg-color: var(--bg-base);
+        --card-bg: var(--bg-card);
+        --neon-green: var(--point-green);
+        --neon-pink: var(--point-pink);
+        --neon-blue: var(--point-blue);
+        --theme-gold: var(--point-gold);
+        --border-color: var(--border-card);
     }
 
     * { box-sizing: border-box; }
@@ -35,12 +45,12 @@
 
     /* 상단바 */
     .panel-header {
-        position: sticky; top: 0; z-index: 100;
+        position: sticky; top: 0; z-index: 50;
         display: flex; align-items: center;
         padding: 15px 20px;
-        border-bottom: 1px solid var(--border-color);
-        background-color: rgba(9, 9, 11, 0.95);
-        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-soft);
+        background-color: rgba(10, 10, 12, 0.92);
+        backdrop-filter: blur(12px);
     }
     .header-left { display: flex; align-items: center; flex: 1; }
     .btn-back {
@@ -58,7 +68,7 @@
     .settings-group { margin-top: 30px; }
     .settings-group-title {
         font-size: 0.85rem; font-weight: 800;
-        color: var(--neon-green);
+        color: var(--point-blue);
         margin-bottom: 10px; padding-left: 5px;
     }
     .settings-group-title.danger { color: var(--alert-red); }
@@ -226,7 +236,7 @@
 
     .tab-wrapper { display: flex; background: rgba(39,39,42,0.5); border-radius: 12px; padding: 4px; margin-bottom: 16px; gap: 4px; }
     .top-tab { flex: 1; text-align: center; padding: 10px 0; border-radius: 10px; font-size: 0.88rem; font-weight: 800; color: var(--text-sub); cursor: pointer; border: none; background: transparent; }
-    .top-tab.active { background: var(--card-bg); color: var(--neon-green); border: 1px solid var(--border-color); }
+    .top-tab.active { background: var(--bg-card); color: var(--point-green); border: 1px solid var(--border-soft); }
     .hidden { display: none !important; }
     .policy-text { font-size: 0.9rem; color: #d4d4d8; line-height: 1.7; }
 
@@ -246,6 +256,52 @@
         border: none; padding: 16px; border-radius: 12px;
         font-size: 1.05rem; font-weight: 900; cursor: pointer;
     }
+
+    .settings-auth-group { margin-top: 28px; }
+    .settings-auth-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .btn-logout-pill {
+        flex: 1; min-width: 140px; padding: 14px 18px; border-radius: 14px;
+        border: 1px solid var(--border-color); background: var(--card-bg);
+        color: var(--text-main); font-size: 0.95rem; font-weight: 800; cursor: pointer; font-family: inherit;
+    }
+    .btn-withdraw-text {
+        background: none; border: none; color: var(--text-sub); font-size: 0.78rem;
+        font-weight: 600; cursor: pointer; padding: 8px 4px; font-family: inherit; opacity: 0.85;
+    }
+    .company-accordion { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px; }
+    .company-accordion-toggle {
+        width: 100%; background: none; border: none; color: var(--text-sub);
+        font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 8px 4px;
+        text-align: left; font-family: inherit; display: flex; align-items: center; justify-content: space-between;
+    }
+    .company-accordion-body {
+        max-height: 0; overflow: hidden; transition: max-height 0.35s ease;
+        font-size: 0.72rem; color: var(--text-sub); line-height: 1.65; padding: 0 4px;
+    }
+    .company-accordion.open .company-accordion-body { max-height: 200px; padding-bottom: 8px; }
+    .company-disclaimer {
+        margin: 12px 0 0; font-size: 0.68rem; color: var(--text-sub);
+        line-height: 1.55; word-break: keep-all; opacity: 0.9;
+    }
+    .mypage-confirm-modal {
+        position: fixed; inset: 0; z-index: 9500; display: flex; align-items: center; justify-content: center;
+        padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    .mypage-confirm-modal.open { opacity: 1; pointer-events: auto; }
+    .mypage-confirm-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); }
+    .mypage-confirm-box {
+        position: relative; z-index: 1; width: 100%; max-width: 320px;
+        background: var(--card-bg); border: 1px solid var(--border-color);
+        border-radius: 20px; padding: 24px 20px 18px; text-align: center;
+    }
+    .mypage-confirm-box p { margin: 0 0 20px; font-size: 1rem; font-weight: 700; color: var(--text-main); }
+    .mypage-confirm-actions { display: flex; gap: 10px; }
+    .mypage-confirm-actions button {
+        flex: 1; padding: 13px 12px; border-radius: 12px; font-size: 0.92rem;
+        font-weight: 800; cursor: pointer; font-family: inherit; border: none;
+    }
+    #btnLogoutCancel { background: var(--card-bg); color: var(--text-sub); border: 1px solid var(--border-color) !important; }
+    #btnLogoutConfirm { background: linear-gradient(135deg, #73A5FF, #FF85A1); color: #0a0a0c; }
 </style>
 <link rel="stylesheet" href="../css/responsive-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
@@ -327,19 +383,37 @@
         </div>
     </div>
 
-    <div class="settings-group account-actions">
-        <div class="settings-item text-danger" id="btnLogout">로그아웃</div>
-        <div class="settings-item text-danger" id="btnWithdraw">회원탈퇴</div>
+    <div class="settings-group settings-auth-group">
+        <div class="settings-auth-row">
+            <button type="button" class="btn-logout-pill" id="btnLogout">로그아웃</button>
+            <button type="button" class="btn-withdraw-text" id="btnWithdraw">회원 탈퇴</button>
+        </div>
     </div>
 
-    <footer class="site-footer">
-        <p>상호명: (주)굿임팩트 &nbsp;|&nbsp; 대표자: 이준수</p>
-        <p>사업자등록번호: [000-00-00000] &nbsp;|&nbsp; 통신판매업신고: [제0000-0000호]</p>
-        <p>주소: [법인 주소 입력란]</p>
-        <p>고객센터: <a href="mailto:cs@goodimpact.com" style="color:#888;text-decoration:none;">cs@goodimpact.com</a></p>
-        <p class="footer-copy">Copyright © Good Impact Co., Ltd. All rights reserved.</p>
-    </footer>
+    <div class="company-accordion" id="companyAccordion">
+        <button type="button" class="company-accordion-toggle" id="btnCompanyAccordion" onclick="toggleCompanyAccordion()">
+            <span>(주)굿임팩트 사업자 정보</span>
+            <span id="companyAccordionChevron">🔽</span>
+        </button>
+        <div class="company-accordion-body" id="companyAccordionBody">
+            대표: 이준수 · 사업자등록번호: 123-45-67890<br>
+            주소: 서울특별시 강남구 테헤란로 123, 8층<br>
+            통신판매업신고번호: 제2026-서울강남-0001호
+        </div>
+        <p class="company-disclaimer">P!CKLE은 사용자 간의 투표와 소통을 위한 플랫폼을 제공하며, 회원이 등록한 게시물 내용 및 이로 인해 발생하는 분쟁에 대하여 법적 책임을 지지 않습니다.</p>
+    </div>
 
+</div>
+
+<div id="logoutConfirmModal" class="mypage-confirm-modal" aria-hidden="true" role="dialog" aria-labelledby="logoutConfirmTitle">
+    <div class="mypage-confirm-backdrop" onclick="closeLogoutConfirm()"></div>
+    <div class="mypage-confirm-box">
+        <p id="logoutConfirmTitle">로그아웃 하시겠습니까?</p>
+        <div class="mypage-confirm-actions">
+            <button type="button" id="btnLogoutCancel" onclick="closeLogoutConfirm()">취소</button>
+            <button type="button" id="btnLogoutConfirm">확인</button>
+        </div>
+    </div>
 </div>
 
 <!-- 서브 패널 -->
@@ -613,6 +687,31 @@
             closeSubPanel('legalPanel');
         }
     }
+
+    function toggleCompanyAccordion() {
+        var acc = document.getElementById('companyAccordion');
+        var chev = document.getElementById('companyAccordionChevron');
+        if (!acc) return;
+        acc.classList.toggle('open');
+        if (chev) chev.textContent = acc.classList.contains('open') ? '🔼' : '🔽';
+    }
+    function openLogoutConfirm() {
+        var modal = document.getElementById('logoutConfirmModal');
+        if (!modal) return;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeLogoutConfirm() {
+        var modal = document.getElementById('logoutConfirmModal');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+    window.toggleCompanyAccordion = toggleCompanyAccordion;
+    window.openLogoutConfirm = openLogoutConfirm;
+    window.closeLogoutConfirm = closeLogoutConfirm;
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

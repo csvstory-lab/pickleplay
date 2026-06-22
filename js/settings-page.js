@@ -77,20 +77,34 @@
   }
 
   async function handleLogout() {
-    if (!confirm('로그아웃 하시겠습니까?')) return;
     try {
       var sb = getSupabaseClient();
       var result = await sb.auth.signOut();
       if (result.error) throw result.error;
       window.location.href = 'login.html';
     } catch (err) {
+      if (typeof window.closeLogoutConfirm === 'function') {
+        window.closeLogoutConfirm();
+      }
       alert(err.message || '로그아웃에 실패했습니다.');
     }
   }
 
   function bindLogout() {
     var btn = document.getElementById('btnLogout');
-    if (btn) btn.addEventListener('click', handleLogout);
+    var confirmBtn = document.getElementById('btnLogoutConfirm');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        if (typeof window.openLogoutConfirm === 'function') {
+          window.openLogoutConfirm();
+        } else {
+          handleLogout();
+        }
+      });
+    }
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', handleLogout);
+    }
   }
 
   function bindWithdraw() {
