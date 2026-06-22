@@ -34,11 +34,6 @@
     '<path d="M8 20h8M12 17v3M7 4h10v2.8a5 5 0 0 1-10 0V4zM5 4H3.5v2a2.5 2.5 0 0 0 2.5 2.5M19 4h1.5v2a2.5 2.5 0 0 1-2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
     '</svg>';
 
-  var ICON_FIRE =
-    '<svg class="nav-icon nav-icon--fire" viewBox="0 0 24 24" aria-hidden="true">' +
-    '<path d="M12 3c1.2 2.4 3.6 3.8 3.6 7.2 0 2.8-1.6 5-3.6 5.8-2-.8-3.6-3-3.6-5.8C8.4 6.8 10.8 5.4 12 3zm0 14.2a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4z" fill="#242428"/>' +
-    '</svg>';
-
   var ICON_EVENT =
     '<svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">' +
     '<rect x="3.5" y="8.5" width="17" height="12" rx="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/>' +
@@ -79,9 +74,7 @@
     '<a class="nav-btn fire-btn" data-nav-page="create" href="create.html" onclick="' +
     navClick('create.html') +
     '" aria-label="불판 생성">' +
-    '<span class="nav-fab">' +
-    ICON_FIRE +
-    '</span></a>' +
+    '<i class="ph-fill ph-fire nav-icon"></i></a>' +
     '<a class="nav-btn" data-nav-page="event" href="event.html" onclick="' +
     navClick('event.html') +
     '">' +

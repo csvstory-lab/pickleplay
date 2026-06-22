@@ -237,36 +237,32 @@ header#mainHeader {
 }
 
 /* 중앙 플로팅 불판 생성 FAB */
-.bottom-nav .nav-btn.fire-btn {
-  justify-content: flex-end;
-  padding-bottom: 8px;
+.bottom-nav .fire-btn {
+  transform: translateY(-20px);
+  justify-content: center;
   overflow: visible;
 }
 
-.bottom-nav .nav-fab {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+.bottom-nav .fire-btn .nav-icon {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffde9e 0%, #ffa092 100%);
-  box-shadow: 0 4px 16px rgba(255, 160, 146, 0.4);
   display: flex;
-  align-items: center;
   justify-content: center;
-  pointer-events: none;
-}
-
-.bottom-nav .nav-icon--fire {
-  width: 26px;
-  height: 26px;
+  align-items: center;
+  background: linear-gradient(135deg, #ffde9e 0%, #ffa092 100%);
   color: #242428;
-  stroke: #242428;
-  fill: #242428;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 16px rgba(255, 160, 146, 0.4);
+  stroke: none;
+  fill: currentColor;
 }
 
 .bottom-nav .fire-btn.active {
   color: #8e8e93;
+}
+
+.bottom-nav .fire-btn.active .nav-icon {
+  color: #242428;
+  stroke: none;
 }
