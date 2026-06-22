@@ -1010,6 +1010,24 @@ function renderCommentItemHtml(comment, options) {
         insertResult.data && insertResult.data.id ? insertResult.data.id : null;
       var replyParentId = insertPayload.parent_id || null;
 
+      var replyAuthorId =
+        (currentPost && currentPost.author_id) ||
+        (currentPost && currentPost.user_id) ||
+        null;
+      if (
+        replyAuthorId &&
+        newReplyId &&
+        window.PickleProfile &&
+        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget
+      ) {
+        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
+          replyAuthorId,
+          currentPostId,
+          'COMMENT',
+          { commentId: newReplyId }
+        );
+      }
+
       if (replyParentId && newReplyId) {
         await sendReplyNotification(sb, replyParentId, newReplyId, user.id);
       }
@@ -1338,6 +1356,23 @@ function renderCommentsList(comments, sortType) {
       }
       if (!newComment.author_avatar_html) {
         newComment.author_avatar_html = authorSnapshot.author_avatar_html;
+      }
+
+      var authorId =
+        (currentPost && currentPost.author_id) ||
+        (currentPost && currentPost.user_id) ||
+        null;
+      if (
+        authorId &&
+        window.PickleProfile &&
+        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget
+      ) {
+        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
+          authorId,
+          currentPostId,
+          'COMMENT',
+          { commentId: newComment.id }
+        );
       }
 
       await notifyForNewComment(sb, {
@@ -1972,6 +2007,22 @@ function renderCommentsList(comments, sortType) {
         );
       }
       throw insertResult.error;
+    }
+
+    var authorId =
+      (currentPost && currentPost.author_id) ||
+      (currentPost && currentPost.user_id) ||
+      null;
+    if (
+      authorId &&
+      window.PickleProfile &&
+      window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget
+    ) {
+      window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
+        authorId,
+        postId,
+        'VOTE'
+      );
     }
 
     if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {

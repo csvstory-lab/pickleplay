@@ -1186,6 +1186,9 @@
           text: text,
           url: shareUrl,
         });
+        if (window.PickleRankingEvents && window.PickleRankingEvents.recordPostShare) {
+          window.PickleRankingEvents.recordPostShare(post.id, 'native');
+        }
         return;
       } catch (err) {
         if (err && err.name === 'AbortError') return;
@@ -1195,6 +1198,9 @@
 
     try {
       await copyShareUrlToClipboard(shareUrl);
+      if (window.PickleRankingEvents && window.PickleRankingEvents.recordPostShare) {
+        window.PickleRankingEvents.recordPostShare(post.id, 'clipboard');
+      }
       notifyShareUrlCopied();
     } catch (err) {
       console.warn('[P!CKLE Mypage] share URL 복사 실패', err);
@@ -2311,6 +2317,25 @@
     }
   }
 
+  function bindStarScoreRefreshListener() {
+    if (window.__pickleMypageStarScoreListenerBound) return;
+    window.__pickleMypageStarScoreListenerBound = true;
+
+    window.addEventListener('pickle:star-score-updated', function (ev) {
+      var uid = ev && ev.detail && ev.detail.userId;
+      if (!currentUser || !uid || String(currentUser.id) !== String(uid)) return;
+
+      fetchCurrentUserRankingPoints(currentUser)
+        .then(function (pts) {
+          currentUserRankingPoints = pts;
+          updateLevelExpUI(pts);
+        })
+        .catch(function (err) {
+          console.warn('[P!CKLE Mypage] star score refresh failed', err);
+        });
+    });
+  }
+
   async function initMypage() {
     try {
       var b = window.PickleSupabaseBootstrap;
@@ -2349,6 +2374,7 @@
       bindProfileAvatarClick();
       syncLevelGuideList();
       bindLevelGuide();
+      bindStarScoreRefreshListener();
       bindProfileSelectFilledState();
       bindLogout();
       bindWithdraw();

@@ -626,6 +626,11 @@
     });
     if (ins.error) throw ins.error;
     myFollowingSet.add(String(targetUserId));
+
+    if (window.PickleProfile && window.PickleProfile.tryUpdateUserScoreFireAndForget) {
+      window.PickleProfile.tryUpdateUserScoreFireAndForget(targetUserId, 'PICK_ME');
+    }
+
     return true;
   }
 

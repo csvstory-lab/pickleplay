@@ -311,6 +311,13 @@
 
     try {
       await submitVote(postId, choice, user.id);
+      if (post && post.author_id && window.PickleProfile?.tryAwardPostAuthorStarScoreFireAndForget) {
+        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
+          post.author_id,
+          postId,
+          'VOTE'
+        );
+      }
       if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
         window.PicklePoints.tryAwardPoints(user.id, 'vote', 'Vote').catch(function (err) {
           console.warn('[P!CKLE Feed] vote points skipped', err);

@@ -418,6 +418,11 @@
     try {
       const created = await submitComment(postId, text, panel);
       if (!created) return;
+      if (window.PickleProfile?.tryAwardPostAuthorFromPostIdFireAndForget) {
+        window.PickleProfile.tryAwardPostAuthorFromPostIdFireAndForget(postId, 'COMMENT', {
+          commentId: created.id,
+        });
+      }
       if (window.PicklePoints && window.PicklePoints.tryAwardPoints && created.user_id) {
         window.PicklePoints.tryAwardPoints(created.user_id, 'comment', 'Comment').catch(function (err) {
           console.warn('[P!CKLE Comments] comment points skipped', err);

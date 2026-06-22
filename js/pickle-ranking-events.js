@@ -1,6 +1,6 @@
 /**
- * P!CKLE — 랭킹 이벤트 기록 (조회 · 공유 · 댓글 좋아요)
- * fire_score / star_score 트리거와 연동
+ * P!CKLE — 랭킹 이벤트 기록 (조회 · 공유 · 좋아요)
+ * fire_score 트리거 + star_score 가이드 지급(updateUserScore) 연동
  */
 (function () {
   'use strict';
@@ -69,7 +69,6 @@
       row.viewer_id = userId;
     }
 
-    // partial unique index (post_id,user_id / post_id,viewer_key)는 PostgREST upsert onConflict 미지원 → insert + 중복 무시
     var insertResult = await sb.from('post_views').insert(row);
     if (!insertResult.error) return;
     if (isDuplicateDbError(insertResult.error)) return;
@@ -93,6 +92,11 @@
     var result = await sb.from('post_shares').insert(row);
     if (result.error) {
       console.warn('[P!CKLE Ranking] post share record failed', result.error);
+      return;
+    }
+
+    if (window.PickleProfile && window.PickleProfile.tryAwardPostAuthorFromPostIdFireAndForget) {
+      window.PickleProfile.tryAwardPostAuthorFromPostIdFireAndForget(postId, 'SHARE');
     }
   }
 
@@ -118,9 +122,52 @@
     return true;
   }
 
+  async function recordPostLike(postId) {
+    if (!postId) return false;
+
+    var sb = getClient();
+    if (!sb) return false;
+
+    var userId = await getAuthUserId();
+    if (!userId) return false;
+
+    var insertResult = await sb.from('post_likes').insert({
+      post_id: postId,
+      user_id: userId,
+    });
+
+    if (insertResult.error) {
+      if (isDuplicateDbError(insertResult.error)) return false;
+      console.warn('[P!CKLE Ranking] post like record failed', insertResult.error);
+      return false;
+    }
+
+    var postResult = await sb
+      .from('posts')
+      .select('author_id, like_count')
+      .eq('id', postId)
+      .maybeSingle();
+
+    var post = postResult.data;
+    if (!post || !post.author_id) return true;
+
+    var currentLikes = Number(post.like_count);
+    if (!Number.isFinite(currentLikes) || currentLikes < 1) currentLikes = 1;
+
+    if (window.PickleProfile && window.PickleProfile.updateUserScore) {
+      await window.PickleProfile.updateUserScore(post.author_id, 'LIKE_MILESTONE', {
+        postId: postId,
+        currentLikes: currentLikes,
+      });
+    }
+
+    return true;
+  }
+
   window.PickleRankingEvents = {
     recordPostView: recordPostView,
     recordPostShare: recordPostShare,
     recordCommentLike: recordCommentLike,
+    recordPostLike: recordPostLike,
   };
 })();

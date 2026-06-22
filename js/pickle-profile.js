@@ -266,8 +266,126 @@
     return buildLevelBadgeFromPoints(extractRankingPointsFromRow(userOrLevelOrPoints));
   }
 
+  /**
+   * 가이드 기준 star_score 획득량 (실제 지급은 award_star_score RPC)
+   * VOTE +1 · COMMENT +3 · SHARE +5 · PICK_ME +10 · LIKE_MILESTONE +2 (10개 단위)
+   */
+  var STAR_SCORE_DELTAS = {
+    VOTE: 1,
+    COMMENT: 3,
+    SHARE: 5,
+    PICK_ME: 10,
+    LIKE_MILESTONE: 2,
+  };
+
+  function getSupabaseClientForScore() {
+    if (window.PickleSupabaseBootstrap && window.PickleSupabaseBootstrap.getClient) {
+      return window.PickleSupabaseBootstrap.getClient();
+    }
+    if (window.PickleSupabase && window.PickleSupabase.getClient) {
+      return window.PickleSupabase.getClient();
+    }
+    return null;
+  }
+
+  function notifyStarScoreUpdated(userId) {
+    clearRankingPointsCache(userId);
+    try {
+      window.dispatchEvent(
+        new CustomEvent('pickle:star-score-updated', {
+          detail: { userId: String(userId) },
+        })
+      );
+    } catch (e) {
+      /* noop */
+    }
+  }
+
+  async function updateUserScore(userId, actionType, extraData) {
+    if (!userId || !actionType) {
+      return { ok: false, awarded: false, reason: 'invalid_args' };
+    }
+
+    var action = String(actionType).toUpperCase();
+    var extra = extraData && typeof extraData === 'object' ? extraData : {};
+
+    if (action === 'LIKE_MILESTONE') {
+      var likes = Number(extra.currentLikes);
+      if (!Number.isFinite(likes) || likes < 10 || likes % 10 !== 0) {
+        return { ok: true, awarded: false, reason: 'not_milestone' };
+      }
+    }
+
+    var sb = getSupabaseClientForScore();
+    if (!sb) {
+      return { ok: false, awarded: false, reason: 'no_client' };
+    }
+
+    try {
+      var result = await sb.rpc('award_star_score', {
+        p_target_user_id: userId,
+        p_action: action,
+        p_extra: extra,
+      });
+
+      if (result.error) {
+        console.warn('[P!CKLE Profile] award_star_score RPC failed', result.error);
+        return { ok: false, awarded: false, reason: 'rpc_error', error: result.error };
+      }
+
+      var payload = result.data || {};
+      if (payload.awarded) {
+        notifyStarScoreUpdated(userId);
+      }
+      return payload;
+    } catch (err) {
+      console.warn('[P!CKLE Profile] updateUserScore failed', err);
+      return { ok: false, awarded: false, reason: 'exception', error: err };
+    }
+  }
+
+  async function tryAwardPostAuthorStarScore(authorId, postId, actionType, extra) {
+    if (!authorId || !postId) return null;
+    var merged = Object.assign({ postId: postId }, extra || {});
+    return updateUserScore(authorId, actionType, merged);
+  }
+
+  async function tryAwardPostAuthorFromPostId(postId, actionType, extra) {
+    var sb = getSupabaseClientForScore();
+    if (!sb || !postId) return null;
+
+    var postResult = await sb
+      .from('posts')
+      .select('author_id')
+      .eq('id', postId)
+      .maybeSingle();
+
+    var authorId = postResult.data && postResult.data.author_id;
+    if (!authorId) return null;
+    return tryAwardPostAuthorStarScore(authorId, postId, actionType, extra);
+  }
+
+  function tryAwardPostAuthorStarScoreFireAndForget(authorId, postId, actionType, extra) {
+    tryAwardPostAuthorStarScore(authorId, postId, actionType, extra).catch(function (err) {
+      console.warn('[P!CKLE Profile] star score award skipped', actionType, err);
+    });
+  }
+
+  function tryAwardPostAuthorFromPostIdFireAndForget(postId, actionType, extra) {
+    tryAwardPostAuthorFromPostId(postId, actionType, extra).catch(function (err) {
+      console.warn('[P!CKLE Profile] star score award skipped', actionType, err);
+    });
+  }
+
+  function tryUpdateUserScoreFireAndForget(userId, actionType, extra) {
+    updateUserScore(userId, actionType, extra).catch(function (err) {
+      console.warn('[P!CKLE Profile] star score award skipped', actionType, err);
+    });
+  }
+
   window.PickleProfile = {
     LEVEL_TIERS: LEVEL_TIERS,
+    STAR_SCORE_DELTAS: STAR_SCORE_DELTAS,
     calculateLevel: calculateLevel,
     getLevelProgress: getLevelProgress,
     getLevelTier: getLevelTier,
@@ -282,5 +400,11 @@
     clearRankingPointsCache: clearRankingPointsCache,
     getUserLevel: getUserLevel,
     extractAuthorSnapshot: extractAuthorSnapshot,
+    updateUserScore: updateUserScore,
+    tryAwardPostAuthorStarScore: tryAwardPostAuthorStarScore,
+    tryAwardPostAuthorFromPostId: tryAwardPostAuthorFromPostId,
+    tryAwardPostAuthorStarScoreFireAndForget: tryAwardPostAuthorStarScoreFireAndForget,
+    tryAwardPostAuthorFromPostIdFireAndForget: tryAwardPostAuthorFromPostIdFireAndForget,
+    tryUpdateUserScoreFireAndForget: tryUpdateUserScoreFireAndForget,
   };
 })();

@@ -696,20 +696,23 @@
         var likeBtn = document.getElementById('detailLikeBtn');
         var likeTextSpan = document.getElementById('likeCountText');
         if (!likeBtn || !likeTextSpan) return;
-        
+
+        var willLike = !likeBtn.classList.contains('is-liked');
         likeBtn.classList.toggle('is-liked');
         var currentCount = 0;
         var match = likeTextSpan.textContent.match(/\d+/);
         if (match) currentCount = parseInt(match[0], 10);
-        
-        if (likeBtn.classList.contains('is-liked')) {
+
+        if (willLike) {
             currentCount += 1;
             likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
             likeBtn.querySelector('i').className = 'ph-fill ph-heart';
-            
-            if (window.PickleRankingEvents && typeof window.PickleRankingEvents.recordPostLike === 'function') {
-                var postId = new URLSearchParams(window.location.search).get('id');
-                window.PickleRankingEvents.recordPostLike(postId);
+
+            var postId = new URLSearchParams(window.location.search).get('id');
+            if (postId && window.PickleRankingEvents && typeof window.PickleRankingEvents.recordPostLike === 'function') {
+                window.PickleRankingEvents.recordPostLike(postId).catch(function (err) {
+                    console.warn('[P!CKLE Detail] post like record failed', err);
+                });
             }
         } else {
             currentCount = Math.max(0, currentCount - 1);
