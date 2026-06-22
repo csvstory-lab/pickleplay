@@ -238,21 +238,21 @@ header#mainHeader {
 
 /* 중앙 플로팅 불판 생성 FAB */
 .bottom-nav .fire-btn {
-  transform: translateY(-20px);
+  transform: translateY(-12px) !important;
   justify-content: center;
   overflow: visible;
 }
 
 .bottom-nav .fire-btn .nav-icon {
-  width: 56px;
-  height: 56px;
+  width: 64px !important;
+  height: 64px !important;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #ffde9e 0%, #ffa092 100%);
   color: #242428;
-  font-size: 1.6rem;
+  font-size: 1.85rem !important;
   box-shadow: 0 4px 16px rgba(255, 160, 146, 0.4);
   stroke: none;
   fill: currentColor;
