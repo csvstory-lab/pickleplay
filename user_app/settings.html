@@ -6,6 +6,7 @@
 <title>P!CKLE - 설정</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 <style>
     :root {
         --bg-base: #0a0a0c;
@@ -54,10 +55,12 @@
     }
     .header-left { display: flex; align-items: center; flex: 1; }
     .btn-back {
-        background: none; border: none; color: #fff;
-        font-size: 1.5rem; cursor: pointer;
-        padding: 0; margin-right: 15px;
+        background: none; border: none; color: var(--text-main);
+        cursor: pointer; padding: 0; margin-right: 15px;
+        display: flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px;
     }
+    .btn-back i { font-size: 1.5rem; line-height: 1; }
     .panel-title {
         font-weight: 800; font-size: 1.25rem;
         margin: 0; letter-spacing: -0.5px;
@@ -279,6 +282,14 @@
         font-size: 0.72rem; color: var(--text-sub); line-height: 1.65; padding: 0 4px;
     }
     .company-accordion.open .company-accordion-body { max-height: 200px; padding-bottom: 8px; }
+    .company-accordion-chevron {
+        color: var(--text-sub);
+        font-size: 0.9rem;
+        line-height: 1;
+        transition: transform 0.25s ease;
+        flex-shrink: 0;
+    }
+    .company-accordion.open .company-accordion-chevron { transform: rotate(180deg); }
     .company-disclaimer {
         margin: 12px 0 0; font-size: 0.68rem; color: var(--text-sub);
         line-height: 1.55; word-break: keep-all; opacity: 0.9;
@@ -316,7 +327,7 @@
 
 <div class="panel-header">
     <div class="header-left">
-        <button class="btn-back" type="button" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')" aria-label="뒤로가기">←</button>
+        <button class="btn-back" type="button" onclick="PickleAuth.navigateWhenAuthReady('mypage.html')" aria-label="뒤로가기"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
         <h1 class="panel-title">설정</h1>
     </div>
 </div>
@@ -393,7 +404,7 @@
     <div class="company-accordion" id="companyAccordion">
         <button type="button" class="company-accordion-toggle" id="btnCompanyAccordion" onclick="toggleCompanyAccordion()">
             <span>(주)굿임팩트 사업자 정보</span>
-            <span id="companyAccordionChevron">🔽</span>
+            <i class="ph ph-caret-down company-accordion-chevron" id="companyAccordionChevron" aria-hidden="true"></i>
         </button>
         <div class="company-accordion-body" id="companyAccordionBody">
             대표: 이준수 · 사업자등록번호: 123-45-67890<br>
@@ -420,7 +431,7 @@
 <div id="profilePanel" class="sub-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" type="button" onclick="closeSubPanel('profilePanel')">←</button>
+            <button class="btn-back" type="button" onclick="closeSubPanel('profilePanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">프로필 편집</h2>
         </div>
         <button class="btn-save" type="button" onclick="saveProfile()">완료</button>
@@ -448,7 +459,7 @@
 <div id="penaltyPanel" class="sub-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" type="button" onclick="closeSubPanel('penaltyPanel')">←</button>
+            <button class="btn-back" type="button" onclick="closeSubPanel('penaltyPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">계정 상태 및 제재 내역</h2>
         </div>
     </div>
@@ -483,7 +494,7 @@
 <div id="noticePanel" class="sub-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" type="button" onclick="closeSubPanel('noticePanel')">←</button>
+            <button class="btn-back" type="button" onclick="closeSubPanel('noticePanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">공지사항</h2>
         </div>
     </div>
@@ -520,7 +531,7 @@
 <div id="supportPanel" class="sub-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" type="button" onclick="closeSubPanel('supportPanel')">←</button>
+            <button class="btn-back" type="button" onclick="closeSubPanel('supportPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">고객센터</h2>
         </div>
     </div>
@@ -562,7 +573,7 @@
 <div id="policyPanel" class="sub-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" type="button" onclick="closeSubPanel('policyPanel')">←</button>
+            <button class="btn-back" type="button" onclick="closeSubPanel('policyPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">약관 및 정책</h2>
         </div>
     </div>
@@ -585,7 +596,7 @@
 <div id="legalPanel" class="sub-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" type="button" onclick="closeSubPanel('legalPanel')">←</button>
+            <button class="btn-back" type="button" onclick="closeSubPanel('legalPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">권리침해 신고센터</h2>
         </div>
     </div>
@@ -690,10 +701,8 @@
 
     function toggleCompanyAccordion() {
         var acc = document.getElementById('companyAccordion');
-        var chev = document.getElementById('companyAccordionChevron');
         if (!acc) return;
         acc.classList.toggle('open');
-        if (chev) chev.textContent = acc.classList.contains('open') ? '🔼' : '🔽';
     }
     function openLogoutConfirm() {
         var modal = document.getElementById('logoutConfirmModal');

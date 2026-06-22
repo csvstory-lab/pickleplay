@@ -489,7 +489,9 @@
     var fill = document.querySelector('.exp-container .progress-fill');
 
     if (level >= 5) {
-      if (expEl) expEl.textContent = normalized.toLocaleString() + ' P · MAX';
+      if (expEl) {
+        expEl.textContent = normalized.toLocaleString() + '점 · MAX';
+      }
       if (fill) fill.style.width = '100%';
       return;
     }
@@ -497,7 +499,8 @@
     var prev = tiers[level - 1] || 0;
     var next = tiers[level] || 1000;
     if (expEl) {
-      expEl.textContent = normalized.toLocaleString() + ' / ' + next.toLocaleString() + ' P';
+      expEl.textContent =
+        normalized.toLocaleString() + ' / ' + next.toLocaleString() + '점';
     }
     if (fill) {
       var span = Math.max(1, next - prev);

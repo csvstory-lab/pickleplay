@@ -456,11 +456,12 @@
     .header-left { display: flex; align-items: center; }
     .btn-back {
         background: var(--bg-elevated); border: 1px solid var(--border-soft);
-        color: var(--text-main); font-size: 1.2rem;
-        width: 36px; height: 36px; border-radius: 10px;
+        color: var(--text-main);
+        width: 40px; height: 40px; border-radius: 10px;
         cursor: pointer; padding: 0; margin-right: 12px;
         display: flex; align-items: center; justify-content: center;
     }
+    .btn-back i { font-size: 1.5rem; line-height: 1; }
     .panel-title {
         font-family: 'Pretendard', sans-serif; font-weight: 800;
         font-size: 1.15rem; color: var(--text-main); margin: 0; letter-spacing: -0.3px;
@@ -1277,6 +1278,14 @@
         padding: 0 4px;
     }
     .company-accordion.open .company-accordion-body { max-height: 200px; padding-bottom: 8px; }
+    .company-accordion-chevron {
+        color: var(--text-sub);
+        font-size: 0.9rem;
+        line-height: 1;
+        transition: transform 0.25s ease;
+        flex-shrink: 0;
+    }
+    .company-accordion.open .company-accordion-chevron { transform: rotate(180deg); }
     .company-disclaimer {
         margin: 12px 0 0;
         font-size: 0.68rem;
@@ -1400,7 +1409,7 @@
                         <button type="button" class="level-guide-more" onclick="openGuideModal()">포인트 적립 자세히 보기 ›</button>
                     </div>
                 </span>
-                <span class="exp-text" id="expText">0 / 100 P</span>
+                <span class="exp-text" id="expText">—</span>
             </div>
             <div class="progress-track"><div class="progress-fill" style="width:0%;"></div></div>
         </div>
@@ -1434,7 +1443,7 @@
 <div id="postEditPanel" class="slide-panel" aria-hidden="true">
     <div class="panel-header">
         <div class="header-left">
-            <button type="button" class="btn-back" onclick="closePostEditPanel()">←</button>
+            <button type="button" class="btn-back" onclick="closePostEditPanel()"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">불판 수정</h2>
         </div>
         <button type="button" class="btn-save-post-edit" id="btnSavePostEdit" onclick="updatePost()">수정 완료</button>
@@ -1481,7 +1490,7 @@
 <div id="settingsPanel" class="slide-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('settingsPanel')">←</button>
+            <button class="btn-back" onclick="closePanel('settingsPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">설정</h2>
         </div>
     </div>
@@ -1552,8 +1561,8 @@
 
         <div class="company-accordion" id="companyAccordion">
             <button type="button" class="company-accordion-toggle" id="btnCompanyAccordion" onclick="toggleCompanyAccordion()">
-                <span>(주)굿임팩트 사업자 정보</span>
-                <span id="companyAccordionChevron">🔽</span>
+            <span>(주)굿임팩트 사업자 정보</span>
+            <i class="ph ph-caret-down company-accordion-chevron" id="companyAccordionChevron" aria-hidden="true"></i>
             </button>
             <div class="company-accordion-body" id="companyAccordionBody">
                 대표: 이준수 · 사업자등록번호: 123-45-67890<br>
@@ -1571,7 +1580,7 @@
 <div id="profileEditPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('profileEditPanel')">←</button>
+            <button class="btn-back" onclick="closePanel('profileEditPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">프로필 편집</h2>
         </div>
         <button type="button" class="btn-save" onclick="saveProfile()" style="background:none; border:none; color:var(--neon-green); font-size:1.05rem; font-weight:800; cursor:pointer;">완료</button>
@@ -1659,7 +1668,7 @@
 <div id="penaltyPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('penaltyPanel')">←</button>
+            <button class="btn-back" onclick="closePanel('penaltyPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">계정 상태 및 제재 내역</h2>
         </div>
     </div>
@@ -1690,7 +1699,7 @@
 <div id="noticePanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('noticePanel')">←</button>
+            <button class="btn-back" onclick="closePanel('noticePanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">공지사항</h2>
         </div>
     </div>
@@ -1729,7 +1738,7 @@
 <div id="supportPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('supportPanel')">←</button>
+            <button class="btn-back" onclick="closePanel('supportPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">고객센터</h2>
         </div>
     </div>
@@ -1787,7 +1796,7 @@
 <div id="policyPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('policyPanel')">←</button>
+            <button class="btn-back" onclick="closePanel('policyPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title">약관 및 정책</h2>
         </div>
     </div>
@@ -1817,7 +1826,7 @@
 <div id="legalPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
-            <button class="btn-back" onclick="closePanel('legalPanel')">←</button>
+            <button class="btn-back" onclick="closePanel('legalPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             <h2 class="panel-title" style="color:var(--alert-red);">권리침해 신고센터</h2>
         </div>
     </div>
@@ -1990,10 +1999,8 @@
 
     function toggleCompanyAccordion() {
         var acc = document.getElementById('companyAccordion');
-        var chev = document.getElementById('companyAccordionChevron');
         if (!acc) return;
         acc.classList.toggle('open');
-        if (chev) chev.textContent = acc.classList.contains('open') ? '🔼' : '🔽';
     }
 
     function openLogoutConfirm() {

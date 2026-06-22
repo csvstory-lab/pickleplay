@@ -110,10 +110,57 @@
     .result-view { padding: 0 20px 16px; display: none; }
     .result-view.show { display: block; }
     .result-container { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 20px; }
-    .result-bar-track { display: flex; width: 100%; height: 24px; background: #000; border-radius: 6px; overflow: hidden; margin: 8px 0; }
-    .bar-action-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
-    .bar-fill-a { background: var(--point-blue); }
-    .bar-fill-b { background: var(--point-pink); margin-left: auto; }
+    .result-bar-track {
+        display: flex;
+        width: 100%;
+        height: 32px;
+        background: var(--bg-base);
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 8px 0 10px;
+        border: 1px solid var(--border-soft);
+    }
+    .bar-action-fill {
+        height: 100%;
+        width: 0%;
+        transition: width 1s ease-out;
+        display: flex;
+        align-items: center;
+        position: relative;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .bar-fill-a { background: var(--point-blue); justify-content: flex-start; }
+    .bar-fill-b { background: var(--point-pink); margin-left: auto; justify-content: flex-end; }
+    .bar-inner-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 8px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--bg-base);
+        white-space: nowrap;
+        line-height: 1;
+        text-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+    }
+    .bar-fill-b .bar-inner-label { color: #fff; }
+    .bar-inner-label span + span::before {
+        content: '·';
+        margin: 0 3px;
+        opacity: 0.85;
+    }
+    .result-bar-names {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-sub);
+        margin-bottom: 4px;
+    }
+    .result-bar-names .pick-a { color: var(--point-blue); }
+    .result-bar-names .pick-b { color: var(--point-pink); text-align: right; }
 
     /* 하단 액션 바 */
     .issue-footer-box { padding: 0 20px 20px; }
@@ -358,9 +405,17 @@
 
     <div class="result-view" id="detailResultView" aria-hidden="true">
         <div class="result-container">
+            <div class="result-bar-names">
+                <span class="pick-a" id="resultLabelA">A</span>
+                <span class="pick-b" id="resultLabelB">B</span>
+            </div>
             <div class="result-bar-track">
-                <div class="bar-action-fill bar-fill-a" id="resultBarA"></div>
-                <div class="bar-action-fill bar-fill-b" id="resultBarB"></div>
+                <div class="bar-action-fill bar-fill-a" id="resultBarA">
+                    <span class="bar-inner-label"><span id="resultPctA">0%</span><span id="resultCountA">0</span></span>
+                </div>
+                <div class="bar-action-fill bar-fill-b" id="resultBarB">
+                    <span class="bar-inner-label"><span id="resultPctB">0%</span><span id="resultCountB">0</span></span>
+                </div>
             </div>
             <p style="text-align:center; font-size:0.85rem; margin:8px 0 0 0;" id="resultTotalVotes">🔥 0명 참전</p>
         </div>

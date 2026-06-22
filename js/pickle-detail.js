@@ -1787,11 +1787,19 @@ function renderCommentsList(comments, sortType) {
     var barB = $('resultBarB');
     var pctAEl = $('resultPctA');
     var pctBEl = $('resultPctB');
+    var countAEl = $('resultCountA');
+    var countBEl = $('resultCountB');
 
     if (barA) barA.style.width = pctA + '%';
     if (barB) barB.style.width = pctB + '%';
     if (pctAEl) pctAEl.textContent = pctA + '%';
     if (pctBEl) pctBEl.textContent = pctB + '%';
+    if (countAEl) {
+      countAEl.textContent = (Number(cachedVoteStats.votesA) || 0).toLocaleString();
+    }
+    if (countBEl) {
+      countBEl.textContent = (Number(cachedVoteStats.votesB) || 0).toLocaleString();
+    }
   }
 
   function stopResultFakeAnimation() {
@@ -1893,7 +1901,8 @@ function renderCommentsList(comments, sortType) {
 
   function showResultView(post, voteStats, options) {
     var opts = options || {};
-    var pct = calcVotePercent(voteStats.votesA, voteStats.votesB);
+    cachedVoteStats = voteStats || cachedVoteStats || { votesA: 0, votesB: 0, total: 0 };
+    var pct = calcVotePercent(cachedVoteStats.votesA, cachedVoteStats.votesB);
 
     hideVoteOptions();
 

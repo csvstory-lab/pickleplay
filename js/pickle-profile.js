@@ -37,6 +37,9 @@
 
   function extractRankingPointsFromRow(row) {
     if (!row) return 0;
+    if (row.star_score != null && row.star_score !== '') {
+      return normalizeRankingPoints(row.star_score);
+    }
     if (row.ranking_points != null && row.ranking_points !== '') {
       return normalizeRankingPoints(row.ranking_points);
     }
@@ -82,7 +85,7 @@
 
     var result = await sb
       .from('users')
-      .select('id, points')
+      .select('id, star_score, points')
       .eq('id', userId)
       .maybeSingle();
 
@@ -114,7 +117,7 @@
     if (missing.length) {
       var result = await sb
         .from('users')
-        .select('id, points')
+        .select('id, star_score, points')
         .in('id', missing);
 
       if (result.error) {
@@ -190,6 +193,9 @@
   function getUserLevel(user) {
     if (user && user._rankingPoints != null) {
       return calculateLevel(user._rankingPoints);
+    }
+    if (user && user.star_score != null) {
+      return calculateLevel(user.star_score);
     }
     if (user && user.ranking_points != null) {
       return calculateLevel(user.ranking_points);
