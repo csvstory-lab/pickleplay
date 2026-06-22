@@ -17,21 +17,43 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FF85A1;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --point-peach: #FFA092;
+        --point-peach-light: #FFDE9E;
+        --silver: #c4c4cc;
+        --bronze: #c9956c;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
+        --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+        --glow-peach: 0 4px 20px rgba(255, 133, 161, 0.22);
+        --glow-blue: 0 4px 20px rgba(115, 165, 255, 0.2);
+        --glow-green: 0 4px 18px rgba(74, 222, 128, 0.18);
+        /* legacy aliases — JS·기존 클래스 호환 */
+        --bg-color: var(--bg-base);
+        --card-bg: var(--bg-card);
         --border-color: #27272a;
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
-        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
-        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+        margin: 0; padding: 0;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        font-family: 'Pretendard', sans-serif;
+        max-width: 480px; margin: 0 auto;
+        position: relative; min-height: 100vh;
+        overflow-x: hidden;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .category-nav-scroll {
@@ -40,67 +62,112 @@
     }
     .category-nav-scroll::-webkit-scrollbar { display: none; }
     .category-nav-tab {
-        flex-shrink: 0; border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
-        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
-        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        flex-shrink: 0;
+        border: 1px solid var(--border-soft);
+        background: var(--bg-elevated);
+        color: var(--text-sub);
+        padding: 8px 14px; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.2s;
         font-family: inherit; white-space: nowrap;
     }
     .category-nav-tab.active {
-        border-color: var(--neon-green); color: #000; background: var(--neon-green);
-        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
+        border-color: var(--border-card);
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: none;
     }
     .category-nav-tab:active { transform: scale(0.96); }
     .category-nav-tab--seasonal {
-        border-color: rgba(57, 255, 20, 0.55);
-        box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
+        border-color: rgba(255, 160, 146, 0.35);
     }
     .category-nav-tab--seasonal.active {
-        box-shadow: 0 0 16px rgba(57, 255, 20, 0.45);
+        background: rgba(255, 222, 158, 0.12);
+        border-color: rgba(255, 160, 146, 0.4);
+        color: var(--text-main);
+        box-shadow: var(--glow-peach);
     }
     a.category-nav-tab {
         text-decoration: none; color: var(--text-sub);
         display: inline-flex; align-items: center;
     }
-    a.category-nav-tab.active { color: #000; }
+    a.category-nav-tab.active { color: var(--text-main); }
 
-    /* === 메인 컨텐츠 (랭킹 UI) === */
     main {
         padding: 128px 20px 120px 20px;
         transition: all 0.3s ease;
     }
 
     .page-title {
-        font-family: 'Pretendard', sans-serif; font-weight: 900;
-        font-size: 1.6rem; margin: 0 0 20px 0; color: #fff;
-        text-align: center; letter-spacing: -0.5px;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        font-family: 'Pretendard', sans-serif; font-weight: 800;
+        font-size: 1.5rem; margin: 0; color: var(--text-main);
+        text-align: center; letter-spacing: -0.4px;
     }
 
-    /* 1. 메인 탭 */
-    .main-tab-wrapper { display: flex; background: rgba(39, 39, 42, 0.5); border-radius: 16px; padding: 5px; margin-bottom: 15px; }
-    .main-tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 1rem; color: var(--text-sub); cursor: pointer; border: 1px solid transparent; background: transparent; transition: all 0.3s; }
+    /* 메인 탭 */
+    .main-tab-wrapper {
+        display: flex;
+        background: var(--bg-card);
+        border: 1px solid var(--border-soft);
+        border-radius: 16px;
+        padding: 5px;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow-card);
+    }
+    .main-tab {
+        flex: 1; text-align: center; padding: 12px 8px;
+        border-radius: 12px; font-weight: 700; font-size: 0.92rem;
+        color: var(--text-sub); cursor: pointer;
+        border: 1px solid transparent; background: transparent;
+        transition: all 0.25s ease; font-family: inherit;
+    }
 
-    /* 💡 테마 1: 🔥 핫 불판 (네온 핑크 테마) */
-    .main-tab#tabGrill.active { background: rgba(255, 0, 127, 0.1); color: #fff; border-color: var(--neon-pink); box-shadow: 0 4px 15px rgba(255, 0, 127, 0.2); }
-    main.theme-grill .sub-tab.active { background-color: var(--neon-pink); color: #000; border-color: var(--neon-pink); box-shadow: 0 0 10px rgba(255, 0, 127, 0.4); }
-    main.theme-grill .podium-score { color: var(--neon-pink); }
-    main.theme-grill .rank-score { color: var(--neon-pink); }
+    /* 🔥 핫 불판 — 피치 파스텔 */
+    .main-tab#tabGrill.active {
+        background: linear-gradient(135deg, rgba(255, 222, 158, 0.2) 0%, rgba(255, 160, 146, 0.16) 100%);
+        color: var(--text-main);
+        border-color: rgba(255, 160, 146, 0.45);
+        box-shadow: var(--glow-peach);
+    }
+    main.theme-grill .sub-tab.active {
+        background: rgba(255, 133, 161, 0.12);
+        color: var(--point-pink);
+        border-color: rgba(255, 133, 161, 0.38);
+        box-shadow: 0 2px 12px rgba(255, 133, 161, 0.12);
+    }
+    main.theme-grill .podium-score { color: var(--point-pink); }
+    main.theme-grill .rank-score { color: var(--point-pink); }
 
-    /* 💡 테마 2: 😎 픽클러 (네온 블루 테마) */
-    .main-tab#tabPickler.active { background: rgba(0, 240, 255, 0.1); color: #fff; border-color: var(--neon-blue); box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2); }
-    main.theme-pickler .sub-tab.active { background-color: var(--neon-blue); color: #000; border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 240, 255, 0.4); }
-    main.theme-pickler .podium-score { color: var(--neon-blue); }
-    main.theme-pickler .rank-score { color: var(--neon-blue); }
+    /* 😎 픽클러 — 파스텔 블루·민트 */
+    .main-tab#tabPickler.active {
+        background: linear-gradient(135deg, rgba(115, 165, 255, 0.16) 0%, rgba(74, 222, 128, 0.1) 100%);
+        color: var(--text-main);
+        border-color: rgba(115, 165, 255, 0.42);
+        box-shadow: var(--glow-blue);
+    }
+    main.theme-pickler .sub-tab.active {
+        background: rgba(115, 165, 255, 0.12);
+        color: var(--point-blue);
+        border-color: rgba(115, 165, 255, 0.38);
+        box-shadow: 0 2px 12px rgba(115, 165, 255, 0.12);
+    }
+    main.theme-pickler .podium-score { color: var(--point-blue); }
+    main.theme-pickler .rank-score { color: var(--point-green); }
 
-    /* 1위 단상은 황금색이므로 글씨 흰색 고정 */
-    .podium-1 .podium-score { color: #fff !important; }
+    .podium-1 .podium-score { color: var(--point-gold) !important; }
 
-    /* 2. 서브 탭 (일/주/월/연) 기본 설정 */
-    .sub-tab-wrapper { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
-    .sub-tab { padding: 8px 16px; border-radius: 20px; background-color: transparent; border: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
-    .sub-tab.active { font-weight: 900; }
+    /* 서브 탭 */
+    .sub-tab-wrapper { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+    .sub-tab {
+        padding: 8px 14px; border-radius: 999px;
+        background-color: transparent;
+        border: 1px solid var(--border-soft);
+        color: var(--text-sub);
+        font-size: 0.82rem; font-weight: 700; cursor: pointer;
+        transition: 0.25s ease; font-family: inherit;
+    }
+    .sub-tab.active { font-weight: 800; }
 
-    /* 3. 명예의 전당 (Top 3 시상대) */
+    /* 명예의 전당 Top 3 */
     .podium-container {
         display: flex;
         justify-content: center;
@@ -128,82 +195,154 @@
         flex-shrink: 0;
         gap: 4px;
         padding-bottom: 32px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-soft);
+        border-bottom: none;
     }
-    .podium-item:active { transform: scale(0.93); }
+    .podium-item:active { transform: scale(0.97); }
     #picklerRankingArea .podium-item { cursor: default; }
     .podium-item > .podium-name,
     .podium-item > .podium-score,
-    .podium-item > .podium-rank {
-        flex-shrink: 0;
-    }
+    .podium-item > .podium-rank { flex-shrink: 0; }
 
-    .podium-avatar { width: 56px; height: 56px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: absolute; top: -35px; left: 50%; transform: translateX(-50%); z-index: 10; transition: transform 0.2s; }
+    .podium-avatar {
+        width: 56px; height: 56px; border-radius: 50%;
+        background-color: var(--bg-elevated);
+        display: flex; justify-content: center; align-items: center;
+        font-size: 1.8rem;
+        border: 2px solid var(--border-card);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        position: absolute; top: -35px; left: 50%;
+        transform: translateX(-50%); z-index: 10;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
     .podium-rank {
         position: absolute;
         bottom: 12px;
-        left: 0;
-        right: 0;
+        left: 0; right: 0;
         text-align: center;
-        font-family: 'Black Han Sans', sans-serif;
-        font-size: 1.5rem;
-        color: #000;
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-sub);
         margin: 0;
         line-height: 1;
         z-index: 2;
     }
-    .podium-name { font-weight: 800; font-size: 0.85rem; text-align: center; margin-top: 28px; margin-bottom: 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; padding: 0 4px; box-sizing: border-box; }
-    .podium-score { font-size: 0.75rem; font-weight: 700; margin: 0; transition: color 0.3s; line-height: 1.3; }
-
-    /* 픽클러 시상대 — 별점 30%+ 확대 (리스트 가독성 맞춤) */
-    #picklerRankingArea .podium-score {
-        font-size: 1.05rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+    .podium-name {
+        font-weight: 700; font-size: 0.82rem; text-align: center;
+        margin-top: 28px; margin-bottom: 0;
+        color: var(--text-main);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        width: 100%; line-height: 1.3;
+        padding: 0 4px; box-sizing: border-box;
     }
-    #picklerRankingArea .podium-1 .podium-score {
-        font-size: 1.1rem;
+    .podium-score {
+        font-size: 0.78rem; font-weight: 700; margin: 0;
+        transition: color 0.3s; line-height: 1.3;
+        font-family: 'Pretendard', sans-serif;
     }
 
-    /* 핫 불판 시상대 — 화력 점수 30%+ 확대 */
+    #picklerRankingArea .podium-score,
     #grillRankingArea .podium-score {
-        font-size: 1.05rem;
+        font-size: 0.88rem;
         font-weight: 800;
         letter-spacing: -0.02em;
     }
+    #picklerRankingArea .podium-1 .podium-score,
     #grillRankingArea .podium-1 .podium-score {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
     }
 
-    .podium-1 { min-height: 155px; height: 155px; background: linear-gradient(180deg, #ffcc00 0%, #cc8800 100%); border-top-left-radius: 16px; border-top-right-radius: 16px; width: 36%; z-index: 5; box-shadow: 0 -5px 20px rgba(255, 204, 0, 0.4); border: 2px solid #ffe680; border-bottom: none; overflow: visible; }
-    .podium-1 .podium-avatar { width: 70px; height: 70px; font-size: 2.2rem; top: -45px; border-color: #ffcc00; }
-    .podium-1 .podium-name { font-size: 1rem; margin-top: 36px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .podium-1 {
+        min-height: 155px; height: 155px;
+        width: 36%; z-index: 5;
+        border-top-left-radius: 16px; border-top-right-radius: 16px;
+        border-top: 3px solid rgba(252, 211, 77, 0.75);
+        box-shadow: 0 -6px 28px rgba(252, 211, 77, 0.12), var(--shadow-card);
+    }
+    .podium-1 .podium-avatar {
+        width: 68px; height: 68px; font-size: 2rem; top: -42px;
+        border-color: rgba(252, 211, 77, 0.55);
+        box-shadow: 0 6px 20px rgba(252, 211, 77, 0.18);
+    }
+    .podium-1 .podium-name { font-size: 0.9rem; margin-top: 34px; }
+    .podium-1 .podium-rank { color: var(--point-gold); }
 
-    .podium-2 { min-height: 135px; height: 135px; background: linear-gradient(180deg, #a1a1aa 0%, #52525b 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d4d4d8; border-bottom: none; }
-    .podium-2 .podium-avatar { border-color: #a1a1aa; }
+    .podium-2 {
+        min-height: 135px; height: 135px;
+        border-top-left-radius: 14px; border-top-right-radius: 14px;
+        border-top: 3px solid rgba(196, 196, 204, 0.65);
+        box-shadow: 0 -4px 20px rgba(196, 196, 204, 0.08), var(--shadow-card);
+    }
+    .podium-2 .podium-avatar {
+        border-color: rgba(196, 196, 204, 0.5);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+    .podium-2 .podium-rank { color: var(--silver); }
 
-    .podium-3 { min-height: 118px; height: 118px; background: linear-gradient(180deg, #b87333 0%, #7a4b22 100%); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid #d89355; border-bottom: none; }
-    .podium-3 .podium-avatar { border-color: #b87333; }
+    .podium-3 {
+        min-height: 118px; height: 118px;
+        border-top-left-radius: 14px; border-top-right-radius: 14px;
+        border-top: 3px solid rgba(201, 149, 108, 0.65);
+        box-shadow: 0 -4px 20px rgba(201, 149, 108, 0.08), var(--shadow-card);
+    }
+    .podium-3 .podium-avatar {
+        border-color: rgba(201, 149, 108, 0.5);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+    .podium-3 .podium-rank { color: var(--bronze); }
 
-    /* 4. 랭킹 리스트 (4위 ~ 10위) */
+    /* 랭킹 리스트 4~10위 */
     .ranking-list { display: flex; flex-direction: column; gap: 12px; }
     .rank-item {
-        display: flex; align-items: center; background-color: var(--card-bg);
-        padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); gap: 15px;
+        display: flex; align-items: center;
+        background-color: #1c1c1e;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid #27272a;
+        gap: 14px;
+        box-shadow: var(--shadow-card);
     }
-    .rank-num { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--text-sub); width: 25px; text-align: center; }
-    .rank-pic { width: 44px; height: 44px; border-radius: 50%; background-color: #27272a; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; flex-shrink: 0; }
+    .rank-num {
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1rem; font-weight: 800;
+        color: var(--text-sub);
+        width: 24px; text-align: center; flex-shrink: 0;
+    }
+    .rank-pic {
+        width: 44px; height: 44px; border-radius: 50%;
+        background-color: var(--bg-elevated);
+        border: 1px solid var(--border-soft);
+        display: flex; justify-content: center; align-items: center;
+        font-size: 1.35rem; flex-shrink: 0;
+    }
+    .rank-item.grill .rank-pic {
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255, 133, 161, 0.12), rgba(115, 165, 255, 0.1));
+    }
+    .rank-info { flex: 1; overflow: hidden; min-width: 0; }
+    .rank-title {
+        font-weight: 700; font-size: 0.92rem; color: var(--text-main);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-bottom: 4px;
+    }
+    .rank-sub {
+        font-size: 0.74rem; color: var(--text-sub);
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .rank-score {
+        font-family: 'Pretendard', sans-serif;
+        font-size: 0.88rem; font-weight: 800;
+        display: flex; align-items: center; gap: 4px;
+        transition: color 0.3s;
+        flex-shrink: 0;
+        letter-spacing: -0.02em;
+    }
 
-    .rank-item.grill .rank-pic { border-radius: 10px; background: linear-gradient(135deg, #2e1a2a, #0a192f); }
-
-    .rank-info { flex: 1; overflow: hidden; }
-    .rank-title { font-weight: 800; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-    .rank-sub { font-size: 0.75rem; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
-    .rank-score { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; display: flex; align-items: center; gap: 5px; transition: color 0.3s; }
-
-    /* 숨김 처리 유틸 */
     .hidden { display: none !important; }
 
-    /* === 랭킹 가이드 (바텀 시트) — 시상대 CSS와 분리 === */
+    /* 랭킹 가이드 바텀 시트 */
     .ranking-title-row {
         position: relative;
         display: flex;
@@ -214,158 +353,108 @@
     .ranking-title-row .page-title { margin-bottom: 0; }
     .ranking-guide-btn {
         position: absolute;
-        right: 0;
-        top: 50%;
+        right: 0; top: 50%;
         transform: translateY(-50%);
-        width: 32px;
-        height: 32px;
+        width: 32px; height: 32px;
         border-radius: 50%;
-        border: 1px solid var(--border-color);
-        background: rgba(39, 39, 42, 0.85);
+        border: 1px solid var(--border-soft);
+        background: var(--bg-elevated);
         color: var(--text-sub);
-        font-size: 0.95rem;
-        font-weight: 800;
-        font-family: inherit;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 0.2s;
-        padding: 0;
-        line-height: 1;
+        font-size: 0.95rem; font-weight: 800;
+        font-family: inherit; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: 0.2s; padding: 0; line-height: 1;
     }
     .ranking-guide-btn:active { transform: translateY(-50%) scale(0.92); }
     main.theme-grill .ranking-guide-btn:active,
     main.theme-grill .ranking-guide-btn:focus-visible {
-        border-color: var(--neon-pink);
-        color: var(--neon-pink);
-        box-shadow: 0 0 10px rgba(255, 0, 127, 0.25);
+        border-color: rgba(255, 133, 161, 0.45);
+        color: var(--point-pink);
+        box-shadow: var(--glow-peach);
     }
     main.theme-pickler .ranking-guide-btn:active,
     main.theme-pickler .ranking-guide-btn:focus-visible {
-        border-color: var(--neon-blue);
-        color: var(--neon-blue);
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+        border-color: rgba(115, 165, 255, 0.45);
+        color: var(--point-blue);
+        box-shadow: var(--glow-blue);
     }
 
     .ranking-guide-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 1100;
-        display: none;
-        max-width: 480px;
-        margin: 0 auto;
+        position: fixed; inset: 0; z-index: 1100;
+        display: none; max-width: 480px; margin: 0 auto;
     }
     .ranking-guide-overlay.is-visible { display: block; }
     .ranking-guide-dim {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.68);
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        position: absolute; inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        opacity: 0; transition: opacity 0.3s ease;
     }
     .ranking-guide-overlay.is-open .ranking-guide-dim { opacity: 1; }
     .ranking-guide-sheet {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #18181b;
-        border-top-left-radius: 20px;
-        border-top-right-radius: 20px;
-        border: 1px solid var(--border-color);
+        position: absolute; left: 0; right: 0; bottom: 0;
+        background: var(--bg-card);
+        border-top-left-radius: 20px; border-top-right-radius: 20px;
+        border: 1px solid var(--border-card);
         border-bottom: none;
-        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55);
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
         transform: translateY(100%);
         transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
         max-height: 82vh;
-        display: flex;
-        flex-direction: column;
+        display: flex; flex-direction: column;
         padding-bottom: calc(16px + env(safe-area-inset-bottom));
     }
     .ranking-guide-overlay.is-open .ranking-guide-sheet { transform: translateY(0); }
     .ranking-guide-handle {
-        width: 40px;
-        height: 4px;
-        border-radius: 999px;
-        background: #3f3f46;
-        margin: 10px auto 6px;
-        flex-shrink: 0;
+        width: 40px; height: 4px; border-radius: 999px;
+        background: var(--border-soft);
+        margin: 10px auto 6px; flex-shrink: 0;
     }
     .ranking-guide-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        display: flex; align-items: center; justify-content: space-between;
         padding: 4px 20px 12px;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-soft);
         flex-shrink: 0;
     }
     .ranking-guide-header h2 {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 900;
-        color: #fff;
-        letter-spacing: -0.02em;
+        margin: 0; font-size: 1.05rem; font-weight: 800;
+        color: var(--text-main); letter-spacing: -0.02em;
     }
     .ranking-guide-close {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: 1px solid var(--border-color);
-        background: rgba(39, 39, 42, 0.9);
-        color: var(--text-sub);
-        font-size: 1rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        font-family: inherit;
-        transition: 0.2s;
+        width: 32px; height: 32px; border-radius: 50%;
+        border: 1px solid var(--border-soft);
+        background: var(--bg-elevated);
+        color: var(--text-sub); font-size: 1rem;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        padding: 0; font-family: inherit; transition: 0.2s;
     }
-    .ranking-guide-close:active { transform: scale(0.92); color: #fff; }
+    .ranking-guide-close:active { transform: scale(0.92); color: var(--text-main); }
     .ranking-guide-body {
-        overflow-y: auto;
-        padding: 16px 20px 8px;
+        overflow-y: auto; padding: 16px 20px 8px;
         -webkit-overflow-scrolling: touch;
     }
     .ranking-guide-section + .ranking-guide-section { margin-top: 20px; }
     .ranking-guide-section h3 {
-        margin: 0 0 8px;
-        font-size: 0.95rem;
-        font-weight: 900;
-        color: #fff;
+        margin: 0 0 8px; font-size: 0.95rem; font-weight: 800;
+        color: var(--text-main);
     }
     .ranking-guide-section p {
-        margin: 0 0 10px;
-        font-size: 0.85rem;
-        line-height: 1.55;
+        margin: 0 0 10px; font-size: 0.85rem; line-height: 1.55;
         color: var(--text-sub);
     }
-    .ranking-guide-section ul {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
+    .ranking-guide-section ul { margin: 0; padding: 0; list-style: none; }
     .ranking-guide-section li {
-        position: relative;
-        padding-left: 14px;
-        margin-bottom: 8px;
-        font-size: 0.84rem;
-        line-height: 1.5;
-        color: #e4e4e7;
+        position: relative; padding-left: 14px; margin-bottom: 8px;
+        font-size: 0.84rem; line-height: 1.5; color: #d4d4d8;
     }
     .ranking-guide-section li::before {
-        content: '•';
-        position: absolute;
-        left: 0;
-        color: var(--neon-green);
-        font-weight: 900;
+        content: '•'; position: absolute; left: 0;
+        color: var(--text-sub); font-weight: 700;
     }
-    .ranking-guide-section--grill h3 { color: var(--neon-pink); }
-    .ranking-guide-section--grill li::before { color: var(--neon-pink); }
-    .ranking-guide-section--pickler h3 { color: var(--neon-blue); }
-    .ranking-guide-section--pickler li::before { color: var(--neon-blue); }
+    .ranking-guide-section--grill h3 { color: var(--point-pink); }
+    .ranking-guide-section--grill li::before { color: var(--point-pink); }
+    .ranking-guide-section--pickler h3 { color: var(--point-blue); }
+    .ranking-guide-section--pickler li::before { color: var(--point-green); }
     body.ranking-guide-open { overflow: hidden; }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
@@ -437,7 +526,7 @@
                 <div class="rank-pic">🍻</div>
                 <div class="rank-info">
                     <div class="rank-title">금요일 퇴근 후 치맥 vs 삼쏘</div>
-                    <div class="rank-sub"><span>작성자: 쩝쩝박사</span> <span>|</span> <span style="color:var(--neon-sub);">마감 완료</span></div>
+                    <div class="rank-sub"><span>작성자: 쩝쩝박사</span> <span>|</span> <span style="color:var(--point-pink); opacity:0.85;">마감 완료</span></div>
                 </div>
                 <div class="rank-score">28.4K <span style="font-size:0.8rem;">🔥</span></div>
             </div>
