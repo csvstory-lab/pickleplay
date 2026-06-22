@@ -93,9 +93,76 @@
     a.category-nav-tab.active { color: var(--text-main); }
 
     main {
-        padding: 128px 20px 120px 20px;
+        padding: 80px 20px 120px 20px;
         transition: all 0.3s ease;
     }
+
+    .tab-icon {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 5px;
+        vertical-align: middle;
+        font-size: 1.05em;
+        line-height: 1;
+    }
+    .page-title .tab-icon { margin-right: 8px; font-size: 1.15em; }
+    .score-icon { display: inline-flex; align-items: center; font-size: 0.9em; line-height: 1; }
+    .podium-avatar .ph, .rank-pic .ph { font-size: 1.35rem; }
+    .ranking-guide-section h3 .tab-icon { margin-right: 6px; }
+
+    .ranking-profile-overlay {
+        position: fixed; inset: 0; z-index: 9998;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+        max-width: 480px; margin: 0 auto;
+    }
+    .ranking-profile-overlay.open { opacity: 1; visibility: visible; }
+    .ranking-profile-sheet {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        max-width: 480px; margin: 0 auto;
+        background-color: var(--bg-card);
+        border-radius: 24px 24px 0 0;
+        padding: 25px 20px calc(32px + env(safe-area-inset-bottom));
+        z-index: 9999;
+        transform: translateY(100%);
+        transition: transform 0.25s ease-out;
+        border-top: 1px solid var(--border-soft);
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+    }
+    .ranking-profile-sheet.open { transform: translateY(0); }
+    .ranking-profile-sheet .sheet-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 16px;
+    }
+    .ranking-profile-sheet .sheet-title {
+        margin: 0; font-size: 1.05rem; font-weight: 800;
+        color: var(--point-green);
+        display: flex; align-items: center; gap: 6px;
+    }
+    .ranking-profile-sheet .btn-close-sheet {
+        width: 32px; height: 32px; border-radius: 50%;
+        border: 1px solid var(--border-soft);
+        background: var(--bg-elevated);
+        color: var(--text-sub); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0; font-family: inherit;
+    }
+    .ranking-profile-sheet .btn-action-v2 {
+        flex: 1; padding: 12px; border-radius: 12px;
+        border: none; font-weight: 800; font-size: 0.88rem;
+        cursor: pointer; font-family: inherit;
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .ranking-profile-sheet .grade-badge {
+        font-size: 0.72rem; font-weight: 800;
+        padding: 3px 8px; border-radius: 999px;
+        background: linear-gradient(90deg, #4ADE80, #73A5FF);
+        color: #0a0a0c;
+    }
+    #picklerRankingArea .podium-item,
+    #picklerRankingArea .rank-item { cursor: pointer; }
 
     .page-title {
         font-family: 'Pretendard', sans-serif; font-weight: 800;
@@ -200,7 +267,6 @@
         border-bottom: none;
     }
     .podium-item:active { transform: scale(0.97); }
-    #picklerRankingArea .podium-item { cursor: default; }
     .podium-item > .podium-name,
     .podium-item > .podium-score,
     .podium-item > .podium-rank { flex-shrink: 0; }
@@ -476,13 +542,13 @@
 <!-- 💡 초기 테마는 핫 불판(theme-grill)으로 세팅 -->
 <main class="theme-grill">
     <div class="ranking-title-row">
-        <h1 class="page-title">🏆 P!CKLE 랭킹</h1>
-        <button type="button" id="rankingGuideBtn" class="ranking-guide-btn" aria-label="랭킹 안내">ⓘ</button>
+        <h1 class="page-title"><i class="ph-fill ph-trophy tab-icon" aria-hidden="true"></i>P!CKLE 랭킹</h1>
+        <button type="button" id="rankingGuideBtn" class="ranking-guide-btn" aria-label="랭킹 안내"><i class="ph ph-info"></i></button>
     </div>
 
     <div class="main-tab-wrapper">
-        <button class="main-tab active" id="tabGrill" onclick="switchMainTab('grill')"><span class="emoji">🔥</span> 가장 핫한 불판</button>
-        <button class="main-tab" id="tabPickler" onclick="switchMainTab('pickler')"><span class="emoji">😎</span> 최고의 픽클러</button>
+        <button class="main-tab active" id="tabGrill" onclick="switchMainTab('grill')"><i class="ph-fill ph-fire tab-icon" aria-hidden="true"></i>가장 핫한 불판</button>
+        <button class="main-tab" id="tabPickler" onclick="switchMainTab('pickler')"><i class="ph-fill ph-user tab-icon" aria-hidden="true"></i>최고의 픽클러</button>
     </div>
 
     <div class="sub-tab-wrapper" id="subTabs">
@@ -497,49 +563,26 @@
     <!-- ============================================== -->
     <div id="grillRankingArea">
         <div class="podium-container">
-            <!-- 2위 (OOTD) -->
-            <div class="podium-item podium-2" onclick="location.href='detail.html'">
-                <div class="podium-avatar" style="border-radius:10px;">👗</div>
-                <div class="podium-name">첫 데이트룩 골라주세요!</div>
-                <div class="podium-score">🔥 45.2K</div>
+            <div class="podium-item podium-2">
+                <div class="podium-avatar" style="border-radius:10px;"></div>
+                <div class="podium-name">…</div>
+                <div class="podium-score"><i class="ph-fill ph-fire score-icon" aria-hidden="true"></i> …</div>
                 <div class="podium-rank">2</div>
             </div>
-            <!-- 1위 (먹잘알) -->
-            <div class="podium-item podium-1" onclick="location.href='detail.html'">
-                <div class="podium-avatar" style="border-radius:10px;">🍜</div>
-                <div class="podium-name">평생 라면 vs 평생 치킨</div>
-                <div class="podium-score">🔥 89.1K</div>
+            <div class="podium-item podium-1">
+                <div class="podium-avatar" style="border-radius:10px;"></div>
+                <div class="podium-name">…</div>
+                <div class="podium-score"><i class="ph-fill ph-fire score-icon" aria-hidden="true"></i> …</div>
                 <div class="podium-rank">1</div>
             </div>
-            <!-- 3위 (블박) -->
-            <div class="podium-item podium-3" onclick="location.href='detail.html'">
-                <div class="podium-avatar" style="border-radius:10px;">🚗</div>
-                <div class="podium-name">킥보드 vs 오토바이 과실</div>
-                <div class="podium-score">🔥 32.8K</div>
+            <div class="podium-item podium-3">
+                <div class="podium-avatar" style="border-radius:10px;"></div>
+                <div class="podium-name">…</div>
+                <div class="podium-score"><i class="ph-fill ph-fire score-icon" aria-hidden="true"></i> …</div>
                 <div class="podium-rank">3</div>
             </div>
         </div>
-
-        <div class="ranking-list">
-            <div class="rank-item grill">
-                <div class="rank-num">4</div>
-                <div class="rank-pic">🍻</div>
-                <div class="rank-info">
-                    <div class="rank-title">금요일 퇴근 후 치맥 vs 삼쏘</div>
-                    <div class="rank-sub"><span>작성자: 쩝쩝박사</span> <span>|</span> <span style="color:var(--point-pink); opacity:0.85;">마감 완료</span></div>
-                </div>
-                <div class="rank-score">28.4K <span style="font-size:0.8rem;">🔥</span></div>
-            </div>
-            <div class="rank-item grill">
-                <div class="rank-num">5</div>
-                <div class="rank-pic">💖</div>
-                <div class="rank-info">
-                    <div class="rank-title">남사친/여사친 깻잎 떼어주기 논쟁</div>
-                    <div class="rank-sub"><span>작성자: 과몰입러</span> <span>|</span> <span>진행 중</span></div>
-                </div>
-                <div class="rank-score">21.0K <span style="font-size:0.8rem;">🔥</span></div>
-            </div>
-        </div>
+        <div class="ranking-list"></div>
     </div>
 
     <!-- ============================================== -->
@@ -551,45 +594,26 @@
             <div class="podium-item podium-2" data-user-id="">
                 <div class="podium-avatar"></div>
                 <div class="podium-name">…</div>
-                <div class="podium-score">⭐ …</div>
+                <div class="podium-score"><i class="ph-fill ph-star score-icon" aria-hidden="true"></i> …</div>
                 <div class="podium-rank">2</div>
             </div>
             <!-- 1위 -->
             <div class="podium-item podium-1" data-user-id="">
                 <div class="podium-avatar"></div>
                 <div class="podium-name">…</div>
-                <div class="podium-score">⭐ …</div>
+                <div class="podium-score"><i class="ph-fill ph-star score-icon" aria-hidden="true"></i> …</div>
                 <div class="podium-rank">1</div>
             </div>
             <!-- 3위 -->
             <div class="podium-item podium-3" data-user-id="">
                 <div class="podium-avatar"></div>
                 <div class="podium-name">…</div>
-                <div class="podium-score">⭐ …</div>
+                <div class="podium-score"><i class="ph-fill ph-star score-icon" aria-hidden="true"></i> …</div>
                 <div class="podium-rank">3</div>
             </div>
         </div>
 
-        <div class="ranking-list">
-            <div class="rank-item">
-                <div class="rank-num">4</div>
-                <div class="rank-pic">👗</div>
-                <div class="rank-info">
-                    <div class="rank-title">패션피플 <span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.3</span></div>
-                    <div class="rank-sub"><span>나의 픽: 4,102명</span></div>
-                </div>
-                <div class="rank-score">8.5K <span style="font-size:0.8rem;">⭐</span></div>
-            </div>
-            <div class="rank-item">
-                <div class="rank-num">5</div>
-                <div class="rank-pic">🤬</div>
-                <div class="rank-info">
-                    <div class="rank-title">프로불편러 <span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.1</span></div>
-                    <div class="rank-sub"><span>나의 픽: 3,890명</span></div>
-                </div>
-                <div class="rank-score">7.1K <span style="font-size:0.8rem;">⭐</span></div>
-            </div>
-        </div>
+        <div class="ranking-list"></div>
     </div>
 
 </main>
@@ -601,11 +625,11 @@
         <div class="ranking-guide-handle" aria-hidden="true"></div>
         <div class="ranking-guide-header">
             <h2 id="rankingGuideTitle">랭킹 가이드</h2>
-            <button type="button" class="ranking-guide-close" aria-label="닫기">✕</button>
+            <button type="button" class="ranking-guide-close" aria-label="닫기"><i class="ph ph-x"></i></button>
         </div>
         <div class="ranking-guide-body">
             <section class="ranking-guide-section ranking-guide-section--grill">
-                <h3>🔥 가장 핫한 불판</h3>
+                <h3><i class="ph-fill ph-fire tab-icon" aria-hidden="true"></i>가장 핫한 불판</h3>
                 <p>어떤 불판이 가장 뜨겁게 불타오르고 있는지 보여주는 '화력' 랭킹입니다!</p>
                 <ul>
                     <li><strong>점수 방식:</strong> 투표(1점), 조회(0.1점), 댓글(3점), 공유(5점)</li>
@@ -613,7 +637,7 @@
                 </ul>
             </section>
             <section class="ranking-guide-section ranking-guide-section--pickler">
-                <h3>😎 최고의 픽클러</h3>
+                <h3><i class="ph-fill ph-user tab-icon" aria-hidden="true"></i>최고의 픽클러</h3>
                 <p>PICKLE 생태계를 이끌어가는 '영향력' 랭킹입니다!</p>
                 <ul>
                     <li><strong>점수 방식:</strong> 나를 픽한 유저 1명당 10점, 내 불판 참여자당 0.1점</li>
@@ -624,10 +648,57 @@
     </div>
 </div>
 
+<div id="rankingProfileOverlay" class="ranking-profile-overlay" onclick="closeRankingProfileModal()"></div>
+<div class="ranking-profile-sheet share-sheet" id="userProfileSheet">
+    <div class="sheet-header">
+        <h2 class="sheet-title"><i class="ph-fill ph-user-circle" aria-hidden="true"></i> 픽클러 프로필</h2>
+        <button type="button" class="btn-close-sheet" onclick="closeRankingProfileModal()" aria-label="닫기"><i class="ph ph-x"></i></button>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:10px 0 25px 0;">
+        <div id="popupUserPic" style="width:76px; height:76px; border-radius:50%; background:#2c2c2e; border:2.5px solid var(--point-pink); display:flex; justify-content:center; align-items:center; font-size:2.2rem; box-shadow: 0 4px 14px rgba(0,0,0,0.4); overflow:hidden;"><i class="ph-fill ph-user"></i></div>
+        <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:5px;">
+            <div id="popupUserName" style="font-size:1.15rem; font-weight:900; color:#fff; letter-spacing:-0.3px;">픽클러</div>
+            <span class="grade-badge" id="popupUserBadge">일반 픽클러</span>
+        </div>
+        <div style="display:flex; gap:20px; margin-top:10px; font-size:0.82rem; font-weight:700; color:var(--text-sub); background: rgba(255,255,255,0.03); padding: 6px 20px; border-radius: 20px; border: 1px solid var(--border-soft);">
+            <div>나를 픽한 <span id="popupFollowerCount" style="color:var(--point-green); font-weight:900; margin-left:2px;">0</span></div>
+            <div style="width:1px; height:12px; background:var(--border-soft); align-self:center;"></div>
+            <div>내가 픽한 <span id="popupFollowingCount" style="color:var(--point-blue); font-weight:900; margin-left:2px;">0</span></div>
+        </div>
+    </div>
+    <div style="display:flex; gap:10px; width:100%; box-sizing:border-box;">
+        <button type="button" class="btn-action-v2" id="popupFollowBtn" style="background:linear-gradient(135deg, var(--point-green), #22c55e); color:#0a0a0c;" onclick="handleRankingPopupFollow()"><i class="ph ph-plus-bold"></i> 나의 픽</button>
+    </div>
+</div>
+
 <div id="common-footer"></div>
 
 <script>
-    // 💡 테마(Theme) 컬러가 바뀌는 마법의 탭 스위칭 함수
+    function closeRankingProfileModal() {
+        var overlay = document.getElementById('rankingProfileOverlay');
+        var sheet = document.getElementById('userProfileSheet');
+        if (overlay) overlay.classList.remove('open');
+        if (sheet) sheet.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function handleRankingPopupFollow() {
+        var btn = document.getElementById('popupFollowBtn');
+        if (!btn) return;
+        var targetUid = btn.getAttribute('data-user-id');
+        if (!targetUid) return;
+        if (window.PickleFollows && typeof window.PickleFollows.toggleFollow === 'function') {
+            window.PickleFollows.toggleFollow(targetUid).then(function (isFollowing) {
+                btn.style.background = isFollowing ? '#2c2c2e' : 'linear-gradient(135deg, var(--point-green), #22c55e)';
+                btn.style.color = isFollowing ? '#fff' : '#0a0a0c';
+                btn.innerHTML = isFollowing ? '✓ 팔로잉 중' : '<i class="ph ph-plus-bold"></i> 나의 픽';
+                if (typeof window.PickleFollows.loadProfilePopupCounts === 'function') {
+                    window.PickleFollows.loadProfilePopupCounts(targetUid);
+                }
+            });
+        }
+    }
+
     function switchMainTab(tabName) {
         document.getElementById('tabGrill').classList.remove('active');
         document.getElementById('tabPickler').classList.remove('active');
@@ -678,7 +749,8 @@
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-profile.js?v=20260608_ranking1"></script>
-<script src="../js/pickle-ranking.js?v=20260608_ranking9"></script>
+<script src="../js/pickle-follows.js?v=20260617_ranking1"></script>
+<script src="../js/pickle-ranking.js?v=20260617_ranking1"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 </body>

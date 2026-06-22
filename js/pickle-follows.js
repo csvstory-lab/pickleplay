@@ -795,6 +795,147 @@
     });
   }
 
+  async function loadProfilePopupCounts(uid) {
+    var followerEl = document.getElementById('popupFollowerCount');
+    var followingEl = document.getElementById('popupFollowingCount');
+    if (followerEl) followerEl.textContent = '0';
+    if (followingEl) followingEl.textContent = '0';
+    if (!uid) return;
+
+    try {
+      var sb = getSupabaseClient();
+      if (!sb) return;
+
+      var followerRes = await sb
+        .from('user_follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', uid);
+      var followingRes = await sb
+        .from('user_follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', uid);
+
+      if (!followerRes.error && followerRes.count != null && followerEl) {
+        followerEl.textContent = String(followerRes.count);
+      }
+      if (!followingRes.error && followingRes.count != null && followingEl) {
+        followingEl.textContent = String(followingRes.count);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Follows] profile counts failed', err);
+    }
+  }
+
+  function getProfileOverlay() {
+    return (
+      document.getElementById('detailOverlay') ||
+      document.getElementById('commonOverlay') ||
+      document.getElementById('rankingProfileOverlay')
+    );
+  }
+
+  function closeUserProfileModal() {
+    var sheet = document.getElementById('userProfileSheet');
+    var overlay = getProfileOverlay();
+    if (overlay) overlay.classList.remove('open');
+    if (sheet) sheet.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function setPopupFollowButtonState(btn, isFollowingUser) {
+    if (!btn) return;
+    btn.style.background = isFollowingUser
+      ? '#2c2c2e'
+      : 'linear-gradient(135deg, #4ADE80, #22c55e)';
+    btn.style.color = isFollowingUser ? '#fff' : '#0a0a0c';
+    btn.innerHTML = isFollowingUser
+      ? '✓ 팔로잉 중'
+      : '<i class="ph ph-plus-bold"></i> 나의 픽';
+  }
+
+  async function openUserProfileModal(userId, options) {
+    options = options || {};
+    var uid = userId ? String(userId).trim() : '';
+    if (!uid) return;
+
+    var sheet = document.getElementById('userProfileSheet');
+    if (!sheet) {
+      console.warn('[P!CKLE Follows] userProfileSheet not found');
+      return;
+    }
+
+    var popupName = document.getElementById('popupUserName');
+    var popupPic = document.getElementById('popupUserPic');
+    var popupFollowBtn = document.getElementById('popupFollowBtn');
+    var badgeEl = document.getElementById('popupUserBadge');
+
+    var nickname = options.nickname ? String(options.nickname).trim() : '';
+    var avatarHtml = options.avatarHtml != null ? String(options.avatarHtml) : '';
+    var meta = options.userMeta || null;
+
+    if (!meta && (!nickname || !avatarHtml)) {
+      var sb = getSupabaseClient();
+      if (sb) {
+        var userRes = await sb
+          .from('users')
+          .select('nickname, avatar_html, avatar_url, star_score, points')
+          .eq('id', uid)
+          .maybeSingle();
+        if (!userRes.error && userRes.data) meta = userRes.data;
+      }
+    }
+
+    if (meta) {
+      if (!nickname) nickname = String(meta.nickname || '').trim() || FANDOM_NICKNAME_FALLBACK;
+      if (!avatarHtml) {
+        if (meta.avatar_url) {
+          avatarHtml =
+            '<img src="' +
+            escapeHtml(String(meta.avatar_url).trim()) +
+            '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+        } else if (meta.avatar_html) {
+          avatarHtml = String(meta.avatar_html);
+        }
+      }
+      if (badgeEl && window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
+        var pts = meta.star_score != null ? meta.star_score : meta.points;
+        badgeEl.textContent =
+          'Lv.' +
+          window.PickleProfile.getUserLevelFromPoints(Number(pts) || 0) +
+          ' 픽클러';
+      }
+    }
+
+    if (!nickname) nickname = FANDOM_NICKNAME_FALLBACK;
+    if (!avatarHtml) avatarHtml = '<i class="ph-fill ph-user"></i>';
+
+    if (popupName) popupName.textContent = nickname;
+    if (popupPic) popupPic.innerHTML = avatarHtml;
+
+    if (popupFollowBtn) {
+      popupFollowBtn.setAttribute('data-user-id', uid);
+      var myId = await getCurrentUserId();
+      if (myId && String(myId) === uid) {
+        popupFollowBtn.hidden = true;
+      } else {
+        popupFollowBtn.hidden = false;
+        try {
+          var following = myId ? await isFollowing(myId, uid) : false;
+          setPopupFollowButtonState(popupFollowBtn, following);
+        } catch (err) {
+          setPopupFollowButtonState(popupFollowBtn, false);
+        }
+      }
+    }
+
+    await loadProfilePopupCounts(uid);
+
+    var overlay = getProfileOverlay();
+    if (overlay) overlay.classList.add('open');
+    sheet.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
   window.PickleFollows = {
     loadFollowStats: loadFollowStats,
     openFandomSheet: openFandomSheet,
@@ -808,10 +949,15 @@
     setFollowButtonState: setFollowButtonState,
     refreshMyFollowingSet: refreshMyFollowingSet,
     bumpFollowStats: bumpFollowStats,
+    openUserProfileModal: openUserProfileModal,
+    closeUserProfileModal: closeUserProfileModal,
+    loadProfilePopupCounts: loadProfilePopupCounts,
   };
 
   window.openFandomSheet = openFandomSheet;
   window.toggleFollow = toggleFollowFromButton;
+  window.openUserProfileModal = openUserProfileModal;
+  window.closeRankingProfileModal = closeUserProfileModal;
 
   document.addEventListener('DOMContentLoaded', function () {
     bindDetailFollowButton();

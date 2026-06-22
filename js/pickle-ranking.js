@@ -1,7 +1,7 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260608_ranking9
- * hot_grill_ranking · top_pickler_ranking VIEW → 기존 DOM 바인딩
+ * @build 20260617_ranking1
+ * hot_grill_ranking · top_pickler_ranking VIEW → 동적 DOM 렌더링
  */
 (function () {
   'use strict';
@@ -12,6 +12,13 @@
   var picklerRows = [];
   var postMetaMap = new Map();
   var userAvatarMap = new Map();
+
+  var ICON = {
+    fire: '<i class="ph-fill ph-fire score-icon" aria-hidden="true"></i>',
+    star: '<i class="ph-fill ph-star score-icon" aria-hidden="true"></i>',
+    user: '<i class="ph-fill ph-user" aria-hidden="true"></i>',
+    flame: '<i class="ph-fill ph-flame" aria-hidden="true" style="font-size:1.35rem;color:var(--point-pink);"></i>',
+  };
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -33,12 +40,17 @@
 
   function formatScore(value) {
     var n = Number(value);
-    if (!Number.isFinite(n)) n = 0;
-    if (n <= 0) return '0';
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-    if (Number.isInteger(n)) return n.toLocaleString('ko-KR');
-    return n.toFixed(1);
+    if (!Number.isFinite(n) || n < 0) n = 0;
+    return Math.round(n).toLocaleString('ko-KR');
+  }
+
+  function scoreWithIcon(value, iconHtml) {
+    return iconHtml + ' ' + formatScore(value);
+  }
+
+  function fallbackAvatarIcon(kind) {
+    if (kind === 'fire') return ICON.flame;
+    return ICON.user;
   }
 
   function normalizePicklerRow(row) {
@@ -86,16 +98,21 @@
     return '작성자: ' + name;
   }
 
-  function buildLevelBadgeHtml(points) {
-    var lv = 1;
-    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
-      lv = window.PickleProfile.getUserLevelFromPoints(points);
+  function buildLevelBadgeHtml(starScore) {
+    var score = Number(starScore);
+    if (!Number.isFinite(score) || score < 0) score = 0;
+    if (window.PickleProfile && window.PickleProfile.buildLevelBadgeFromPoints) {
+      return window.PickleProfile.buildLevelBadgeFromPoints(score);
     }
-    return (
-      '<span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.' +
-      Math.floor(lv) +
-      '</span>'
-    );
+    if (window.PickleProfile && window.PickleProfile.getUserLevelFromPoints) {
+      var lv = window.PickleProfile.getUserLevelFromPoints(score);
+      return (
+        '<span style="font-size:0.7rem; background:#444; padding:2px 6px; border-radius:8px; margin-left:5px;">Lv.' +
+        Math.floor(lv) +
+        '</span>'
+      );
+    }
+    return '';
   }
 
   function renderMediaInner(meta, fallbackEmoji) {
@@ -111,7 +128,7 @@
       if (av.indexOf('<') !== -1) return av;
       return escapeHtml(av);
     }
-    return escapeHtml(fallbackEmoji || '🥒');
+    return fallbackAvatarIcon(fallbackEmoji === 'fire' ? 'fire' : 'user');
   }
 
   function renderUserAvatarInner(userId, nickname, fallbackEmoji) {
@@ -129,7 +146,25 @@
       return escapeHtml(html);
     }
     var nick = String(nickname || '').trim();
-    return escapeHtml(nick.charAt(0) || fallbackEmoji || '픽');
+    if (nick) return escapeHtml(nick.charAt(0));
+    return fallbackAvatarIcon(fallbackEmoji === 'fire' ? 'fire' : 'user');
+  }
+
+  function openUserProfile(userId, nickname, avatarHtml) {
+    if (!userId) return;
+    if (typeof window.openUserProfileModal === 'function') {
+      window.openUserProfileModal(userId, {
+        nickname: nickname,
+        avatarHtml: avatarHtml,
+      });
+      return;
+    }
+    if (window.PickleFollows && typeof window.PickleFollows.openUserProfileModal === 'function') {
+      window.PickleFollows.openUserProfileModal(userId, {
+        nickname: nickname,
+        avatarHtml: avatarHtml,
+      });
+    }
   }
 
   function goDetail(postId) {
@@ -309,7 +344,6 @@
     slotEl.style.display = '';
     var meta = postMetaMap.get(String(row.post_id)) || {};
     var title = postTitle(row, meta);
-    var score = formatScore(row.hot_grill_score);
 
     var avatarEl = slotEl.querySelector('.podium-avatar');
     var nameEl = slotEl.querySelector('.podium-name');
@@ -318,10 +352,10 @@
 
     if (avatarEl) {
       avatarEl.style.borderRadius = '10px';
-      avatarEl.innerHTML = renderMediaInner(meta, '🔥');
+      avatarEl.innerHTML = renderMediaInner(meta, 'fire');
     }
     if (nameEl) nameEl.textContent = title;
-    if (scoreEl) scoreEl.textContent = '🔥 ' + score;
+    if (scoreEl) scoreEl.innerHTML = scoreWithIcon(row.hot_grill_score, ICON.fire);
     if (rankEl) rankEl.textContent = String(rank);
 
     slotEl.onclick = function () {
@@ -336,7 +370,7 @@
     var statusStyle =
       status === '마감 완료' ? ' style="color:var(--neon-sub);"' : '';
     var score = formatScore(row.hot_grill_score);
-    var picInner = renderMediaInner(meta, '🔥');
+    var picInner = renderMediaInner(meta, 'fire');
 
     return (
       '<div class="rank-item grill" data-post-id="' +
@@ -362,7 +396,9 @@
       '</div>' +
       '<div class="rank-score">' +
       escapeHtml(score) +
-      ' <span style="font-size:0.8rem;">🔥</span></div>' +
+      ' ' +
+      ICON.fire +
+      '</div>' +
       '</div>'
     );
   }
@@ -373,31 +409,34 @@
     if (!data) {
       slotEl.style.display = 'none';
       slotEl.removeAttribute('data-user-id');
+      slotEl.onclick = null;
       return;
     }
 
     slotEl.style.display = '';
     slotEl.setAttribute('data-user-id', String(data.user_id));
-    slotEl.onclick = null;
+    slotEl.style.cursor = 'pointer';
 
     var avatarEl = slotEl.querySelector('.podium-avatar');
     var nameEl = slotEl.querySelector('.podium-name');
     var scoreEl = slotEl.querySelector('.podium-score');
     var rankEl = slotEl.querySelector('.podium-rank');
+    var avatarInner = renderUserAvatarInner(data.user_id, data.nickname, 'user');
 
     if (avatarEl) {
       avatarEl.style.borderRadius = '';
-      avatarEl.innerHTML = renderUserAvatarInner(
-        data.user_id,
-        data.nickname,
-        '😎'
-      );
+      avatarEl.innerHTML = avatarInner;
     }
     if (nameEl) nameEl.textContent = data.nickname;
     if (scoreEl) {
-      scoreEl.textContent = '⭐ ' + formatScore(data.star_score_total);
+      scoreEl.innerHTML = scoreWithIcon(data.star_score_total, ICON.star);
     }
     if (rankEl) rankEl.textContent = String(rank);
+
+    slotEl.onclick = function (e) {
+      e.preventDefault();
+      openUserProfile(data.user_id, data.nickname, avatarInner);
+    };
   }
 
   function buildPicklerListItemHtml(row, rank) {
@@ -405,12 +444,14 @@
     if (!data) return '';
     var score = formatScore(data.star_score_total);
     var followers = data.follower_count;
-    var picInner = renderUserAvatarInner(data.user_id, data.nickname, '😎');
-    var levelBadge = buildLevelBadgeHtml(data.points);
+    var picInner = renderUserAvatarInner(data.user_id, data.nickname, 'user');
+    var levelBadge = buildLevelBadgeHtml(data.star_score_total);
 
     return (
-      '<div class="rank-item" data-user-id="' +
+      '<div class="rank-item pickler" data-user-id="' +
       escapeHtml(data.user_id) +
+      '" data-nickname="' +
+      escapeHtml(data.nickname) +
       '">' +
       '<div class="rank-num">' +
       rank +
@@ -430,9 +471,25 @@
       '</div>' +
       '<div class="rank-score">' +
       escapeHtml(score) +
-      ' <span style="font-size:0.8rem;">⭐</span></div>' +
+      ' ' +
+      ICON.star +
+      '</div>' +
       '</div>'
     );
+  }
+
+  function bindPicklerListClicks(listEl) {
+    if (!listEl) return;
+    listEl.querySelectorAll('.rank-item.pickler[data-user-id]').forEach(function (item) {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function () {
+        var uid = item.getAttribute('data-user-id');
+        var nickname = item.getAttribute('data-nickname') || '';
+        var picEl = item.querySelector('.rank-pic');
+        var avatarHtml = picEl ? picEl.innerHTML : '';
+        openUserProfile(uid, nickname, avatarHtml);
+      });
+    });
   }
 
   function bindGrillListClicks(listEl) {
@@ -514,15 +571,16 @@
         return buildPicklerListItemHtml(row, idx + 4);
       })
       .join('');
+    bindPicklerListClicks(list);
   }
 
-  function setPodiumLoading(area, scoreIcon) {
+  function setPodiumLoading(area, iconHtml) {
     if (!area) return;
     area.querySelectorAll('.podium-item').forEach(function (slot) {
       var nameEl = slot.querySelector('.podium-name');
       var scoreEl = slot.querySelector('.podium-score');
       if (nameEl) nameEl.textContent = '…';
-      if (scoreEl) scoreEl.textContent = scoreIcon + ' …';
+      if (scoreEl) scoreEl.innerHTML = iconHtml + ' …';
     });
   }
 
@@ -534,7 +592,7 @@
       var grillPodium = grillArea.querySelector('.podium-container');
       var grillList = grillArea.querySelector('.ranking-list');
       if (grillPodium) grillPodium.style.display = 'none';
-      setPodiumLoading(grillArea, '🔥');
+      setPodiumLoading(grillArea, ICON.fire);
       setListLoading(grillList);
     }
 
@@ -542,7 +600,7 @@
       var picklerPodium = picklerArea.querySelector('.podium-container');
       var picklerList = picklerArea.querySelector('.ranking-list');
       if (picklerPodium) picklerPodium.style.display = 'none';
-      setPodiumLoading(picklerArea, '⭐');
+      setPodiumLoading(picklerArea, ICON.star);
       setListLoading(picklerList);
     }
   }
