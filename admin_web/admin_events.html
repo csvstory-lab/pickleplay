@@ -38,7 +38,6 @@
     .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
     .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
     .nav-sub-item:hover { color: #fff; }
-    .nav-sub-item.active { color: var(--neon-blue); font-weight: 800; }
     .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
 
     /* === 메인 컨텐츠 영역 === */
@@ -46,6 +45,15 @@
     .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.95); position: sticky; top: 0; z-index: 5; }
     .page-title { font-size: 1.4rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 10px; color: #fff; }
     .content-container { padding: 30px 40px; width: 100%; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
+
+    /* 메인 카테고리 탭 (이벤트 / 팝업) */
+    .main-category-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+    .main-category-tabs .btn-switch-tab { min-width: 140px; }
+    .main-section { display: none; flex-direction: column; gap: 25px; }
+    .main-section.active { display: flex; }
+    .status-scheduled { background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .btn-cancel { background: #27272a; color: #fff; border: 1px solid #3f3f46; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Pentabreed', 'Pretendard', sans-serif; width: 100%; margin-top: 8px; }
+    .hint { font-size: 0.75rem; color: var(--text-sub); margin-top: 4px; }
 
     /* 서브 탭 스타일 */
     .view-switch-btns { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
@@ -165,9 +173,7 @@
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
-        <li class="nav-item active" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎉</span> 이벤트/프로모션</div></li>
-        <li class="nav-sub-item active" onclick="location.href='admin_events.html'">· 이벤트 캠페인 관리</li>
-        <li class="nav-sub-item" onclick="location.href='admin_popups.html'">· 메인 팝업 관리</li>
+        <li class="nav-item active" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
         <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
         <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
         <li class="nav-item" onclick="location.href='admin_statistics.html'"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
@@ -194,6 +200,13 @@
     </header>
 
     <div class="content-container">
+
+        <div class="main-category-tabs view-switch-btns" style="border-bottom:none;padding-bottom:0;">
+            <button type="button" class="btn-switch-tab active" id="mainTabEventsBtn" onclick="switchMainSection('events')">📋 이벤트 관리</button>
+            <button type="button" class="btn-switch-tab" id="mainTabPopupsBtn" onclick="switchMainSection('popups')">🎉 팝업 관리</button>
+        </div>
+
+        <div id="sectionEvents" class="main-section active">
         
         <div class="view-switch-btns">
             <button class="btn-switch-tab active" id="tabListBtn" onclick="switchView('list')">📋 진행/종료 이벤트 목록</button>
@@ -370,6 +383,88 @@
             <button class="btn-submit-main" id="btnSubmitForm" onclick="executeSubmitEvent()">🚀 이벤트 설정 저장 완료</button>
         </div>
 
+        </div>
+
+        <div id="sectionPopups" class="main-section">
+            <p class="hint" style="font-size:0.9rem;line-height:1.5;margin:0;">
+                메인 화면(<code>index.html</code>) 하단 바텀 시트 팝업을 관리합니다.
+                <strong style="color:var(--neon-blue);">is_active ON</strong> 이고 노출 기간 내인 팝업만 유저에게 표시됩니다.
+            </p>
+
+            <div class="view-switch-btns">
+                <button type="button" class="btn-switch-tab active" id="popupTabListBtn">📋 팝업 목록</button>
+                <button type="button" class="btn-switch-tab" id="popupTabFormBtn">➕ 팝업 등록/수정</button>
+                <button type="button" class="btn-switch-tab" id="popupNewBtn" style="margin-left:auto;">신규 등록</button>
+            </div>
+
+            <div id="popupViewList" class="view-panel active">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:28%;">제목</th>
+                            <th style="width:22%;">노출 기간</th>
+                            <th style="width:12%;">상태</th>
+                            <th style="width:12%;text-align:center;">메인 노출</th>
+                            <th style="width:10%;text-align:center;">미리보기</th>
+                            <th style="width:16%;text-align:center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="popupListTableBody">
+                        <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px;">팝업 관리 탭을 열면 목록이 표시됩니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="popupViewForm" class="view-panel">
+                <div class="form-card">
+                    <div class="form-section-title" id="popupFormTitle">➕ 신규 팝업 등록</div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="popupTitleInput">팝업 제목 <span style="color:var(--neon-pink);">*</span></label>
+                        <input type="text" class="form-input" id="popupTitleInput" placeholder="예: 6월 웰컴 이벤트">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="popupStartInput">노출 시작 <span style="color:var(--neon-pink);">*</span></label>
+                            <input type="datetime-local" class="form-input" id="popupStartInput">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="popupEndInput">노출 종료 <span style="color:var(--neon-pink);">*</span></label>
+                            <input type="datetime-local" class="form-input" id="popupEndInput">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="popupLinkInput">클릭 이동 링크 (선택)</label>
+                        <input type="url" class="form-input" id="popupLinkInput" placeholder="https://... 또는 user_app/event.html?id=...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">팝업 이미지 <span style="color:var(--neon-pink);">*</span></label>
+                        <input type="file" id="popupImageFileInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                        <div class="drop-zone-box" id="popupImageDropZone">📸 팝업 이미지 업로드</div>
+                        <p class="hint" style="margin-top:8px;color:var(--neon-blue);font-weight:700;">
+                            * 권장 사이즈: 600×600px (1:1 비율) / 최대 2MB
+                        </p>
+                        <p class="hint">또는 아래에 이미지 URL을 직접 입력할 수 있습니다.</p>
+                        <input type="url" class="form-input" id="popupImageUrlInput" placeholder="https://.../popup.jpg" style="margin-top:8px;">
+                    </div>
+
+                    <div class="form-group" style="flex-direction:row;align-items:center;gap:12px;">
+                        <label class="switch">
+                            <input type="checkbox" id="popupActiveInput" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="form-label" style="margin:0;">메인 화면 노출 (is_active)</span>
+                    </div>
+
+                    <button type="button" class="btn-submit-main" id="popupSubmitBtn">🚀 팝업 등록 완료</button>
+                    <button type="button" class="btn-cancel" id="popupCancelBtn">취소 · 목록으로</button>
+                </div>
+            </div>
+        </div>
+
     </div>
   </main>
 
@@ -456,10 +551,31 @@
         return match ? match[0] : s;
     }
 
-    // 서브 뷰 전환
+    // 메인 섹션 전환 (이벤트 / 팝업)
+    function switchMainSection(section) {
+        var isEvents = section !== 'popups';
+        document.getElementById('mainTabEventsBtn').classList.toggle('active', isEvents);
+        document.getElementById('mainTabPopupsBtn').classList.toggle('active', !isEvents);
+        document.getElementById('sectionEvents').classList.toggle('active', isEvents);
+        document.getElementById('sectionPopups').classList.toggle('active', !isEvents);
+        if (!isEvents && window.AdminPopups && window.AdminPopups.ensureInit) {
+            window.AdminPopups.ensureInit();
+        }
+        if (!isEvents) {
+            try { history.replaceState(null, '', '#popups'); } catch (e) { /* noop */ }
+        } else {
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* noop */ }
+        }
+    }
+
+    // 이벤트 서브 뷰 전환
     function switchView(viewType) {
-        document.querySelectorAll('.btn-switch-tab').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+        document.querySelectorAll('#sectionEvents .view-switch-btns .btn-switch-tab').forEach(function (btn) {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('#sectionEvents .view-panel').forEach(function (panel) {
+            panel.classList.remove('active');
+        });
 
         if(viewType === 'list') {
             document.getElementById('tabListBtn').classList.add('active');
@@ -672,8 +788,13 @@
     }
 
     syncJoinTypeConditionalFields();
+
+    if (window.location.hash === '#popups') {
+      switchMainSection('popups');
+    }
   </script>
   <script src="js/admin-events.js?v=20260617_event_upload"></script>
+  <script src="js/admin-popups.js?v=20260617_popup3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>

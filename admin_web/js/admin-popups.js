@@ -72,14 +72,16 @@
     return ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
   }
 
+  var POPUP_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+
   function validateImageFile(file) {
     if (!file) throw new Error('이미지 파일이 없습니다.');
     var allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (file.type && allowed.indexOf(file.type) === -1) {
       throw new Error('JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다.');
     }
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error('이미지는 10MB 이하만 업로드할 수 있습니다.');
+    if (file.size > POPUP_IMAGE_MAX_BYTES) {
+      throw new Error('이미지 용량은 최대 2MB까지 업로드할 수 있습니다.');
     }
   }
 
@@ -117,7 +119,7 @@
       zone.innerHTML =
         '<img src="' +
         escapeHtml(previewUrl) +
-        '" alt="" style="width:100%;min-height:160px;max-height:240px;object-fit:contain;border-radius:8px;display:block;background:#000;">';
+        '" alt="" style="width:100%;height:100%;max-height:200px;object-fit:cover;border-radius:8px;display:block;background:#000;">';
       zone.classList.add('has-preview');
       return;
     }
@@ -477,21 +479,22 @@
     bindImageInput();
   }
 
-  async function initAdminPopups() {
+  var popupsInitialized = false;
+
+  async function ensureInit() {
+    if (popupsInitialized) {
+      await loadPopups();
+      return;
+    }
+    if (!document.getElementById('sectionPopups')) return;
+    popupsInitialized = true;
     bindEvents();
     await loadPopups();
   }
 
-  window.switchPopupView = switchPopupView;
-  window.initAdminPopups = initAdminPopups;
-
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.PickleAdminNav && window.PickleAdminNav.safeInit) {
-      window.PickleAdminNav.safeInit('Popups', initAdminPopups);
-    } else {
-      initAdminPopups().catch(function (err) {
-        console.error('[Admin Popups] init failed', err);
-      });
-    }
-  });
+  window.AdminPopups = {
+    ensureInit: ensureInit,
+    switchPopupView: switchPopupView,
+    loadPopups: loadPopups,
+  };
 })();
