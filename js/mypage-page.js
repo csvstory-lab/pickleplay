@@ -431,9 +431,18 @@
     fillProfileDemographicsForm(demoRow);
   }
 
+  async function refreshMessageInboxBadgeSafe(user) {
+    if (!user || !user.id) return;
+    if (!window.PickleMessages || !window.PickleMessages.refreshInboxBadge) return;
+    try {
+      await window.PickleMessages.refreshInboxBadge(user.id);
+    } catch (err) {
+      console.error('[P!CKLE Mypage] message inbox badge failed', err);
+    }
+  }
+
   async function renderProfile(user) {
     currentUser = user;
-    currentUserRankingPoints = await fetchCurrentUserRankingPoints(user);
     var name = getDisplayName(user);
 
     var nickEl = document.getElementById('mainNickname');
@@ -443,8 +452,6 @@
     } else if (nickEl) {
       nickEl.textContent = name;
     }
-
-    updateLevelExpUI(currentUserRankingPoints);
 
     var bioEl = document.getElementById('mainBio');
     if (bioEl) {
@@ -459,13 +466,23 @@
     fillProfileEditForm(user);
     renderSnsLinkStatus(user);
 
+    try {
+      currentUserRankingPoints = await fetchCurrentUserRankingPoints(user);
+    } catch (err) {
+      console.error('[P!CKLE Mypage] ranking points load failed', err);
+      currentUserRankingPoints = 0;
+    }
+    updateLevelExpUI(currentUserRankingPoints);
+
     if (window.PickleFollows && window.PickleFollows.loadFollowStats) {
-      await window.PickleFollows.loadFollowStats(user.id);
+      try {
+        await window.PickleFollows.loadFollowStats(user.id);
+      } catch (err) {
+        console.error('[P!CKLE Mypage] follow stats load failed', err);
+      }
     }
 
-    if (window.PickleMessages && window.PickleMessages.refreshInboxBadge) {
-      await window.PickleMessages.refreshInboxBadge(user.id);
-    }
+    await refreshMessageInboxBadgeSafe(user);
   }
 
   async function resolveAuthUserOnly() {

@@ -1,11 +1,11 @@
 /**
  * P!CKLE — 쪽지(메시지) 작성 · 메시지함 · 읽지 않음 뱃지 · 발송 방어
- * @build 20260617_messages2
+ * @build 20260617_messages3
  */
 (function () {
   'use strict';
 
-  var STYLE_ID = 'pickle-messages-styles';
+  var STYLE_ID = 'pickle-messages-styles-v3';
   var TOAST_ID = 'pickleMessageToast';
   var MOUNTED = false;
   var currentTargetUserId = null;
@@ -199,14 +199,17 @@
       '.pickle-message-overlay.open{opacity:1;visibility:visible}' +
       '.pickle-message-compose{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:10201;background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);font-family:Pretendard,sans-serif}' +
       '.pickle-message-compose.open{transform:translateY(0)}' +
-      '.pickle-message-compose .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}' +
-      '.pickle-message-compose .modal-title{margin:0;font-size:1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px}' +
+      '.pickle-message-compose .modal-header{position:relative;padding:4px 48px 14px 4px;margin-bottom:14px;min-height:40px}' +
+      '.pickle-message-compose .modal-title{margin:0;font-size:1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;padding-right:8px}' +
       '.pickle-message-compose .modal-title .ph{color:#4ade80}' +
-      '.pickle-message-compose .btn-close{background:#2c2c2e;border:1px solid rgba(255,255,255,.1);color:#a1a1aa;border-radius:50%;width:32px;height:32px;cursor:pointer}' +
+      '.pickle-message-compose .btn-close{position:absolute;top:15px;right:15px;z-index:2;background:#2c2c2e;border:1px solid rgba(255,255,255,.1);color:#a1a1aa;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}' +
       '.pickle-message-compose .form-textarea{width:100%;box-sizing:border-box;background:#0a0a0c;border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;padding:12px;font-family:inherit;font-size:.85rem;resize:vertical;min-height:110px;margin-bottom:12px}' +
       '.pickle-message-compose .btn-send{width:100%;padding:14px;border:none;border-radius:14px;background:#4ade80;color:#0a0a0c;font-weight:800;font-size:.92rem;cursor:pointer}' +
       '.pickle-message-inbox-sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:10201;background:#1c1c1e;border-radius:20px 20px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);max-height:78vh;display:flex;flex-direction:column;font-family:Pretendard,sans-serif}' +
       '.pickle-message-inbox-sheet.open{transform:translateY(0)}' +
+      '#pickleMessageInboxSheet .modal-header{position:relative;flex-shrink:0;padding:4px 48px 12px 4px;margin-bottom:8px;min-height:40px}' +
+      '#pickleMessageInboxSheet .modal-title{margin:0;font-size:1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px}' +
+      '#pickleMessageInboxSheet .btn-close{position:absolute;top:15px;right:15px;z-index:2;background:#2c2c2e;border:1px solid rgba(255,255,255,.1);color:#a1a1aa;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}' +
       '.pickle-message-inbox-list{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px}' +
       '.pickle-message-inbox-item{background:#2c2c2e;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px}' +
       '.pickle-message-inbox-item.unread{border-color:rgba(255,160,146,.35);background:rgba(255,160,146,.06)}' +
@@ -421,13 +424,20 @@
     var sb = getClient();
     if (!sb) return 0;
 
-    var res = await sb
-      .from('messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('receiver_id', userId)
-      .eq('is_read', false);
+    try {
+      var res = await sb
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
+        .eq('is_read', false);
 
-    if (!res.error && res.count != null) return Number(res.count) || 0;
+      if (!res.error && res.count != null) return Number(res.count) || 0;
+      if (res.error) {
+        console.error('[P!CKLE Messages] unread count failed', res.error);
+      }
+    } catch (err) {
+      console.error('[P!CKLE Messages] unread count exception', err);
+    }
     return 0;
   }
 
@@ -447,18 +457,24 @@
   }
 
   async function refreshInboxBadge(userId) {
-    var uid = userId;
-    if (!uid) {
-      var user = await getCurrentUser();
-      uid = user && user.id;
-    }
-    if (!uid) {
+    try {
+      var uid = userId;
+      if (!uid) {
+        var user = await getCurrentUser();
+        uid = user && user.id;
+      }
+      if (!uid) {
+        updateInboxBadge(0);
+        return 0;
+      }
+      var count = await fetchUnreadCount(uid);
+      updateInboxBadge(count);
+      return count;
+    } catch (err) {
+      console.error('[P!CKLE Messages] refreshInboxBadge failed', err);
       updateInboxBadge(0);
       return 0;
     }
-    var count = await fetchUnreadCount(uid);
-    updateInboxBadge(count);
-    return count;
   }
 
   async function markMessageRead(messageId) {
@@ -642,7 +658,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     mountMessageUi();
     if (document.getElementById('btnMessageInbox')) {
-      refreshInboxBadge();
+      refreshInboxBadge().catch(function (err) {
+        console.error('[P!CKLE Messages] initial badge refresh failed', err);
+      });
     }
   });
 })();
