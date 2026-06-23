@@ -38,6 +38,7 @@
     .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
     .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
     .nav-sub-item:hover { color: #fff; }
+    .nav-sub-item.active { color: var(--neon-blue); font-weight: 800; }
     .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
 
     /* === 메인 컨텐츠 영역 === */
@@ -164,7 +165,9 @@
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
-        <li class="nav-item active" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item active" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎉</span> 이벤트/프로모션</div></li>
+        <li class="nav-sub-item active" onclick="location.href='admin_events.html'">· 이벤트 캠페인 관리</li>
+        <li class="nav-sub-item" onclick="location.href='admin_popups.html'">· 메인 팝업 관리</li>
         <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
         <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
         <li class="nav-item" onclick="location.href='admin_statistics.html'"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
