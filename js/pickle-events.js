@@ -181,7 +181,7 @@
     var titleStyle = ended ? ' style="color:#d4d4d8;"' : '';
     var periodStyle = ended ? ' style="margin-top: 15px;"' : '';
     var periodExtra = ended
-      ? '<span class="winner-tag">🎉 당첨자 확인 ❯</span>'
+      ? '<span class="winner-tag">당첨자 확인</span>'
       : buildPointTagHtml(row.participate_points);
 
     return (
@@ -278,7 +278,7 @@
         .map(function (group) {
           var rankLabel =
             group.rank != null
-              ? '<div style="font-size:0.78rem;font-weight:900;color:var(--theme-gold);margin-bottom:8px;letter-spacing:0.04em;">' +
+              ? '<div style="font-size:0.78rem;font-weight:800;color:var(--point-gold);margin-bottom:8px;letter-spacing:-0.02em;">' +
                 escapeHtml(formatRankLabel(group.rank)) +
                 '</div>'
               : '';
@@ -303,7 +303,7 @@
     return (
       '<div class="winner-box">' +
       '<h3 class="winner-title">' +
-      escapeHtml(row.winner_box_title || '🎉 당첨자 발표') +
+      escapeHtml(row.winner_box_title || '당첨자 발표') +
       '</h3>' +
       buildWinnerListBodyHtml(winners) +
       '</div>'
@@ -605,7 +605,7 @@
   function buildWinnerClaimButtonHtml() {
     return (
       '<button class="btn-participate-huge btn-winner-claim" type="button" id="btnOpenWinnerForm">' +
-      '🎁 경품 수령 정보 입력하기' +
+      '경품 수령 정보 입력하기' +
       '</button>'
     );
   }

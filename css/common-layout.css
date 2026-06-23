@@ -54,13 +54,19 @@ header#mainHeader {
   color: var(--text-main) !important;
   padding: 6px 14px !important;
   border-radius: 999px;
+  font-family: 'Pretendard', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   transition: 0.2s;
+}
+
+.btn-category .ph-fire {
+  font-size: 0.95rem;
+  color: #ff85a1;
 }
 
 .icon-search-top {
@@ -139,9 +145,11 @@ header#mainHeader {
 }
 
 .sheet-title {
-  font-family: 'Black Han Sans', sans-serif;
-  font-size: 1.2rem;
-  color: var(--point-green);
+  font-family: 'Pretendard', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #73a5ff;
+  letter-spacing: -0.02em;
 }
 
 .btn-close {

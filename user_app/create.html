@@ -172,14 +172,27 @@
     
     /* 🛠️ [수정 9] 동의 체크박스 UI 디자인 */
     .legal-check-wrap { display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer; }
-    .legal-check-wrap input[type="checkbox"] { 
-        appearance: none; width: 22px; height: 22px; border: 2px solid var(--border-soft); 
-        border-radius: 6px; background: var(--bg-base); cursor: pointer; position: relative; transition: 0.2s;
+    .legal-check-wrap input[type="checkbox"] {
+        appearance: none; -webkit-appearance: none;
+        width: 22px; height: 22px; min-width: 22px;
+        border: 2px solid rgba(255, 255, 255, 0.55);
+        border-radius: 6px;
+        background: #2c2c2e;
+        cursor: pointer; position: relative; transition: 0.2s;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
     }
-    .legal-check-wrap input[type="checkbox"]:checked { background: var(--point-blue); border-color: var(--point-blue); }
-    .legal-check-wrap input[type="checkbox"]:checked::after { 
-        content: '✔'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        color: #000; font-size: 0.85rem; font-weight: 900; 
+    .legal-check-wrap input[type="checkbox"]:hover {
+        border-color: rgba(255, 255, 255, 0.75);
+        background: #353538;
+    }
+    .legal-check-wrap input[type="checkbox"]:checked {
+        background: rgba(115, 165, 255, 0.35);
+        border-color: var(--point-blue);
+    }
+    .legal-check-wrap input[type="checkbox"]:checked::after {
+        content: '✔'; position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ffffff; font-size: 0.8rem; font-weight: 900;
     }
     .legal-check-label { font-size: 0.85rem; font-weight: 700; color: #fff; }
 
@@ -364,9 +377,9 @@
             음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
         </div>
         <!-- 잃어버린 체크박스 복구 -->
-        <label class="legal-check-wrap" style="display:flex; align-items:center; gap:8px; margin-top:12px; cursor:pointer;">
-            <input type="checkbox" id="legalAgreeCheck" style="accent-color:var(--point-pink); width:18px; height:18px;">
-            <span class="legal-check-label" style="font-size:0.85rem; color:var(--text-main); font-weight:700;">위 내용을 확인하였으며, 이에 동의합니다.</span>
+        <label class="legal-check-wrap">
+            <input type="checkbox" id="legalAgreeCheck">
+            <span class="legal-check-label">위 내용을 확인하였으며, 이에 동의합니다.</span>
         </label>
     </div>
 

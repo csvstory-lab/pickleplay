@@ -9,7 +9,7 @@
     '<div class="top-row" id="headerTopRow">' +
     '<h1 class="logo" onclick="PickleAuth.navigateWhenAuthReady(\'index.html\')">P!CKLE</h1>' +
     '<div class="header-actions">' +
-    '<button type="button" class="btn-category" onclick="toggleCategorySheet()">전체 불판</button>' +
+    '<button type="button" class="btn-category" onclick="toggleCategorySheet()"><i class="ph-fill ph-fire" aria-hidden="true"></i> 전체 불판</button>' +
     '<i class="ph ph-magnifying-glass icon-search-top" onclick="PickleAuth.navigateWhenAuthReady(\'search.html\')"></i>' +
     '<i class="ph ph-bell noti-bell" onclick="alert(\'알림 기능은 준비 중입니다.\')"></i>' +
     '</div>' +
@@ -18,7 +18,7 @@
     '<div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>' +
     '<div class="bottom-sheet" id="categorySheet">' +
     '<div class="sheet-header">' +
-    '<div class="sheet-title">모든 불판 탐험 🚀</div>' +
+    '<div class="sheet-title">모든 불판 탐험</div>' +
     '<button type="button" class="btn-close" onclick="closeAllDrawers()">✕</button>' +
     '</div>' +
     '<div class="category-grid" id="categoryGrid"></div>' +
