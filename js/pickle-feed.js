@@ -909,8 +909,11 @@
     );
   }
 
-  function buildKingCardHtml(post) {
+  function buildKingCardHtml(post, cardIndex) {
     if (!post || post.id == null) return '';
+
+    var pickVariants = ['coral', 'blue', 'mint'];
+    var pickVariant = pickVariants[(cardIndex || 0) % 3];
 
     return (
       '<article class="king-card" data-id="' +
@@ -924,8 +927,9 @@
       escapeHtml(safeStr(post.title, '제목 없음')) +
       '</h2>' +
       renderKingAbBox(post) +
-      /* 💡 기존 옛날 투표 문구에서 [✔️ 내 픽 남기기]로 텍스트 자체를 정석으로 바꿈 */
-      '<button type="button" class="btn-pick">✔️ 내 픽 남기기</button>' +
+      '<button type="button" class="btn-pick btn-pick--' +
+      pickVariant +
+      '"><span class="btn-pick-icon-circle" aria-hidden="true">✓</span> 내 픽 남기기</button>' +
       renderFeedCardMetaFooter(post) +
       '</div>' +
       '</article>'
@@ -1008,9 +1012,9 @@
     }
 
     var htmlParts = [];
-    safePosts.forEach(function (post) {
+    safePosts.forEach(function (post, index) {
       try {
-        var html = buildKingCardHtml(post);
+        var html = buildKingCardHtml(post, index);
         if (html) htmlParts.push(html);
       } catch (err) {
         console.warn('[P!CKLE Feed] 킹 카드 렌더 스킵', post && post.id, err);

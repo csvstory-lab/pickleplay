@@ -50,7 +50,21 @@
     /* === 메인 콘텐츠 === */
     main { padding: 20px 0 100px 0; position: relative; z-index: 1; }
     .section-header { margin-bottom: 16px; padding: 0 20px; }
-    .section-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+    .section-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.25rem; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+
+  .section-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+  }
+  .section-title-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
 
     /* 오늘의 픽클 & 실시간 불판 공통 구조 */
     .horizontal-scroll-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding: 0 20px 20px 20px; scrollbar-width: none; }
@@ -82,7 +96,7 @@
     /* 전체 피드에서 궁금증 유발을 위한 A/B 선택지 텍스트창 완전 숨김 */
     .king-ab-box, .text-vs-box { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; overflow: hidden !important; } 
 
-    /* 👑 오늘의 픽클 버튼 스타일 정의 */
+    /* 👑 오늘의 픽클 버튼 — 파스텔 3종 */
     .king-card .btn-pick {
         order: 4 !important; 
         width: 100% !important; 
@@ -90,8 +104,6 @@
         padding: 19px 16px !important; 
         border-radius: 14px !important; 
         border: none !important;
-        background: var(--bg-elevated) !important; 
-        color: var(--text-main) !important; 
         font-family: 'Pretendard', sans-serif !important; 
         font-size: 0.95rem !important; 
         font-weight: 700 !important; 
@@ -100,12 +112,24 @@
         justify-content: center !important; 
         align-items: center !important; 
         gap: 8px !important; 
-        transition: 0.2s !important; 
+        transition: transform 0.2s ease, filter 0.2s ease !important; 
         margin-top: 4px !important;
     }
-    .king-card .btn-pick:active { background: #3a3a3c !important; }
+    .king-card .btn-pick--coral {
+        background: #FFD4DE !important;
+        color: #3D2830 !important;
+    }
+    .king-card .btn-pick--blue {
+        background: #C8DCFF !important;
+        color: #1E2A3D !important;
+    }
+    .king-card .btn-pick--mint {
+        background: #C5F0DC !important;
+        color: #1A3328 !important;
+    }
+    .king-card .btn-pick:active { transform: scale(0.98); filter: brightness(0.96); }
 
-    /* 원형 미니 체크 배지 디자인 */
+    /* 원형 미니 체크 배지 */
     .king-card .btn-pick-icon-circle {
         display: flex !important;
         align-items: center !important;
@@ -113,10 +137,21 @@
         width: 18px !important;
         height: 18px !important;
         border-radius: 50% !important;
-        background-color: var(--point-green) !important; 
-        color: #0a0a0c !important; 
-        font-size: 0.7rem !important;
+        font-size: 0.68rem !important;
         font-weight: 900 !important;
+        flex-shrink: 0 !important;
+    }
+    .king-card .btn-pick--coral .btn-pick-icon-circle {
+        background-color: #FF85A1 !important;
+        color: #fff !important;
+    }
+    .king-card .btn-pick--blue .btn-pick-icon-circle {
+        background-color: #73A5FF !important;
+        color: #fff !important;
+    }
+    .king-card .btn-pick--mint .btn-pick-icon-circle {
+        background-color: #4ADE80 !important;
+        color: #0a0a0c !important;
     }
 
     /* 🔥 지금 뜨거운 불판 리스트 - 버튼 가리기 전술 적용 */
@@ -156,7 +191,18 @@
     <!-- 👑 오늘의 픽클 섹션 -->
     <section>
         <div class="section-header">
-            <h2 class="section-title"><span style="color:var(--point-gold);">👑</span> 오늘의 픽클</h2>
+            <h2 class="section-title">
+                <span class="section-title-icon section-title-icon--crown" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 17h16v3H4v-3z" fill="#E8D48B"/>
+                        <path d="M4 17L7 7l5 5.5L17 7l3 10H4z" fill="#FDE68A" stroke="#E8C96A" stroke-width="1.1" stroke-linejoin="round"/>
+                        <circle cx="7" cy="7.5" r="1.4" fill="#FFF8DC"/>
+                        <circle cx="12" cy="9.5" r="1.4" fill="#FFF8DC"/>
+                        <circle cx="17" cy="7.5" r="1.4" fill="#FFF8DC"/>
+                    </svg>
+                </span>
+                오늘의 픽클
+            </h2>
         </div>
         <div class="horizontal-scroll-container" id="aiCurationContainer">
             <div class="feed-loading">
@@ -169,7 +215,16 @@
     <!-- 🔥 지금 뜨거운 불판 섹션 -->
     <section class="list-section">
         <div class="section-header" style="padding:0;">
-            <h2 class="section-title"><span style="color:var(--point-pink);">🔥</span> 지금 뜨거운 불판</h2>
+            <h2 class="section-title">
+                <span class="section-title-icon section-title-icon--fire" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22c4.2-3.2 7.5-7.2 7.5-11.8C19.5 5.8 16 3.5 12 6.2 8 3.5 4.5 5.8 4.5 10.2 4.5 14.8 7.8 18.8 12 22z" fill="#FFB8C6"/>
+                        <path d="M12 19.8c2.4-1.9 4.3-4.6 4.3-7.8 0-2.8-1.9-4.2-4.3-2.3-2.4-1.9-4.3-.5-4.3 2.3 0 3.2 1.9 5.9 4.3 7.8z" fill="#FF85A1"/>
+                        <ellipse cx="12" cy="14.5" rx="1.8" ry="2.5" fill="#FFD4DE" opacity="0.85"/>
+                    </svg>
+                </span>
+                지금 뜨거운 불판
+            </h2>
         </div>
         <div id="hotFeedList">
             <div class="feed-loading">
@@ -197,7 +252,7 @@
 <script src="../js/pickle-categories.js"></script>
 <!-- 💡 하단 레이아웃 밸런싱 동기화를 위한 캐시 폭파 버전 업데이트 -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script src="../js/pickle-feed.js?v=0627"></script>
+<script src="../js/pickle-feed.js?v=20260617_pastel1"></script>
 <script src="../js/pickle-popup.js?v=20260617_popup7"></script>
 <script src="../js/mobile-touch-guard.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
