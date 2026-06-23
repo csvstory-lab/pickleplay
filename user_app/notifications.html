@@ -14,34 +14,34 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>P!CKLE - 알림</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <style>
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --theme-gold: #ffcc00;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FFA092;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
-        --border-color: #27272a;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
     }
 
     * { box-sizing: border-box; }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        margin: 0; padding: 0; background-color: var(--bg-base); color: var(--text-main);
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         min-height: 100vh; -webkit-tap-highlight-color: transparent;
     }
 
     header {
         position: sticky; top: 0; z-index: 100;
-        background: rgba(9, 9, 11, 0.95); backdrop-filter: blur(12px);
-        border-bottom: 3px solid #000;
-        box-shadow: 0 4px 0 var(--neon-green);
+        background: rgba(10, 10, 12, 0.92); backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--border-soft);
     }
 
     .top-row {
@@ -50,35 +50,33 @@
     }
 
     .btn-back {
-        width: 40px; height: 40px; border: 3px solid #000; border-radius: 12px;
-        background: var(--card-bg); color: #fff;
-        cursor: pointer; box-shadow: 3px 3px 0 #000;
-        display: flex; align-items: center; justify-content: center;
-        transition: transform 0.15s;
+        width: 40px; height: 40px; border: 1px solid var(--border-card); border-radius: 12px;
+        background: var(--bg-card); color: var(--text-main);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: transform 0.15s, background 0.15s;
     }
-    .btn-back i { font-size: 1.5rem; line-height: 1; }
-    .btn-back:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+    .btn-back i { font-size: 1.35rem; line-height: 1; }
+    .btn-back:active { transform: scale(0.96); background: var(--bg-elevated); }
 
     .page-heading { flex: 1; min-width: 0; }
     .page-heading h1 {
-        margin: 0; font-family: 'Black Han Sans', sans-serif; font-size: 1.55rem;
-        letter-spacing: -0.5px; color: var(--neon-green);
-        text-shadow: 2px 2px 0 #000;
+        margin: 0; font-family: 'Pretendard', sans-serif; font-size: 1.25rem; font-weight: 800;
+        letter-spacing: -0.02em; color: var(--text-main);
+        display: flex; align-items: center; gap: 8px;
     }
+    .page-heading h1 .title-icon { color: var(--point-blue); font-size: 1.3rem; }
     .page-heading p {
-        margin: 2px 0 0; font-size: 0.72rem; font-weight: 700; color: var(--text-sub);
+        margin: 4px 0 0; font-size: 0.72rem; font-weight: 700; color: var(--text-sub);
     }
 
     .btn-read-all {
-        border: 3px solid #000; border-radius: 999px; padding: 8px 12px;
-        background: var(--card-bg); color: var(--text-sub); font-size: 0.72rem; font-weight: 800;
-        cursor: pointer; box-shadow: 3px 3px 0 #000; white-space: nowrap;
+        border: 1px solid var(--border-card); border-radius: 999px; padding: 8px 12px;
+        background: var(--bg-card); color: var(--text-sub); font-size: 0.72rem; font-weight: 800;
+        cursor: pointer; white-space: nowrap;
         font-family: inherit; transition: transform 0.15s, background 0.15s, color 0.15s;
     }
-    .btn-read-all:not(:disabled):active {
-        transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000;
-    }
-    .btn-read-all:not(:disabled):hover { color: #fff; }
+    .btn-read-all:not(:disabled):active { transform: scale(0.97); }
+    .btn-read-all:not(:disabled):hover { color: var(--text-main); background: var(--bg-elevated); }
     .btn-read-all:disabled { opacity: 0.45; cursor: not-allowed; }
 
     main { padding: 16px 16px 100px; }
@@ -90,67 +88,67 @@
 
     .noti-page-item {
         position: relative; display: flex; align-items: flex-start; gap: 14px;
-        padding: 16px; background: var(--card-bg);
-        border: 3px solid #000; border-radius: 16px;
-        box-shadow: 4px 4px 0 #000;
+        padding: 16px; background: var(--bg-card);
+        border: 1px solid var(--border-card); border-radius: 18px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
         cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
     }
-    .noti-page-item:active {
-        transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000;
-    }
+    .noti-page-item:active { transform: scale(0.98); }
     .noti-page-item.unread {
-        background: linear-gradient(135deg, rgba(57, 255, 20, 0.08), var(--card-bg));
-        border-color: var(--neon-green);
-        box-shadow: 4px 4px 0 var(--neon-green);
+        background: linear-gradient(135deg, rgba(74, 222, 128, 0.06), var(--bg-card));
+        border-color: rgba(74, 222, 128, 0.35);
+        box-shadow: 0 4px 20px rgba(74, 222, 128, 0.08);
     }
 
     .noti-page-icon {
-        width: 46px; height: 46px; flex-shrink: 0;
-        border: 3px solid #000; border-radius: 14px;
-        background: #27272a; display: flex; align-items: center; justify-content: center;
-        font-size: 1.35rem; box-shadow: 2px 2px 0 #000;
+        width: 44px; height: 44px; flex-shrink: 0;
+        border: 1px solid var(--border-soft); border-radius: 14px;
+        background: var(--bg-elevated); display: flex; align-items: center; justify-content: center;
+        font-size: 1.25rem; color: var(--text-main);
     }
-    .noti-page-item.type-comment .noti-page-icon { border-color: var(--neon-blue); }
-    .noti-page-item.type-result .noti-page-icon { border-color: var(--neon-green); }
-    .noti-page-item.type-honor .noti-page-icon { border-color: var(--theme-gold); }
-    .noti-page-item.type-mypick .noti-page-icon { border-color: var(--theme-gold); }
-    .noti-page-item.type-vote .noti-page-icon { border-color: var(--neon-pink); }
-    .noti-page-item.type-end .noti-page-icon { border-color: #ff6b35; }
+    .noti-page-item.type-comment .noti-page-icon { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.35); }
+    .noti-page-item.type-reply .noti-page-icon { color: var(--point-blue); border-color: rgba(115, 165, 255, 0.35); }
+    .noti-page-item.type-result .noti-page-icon { color: var(--point-green); border-color: rgba(74, 222, 128, 0.35); }
+    .noti-page-item.type-honor .noti-page-icon { color: var(--point-gold); border-color: rgba(252, 211, 77, 0.35); }
+    .noti-page-item.type-mypick .noti-page-icon { color: var(--point-gold); border-color: rgba(252, 211, 77, 0.35); }
+    .noti-page-item.type-vote .noti-page-icon { color: var(--point-pink); border-color: rgba(255, 160, 146, 0.35); }
+    .noti-page-item.type-end .noti-page-icon { color: var(--point-gold); border-color: rgba(252, 211, 77, 0.35); }
+    .noti-page-item.type-penalty .noti-page-icon { color: var(--point-pink); border-color: rgba(255, 160, 146, 0.4); }
+    .noti-page-item.type-system .noti-page-icon { color: var(--point-blue); }
 
     .noti-page-body { flex: 1; min-width: 0; padding-right: 8px; }
     .noti-page-message {
         margin: 0 0 6px; font-size: 0.92rem; font-weight: 700; line-height: 1.45;
-        color: #fff; word-break: keep-all;
+        color: var(--text-main); word-break: keep-all;
     }
     .noti-page-time { font-size: 0.72rem; font-weight: 700; color: var(--text-sub); }
 
     .noti-page-dot {
         position: absolute; top: 16px; right: 14px;
-        width: 10px; height: 10px; border-radius: 50%;
-        background: #ff0033; border: 2px solid #000;
-        box-shadow: 0 0 8px rgba(255, 0, 51, 0.8);
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--point-pink);
+        box-shadow: 0 0 8px rgba(255, 160, 146, 0.6);
     }
 
     .noti-page-loading,
     .noti-page-empty {
         text-align: center; padding: 48px 20px;
-        border: 3px dashed #3f3f46; border-radius: 20px;
-        background: rgba(24, 24, 27, 0.6);
+        border: 1px dashed var(--border-card); border-radius: 20px;
+        background: rgba(28, 28, 30, 0.6);
     }
-    .noti-page-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .noti-page-empty-title { margin: 0 0 6px; font-size: 1rem; font-weight: 900; }
+    .noti-page-empty-icon {
+        font-size: 2rem; margin-bottom: 12px; color: var(--text-sub);
+        display: flex; justify-content: center;
+    }
+    .noti-page-empty-title { margin: 0 0 6px; font-size: 1rem; font-weight: 800; }
     .noti-page-empty-desc { margin: 0; font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }
 
     .noti-page-spinner {
         width: 36px; height: 36px; margin: 0 auto 12px;
-        border: 4px solid #333; border-top-color: var(--neon-green);
+        border: 3px solid var(--bg-elevated); border-top-color: var(--point-green);
         border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .noti-bell { font-size: 1.5rem; position: relative; cursor: pointer; display: flex; align-items: center; transition: 0.2s; }
-    .noti-bell:active { transform: scale(0.9); }
-
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/mobile-shell.css">
@@ -167,7 +165,7 @@
     <div class="top-row">
         <button type="button" class="btn-back" onclick="history.back()" aria-label="뒤로"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
         <div class="page-heading">
-            <h1>🔔 알림</h1>
+            <h1><i class="ph ph-bell title-icon" aria-hidden="true"></i> 알림</h1>
             <p id="notiUnreadCount" hidden></p>
         </div>
         <button type="button" class="btn-read-all" id="btnMarkAllRead" disabled>모두 읽음</button>
@@ -193,7 +191,7 @@
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
-<script src="../js/pickle-notifications.js"></script>
-<script src="../js/notifications-page.js"></script>
+<script src="../js/pickle-notifications.js?v=20260617_noti2"></script>
+<script src="../js/notifications-page.js?v=20260617_noti2"></script>
 </body>
 </html>

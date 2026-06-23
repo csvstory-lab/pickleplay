@@ -5,7 +5,7 @@
   'use strict';
 
   var SORT_OPTIONS = [
-    { id: 'today_popular', label: '오늘인기순' },
+    { id: 'today_popular', label: '인기순' },
     { id: 'deadline', label: '마감임박순' },
     { id: 'participants', label: '참여자순' },
     { id: 'latest', label: '최신순' },
@@ -84,7 +84,7 @@
   }
 
   function getSortLabel(sortId) {
-    var label = '오늘인기순';
+    var label = '인기순';
     SORT_OPTIONS.forEach(function (opt) {
       if (opt.id === sortId) label = opt.label;
     });
@@ -130,11 +130,25 @@
     if (toggle) toggle.checked = state.unseenOnly;
   }
 
+  function stripLeadingEmoji(text) {
+    return String(text || '')
+      .replace(/^[\s\p{Extended_Pictographic}\uFE0F]+/u, '')
+      .trim();
+  }
+
   function updatePageTitle() {
+    var textEl = document.getElementById('categoryPageTitleText');
     var titleEl = document.getElementById('categoryPageTitle');
-    if (!titleEl) return;
-    titleEl.textContent =
-      getCategoriesApi().labelFromSlug(state.category) || '🔥 모든 불판';
+    if (!textEl && !titleEl) return;
+
+    var label = getCategoriesApi().labelFromSlug(state.category) || '모든 불판';
+    var plain = stripLeadingEmoji(label) || '모든 불판';
+
+    if (textEl) {
+      textEl.textContent = plain;
+    } else if (titleEl) {
+      titleEl.textContent = plain;
+    }
   }
 
   function buildQueryFilters(sort, urlCategorySlug) {
@@ -272,7 +286,7 @@
     if (state.unseenOnly) {
       msg =
         state.category === 'all'
-          ? '아직 참여하지 않은 불판이 없습니다.<br>모든 불판에 참전하셨네요! 🔥'
+          ? '아직 참여하지 않은 불판이 없습니다.<br>모든 불판에 참전하셨네요!'
           : catLabel + '에서 참여하지 않은 불판이 없습니다.';
     } else if (state.category === 'all') {
       msg = '아직 지펴진 불판이 없습니다.';
@@ -286,11 +300,11 @@
       msg +
       (state.unseenOnly
         ? ''
-        : '<br>첫 불판의 주인이 되어보세요! 🔥') +
+        : '<br>첫 불판의 주인이 되어보세요!') +
       '</p>' +
       (state.unseenOnly
         ? ''
-        : '<button type="button" class="btn-create-feed" onclick="location.href=\'create.html\'">불판 생성하기</button>') +
+        : '<button type="button" class="btn-create-feed" onclick="location.href=\'create.html\'"><i class="ph ph-plus-circle" aria-hidden="true"></i> 불판 생성하기</button>') +
       '</div>'
     );
   }

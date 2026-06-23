@@ -71,7 +71,7 @@
     if (!list) return;
     list.innerHTML =
       '<li class="noti-page-empty">' +
-      '<div class="noti-page-empty-icon">🔕</div>' +
+      '<div class="noti-page-empty-icon"><i class="ph ph-bell-slash" aria-hidden="true"></i></div>' +
       '<p class="noti-page-empty-title">아직 알림이 없어요</p>' +
       '<p class="noti-page-empty-desc">불판에 참여하면 여기에 소식이 쌓여요!</p>' +
       '</li>';
@@ -82,7 +82,7 @@
     if (!list) return;
     list.innerHTML =
       '<li class="noti-page-empty">' +
-      '<div class="noti-page-empty-icon">⚠️</div>' +
+      '<div class="noti-page-empty-icon"><i class="ph ph-warning-circle" aria-hidden="true"></i></div>' +
       '<p class="noti-page-empty-title">알림을 불러오지 못했습니다</p>' +
       '<p class="noti-page-empty-desc">' +
       getApi().escapeHtml(message || '잠시 후 다시 시도해 주세요.') +

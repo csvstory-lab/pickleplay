@@ -11,15 +11,15 @@
   var realtimeUserId = null;
 
   var TYPE_META = {
-    comment: { icon: '💬', css: 'type-comment' },
-    reply: { icon: '↩️', css: 'type-reply' },
-    vote: { icon: '🗳️', css: 'type-vote' },
-    end: { icon: '⏳', css: 'type-end' },
-    honor: { icon: '🏅', css: 'type-honor' },
-    mypick: { icon: '✔️', css: 'type-mypick' },
-    result: { icon: '🏆', css: 'type-result' },
-    system: { icon: '📢', css: 'type-system' },
-    penalty: { icon: '🚨', css: 'type-penalty' } // 💡 제재 알림 아이콘
+    comment: { icon: '<i class="ph ph-chat-circle" aria-hidden="true"></i>', css: 'type-comment' },
+    reply: { icon: '<i class="ph ph-arrow-bend-up-left" aria-hidden="true"></i>', css: 'type-reply' },
+    vote: { icon: '<i class="ph ph-ballot" aria-hidden="true"></i>', css: 'type-vote' },
+    end: { icon: '<i class="ph ph-hourglass" aria-hidden="true"></i>', css: 'type-end' },
+    honor: { icon: '<i class="ph ph-medal" aria-hidden="true"></i>', css: 'type-honor' },
+    mypick: { icon: '<i class="ph ph-check-circle" aria-hidden="true"></i>', css: 'type-mypick' },
+    result: { icon: '<i class="ph ph-trophy" aria-hidden="true"></i>', css: 'type-result' },
+    system: { icon: '<i class="ph ph-megaphone" aria-hidden="true"></i>', css: 'type-system' },
+    penalty: { icon: '<i class="ph ph-warning" aria-hidden="true"></i>', css: 'type-penalty' },
   };
 
   function getClient() {

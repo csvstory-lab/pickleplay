@@ -1,352 +1,345 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-VDZBSH2YBT');
-</script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<title>P!CKLE - 카테고리 불판</title>
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
-<style>
-    :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --theme-gold: #ffcc00;
-        --text-main: #ffffff;
-        --text-sub: #a1a1aa;
-        --border-color: #27272a;
-    }
-
-    body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
-        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
-        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
-    }
-
-    .category-nav-scroll {
-        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
-        scrollbar-width: none; -webkit-overflow-scrolling: touch;
-        position: relative; z-index: 1;
-    }
-    .category-nav-scroll::-webkit-scrollbar { display: none; }
-    .category-nav-tab {
-        flex-shrink: 0; border: 1px solid #3f3f46; background: rgba(39, 39, 42, 0.85);
-        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
-        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
-        font-family: inherit; white-space: nowrap;
-    }
-    .category-nav-tab.active {
-        border-color: var(--neon-green); color: #000; background: var(--neon-green);
-        box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
-    }
-    .category-nav-tab:active { transform: scale(0.96); }
-    .category-nav-tab--seasonal {
-        border-color: rgba(57, 255, 20, 0.55);
-        box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
-    }
-    .category-nav-tab--seasonal.active {
-        box-shadow: 0 0 16px rgba(57, 255, 20, 0.45);
-    }
-    a.category-nav-tab {
-        text-decoration: none; color: var(--text-sub);
-        display: inline-flex; align-items: center;
-    }
-    a.category-nav-tab.active { color: #000; }
-
-    main { padding: 18px 0 100px; position: relative; z-index: 1; }
-
-    .page-header { padding: 0 20px 16px; position: relative; z-index: 1; }
-    .page-header-row {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 10px; flex-wrap: nowrap;
-    }
-    .page-title {
-        font-family: 'Pretendard', sans-serif; font-weight: 900; font-size: 1.15rem;
-        letter-spacing: -0.5px; margin: 0; color: #fff;
-        flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .page-header-controls {
-        display: flex; align-items: center; gap: 8px; flex-shrink: 0;
-        position: relative; z-index: 1;
-    }
-
-    .unseen-toggle {
-        display: inline-flex; align-items: center; gap: 6px;
-        cursor: pointer; user-select: none; margin: 0;
-    }
-    .unseen-toggle-label {
-        font-size: 0.62rem; font-weight: 800; color: var(--text-sub);
-        white-space: nowrap; letter-spacing: -0.02em;
-    }
-    .unseen-toggle-input {
-        position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
-    }
-    .unseen-toggle-track {
-        position: relative; width: 36px; height: 20px; flex-shrink: 0;
-        background: #27272a; border: 2px solid #3f3f46; border-radius: 999px;
-        box-shadow: 2px 2px 0 #000; transition: background 0.2s, border-color 0.2s;
-    }
-    .unseen-toggle-track::after {
-        content: ''; position: absolute; top: 2px; left: 2px;
-        width: 12px; height: 12px; border-radius: 50%;
-        background: #71717a; border: 1px solid #000;
-        transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), background 0.2s;
-    }
-    .unseen-toggle-input:checked + .unseen-toggle-track {
-        background: rgba(57, 255, 20, 0.2); border-color: var(--neon-green);
-        box-shadow: 2px 2px 0 #000, 0 0 12px rgba(57, 255, 20, 0.25);
-    }
-    .unseen-toggle-input:checked + .unseen-toggle-track::after {
-        transform: translateX(16px); background: var(--neon-green);
-    }
-
-    .sort-dropdown {
-        position: relative; flex-shrink: 0; z-index: 8;
-    }
-    .sort-dropdown-trigger {
-        display: inline-flex; align-items: center; justify-content: space-between;
-        gap: 6px; min-width: 96px; max-width: 112px;
-        background: #18181b; color: #fff;
-        border: 2px solid var(--neon-pink); border-radius: 10px;
-        padding: 7px 10px;
-        font-family: inherit; font-size: 0.72rem; font-weight: 800;
-        cursor: pointer; box-shadow: 3px 3px 0 #000;
-        transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-    }
-    .sort-dropdown-trigger:active {
-        transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000;
-    }
-    .sort-dropdown.is-open .sort-dropdown-trigger {
-        border-color: var(--neon-green);
-        box-shadow: 3px 3px 0 #000, 0 0 12px rgba(57, 255, 20, 0.22);
-    }
-    .sort-dropdown-chevron {
-        font-size: 0.65rem; color: var(--neon-green); font-weight: 900;
-        transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1);
-        flex-shrink: 0;
-    }
-    .sort-dropdown.is-open .sort-dropdown-chevron {
-        transform: rotate(180deg); color: var(--neon-pink);
-    }
-    .dropdown-list {
-        position: absolute; top: calc(100% + 6px); right: 0;
-        min-width: 132px; margin: 0; padding: 6px;
-        list-style: none;
-        background: #121214;
-        border: 2px solid var(--neon-pink);
-        border-radius: 12px;
-        box-shadow: 4px 4px 0 #000, 0 12px 32px rgba(255, 0, 127, 0.18);
-        opacity: 0; visibility: hidden; pointer-events: none;
-        transform: translateY(-8px) scale(0.97);
-        transform-origin: top right;
-        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.22s;
-    }
-    .sort-dropdown.is-open .dropdown-list {
-        opacity: 1; visibility: visible; pointer-events: auto;
-        transform: translateY(0) scale(1);
-    }
-    .dropdown-item {
-        padding: 10px 12px; border-radius: 8px;
-        font-size: 0.74rem; font-weight: 800; color: #d4d4d8;
-        cursor: pointer; transition: background 0.15s, color 0.15s;
-        white-space: nowrap;
-    }
-    .dropdown-item:hover,
-    .dropdown-item:focus {
-        background: rgba(255, 0, 127, 0.12); color: #fff; outline: none;
-    }
-    .dropdown-item.active {
-        color: var(--neon-green);
-        background: rgba(57, 255, 20, 0.08);
-        box-shadow: inset 0 0 0 1px rgba(57, 255, 20, 0.25);
-    }
-    .dropdown-item:active { transform: scale(0.98); }
-
-    .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
-    #categoryFeedList { transition: opacity 0.25s ease; }
-
-    .list-card {
-        display: flex; flex-direction: column; background-color: #27272a;
-        border: 1px solid #3f3f46; border-radius: 16px; margin-bottom: 14px;
-        overflow: hidden; cursor: pointer; transition: 0.2s;
-        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
-    }
-    .list-card:active { transform: translate(1px, 1px); border-color: #52525b; }
-    .list-card.sponsor-card {
-        border-color: rgba(255, 204, 0, 0.4);
-        background: linear-gradient(180deg, rgba(255, 204, 0, 0.06) 0%, #27272a 100%);
-    }
-    .list-card .card-body {
-        display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px;
-    }
-    .list-card .title {
-        font-size: 1.05rem; font-weight: 800; line-height: 1.35; color: #fff;
-        margin: 0; word-break: keep-all;
-    }
-
-    .card-thumb-top {
-        width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
-        background: #0f0f11; flex-shrink: 0;
-    }
-    .card-thumb-top .card-thumb-img {
-        width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .card-thumb-top--fallback {
-        display: flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, #0a0a0c 0%, #18181b 50%, #1a1020 100%);
-        border-bottom: 1px dashed #52525b;
-    }
-    .card-thumb-fallback-label {
-        font-family: 'Black Han Sans', sans-serif; font-size: clamp(1.4rem, 6vw, 2rem);
-        line-height: 1.15; text-align: center; padding: 12px 16px;
-        background: linear-gradient(135deg, var(--neon-green), var(--neon-pink));
-        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-        word-break: keep-all;
-    }
-
-    .feed-card-meta {
-        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
-        margin-top: 2px; font-size: 0.78rem; font-weight: 700; color: var(--text-sub);
-    }
-    .feed-cat-badge {
-        display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px;
-        font-size: 0.68rem; font-weight: 800; line-height: 1.2; color: #e4e4e7;
-        background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
-        flex-shrink: 0;
-    }
-    .feed-cat-badge--sponsor {
-        color: var(--theme-gold); background: rgba(255, 204, 0, 0.12);
-        border-color: rgba(255, 204, 0, 0.28);
-    }
-    .feed-meta-participants { color: var(--theme-gold); white-space: nowrap; }
-    .feed-meta-timer.is-ended { color: #71717a; }
-
-    .list-card .text-vs-box {
-        display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-        gap: 8px 10px; background: #0f0f11; border: 1px solid #27272a;
-        border-radius: 12px; padding: 10px; margin: 0;
-    }
-    .list-card .text-vs-box .vs-a,
-    .list-card .text-vs-box .vs-b {
-        flex: 1 1 auto; min-width: 0; font-size: 0.95rem; font-weight: 800;
-        text-align: center; line-height: 1.35; word-break: keep-all;
-    }
-    .list-card .text-vs-box .vs-a { color: var(--neon-blue); }
-    .list-card .text-vs-box .vs-b { color: var(--neon-pink); }
-    .list-card .text-vs-box .vs-label {
-        font-family: 'Black Han Sans', sans-serif; font-size: 0.72rem;
-        font-weight: 700; color: #71717a; letter-spacing: 0.04em;
-    }
-
-    .feed-loading, .feed-empty {
-        padding: 36px 20px; text-align: center; color: var(--text-sub);
-        font-size: 0.9rem; font-weight: 700; line-height: 1.55;
-    }
-    .feed-loading p { margin: 14px 0 0; color: #d4d4d8; }
-    .feed-spinner {
-        width: 36px; height: 36px; margin: 0 auto;
-        border: 3px solid #27272a; border-top-color: var(--neon-green);
-        border-radius: 50%; animation: feedSpin 0.75s linear infinite;
-    }
-    @keyframes feedSpin { to { transform: rotate(360deg); } }
-    .feed-empty-title { color: #fff; font-size: 0.95rem; margin: 0 0 16px; word-break: keep-all; }
-    .btn-create-feed {
-        display: inline-block; padding: 14px 22px; border: none; border-radius: 14px;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00); color: #000;
-        font-family: 'Black Han Sans', sans-serif; font-size: 1rem; font-weight: 900;
-        cursor: pointer; box-shadow: 4px 4px 0 #000;
-    }
-    .feed-error { color: var(--neon-pink); }
-
-</style>
-<link rel="stylesheet" href="../css/common-layout.css">
-<link rel="stylesheet" href="../css/responsive-layout.css">
-<link rel="stylesheet" href="../css/mobile-shell.css">
-<script src="../js/mobile-touch-guard.js"></script>
-</head>
-<body data-nav-page="category">
-<div id="landscape-warning" class="landscape-warning" aria-hidden="true">
-    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
-    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
-    <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
-</div>
-
-<div id="common-header"></div>
-<script src="../js/common-layout.js"></script>
-<nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
-
-<main>
-    <div class="page-header">
-        <div class="page-header-row">
-            <h1 class="page-title" id="categoryPageTitle">🔥 모든 불판</h1>
-            <div class="page-header-controls">
-                <label class="unseen-toggle" for="unseenToggle">
-                    <span class="unseen-toggle-label">👀 안 한 불판만</span>
-                    <input type="checkbox" id="unseenToggle" class="unseen-toggle-input">
-                    <span class="unseen-toggle-track" aria-hidden="true"></span>
-                </label>
-                <div class="sort-dropdown" id="sortDropdown">
-                    <button type="button" class="sort-dropdown-trigger" id="sortDropdownTrigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="sortDropdownList">
-                        <span id="sortDropdownLabel">오늘인기순</span>
-                        <span class="sort-dropdown-chevron" aria-hidden="true">▾</span>
-                    </button>
-                    <ul class="dropdown-list" id="sortDropdownList" role="listbox" aria-label="정렬"></ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <section class="list-section">
-        <div id="categoryFeedList">
-            <div class="feed-loading">
-                <div class="feed-spinner" aria-hidden="true"></div>
-                <p>🔥 불판을 뜨겁게 달구는 중입니다...</p>
-            </div>
-        </div>
-    </section>
-</main>
-
-<div id="common-footer"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
-<script src="../js/supabase-bootstrap.js"></script>
-<script src="../js/supabase-client.js"></script>
-<script src="../js/pickle-oauth-callback-guard.js"></script>
-<script src="../js/media-upload.js"></script>
-<script src="../js/pickle-media-view.js"></script>
-<script src="../js/pickle-inapp-browser.js"></script>
-<script src="../js/auth.js"></script>
-<script src="../js/pickle-notifications.js"></script>
-<script src="../js/pickle-categories.js"></script>
-<script src="../js/pickle-feed.js"></script>
-<script src="../js/pickle-category.js"></script>
-<script src="../js/pickle-header-legacy-cleanup.js"></script>
-<script>
-    var lastScrollTop = 0;
-    window.addEventListener('scroll', function () {
-        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        var header = document.getElementById('mainHeader');
-        if (!header) return;
-        if (scrollTop > lastScrollTop && scrollTop > 60) {
-            header.style.top = '-120px';
-        } else {
-            header.style.top = '0';
-        }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-    });
-</script>
-</body>
-</html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VDZBSH2YBT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VDZBSH2YBT');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>P!CKLE - 카테고리 불판</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+    :root {
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FFA092;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
+        --text-sub: #a1a1aa;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
+    }
+
+    body {
+        margin: 0; padding: 0; background-color: var(--bg-base); color: var(--text-main);
+        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
+        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+    }
+
+    .category-nav-scroll {
+        display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 12px;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        position: relative; z-index: 1;
+    }
+    .category-nav-scroll::-webkit-scrollbar { display: none; }
+    .category-nav-tab {
+        flex-shrink: 0; border: 1px solid var(--border-card); background: var(--bg-card);
+        color: var(--text-sub); padding: 8px 14px; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        font-family: inherit; white-space: nowrap;
+    }
+    .category-nav-tab.active {
+        border-color: rgba(74, 222, 128, 0.5); color: #0a0a0c; background: var(--point-green);
+        box-shadow: 0 0 14px rgba(74, 222, 128, 0.2);
+    }
+    .category-nav-tab:active { transform: scale(0.96); }
+    .category-nav-tab--seasonal {
+        border-color: rgba(74, 222, 128, 0.35);
+    }
+    a.category-nav-tab {
+        text-decoration: none; color: var(--text-sub);
+        display: inline-flex; align-items: center;
+    }
+    a.category-nav-tab.active { color: #0a0a0c; }
+
+    main { padding: 18px 0 100px; position: relative; z-index: 1; }
+
+    .page-header { padding: 0 20px 16px; position: relative; z-index: 20; }
+    .page-header-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; flex-wrap: nowrap;
+    }
+    .page-title {
+        font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.15rem;
+        letter-spacing: -0.02em; margin: 0; color: var(--text-main);
+        flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .page-title-icon { color: var(--point-pink); font-size: 1.1rem; flex-shrink: 0; }
+    .page-header-controls {
+        display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        position: relative; z-index: 30;
+    }
+
+    .unseen-toggle {
+        display: inline-flex; align-items: center; gap: 6px;
+        cursor: pointer; user-select: none; margin: 0;
+    }
+    .unseen-toggle-label {
+        font-size: 0.62rem; font-weight: 800; color: var(--text-sub);
+        white-space: nowrap; letter-spacing: -0.02em;
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+    .unseen-toggle-label i { font-size: 0.85rem; color: var(--point-blue); }
+    .unseen-toggle-input {
+        position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+    }
+    .unseen-toggle-track {
+        position: relative; width: 36px; height: 20px; flex-shrink: 0;
+        background: var(--bg-elevated); border: 1px solid var(--border-card); border-radius: 999px;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    .unseen-toggle-track::after {
+        content: ''; position: absolute; top: 2px; left: 2px;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #71717a; transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), background 0.2s;
+    }
+    .unseen-toggle-input:checked + .unseen-toggle-track {
+        background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.45);
+    }
+    .unseen-toggle-input:checked + .unseen-toggle-track::after {
+        transform: translateX(16px); background: var(--point-green);
+    }
+
+    .sort-dropdown {
+        position: relative; flex-shrink: 0; z-index: 40;
+    }
+    .sort-dropdown-trigger {
+        display: inline-flex; align-items: center; justify-content: space-between;
+        gap: 6px; min-width: 88px; max-width: 108px;
+        background: var(--bg-card); color: var(--text-main);
+        border: 1px solid var(--border-card); border-radius: 10px;
+        padding: 7px 10px;
+        font-family: inherit; font-size: 0.72rem; font-weight: 800;
+        cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .sort-dropdown-trigger:active { background: var(--bg-elevated); }
+    .sort-dropdown.is-open .sort-dropdown-trigger {
+        border-color: rgba(74, 222, 128, 0.4);
+        background: var(--bg-elevated);
+    }
+    .sort-dropdown-chevron {
+        font-size: 0.75rem; color: var(--point-green); font-weight: 900;
+        transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1);
+        flex-shrink: 0;
+    }
+    .sort-dropdown.is-open .sort-dropdown-chevron {
+        transform: rotate(180deg); color: var(--point-blue);
+    }
+    .dropdown-list {
+        position: absolute; top: calc(100% + 6px); right: 0;
+        min-width: 132px; margin: 0; padding: 6px;
+        list-style: none;
+        background: #18181b;
+        border: 1px solid var(--border-card);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+        z-index: 999;
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transform: translateY(-8px) scale(0.97);
+        transform-origin: top right;
+        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.22s;
+    }
+    .sort-dropdown.is-open .dropdown-list {
+        opacity: 1; visibility: visible; pointer-events: auto;
+        transform: translateY(0) scale(1);
+    }
+    .dropdown-item {
+        padding: 10px 12px; border-radius: 8px;
+        font-size: 0.74rem; font-weight: 800; color: #d4d4d8;
+        cursor: pointer; transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background: rgba(115, 165, 255, 0.1); color: var(--text-main); outline: none;
+    }
+    .dropdown-item.active {
+        color: var(--point-green);
+        background: rgba(74, 222, 128, 0.08);
+    }
+    .dropdown-item:active { transform: scale(0.98); }
+
+    .list-section { padding: 0 20px 12px; position: relative; z-index: 1; }
+    #categoryFeedList { transition: opacity 0.25s ease; }
+
+    /* 메인 피드와 동일한 대형 카드 */
+    .list-card {
+        background: var(--bg-card) !important; border: 1px solid var(--border-card) !important;
+        border-radius: 24px !important; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+        width: 100% !important; max-width: 100% !important; box-sizing: border-box !important;
+        overflow: hidden; cursor: pointer; transition: transform 0.2s;
+        margin-bottom: 16px !important;
+    }
+    .list-card:active { transform: scale(0.98); }
+    .list-card.sponsor-card {
+        border-color: rgba(252, 211, 77, 0.35) !important;
+    }
+    .list-card .card-body {
+        display: flex !important; flex-direction: column !important; gap: 12px !important;
+        padding: 18px 20px !important;
+    }
+    .list-card .title {
+        order: 2 !important; font-size: 1.1rem !important; font-weight: 800 !important;
+        line-height: 1.4 !important; margin: 4px 0 2px 0 !important; color: var(--text-main) !important;
+        word-break: keep-all;
+    }
+
+    .card-thumb-top {
+        width: 100% !important; aspect-ratio: 16 / 9 !important; overflow: hidden !important;
+        background: #000 !important; flex-shrink: 0 !important; border-bottom: 1px solid var(--border-soft) !important;
+    }
+    .card-thumb-top .card-thumb-img {
+        width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important;
+    }
+    .card-thumb-top--fallback {
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%) !important;
+    }
+    .card-thumb-fallback-label {
+        font-family: 'Pretendard', sans-serif !important; font-size: 1.2rem !important;
+        text-align: center !important; padding: 0 20px !important; color: #1a1a1a !important;
+        line-height: 1.45 !important; word-break: keep-all !important; font-weight: 800 !important;
+    }
+
+    .feed-card-meta {
+        order: 1 !important; display: flex !important; justify-content: space-between !important;
+        align-items: center !important; width: 100% !important; font-size: 0.78rem !important;
+        font-weight: 700 !important; color: var(--text-sub) !important; margin: 0 !important;
+    }
+    .feed-cat-badge {
+        order: 1 !important; padding: 4px 10px !important; border-radius: 6px !important;
+        color: var(--text-main) !important; background: var(--bg-elevated) !important;
+        border: none !important; margin-right: 6px !important; font-size: 0.72rem !important;
+    }
+    .feed-cat-badge--sponsor {
+        color: var(--point-gold) !important; background: rgba(252, 211, 77, 0.12) !important;
+    }
+    .feed-meta-participants {
+        order: 3 !important; margin-left: auto !important; color: var(--point-pink) !important;
+        font-weight: 800 !important; display: inline-flex !important; align-items: center !important;
+        gap: 4px !important;
+    }
+    .feed-meta-timer { order: 2 !important; color: var(--point-gold) !important; }
+    .feed-meta-timer.is-ended { color: #71717a !important; }
+
+    /* A/B 선택지 블라인드 — 메인 '지금 뜨거운 불판'과 동일 */
+    .king-ab-box, .text-vs-box {
+        display: none !important; visibility: hidden !important; opacity: 0 !important;
+        height: 0 !important; padding: 0 !important; margin: 0 !important;
+        border: none !important; overflow: hidden !important;
+    }
+    .list-card .btn-pick { display: none !important; }
+
+    .feed-loading, .feed-empty {
+        padding: 36px 20px; text-align: center; color: var(--text-sub);
+        font-size: 0.9rem; font-weight: 700; line-height: 1.55;
+    }
+    .feed-loading p { margin: 14px 0 0; color: #d4d4d8; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .feed-spinner {
+        width: 36px; height: 36px; margin: 0 auto;
+        border: 3px solid var(--bg-elevated); border-top-color: var(--point-green);
+        border-radius: 50%; animation: feedSpin 0.75s linear infinite;
+    }
+    @keyframes feedSpin { to { transform: rotate(360deg); } }
+    .feed-empty-title { color: var(--text-main); font-size: 0.95rem; margin: 0 0 16px; word-break: keep-all; font-weight: 800; }
+    .btn-create-feed {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 14px 22px; border: none; border-radius: 14px;
+        background: var(--point-green); color: #0a0a0c;
+        font-family: 'Pretendard', sans-serif; font-size: 0.95rem; font-weight: 800;
+        cursor: pointer; box-shadow: 0 4px 16px rgba(74, 222, 128, 0.2);
+    }
+    .btn-create-feed:active { transform: scale(0.98); }
+    .feed-error { color: var(--point-pink); }
+</style>
+<link rel="stylesheet" href="../css/common-layout.css">
+<link rel="stylesheet" href="../css/responsive-layout.css">
+<link rel="stylesheet" href="../css/mobile-shell.css">
+<script src="../js/mobile-touch-guard.js"></script>
+</head>
+<body data-nav-page="category">
+<div id="landscape-warning" class="landscape-warning" aria-hidden="true">
+    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
+    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
+    <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
+</div>
+
+<div id="common-header"></div>
+<script src="../js/common-layout.js"></script>
+<nav class="category-nav-scroll" id="categoryNav" aria-label="카테고리"></nav>
+
+<main>
+    <div class="page-header">
+        <div class="page-header-row">
+            <h1 class="page-title" id="categoryPageTitle"><i class="ph-fill ph-fire page-title-icon" aria-hidden="true"></i><span id="categoryPageTitleText">모든 불판</span></h1>
+            <div class="page-header-controls">
+                <label class="unseen-toggle" for="unseenToggle">
+                    <span class="unseen-toggle-label"><i class="ph ph-eye" aria-hidden="true"></i> 안 한 불판만</span>
+                    <input type="checkbox" id="unseenToggle" class="unseen-toggle-input">
+                    <span class="unseen-toggle-track" aria-hidden="true"></span>
+                </label>
+                <div class="sort-dropdown" id="sortDropdown">
+                    <button type="button" class="sort-dropdown-trigger" id="sortDropdownTrigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="sortDropdownList">
+                        <span id="sortDropdownLabel">인기순</span>
+                        <i class="ph ph-caret-down sort-dropdown-chevron" aria-hidden="true"></i>
+                    </button>
+                    <ul class="dropdown-list" id="sortDropdownList" role="listbox" aria-label="정렬"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="list-section">
+        <div id="categoryFeedList">
+            <div class="feed-loading">
+                <div class="feed-spinner" aria-hidden="true"></div>
+                <p><i class="ph ph-fire" aria-hidden="true"></i> 불판을 뜨겁게 달구는 중입니다...</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="common-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
+<script src="../js/supabase-bootstrap.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/pickle-oauth-callback-guard.js"></script>
+<script src="../js/media-upload.js"></script>
+<script src="../js/pickle-media-view.js"></script>
+<script src="../js/pickle-inapp-browser.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/pickle-notifications.js"></script>
+<script src="../js/pickle-categories.js"></script>
+<script src="../js/pickle-feed.js?v=0627"></script>
+<script src="../js/pickle-category.js?v=20260617_cat2"></script>
+<script src="../js/pickle-header-legacy-cleanup.js"></script>
+<script>
+    var lastScrollTop = 0;
+    window.addEventListener('scroll', function () {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var header = document.getElementById('mainHeader');
+        if (!header) return;
+        if (scrollTop > lastScrollTop && scrollTop > 60) {
+            header.style.top = '-120px';
+        } else {
+            header.style.top = '0';
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+</script>
+</body>
+</html>
+
