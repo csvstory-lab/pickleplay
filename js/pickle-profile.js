@@ -301,8 +301,101 @@
     }
   }
 
+  var SCORE_ENGINE_SKIP_REASONS = {
+    already_awarded: true,
+    not_milestone: true,
+    vote_not_found: true,
+    comment_not_found: true,
+    share_not_found: true,
+    follow_not_found: true,
+    self_follow: true,
+    count_mismatch: true,
+    zero_delta: true,
+  };
+
+  function logScoreEngineError(context, error, meta) {
+    var detail = {
+      context: context || 'unknown',
+      meta: meta || null,
+    };
+    if (error && typeof error === 'object') {
+      detail.error = error;
+      if (error.message) detail.message = error.message;
+      if (error.code) detail.code = error.code;
+      if (error.details) detail.details = error.details;
+      if (error.hint) detail.hint = error.hint;
+    } else if (error != null) {
+      detail.error = error;
+    }
+    console.error('[Score Engine Error]', detail);
+  }
+
+  function logScoreEngineSkip(context, payload, meta) {
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug('[Score Engine] skipped', context, payload && payload.reason, meta || '');
+    }
+  }
+
+  /**
+   * RLS 우회 저수준 star_score 증가 RPC
+   * @param {string} userId
+   * @param {number} delta
+   * @param {{ context?: string }} [options]
+   */
+  async function incrementStarScore(userId, delta, options) {
+    var opts = options || {};
+    var context = opts.context || 'incrementStarScore';
+
+    if (!userId) {
+      logScoreEngineError(context, { message: 'userId is required' });
+      return { ok: false, reason: 'invalid_user' };
+    }
+
+    var amount = Number(delta);
+    if (!Number.isFinite(amount) || amount === 0) {
+      logScoreEngineError(context, { message: 'delta must be a non-zero number', delta: delta });
+      return { ok: false, reason: 'invalid_delta' };
+    }
+
+    var sb = getSupabaseClientForScore();
+    if (!sb) {
+      logScoreEngineError(context, { message: 'Supabase client unavailable' }, { userId: userId });
+      return { ok: false, reason: 'no_client' };
+    }
+
+    try {
+      var result = await sb.rpc('increment_star_score', {
+        p_user_id: userId,
+        p_delta: amount,
+      });
+
+      if (result.error) {
+        logScoreEngineError(context, result.error, { userId: userId, delta: amount });
+        return { ok: false, reason: 'rpc_error', error: result.error };
+      }
+
+      var payload = result.data || {};
+      if (payload.ok === false) {
+        logScoreEngineError(context, payload, { userId: userId, delta: amount });
+        return payload;
+      }
+
+      notifyStarScoreUpdated(userId);
+      return payload;
+    } catch (err) {
+      logScoreEngineError(context, err, { userId: userId, delta: amount });
+      return { ok: false, reason: 'exception', error: err };
+    }
+  }
+
   async function updateUserScore(userId, actionType, extraData) {
+    var context = 'updateUserScore:' + String(actionType || '');
+
     if (!userId || !actionType) {
+      logScoreEngineError(context, { message: 'userId and actionType are required' }, {
+        userId: userId,
+        actionType: actionType,
+      });
       return { ok: false, awarded: false, reason: 'invalid_args' };
     }
 
@@ -318,6 +411,7 @@
 
     var sb = getSupabaseClientForScore();
     if (!sb) {
+      logScoreEngineError(context, { message: 'Supabase client unavailable' }, { userId: userId, action: action });
       return { ok: false, awarded: false, reason: 'no_client' };
     }
 
@@ -329,17 +423,35 @@
       });
 
       if (result.error) {
-        console.warn('[P!CKLE Profile] award_star_score RPC failed', result.error);
+        logScoreEngineError(context, result.error, {
+          userId: userId,
+          action: action,
+          extra: extra,
+          rpc: 'award_star_score',
+        });
         return { ok: false, awarded: false, reason: 'rpc_error', error: result.error };
       }
 
       var payload = result.data || {};
+
+      if (payload.ok === false || (payload.awarded === false && payload.reason && !SCORE_ENGINE_SKIP_REASONS[payload.reason])) {
+        logScoreEngineError(context, payload, {
+          userId: userId,
+          action: action,
+          extra: extra,
+          rpc: 'award_star_score',
+        });
+      } else if (payload.awarded === false && payload.reason) {
+        logScoreEngineSkip(context, payload, { userId: userId, action: action });
+      }
+
       if (payload.awarded) {
         notifyStarScoreUpdated(userId);
       }
+
       return payload;
     } catch (err) {
-      console.warn('[P!CKLE Profile] updateUserScore failed', err);
+      logScoreEngineError(context, err, { userId: userId, action: action, extra: extra });
       return { ok: false, awarded: false, reason: 'exception', error: err };
     }
   }
@@ -367,19 +479,29 @@
 
   function tryAwardPostAuthorStarScoreFireAndForget(authorId, postId, actionType, extra) {
     tryAwardPostAuthorStarScore(authorId, postId, actionType, extra).catch(function (err) {
-      console.warn('[P!CKLE Profile] star score award skipped', actionType, err);
+      logScoreEngineError('tryAwardPostAuthorStarScoreFireAndForget:' + actionType, err, {
+        authorId: authorId,
+        postId: postId,
+        extra: extra,
+      });
     });
   }
 
   function tryAwardPostAuthorFromPostIdFireAndForget(postId, actionType, extra) {
     tryAwardPostAuthorFromPostId(postId, actionType, extra).catch(function (err) {
-      console.warn('[P!CKLE Profile] star score award skipped', actionType, err);
+      logScoreEngineError('tryAwardPostAuthorFromPostIdFireAndForget:' + actionType, err, {
+        postId: postId,
+        extra: extra,
+      });
     });
   }
 
   function tryUpdateUserScoreFireAndForget(userId, actionType, extra) {
     updateUserScore(userId, actionType, extra).catch(function (err) {
-      console.warn('[P!CKLE Profile] star score award skipped', actionType, err);
+      logScoreEngineError('tryUpdateUserScoreFireAndForget:' + actionType, err, {
+        userId: userId,
+        extra: extra,
+      });
     });
   }
 
@@ -400,6 +522,7 @@
     clearRankingPointsCache: clearRankingPointsCache,
     getUserLevel: getUserLevel,
     extractAuthorSnapshot: extractAuthorSnapshot,
+    incrementStarScore: incrementStarScore,
     updateUserScore: updateUserScore,
     tryAwardPostAuthorStarScore: tryAwardPostAuthorStarScore,
     tryAwardPostAuthorFromPostId: tryAwardPostAuthorFromPostId,
