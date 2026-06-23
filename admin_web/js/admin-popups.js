@@ -12,7 +12,7 @@
 
   var IMAGE_BUCKET = 'event_images';
   var DROP_DEFAULT =
-    '📸 팝업 이미지 업로드<br><span style="font-size:0.7rem;">(세로형 권장 / .jpg, .png)</span>';
+    '📸 팝업 이미지 업로드<br><span style="font-size:0.7rem;">(16:9 가로형 권장 / .jpg, .png)</span>';
 
   function escapeHtml(str) {
     return String(str ?? '')
@@ -81,7 +81,7 @@
       throw new Error('JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다.');
     }
     if (file.size > POPUP_IMAGE_MAX_BYTES) {
-      throw new Error('이미지 용량은 최대 2MB까지 업로드할 수 있습니다.');
+      throw new Error('SIZE_LIMIT');
     }
   }
 
@@ -147,8 +147,14 @@
       try {
         validateImageFile(file);
       } catch (err) {
-        alert(err.message || String(err));
+        if (err && err.message === 'SIZE_LIMIT') {
+          alert('이미지 용량은 최대 2MB까지만 업로드 가능합니다.');
+        } else {
+          alert(err.message || String(err));
+        }
         input.value = '';
+        pendingImageFile = null;
+        renderImageDropZone(existingImageUrl || null);
         return;
       }
       pendingImageFile = file;
@@ -511,7 +517,11 @@
       await loadPopups();
     } catch (err) {
       console.error('[Admin Popups] submit failed', err);
-      alert(err.message || '저장에 실패했습니다.');
+      if (err && err.message === 'SIZE_LIMIT') {
+        alert('이미지 용량은 최대 2MB까지만 업로드 가능합니다.');
+      } else {
+        alert(err.message || '저장에 실패했습니다.');
+      }
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;

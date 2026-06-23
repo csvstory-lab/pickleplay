@@ -18,9 +18,7 @@
 .pickle-popup-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.7);
   opacity: 0;
   transition: opacity 0.35s ease;
 }
@@ -29,7 +27,8 @@
   opacity: 1;
 }
 
-.pickle-popup-sheet {
+/* 헤더 + 이미지 스택 — 하단에서 슬라이드업 */
+.pickle-popup-float {
   position: absolute;
   left: 50%;
   bottom: 0;
@@ -38,49 +37,47 @@
   max-height: 60vh;
   transform: translate(-50%, 100%);
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  background: linear-gradient(180deg, #1e1e22 0%, #141416 100%);
-  border-radius: 20px 20px 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: none;
-  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.55);
-  padding: 0 0 env(safe-area-inset-bottom, 0px);
-  font-family: 'Pentabreed', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   box-sizing: border-box;
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  font-family: 'Pentabreed', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  pointer-events: none;
 }
 
-.pickle-popup-root.is-open .pickle-popup-sheet {
+.pickle-popup-root.is-open .pickle-popup-float {
   transform: translate(-50%, 0);
 }
 
-/* 상단 헤더 — 투명·미니멀 */
+/* 상단 헤더 — 오버레이 위 플로팅 */
 .pickle-popup-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-shrink: 0;
-  padding: 14px 16px 10px;
+  padding: 0 4px 12px;
   background: transparent;
+  border: none;
+  pointer-events: auto;
 }
 
 .pickle-popup-hide-today {
   appearance: none;
   border: none;
   margin: 0;
-  padding: 4px 0;
+  padding: 6px 0;
   background: transparent;
-  color: #a1a1aa;
+  color: rgba(255, 255, 255, 0.78);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.2s ease;
   white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
 .pickle-popup-hide-today:hover,
@@ -93,13 +90,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   margin: 0;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   color: #fcfcfc;
   font-size: 1.15rem;
   line-height: 1;
@@ -107,10 +104,11 @@
   -webkit-tap-highlight-color: transparent;
   transition: background 0.2s ease, transform 0.15s ease;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .pickle-popup-close:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .pickle-popup-close:active {
@@ -121,14 +119,20 @@
   font-size: 1.1rem;
 }
 
-/* 16:9 가로 배너 이미지 */
-.pickle-popup-body {
+/* 이미지 박스만 시트 역할 */
+.pickle-popup-sheet {
   flex: 1;
   min-height: 0;
   display: flex;
-  padding: 0 0 12px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+  pointer-events: auto;
 }
 
+/* 16:9 가로 배너 이미지 */
 .pickle-popup-image-wrap {
   position: relative;
   display: block;
@@ -136,18 +140,20 @@
   aspect-ratio: 16 / 9;
   max-height: min(calc(60vh - 56px), calc(min(100vw, 480px) * 9 / 16));
   margin: 0;
-  border-radius: 0;
+  border-radius: 16px;
   overflow: hidden;
   background: #0a0a0c;
   cursor: pointer;
   text-decoration: none;
   flex-shrink: 1;
   min-height: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .pickle-popup-image-wrap:focus-visible {
   outline: 2px solid #73a5ff;
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 .pickle-popup-image {
@@ -172,7 +178,7 @@
 @media (prefers-reduced-motion: reduce) {
   .pickle-popup-root,
   .pickle-popup-backdrop,
-  .pickle-popup-sheet {
+  .pickle-popup-float {
     transition: none;
   }
 }
