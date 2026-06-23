@@ -453,6 +453,7 @@
 <script src="../js/pickle-ranking-events.js"></script>
 <script src="../js/pickle-profile-modal.js?v=20260617_profile1"></script>
 <script src="../js/pickle-follows.js"></script>
+<script src="../js/pickle-messages.js?v=20260617_messages2"></script>
 <script src="../js/pickle-comment-clean.js?v=20260617_bannedkw2"></script>
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
@@ -474,6 +475,9 @@
         document.getElementById('shareSheet').classList.remove('open');
         document.getElementById('reportModal').classList.remove('open');
         document.getElementById('messageModal').classList.remove('open');
+        if (window.PickleMessages && typeof window.PickleMessages.closeAll === 'function') {
+            window.PickleMessages.closeAll();
+        }
         if (window.PickleFollows && typeof window.PickleFollows.closeUserProfileModal === 'function') {
             window.PickleFollows.closeUserProfileModal();
         } else if (window.PickleProfileModal && typeof window.PickleProfileModal.close === 'function') {
@@ -492,61 +496,29 @@
         document.body.style.overflow = 'hidden';
     }
     function openMessageModal() {
-        var btn = document.getElementById('popupFollowBtn');
-        var targetUid = btn ? btn.getAttribute('data-user-id') : null;
-        var targetName = document.getElementById('popupUserName').textContent;
-        
-        if (!targetUid) {
-            alert('상대 유저의 고유 정보가 올바르지 않습니다.');
+        if (window.PickleMessages && window.PickleMessages.openCompose) {
+            window.PickleMessages.openCompose();
             return;
         }
-
-        if (window.PickleFollows && typeof window.PickleFollows.closeUserProfileModal === 'function') {
-            window.PickleFollows.closeUserProfileModal();
-        }
-        document.getElementById('messageTargetNickname').textContent = targetName;
-        document.getElementById('messageContent').value = ''; 
-        
-        document.getElementById('detailOverlay').classList.add('open');
-        document.getElementById('messageModal').classList.add('open');
-        document.body.style.overflow = 'hidden';
+        showToastFallback('메시지 기능을 불러오지 못했습니다.');
     }
 
     async function submitDirectMessage() {
-        var contentEl = document.getElementById('messageContent');
-        var content = contentEl ? contentEl.value.trim() : '';
-        var btn = document.getElementById('popupFollowBtn');
-        var targetUid = btn ? btn.getAttribute('data-user-id') : null;
+        if (window.PickleMessages && window.PickleMessages.submitDirectMessage) {
+            return window.PickleMessages.submitDirectMessage();
+        }
+        showToastFallback('메시지 기능을 불러오지 못했습니다.');
+    }
 
-        if (!content) { alert('메시지 내용을 입력해주세요.'); return; }
-        if (!targetUid) { alert('수신인 대상 식별 정보가 유실되었습니다.'); return; }
-
-        try {
-            const { data: { user }, error: authErr } = await supabase.auth.getUser();
-            if (authErr || !user) {
-                alert('로그인한 회원만 쪽지를 발송할 수 있습니다.');
-                return;
-            }
-            if (user.id === targetUid) {
-                alert('나 자신에게는 메시지를 보낼 수 없습니다. 🥒');
-                return;
-            }
-
-            const { error: dbErr } = await supabase
-                .from('messages')
-                .insert([{ sender_id: user.id, receiver_id: targetUid, content: content }]);
-
-            if (dbErr) throw dbErr;
-
-            alert('🚀 ' + document.getElementById('messageTargetNickname').textContent + '님께 쪽지가 안전하게 전달되었습니다!');
-            closeModals();
-        } catch (err) {
-            console.error('쪽지 전송 치명적 에러:', err);
-            alert('메시지 발송 오류가 발생했습니다. (Supabase 테이블 설정을 다시 확인해주세요)');
+    function showToastFallback(msg) {
+        if (window.PickleMessages && window.PickleMessages.showToast) {
+            window.PickleMessages.showToast(msg);
+        } else {
+            alert(msg);
         }
     }
 
-    // 🛠️ [실시간 수치 연동 코어] Supabase 기반 팔로워/팔로잉 카운트 집계 엔진
+    // 레거시 closeModals — 공통 쪽지 UI도 함께 닫기
     async function loadProfilePopupCounts(uid) {
         document.getElementById('popupFollowerCount').textContent = '0';
         document.getElementById('popupFollowingCount').textContent = '0';
