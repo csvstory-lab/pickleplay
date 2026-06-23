@@ -18,7 +18,7 @@
     '<div class="noti-overlay" id="commonOverlay" onclick="closeAllDrawers()"></div>' +
     '<div class="bottom-sheet" id="categorySheet">' +
     '<div class="sheet-header">' +
-    '<div class="sheet-title">모든 불판 탐험</div>' +
+    '<div class="sheet-title">불판 주제</div>' +
     '<button type="button" class="btn-close" onclick="closeAllDrawers()">✕</button>' +
     '</div>' +
     '<div class="category-grid" id="categoryGrid"></div>' +

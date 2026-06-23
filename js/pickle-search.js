@@ -1,7 +1,6 @@
 /**
  * P!CKLE — 검색 페이지 (search.html) Supabase 연동
- * UI/HTML/CSS 변경 없이 데이터만 주입
- * @build 20260613_search1
+ * @build 20260617_search2
  */
 (function () {
   'use strict';
@@ -62,6 +61,7 @@
       'tags',
       'vote_count',
       'comment_count',
+      'thumbnail_url',
       'expires_at',
       'visibility_status',
       'created_at',
@@ -104,6 +104,31 @@
 
   function sevenDaysAgoIso() {
     return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  function twentyFourHoursFromNowIso() {
+    return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  function fortyEightHoursFromNowIso() {
+    return new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+  }
+
+  function engagementScore(post) {
+    var votes = Number(post && post.vote_count);
+    var comments = Number(post && post.comment_count);
+    if (!Number.isFinite(votes)) votes = 0;
+    if (!Number.isFinite(comments)) comments = 0;
+    return votes + comments;
+  }
+
+  function isActiveEngagedPost(post) {
+    if (!post || !post.id) return false;
+    var votes = Number(post.vote_count);
+    var comments = Number(post.comment_count);
+    if (!Number.isFinite(votes)) votes = 0;
+    if (!Number.isFinite(comments)) comments = 0;
+    return votes > 0 || comments > 0;
   }
 
   function isSchemaColumnError(err) {
@@ -367,7 +392,7 @@
   function renderExploreHtml(topSlugs) {
     var html =
       '<div class="explore-card" data-explore-hall="1" role="button" tabindex="0">' +
-      '<div class="explore-icon">🏅</div>' +
+      '<div class="explore-icon"><i class="ph ph-medal" aria-hidden="true"></i></div>' +
       '<div class="explore-text">전당 후보작</div>' +
       '</div>';
 
@@ -399,7 +424,7 @@
       escapeAttr(post.id) +
       '" role="button" tabindex="0">' +
       '<div class="poll-header">' +
-      '<span class="poll-fire">🔥 ' +
+      '<span class="poll-fire"><i class="ph ph-fire" aria-hidden="true"></i> ' +
       votes +
       '명 참전 중</span>' +
       '<span class="poll-time">' +
@@ -532,55 +557,70 @@
     var sb = getClient();
     if (!sb) return [];
 
-    var filterModes = ['active', 'visible'];
+    var minExpires = twentyFourHoursFromNowIso();
+    var maxExpires = fortyEightHoursFromNowIso();
     var selectVariants = POST_SELECT_WITH_STATS;
-    var orders = ['vote_count', 'created_at'];
+    var lastError = null;
 
-    for (var fm = 0; fm < filterModes.length; fm++) {
-      var filterMode = filterModes[fm];
+    for (var i = 0; i < selectVariants.length; i++) {
+      var cols = selectVariants[i];
 
-      for (var o = 0; o < orders.length; o++) {
-        var orderCol = orders[o];
+      var result = await queryWithColumnFallback(sb, 'posts', [cols], function (q) {
+        return applyVisiblePostsFilter(q)
+          .gte('expires_at', minExpires)
+          .lte('expires_at', maxExpires)
+          .order('vote_count', { ascending: false })
+          .limit(30);
+      });
 
-        for (var i = 0; i < selectVariants.length; i++) {
-          var cols = selectVariants[i];
+      if (!result.error && result.data) {
+        var filtered = (result.data || [])
+          .filter(isActiveEngagedPost)
+          .sort(function (a, b) {
+            return engagementScore(b) - engagementScore(a);
+          })
+          .slice(0, 3);
+        return filtered;
+      }
 
-          var result = await queryWithColumnFallback(sb, 'posts', [cols], function (q) {
-            q = applyPostsListFilters(q, filterMode);
-            if (orderCol === 'vote_count') {
-              return q.order('vote_count', { ascending: false }).limit(2);
-            }
-            return q.order('created_at', { ascending: false }).limit(2);
-          });
-
-          if (!result.error && result.data) {
-            return result.data;
-          }
-
-          if (result.error && !isSchemaColumnError(result.error)) {
-            console.warn('[P!CKLE Search] 핫 불판 조회 실패', result.error);
-            if (orderCol === 'vote_count') {
-              break;
-            }
-          }
-        }
+      lastError = result.error;
+      if (result.error && !isSchemaColumnError(result.error)) {
+        console.warn('[P!CKLE Search] 핫 불판 조회 실패', result.error);
+        break;
       }
     }
 
+    if (lastError) {
+      console.warn('[P!CKLE Search] 핫 불판 조회 최종 실패', lastError);
+    }
     return [];
   }
+
+  var HOT_POLL_EMPTY_HTML =
+    '<div class="feed-empty"><p style="margin:0;font-size:0.85rem;font-weight:600;">곧 터질 불판이 준비 중이에요</p></div>';
 
   async function renderHotPolls() {
     var list = document.getElementById('hotPollList');
     if (!list) return;
 
-    var posts = await fetchHotActivePosts();
-    if (!posts.length) {
-      list.innerHTML = '';
+    var rows = await fetchHotActivePosts();
+    if (!rows.length) {
+      list.innerHTML = HOT_POLL_EMPTY_HTML;
       return;
     }
 
-    list.innerHTML = posts.map(renderPollCardHtml).join('');
+    var feed = window.PickleFeed;
+    if (feed && feed.enrichRowsToPosts && feed.renderListToContainer) {
+      try {
+        var posts = await feed.enrichRowsToPosts(rows, 'posts');
+        feed.renderListToContainer(list, posts, { emptyHtml: HOT_POLL_EMPTY_HTML });
+        return;
+      } catch (err) {
+        console.warn('[P!CKLE Search] 피드 카드 렌더 실패 — 폴백', err);
+      }
+    }
+
+    list.innerHTML = rows.map(renderPollCardHtml).join('');
     bindPollCardClicks(list);
   }
 

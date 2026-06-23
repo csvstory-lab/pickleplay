@@ -12,110 +12,223 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>P!CKLE - 검색 및 탐험 (검색 결과 리스트 통합)</title>
+<title>P!CKLE - 검색 및 탐험</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
 <style>
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
-        --theme-gold: #ffcc00;
-        --text-main: #ffffff;
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --bg-elevated: #2c2c2e;
+        --point-green: #4ADE80;
+        --point-pink: #FFA092;
+        --point-blue: #73A5FF;
+        --point-gold: #FCD34D;
+        --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
-        --border-color: #27272a;
-        --search-bar-bg: #27272a;
+        --border-soft: rgba(255, 255, 255, 0.08);
+        --border-card: rgba(255, 255, 255, 0.12);
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main);
+        margin: 0; padding: 0; background-color: var(--bg-base); color: var(--text-main);
         font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
         -webkit-tap-highlight-color: transparent; overflow-x: hidden;
     }
 
-    /* 💡 검색바 모서리 둥글게 최신 스타일 적용 */
     .search-bar-container {
         position: relative;
-        display: flex; align-items: center; background-color: var(--search-bar-bg);
-        border: 1px solid var(--border-color); border-radius: 20px; padding: 12px 18px;
-        transition: border-color 0.2s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-        margin-bottom: 20px;
+        display: flex; align-items: center;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 20px; padding: 12px 18px;
+        transition: border-color 0.25s, box-shadow 0.25s;
+        margin-bottom: 24px;
     }
-    .search-bar-container:focus-within { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
-    
-    .search-icon { font-size: 1.2rem; color: var(--text-sub); margin-right: 10px; flex-shrink: 0; }
+    .search-bar-container:focus-within {
+        border-color: rgba(74, 222, 128, 0.55);
+        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12), 0 4px 20px rgba(74, 222, 128, 0.08);
+    }
+
+    .search-icon {
+        font-size: 1.15rem; color: var(--text-sub); margin-right: 10px; flex-shrink: 0;
+    }
     .search-input {
-        flex: 1; min-width: 0; background: transparent; border: none; color: #fff;
+        flex: 1; min-width: 0; background: transparent; border: none; color: var(--text-main);
         font-family: 'Pretendard', sans-serif; font-size: 1rem; font-weight: 600; outline: none;
         padding-right: 40px;
     }
     .search-input::placeholder { color: #52525b; font-weight: 500; }
     .btn-clear {
         position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-        background: none; border: none; color: var(--text-sub); font-size: 1.2rem;
-        cursor: pointer; display: none; padding: 0; margin: 0; line-height: 1;
+        background: none; border: none; color: var(--text-sub); font-size: 1.15rem;
+        cursor: pointer; display: none; padding: 4px; margin: 0; line-height: 1;
         transition: color 0.2s; z-index: 1;
     }
-    .btn-clear:active { color: var(--neon-pink); }
+    .btn-clear:active { color: var(--point-pink); }
 
-    /* === 메인 컨텐츠 === */
     main { padding: 20px 20px 120px 20px; }
 
-    .section-title { font-family: 'Pretendard', sans-serif; font-size: 1.1rem; font-weight: 900; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-    .section-title span { color: var(--neon-green); }
+    .section-title {
+        font-family: 'Pretendard', sans-serif; font-size: 1.15rem; font-weight: 800;
+        color: var(--text-main); margin-bottom: 14px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .section-title .section-icon { font-size: 1.2rem; line-height: 1; }
+    .section-title .icon-fire { color: var(--point-pink); }
+    .section-title .icon-compass { color: var(--point-blue); }
+    .section-title .icon-timer { color: var(--point-gold); }
 
-    /* 1. 실시간 급상승 검색어 */
-    .trending-box { background-color: var(--card-bg); border-radius: 20px; border: 1px solid var(--border-color); padding: 5px 20px; margin-bottom: 35px; }
-    .trending-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #222; cursor: pointer; transition: background-color 0.2s; }
+    .trending-box {
+        background-color: var(--bg-card); border-radius: 20px;
+        border: 1px solid var(--border-card); padding: 4px 18px; margin-bottom: 32px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .trending-item {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 16px 0; border-bottom: 1px solid var(--border-soft);
+        cursor: pointer; transition: background-color 0.2s;
+    }
     .trending-item:last-child { border-bottom: none; }
-    .trending-item:active { background-color: rgba(255,255,255,0.05); }
-    
-    .trend-left { display: flex; align-items: center; gap: 15px; }
-    .trend-rank { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--text-sub); width: 20px; text-align: center; }
-    .trend-rank.top { color: var(--neon-green); }
-    .trend-keyword { font-size: 1rem; font-weight: 700; color: #e4e4e7; }
-    
-    .trend-badge { font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; }
-    .badge-up { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); }
-    .badge-new { background-color: rgba(0, 240, 255, 0.15); color: var(--neon-blue); }
-    .badge-stay { color: #52525b; font-weight: 600; }
+    .trending-item:active { background-color: rgba(255, 255, 255, 0.04); }
 
-    /* 2. 에디터 추천 탐험 카테고리 */
-    .explore-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 40px; }
-    .explore-card { background-color: #27272a; border-radius: 16px; padding: 18px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
-    .explore-card:active { transform: scale(0.96); border-color: var(--neon-blue); background-color: rgba(0, 240, 255, 0.1); }
-    .explore-icon { font-size: 1.5rem; background-color: #18181b; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-    .explore-text { font-size: 0.95rem; font-weight: 800; color: #fff; }
+    .trend-left { display: flex; align-items: center; gap: 14px; }
+    .trend-rank {
+        font-family: 'Pretendard', sans-serif; font-size: 1.05rem; font-weight: 800;
+        color: var(--text-sub); width: 22px; text-align: center;
+    }
+    .trend-rank.top { color: var(--point-green); }
+    .trend-keyword { font-size: 0.98rem; font-weight: 700; color: #e4e4e7; }
 
-    /* 3. 불판 리스트 디자인 (터지기 직전 프리뷰 & 검색 결과 공통) */
-    .poll-list { display: flex; flex-direction: column; gap: 15px; }
-    .poll-card { background-color: var(--card-bg); border-radius: 20px; border: 1px solid var(--border-color); padding: 18px; cursor: pointer; transition: 0.2s; }
-    .poll-card:active { border-color: var(--neon-green); transform: scale(0.98); background-color: rgba(57, 255, 20, 0.05); }
-    
+    .trend-badge { font-size: 0.68rem; font-weight: 800; padding: 4px 9px; border-radius: 8px; }
+    .badge-up { background-color: rgba(255, 160, 146, 0.15); color: var(--point-pink); }
+    .badge-new { background-color: rgba(115, 165, 255, 0.15); color: var(--point-blue); }
+    .badge-stay { color: #71717a; font-weight: 600; background: transparent; }
+
+    .explore-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 36px; }
+    .explore-card {
+        background-color: var(--bg-elevated); border-radius: 16px; padding: 16px 14px;
+        display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;
+        border: 1px solid var(--border-soft);
+    }
+    .explore-card:active {
+        transform: scale(0.97);
+        border-color: rgba(115, 165, 255, 0.45);
+        background-color: rgba(115, 165, 255, 0.08);
+    }
+    .explore-icon {
+        font-size: 1.25rem; background-color: var(--bg-card); width: 40px; height: 40px;
+        display: flex; justify-content: center; align-items: center; border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); color: var(--point-blue); flex-shrink: 0;
+    }
+    .explore-text { font-size: 0.92rem; font-weight: 800; color: var(--text-main); }
+
+    /* 메인 피드와 동일한 대형 카드 */
+    .list-section { padding: 0; }
+    .king-card, .list-card {
+        background: var(--bg-card) !important; border: 1px solid var(--border-card) !important;
+        border-radius: 24px !important; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+        width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow: hidden;
+    }
+    .list-card { cursor: pointer; transition: transform 0.2s; margin-bottom: 16px !important; }
+    .list-card:active { transform: scale(0.98); }
+    .king-card .card-body, .list-card .card-body {
+        display: flex !important; flex-direction: column !important; gap: 12px !important;
+        padding: 18px 20px !important;
+    }
+    .feed-card-meta {
+        order: 1 !important; display: flex !important; justify-content: space-between !important;
+        align-items: center !important; width: 100% !important; font-size: 0.78rem !important;
+        font-weight: 700 !important; color: var(--text-sub) !important; margin: 0 !important;
+    }
+    .feed-cat-badge {
+        order: 1 !important; padding: 4px 10px !important; border-radius: 6px !important;
+        color: var(--text-main) !important; background: var(--bg-elevated) !important;
+        border: none !important; margin-right: 6px !important; font-size: 0.72rem !important;
+    }
+    .feed-meta-timer {
+        order: 2 !important; color: var(--point-gold) !important;
+        display: inline-flex !important; align-items: center !important; gap: 4px !important;
+    }
+    .feed-meta-participants {
+        order: 3 !important; margin-left: auto !important; color: var(--point-pink) !important;
+        font-weight: 800 !important; display: inline-flex !important; align-items: center !important;
+        gap: 4px !important; background: transparent !important; padding: 0 !important;
+    }
+    .list-card .title {
+        order: 2 !important; font-size: 1.1rem !important; font-weight: 800 !important;
+        line-height: 1.4 !important; margin: 4px 0 2px 0 !important; color: var(--text-main) !important;
+        word-break: keep-all;
+    }
+    .king-ab-box, .text-vs-box {
+        display: none !important; visibility: hidden !important; opacity: 0 !important;
+        height: 0 !important; padding: 0 !important; margin: 0 !important;
+        border: none !important; overflow: hidden !important;
+    }
+    .list-card .btn-pick { display: none !important; }
+    .card-thumb-top {
+        width: 100% !important; aspect-ratio: 16 / 9 !important; overflow: hidden !important;
+        background: #000 !important; flex-shrink: 0 !important; border-bottom: 1px solid var(--border-soft) !important;
+    }
+    .card-thumb-top .card-thumb-img {
+        width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important;
+    }
+    .card-thumb-top--fallback {
+        display: flex !important; align-items: center !important; justify-content: center !important;
+        background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%) !important;
+    }
+    .card-thumb-fallback-label {
+        font-family: 'Pretendard', sans-serif !important; font-size: 1.2rem !important;
+        text-align: center !important; padding: 0 20px !important; color: #1a1a1a !important;
+        line-height: 1.45 !important; word-break: keep-all !important; font-weight: 800 !important;
+    }
+
+    /* 검색 결과 — 컴팩트 카드 */
+    .poll-list { display: flex; flex-direction: column; gap: 14px; }
+    .poll-card {
+        background-color: var(--bg-card); border-radius: 20px;
+        border: 1px solid var(--border-card); padding: 18px; cursor: pointer; transition: 0.2s;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+    .poll-card:active {
+        border-color: rgba(74, 222, 128, 0.4);
+        transform: scale(0.98);
+        background-color: rgba(74, 222, 128, 0.04);
+    }
     .poll-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .poll-fire { font-size: 0.75rem; font-weight: 800; color: var(--theme-gold); background: rgba(255, 204, 0, 0.15); padding: 4px 10px; border-radius: 10px; border: 1px solid rgba(255,204,0,0.3); }
-    .poll-time { font-size: 0.75rem; color: #52525b; background: #27272a; padding: 4px 10px; border-radius: 10px; }
-    
-    .poll-title { font-size: 1.05rem; font-weight: 800; color: #fff; line-height: 1.4; margin-bottom: 15px; word-break: keep-all; }
-    
+    .poll-fire {
+        font-size: 0.75rem; font-weight: 800; color: var(--point-pink);
+        background: rgba(255, 160, 146, 0.12); padding: 4px 10px; border-radius: 10px;
+        border: 1px solid rgba(255, 160, 146, 0.25);
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+    .poll-time {
+        font-size: 0.75rem; color: var(--point-gold); background: var(--bg-elevated);
+        padding: 4px 10px; border-radius: 10px; font-weight: 700;
+    }
+    .poll-title {
+        font-size: 1.02rem; font-weight: 800; color: var(--text-main);
+        line-height: 1.4; margin-bottom: 14px; word-break: keep-all;
+    }
     .vs-preview { display: flex; align-items: center; gap: 10px; }
-    .vs-item { flex: 1; background-color: #09090b; border: 1px solid #3f3f46; padding: 12px 10px; border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 700; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vs-center { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; color: var(--text-sub); }
+    .vs-item {
+        flex: 1; background-color: var(--bg-base); border: 1px solid var(--border-soft);
+        padding: 11px 10px; border-radius: 12px; text-align: center;
+        font-size: 0.84rem; font-weight: 700; color: #d4d4d8;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .vs-center {
+        font-family: 'Pretendard', sans-serif; font-size: 0.85rem; font-weight: 800;
+        color: var(--text-sub);
+    }
 
-    /* === 검색 결과 전용 UI === */
     .search-result-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .result-keyword { font-size: 1.3rem; font-weight: 900; color: var(--neon-green); }
+    .result-keyword { font-size: 1.2rem; font-weight: 800; color: var(--point-green); }
     .result-count { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; }
-    .empty-state { text-align: center; padding: 50px 20px; color: var(--text-sub); }
-    .empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+    .feed-empty { text-align: center; padding: 32px 16px; color: var(--text-sub); font-size: 0.85rem; font-weight: 600; }
 
-    /* 화면 전환을 위한 유틸리티 */
     .hidden { display: none !important; }
-
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -134,41 +247,39 @@
 
 <main>
     <div class="search-bar-container">
-        <span class="search-icon">🔍</span>
+        <i class="ph ph-magnifying-glass search-icon" aria-hidden="true"></i>
         <input type="text" class="search-input" id="searchInput" placeholder="관심있는 논쟁거리를 검색해보세요" oninput="toggleClearBtn()" onkeypress="handleEnter(event)">
-        <button class="btn-clear" id="clearBtn" onclick="clearSearch()">✕</button>
+        <button type="button" class="btn-clear" id="clearBtn" onclick="clearSearch()" aria-label="검색어 지우기"><i class="ph ph-x" aria-hidden="true"></i></button>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 🟢 기본 탐험(Discovery) UI (검색 전 노출) -->
-    <!-- ========================================== -->
     <div id="defaultExploreUI">
-        
-        <!-- 1. 실시간 급상승 검색어 -->
-        <div class="section-title"><span>🔥</span> 실시간 급상승 불판</div>
+
+        <div class="section-title">
+            <i class="ph ph-fire section-icon icon-fire" aria-hidden="true"></i>
+            실시간 급상승 불판
+        </div>
         <div class="trending-box" id="trendingBox"></div>
 
-        <!-- 2. 에디터 추천 탐험 카테고리 -->
-        <div class="section-title"><span>🧭</span> 에디터 추천 탐험</div>
+        <div class="section-title">
+            <i class="ph ph-compass section-icon icon-compass" aria-hidden="true"></i>
+            에디터 추천 탐험
+        </div>
         <div class="explore-grid" id="exploreGrid"></div>
 
-        <!-- 3. 지금 터지기 직전인 핫 불판 프리뷰 -->
-        <div class="section-title"><span>⏱️</span> 지금 터지기 직전인 불판</div>
-        <div class="poll-list" id="hotPollList"></div>
-    </div> <!-- // defaultExploreUI -->
+        <div class="section-title">
+            <i class="ph ph-hourglass-high section-icon icon-timer" aria-hidden="true"></i>
+            지금 터지기 직전인 불판
+        </div>
+        <div class="list-section" id="hotPollList"></div>
+    </div>
 
-
-    <!-- ========================================== -->
-    <!-- 🟢 검색 결과 리스트 UI (검색 실행 시 노출) -->
-    <!-- ========================================== -->
     <div id="searchResultsUI" class="hidden">
         <div class="search-result-header">
             <div class="result-keyword" id="searchKeywordDisplay">'키워드'</div>
             <div class="result-count" id="searchResultCount">검색 결과 0건</div>
         </div>
-        
         <div class="poll-list" id="searchResultsList"></div>
-    </div> <!-- // searchResultsUI -->
+    </div>
 
 </main>
 
@@ -182,12 +293,10 @@
             clearBtn.style.display = 'block';
         } else {
             clearBtn.style.display = 'none';
-            // 만약 검색창이 비워지면 다시 탐험 UI 노출
             showExploreUI();
         }
     }
 
-    // 'X' 버튼 클릭 시
     function clearSearch() {
         const input = document.getElementById('searchInput');
         input.value = '';
@@ -196,7 +305,6 @@
         input.focus();
     }
 
-    // 엔터키 입력 시 검색 실행
     function handleEnter(event) {
         if (event.key === 'Enter') {
             const keyword = document.getElementById('searchInput').value.trim();
@@ -206,21 +314,18 @@
         }
     }
 
-    // 태그나 급상승 검색어 클릭 시 실행
     function triggerSearch(keyword) {
         document.getElementById('searchInput').value = keyword;
         toggleClearBtn();
         executeSearch(keyword);
     }
 
-    // 💡 검색 실행 (결과창 노출) — pickle-search.js에서 Supabase 연동
     function executeSearch(keyword) {
         if (window.PickleSearch && window.PickleSearch.executeSearch) {
             window.PickleSearch.executeSearch(keyword);
         }
     }
 
-    // 💡 탐험 화면(기본)으로 돌아가는 함수
     function showExploreUI() {
         if (window.PickleSearch && window.PickleSearch.showExploreUI) {
             window.PickleSearch.showExploreUI();
@@ -240,7 +345,8 @@
 <script src="../js/auth.js"></script>
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/pickle-categories.js"></script>
-<script src="../js/pickle-search.js?v=20260613_search1"></script>
+<script src="../js/pickle-feed.js?v=0627"></script>
+<script src="../js/pickle-search.js?v=20260617_search2"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 </body>
