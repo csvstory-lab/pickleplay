@@ -15,7 +15,7 @@
 <title>P!CKLE - 불판 생성</title>
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 
 <style>
     /* 🎨 메인 피드와 완벽 동일한 트렌디 뉴트럴 파스텔톤 지정 */
@@ -153,9 +153,46 @@
     .thumb-grid-item--picker { flex-direction: column; gap: 4px; color: var(--text-sub); font-size: 0.72rem; font-weight: 800; border: 2px dashed #48484a; }
 
     /* 타이포그래피 폰트 칩 */
-    .font-chip-group { display: flex; gap: 6px; margin-bottom: 12px; }
-    .font-chip { background: var(--bg-elevated); border: 1px solid var(--border-soft); color: var(--text-sub); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: 0.2s;}
-    .font-chip.active { background: rgba(115, 165, 255, 0.15); color: var(--point-blue); border-color: var(--point-blue); font-weight: 700; }
+    .font-chip-group { display: flex; gap: 6px; margin-bottom: 0; flex-wrap: wrap; }
+    .font-chip { background: var(--bg-elevated); border: 1px solid var(--border-soft); color: var(--text-sub); padding: 8px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: 0.2s;}
+    .font-chip.active { font-weight: 700; }
+    .font-chip[data-font="Pretendard"].active { background: rgba(115, 165, 255, 0.18); color: var(--point-blue); border-color: var(--point-blue); }
+    .font-chip[data-font="Nanum Myeongjo"].active { background: rgba(196, 181, 255, 0.2); color: #c4b5fd; border-color: #a78bfa; }
+    .font-chip[data-font="Nanum Pen Script"].active { background: rgba(255, 133, 161, 0.18); color: var(--point-pink); border-color: var(--point-pink); }
+
+    /* 텍스트 카드(컬러박스) 폰트 · 미리보기 */
+    .text-card-font-toolbar { margin-bottom: 14px; }
+    .text-card-font-toolbar .text-card-label { font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; display: block; color: var(--text-sub); }
+    .text-preview-card {
+        flex: 1; aspect-ratio: 9/16; border-radius: 14px;
+        display: flex; justify-content: center; align-items: center;
+        padding: 15px; box-sizing: border-box;
+    }
+    .text-preview-inner {
+        color: #1a1a1e; text-align: center; word-break: keep-all;
+        width: 100%; max-width: 100%;
+    }
+    .text-preview-inner.font-gothic,
+    .thumb-live-text.font-gothic {
+        font-family: 'Pretendard', sans-serif;
+        font-size: 1.05rem; font-weight: 800;
+        letter-spacing: -0.02em; line-height: 1.45;
+    }
+    .text-preview-inner.font-myeongjo,
+    .thumb-live-text.font-myeongjo {
+        font-family: 'Nanum Myeongjo', serif;
+        font-size: 1.14rem; font-weight: 700;
+        letter-spacing: -0.01em; line-height: 1.5;
+    }
+    .text-preview-inner.font-handwriting,
+    .thumb-live-text.font-handwriting {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 1.62rem; font-weight: 400;
+        letter-spacing: 0.03em; line-height: 1.32;
+    }
+    .thumb-live-text.font-gothic { font-size: 1.1rem; }
+    .thumb-live-text.font-myeongjo { font-size: 1.18rem; }
+    .thumb-live-text.font-handwriting { font-size: 1.5rem; }
 
     /* A/B 인풋 배지 박스 */
     .ab-input-group { display: flex; flex-direction: column; gap: 10px; }
@@ -249,9 +286,9 @@
     
     <div class="thumb-tab-panel active" id="thumbPanelColor" role="tabpanel">
         <div class="font-chip-group" id="thumbFontGroup">
-            <button type="button" class="font-chip active" data-font="Pretendard" onclick="setThumbLiveFont('Pretendard', this)">고딕</button>
+            <button type="button" class="font-chip" data-font="Pretendard" onclick="setThumbLiveFont('Pretendard', this)">고딕</button>
             <button type="button" class="font-chip" data-font="Nanum Myeongjo" onclick="setThumbLiveFont('Nanum Myeongjo', this)">명조</button>
-            <button type="button" class="font-chip" data-font="Nanum Pen Script" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
+            <button type="button" class="font-chip active" data-font="Nanum Pen Script" onclick="setThumbLiveFont('Nanum Pen Script', this)">손글씨</button>
         </div>
         <div id="thumbColorGridWrap"></div>
     </div>
@@ -469,6 +506,10 @@
         const valB = document.getElementById('inputB')?.value.trim() || 'B 선택지';
         if (document.getElementById('textPreviewInnerA')) document.getElementById('textPreviewInnerA').textContent = valA;
         if (document.getElementById('textPreviewInnerB')) document.getElementById('textPreviewInnerB').textContent = valB;
+        applyTextCardPreviewFonts();
+        if (thumbTxtEl && createThumbnailState.type === 'css') {
+            applyPreviewFontToEl(thumbTxtEl, selectedThumbFont);
+        }
     };
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -485,25 +526,67 @@
     const GIPHY_API_KEY = 'QkcJRijkCEnyAQ7Q2tJ1g81hVQh6zvSY';
 
     let createThumbnailState = { type: 'none', file: null, url: null, css: null };
-    let selectedThumbFont = 'Pretendard';
-    const THUMB_FONT_MAP = {
-        'Pretendard': '800 32px Pretendard, "Black Han Sans", sans-serif',
-        'Nanum Myeongjo': '700 30px "Nanum Myeongjo", serif',
-        'Nanum Pen Script': '400 44px "Nanum Pen Script", cursive'
-    };
-    const TEXT_CARD_CANVAS_FONT = '800 36px Pretendard, "Black Han Sans", sans-serif';
+    let selectedThumbFont = 'Nanum Pen Script';
+    let selectedTextCardFont = 'Nanum Pen Script';
 
-    window.setThumbLiveFont = function(fontFamily, btn) {
-        selectedThumbFont = fontFamily;
-        document.querySelectorAll('#thumbFontGroup .font-chip').forEach(function (el) {
-            el.classList.toggle('active', el === btn);
+    const CREATE_FONT_CONFIG = {
+        'Pretendard': {
+            cssClass: 'font-gothic',
+            canvas: '800 36px Pretendard, "Black Han Sans", sans-serif',
+            thumbCanvas: '800 32px Pretendard, "Black Han Sans", sans-serif',
+            lineHeight: 40,
+            lineHeightTall: 50,
+        },
+        'Nanum Myeongjo': {
+            cssClass: 'font-myeongjo',
+            canvas: '700 38px "Nanum Myeongjo", serif',
+            thumbCanvas: '700 30px "Nanum Myeongjo", serif',
+            lineHeight: 44,
+            lineHeightTall: 54,
+        },
+        'Nanum Pen Script': {
+            cssClass: 'font-handwriting',
+            canvas: '400 52px "Nanum Pen Script", cursive',
+            thumbCanvas: '400 44px "Nanum Pen Script", cursive',
+            lineHeight: 48,
+            lineHeightTall: 58,
+        },
+    };
+
+    function getCreateFontConfig(fontKey) {
+        return CREATE_FONT_CONFIG[fontKey] || CREATE_FONT_CONFIG['Nanum Pen Script'];
+    }
+
+    function applyPreviewFontToEl(el, fontKey) {
+        if (!el) return;
+        var cfg = getCreateFontConfig(fontKey);
+        el.classList.remove('font-gothic', 'font-myeongjo', 'font-handwriting');
+        el.classList.add(cfg.cssClass);
+    }
+
+    function syncFontChipGroup(groupId, activeFont) {
+        var group = document.getElementById(groupId);
+        if (!group) return;
+        group.querySelectorAll('.font-chip').forEach(function (el) {
+            el.classList.toggle('active', el.getAttribute('data-font') === activeFont);
         });
-        const txtEl = document.getElementById('thumbLiveText');
-        if (txtEl) {
-            txtEl.style.fontFamily = fontFamily === 'Pretendard'
-                ? 'Pretendard, sans-serif'
-                : ('"' + fontFamily + '"');
-        }
+    }
+
+    function applyTextCardPreviewFonts() {
+        applyPreviewFontToEl(document.getElementById('textPreviewInnerA'), selectedTextCardFont);
+        applyPreviewFontToEl(document.getElementById('textPreviewInnerB'), selectedTextCardFont);
+    }
+
+    window.setTextCardFont = function (fontFamily, btn) {
+        selectedTextCardFont = fontFamily;
+        syncFontChipGroup('textCardFontGroup', fontFamily);
+        applyTextCardPreviewFonts();
+    };
+
+    window.setThumbLiveFont = function (fontFamily, btn) {
+        selectedThumbFont = fontFamily;
+        syncFontChipGroup('thumbFontGroup', fontFamily);
+        applyPreviewFontToEl(document.getElementById('thumbLiveText'), fontFamily);
     };
 
     // 🎨 썸네일 색상 20개 꽉 채운 프리셋
@@ -637,9 +720,7 @@
         if (placeholder) placeholder.style.display = 'none';
         if (txtEl) {
             txtEl.style.display = 'flex';
-            txtEl.style.fontFamily = selectedThumbFont === 'Pretendard'
-                ? 'Pretendard, sans-serif'
-                : ('"' + selectedThumbFont + '"');
+            applyPreviewFontToEl(txtEl, selectedThumbFont);
             txtEl.textContent = document.getElementById('inputTitle')?.value.trim() || '불판 제목 미리보기';
         }
         if (typeof updateLivePreviews === 'function') updateLivePreviews();
@@ -692,20 +773,29 @@
             }).join('');
 
             container.innerHTML = `
+                <div class="text-card-font-toolbar">
+                    <span class="text-card-label">A/B 글꼴</span>
+                    <div class="font-chip-group" id="textCardFontGroup">
+                        <button type="button" class="font-chip" data-font="Pretendard" onclick="setTextCardFont('Pretendard', this)">고딕</button>
+                        <button type="button" class="font-chip" data-font="Nanum Myeongjo" onclick="setTextCardFont('Nanum Myeongjo', this)">명조</button>
+                        <button type="button" class="font-chip active" data-font="Nanum Pen Script" onclick="setTextCardFont('Nanum Pen Script', this)">손글씨</button>
+                    </div>
+                </div>
                 <div style="margin-bottom:16px;">
                     <span style="font-size:0.8rem; font-weight:700; color:var(--text-sub); display:block; margin-bottom:8px;">환상의 짝꿍 (A/B 테마 컬러)</span>
                     <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:8px;">${paletteHtml}</div>
                 </div>
                 <div class="vs-upload-group media-layout-vertical" style="gap:10px; flex-direction:row; align-items:stretch; margin-top:8px;">
-                    <div style="flex:1;aspect-ratio:9/16;background:${theme.a};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardA">
-                        <div id="textPreviewInnerA" style="color:#0a0a0c;font-size:1.15rem;font-weight:900;text-align:center;word-break:keep-all;line-height:1.4;">A 선택지</div>
+                    <div class="text-preview-card" style="background:${theme.a};" id="textPreviewCardA">
+                        <div id="textPreviewInnerA" class="text-preview-inner font-handwriting">A 선택지</div>
                     </div>
                     <div class="vs-badge-upload">VS</div>
-                    <div style="flex:1;aspect-ratio:9/16;background:${theme.b};border-radius:14px;display:flex;justify-content:center;align-items:center;padding:15px;box-sizing:border-box;" id="textPreviewCardB">
-                        <div id="textPreviewInnerB" style="color:#0a0a0c;font-size:1.15rem;font-weight:900;text-align:center;word-break:keep-all;line-height:1.4;">B 선택지</div>
+                    <div class="text-preview-card" style="background:${theme.b};" id="textPreviewCardB">
+                        <div id="textPreviewInnerB" class="text-preview-inner font-handwriting">B 선택지</div>
                     </div>
                 </div>
             `;
+            syncFontChipGroup('textCardFontGroup', selectedTextCardFont);
             if(typeof updateLivePreviews === 'function') updateLivePreviews();
             return;
         }
@@ -786,12 +876,12 @@
         ctx.fillRect(0, 0, width, height);
     }
 
-    function drawCanvasWrappedText(ctx, text, width, height, fontStr) {
+    function drawCanvasWrappedText(ctx, text, width, height, fontStr, lineHeightPx) {
         const safeText = String(text ?? '').trim();
         if (!safeText) return;
 
         ctx.fillStyle = CANVAS_TEXT_COLOR;
-        ctx.font = fontStr || TEXT_CARD_CANVAS_FONT;
+        ctx.font = fontStr || getCreateFontConfig(selectedTextCardFont).canvas;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -808,7 +898,7 @@
         }
         lines.push(line);
 
-        const lineHeight = height > 500 ? 50 : 40;
+        const lineHeight = lineHeightPx || (height > 500 ? 50 : 40);
         const startY = (height / 2) - ((lines.length - 1) * (lineHeight / 2));
         lines.forEach((ln, i) => ctx.fillText(ln, width / 2, startY + (i * lineHeight)));
     }
@@ -841,7 +931,7 @@
         });
     }
 
-    async function makeCanvasImage(text, bgColor, width, height, fontStr) {
+    async function makeCanvasImage(text, bgColor, width, height, fontStr, lineHeightPx) {
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
@@ -849,7 +939,7 @@
         if (!ctx) throw new Error('캔버스를 초기화하지 못했습니다.');
 
         paintCanvasBackground(ctx, bgColor, width, height);
-        drawCanvasWrappedText(ctx, text, width, height, fontStr);
+        drawCanvasWrappedText(ctx, text, width, height, fontStr, lineHeightPx);
 
         const file = await canvasToValidFile(canvas, 'generated.png');
         if (!(file instanceof File) || !file.size) {
@@ -864,8 +954,8 @@
         const title = String(document.getElementById('inputTitle')?.value ?? '').trim();
         if (!title) throw new Error('썸네일 텍스트(불판 제목)을 입력해 주세요.');
 
-        const fontStr = THUMB_FONT_MAP[selectedThumbFont] || THUMB_FONT_MAP.Pretendard;
-        const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, fontStr);
+        const thumbFontCfg = getCreateFontConfig(selectedThumbFont);
+        const thumbFile = await makeCanvasImage(title, createThumbnailState.css, 640, 360, thumbFontCfg.thumbCanvas, thumbFontCfg.lineHeight);
         const uploadedThumbUrl = await window.PickleMedia.uploadPostImage(thumbFile, userId, { aspectRatio: 16 / 9 });
         if (!uploadedThumbUrl) throw new Error('썸네일 업로드에 실패했습니다.');
 
@@ -878,8 +968,9 @@
             const theme = TEXT_CARD_THEMES[selectedTextThemeIndex] || TEXT_CARD_THEMES[0];
             const valA = document.getElementById('inputA').value.trim() || 'A';
             const valB = document.getElementById('inputB').value.trim() || 'B';
-            const fileA = await makeCanvasImage(valA, theme.a, 540, 960, TEXT_CARD_CANVAS_FONT);
-            const fileB = await makeCanvasImage(valB, theme.b, 540, 960, TEXT_CARD_CANVAS_FONT);
+            const textFontCfg = getCreateFontConfig(selectedTextCardFont);
+            const fileA = await makeCanvasImage(valA, theme.a, 540, 960, textFontCfg.canvas, textFontCfg.lineHeightTall);
+            const fileB = await makeCanvasImage(valB, theme.b, 540, 960, textFontCfg.canvas, textFontCfg.lineHeightTall);
             if (!fileA.size || !fileB.size) {
                 throw new Error('텍스트 카드 이미지를 생성하지 못했습니다.');
             }
