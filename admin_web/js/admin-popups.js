@@ -195,6 +195,7 @@
     document.getElementById('popupImageUrlInput').value = '';
     document.getElementById('popupStartInput').value = '';
     document.getElementById('popupEndInput').value = '';
+    syncPopupDateConstraints();
     document.getElementById('popupActiveInput').checked = true;
     resetImageState();
     var submitBtn = document.getElementById('popupSubmitBtn');
@@ -207,8 +208,9 @@
     document.getElementById('popupTitleInput').value = row.title || '';
     document.getElementById('popupLinkInput').value = row.link_url || '';
     document.getElementById('popupImageUrlInput').value = row.image_url || '';
-    document.getElementById('popupStartInput').value = toDatetimeLocal(row.start_date);
-    document.getElementById('popupEndInput').value = toDatetimeLocal(row.end_date);
+    document.getElementById('popupStartInput').value = toDateInputValue(row.start_date);
+    document.getElementById('popupEndInput').value = toDateInputValue(row.end_date);
+    syncPopupDateConstraints();
     document.getElementById('popupActiveInput').checked = !!row.is_active;
     pendingImageFile = null;
     existingImageUrl = row.image_url || null;
@@ -217,31 +219,97 @@
     if (submitBtn) submitBtn.textContent = '💾 팝업 수정 저장';
   }
 
-  function toDatetimeLocal(iso) {
+  function toDateInputValue(iso) {
     if (!iso) return '';
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     var pad = function (n) {
       return String(n).padStart(2, '0');
     };
-    return (
-      d.getFullYear() +
-      '-' +
-      pad(d.getMonth() + 1) +
-      '-' +
-      pad(d.getDate()) +
-      'T' +
-      pad(d.getHours()) +
-      ':' +
-      pad(d.getMinutes())
-    );
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   }
 
-  function fromDatetimeLocal(value) {
-    if (!value) return null;
-    var d = new Date(value);
+  function fromDateInputStart(dateStr) {
+    if (!dateStr) return null;
+    var parts = String(dateStr).split('-');
+    if (parts.length !== 3) return null;
+    var y = Number(parts[0]);
+    var m = Number(parts[1]);
+    var day = Number(parts[2]);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(day)) return null;
+    var d = new Date(y, m - 1, day, 0, 0, 0, 0);
     if (isNaN(d.getTime())) return null;
     return d.toISOString();
+  }
+
+  function fromDateInputEnd(dateStr) {
+    if (!dateStr) return null;
+    var parts = String(dateStr).split('-');
+    if (parts.length !== 3) return null;
+    var y = Number(parts[0]);
+    var m = Number(parts[1]);
+    var day = Number(parts[2]);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(day)) return null;
+    var d = new Date(y, m - 1, day, 23, 59, 59, 999);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  }
+
+  function validatePopupDateRange(showAlert) {
+    var startEl = document.getElementById('popupStartInput');
+    var endEl = document.getElementById('popupEndInput');
+    if (!startEl || !endEl) return true;
+
+    var startVal = startEl.value;
+    var endVal = endEl.value;
+    if (!startVal || !endVal) return true;
+
+    if (endVal < startVal) {
+      if (showAlert) {
+        alert('종료 날짜는 시작 날짜보다 빠를 수 없습니다.');
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function syncPopupDateConstraints() {
+    var startEl = document.getElementById('popupStartInput');
+    var endEl = document.getElementById('popupEndInput');
+    if (!startEl || !endEl) return;
+
+    if (startEl.value) {
+      endEl.min = startEl.value;
+    } else {
+      endEl.removeAttribute('min');
+    }
+
+    if (endEl.value) {
+      startEl.max = endEl.value;
+    } else {
+      startEl.removeAttribute('max');
+    }
+
+    if (startEl.value && endEl.value && endEl.value < startEl.value) {
+      endEl.value = startEl.value;
+    }
+  }
+
+  function bindPopupDateInputs() {
+    var startEl = document.getElementById('popupStartInput');
+    var endEl = document.getElementById('popupEndInput');
+    if (!startEl || !endEl || startEl.dataset.dateBound === '1') return;
+    startEl.dataset.dateBound = '1';
+    endEl.dataset.dateBound = '1';
+
+    startEl.addEventListener('change', function () {
+      syncPopupDateConstraints();
+      validatePopupDateRange(false);
+    });
+    endEl.addEventListener('change', function () {
+      syncPopupDateConstraints();
+      validatePopupDateRange(true);
+    });
   }
 
   async function loadPopups() {
@@ -394,8 +462,8 @@
   async function submitPopupForm() {
     var title = String(document.getElementById('popupTitleInput').value || '').trim();
     var linkUrl = String(document.getElementById('popupLinkInput').value || '').trim();
-    var startDate = fromDatetimeLocal(document.getElementById('popupStartInput').value);
-    var endDate = fromDatetimeLocal(document.getElementById('popupEndInput').value);
+    var startDate = fromDateInputStart(document.getElementById('popupStartInput').value);
+    var endDate = fromDateInputEnd(document.getElementById('popupEndInput').value);
     var isActive = document.getElementById('popupActiveInput').checked;
 
     if (!title) {
@@ -403,11 +471,10 @@
       return;
     }
     if (!startDate || !endDate) {
-      alert('노출 기간(시작·종료)을 입력해 주세요.');
+      alert('시작 날짜와 종료 날짜를 모두 선택해 주세요.');
       return;
     }
-    if (new Date(endDate).getTime() < new Date(startDate).getTime()) {
-      alert('종료일은 시작일 이후여야 합니다.');
+    if (!validatePopupDateRange(true)) {
       return;
     }
 
@@ -477,6 +544,8 @@
     }
 
     bindImageInput();
+    bindPopupDateInputs();
+    syncPopupDateConstraints();
   }
 
   var popupsInitialized = false;

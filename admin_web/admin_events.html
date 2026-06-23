@@ -54,6 +54,7 @@
     .status-scheduled { background: rgba(0, 240, 255, 0.1); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.3); }
     .btn-cancel { background: #27272a; color: #fff; border: 1px solid #3f3f46; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Pentabreed', 'Pretendard', sans-serif; width: 100%; margin-top: 8px; }
     .hint { font-size: 0.75rem; color: var(--text-sub); margin-top: 4px; }
+    .popup-date-input { color-scheme: dark; }
 
     /* 서브 탭 스타일 */
     .view-switch-btns { display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
@@ -426,14 +427,15 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label" for="popupStartInput">노출 시작 <span style="color:var(--neon-pink);">*</span></label>
-                            <input type="datetime-local" class="form-input" id="popupStartInput">
+                            <label class="form-label" for="popupStartInput">시작 날짜 <span style="color:var(--neon-pink);">*</span></label>
+                            <input type="date" class="form-input popup-date-input" id="popupStartInput" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="popupEndInput">노출 종료 <span style="color:var(--neon-pink);">*</span></label>
-                            <input type="datetime-local" class="form-input" id="popupEndInput">
+                            <label class="form-label" for="popupEndInput">종료 날짜 <span style="color:var(--neon-pink);">*</span></label>
+                            <input type="date" class="form-input popup-date-input" id="popupEndInput" required>
                         </div>
                     </div>
+                    <p class="hint" style="margin-top:-4px;margin-bottom:12px;">종료 날짜는 시작 날짜보다 빠를 수 없습니다.</p>
 
                     <div class="form-group">
                         <label class="form-label" for="popupLinkInput">클릭 이동 링크 (선택)</label>
@@ -794,7 +796,7 @@
     }
   </script>
   <script src="js/admin-events.js?v=20260617_event_upload"></script>
-  <script src="js/admin-popups.js?v=20260617_popup3"></script>
+  <script src="js/admin-popups.js?v=20260617_popup4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>
