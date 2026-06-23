@@ -284,10 +284,10 @@
     .create-success-modal {
         width: 100%;
         max-width: 360px;
-        background: linear-gradient(180deg, #ffffff 0%, #fff8fc 100%);
+        background: #1c1c1e;
         border-radius: 20px;
-        border: 1px solid rgba(255, 133, 161, 0.18);
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: none;
         padding: 28px 22px 22px;
         text-align: center;
         transform: translateY(28px);
@@ -318,10 +318,11 @@
         margin: 0 0 20px;
         font-size: 0.98rem;
         font-weight: 700;
-        color: #2c2c2e;
-        line-height: 1.55;
+        color: #fcfcfc;
+        line-height: 1.5;
         letter-spacing: -0.02em;
         word-break: keep-all;
+        white-space: normal;
     }
     .create-success-btn {
         width: 100%;
@@ -534,7 +535,7 @@
 <div id="createSuccessOverlay" class="create-success-overlay" aria-hidden="true">
     <div class="create-success-modal" role="dialog" aria-modal="true" aria-labelledby="createSuccessMessage">
         <div class="create-success-icon" aria-hidden="true">✨</div>
-        <p id="createSuccessMessage" class="create-success-message"></p>
+        <p id="createSuccessMessage" class="create-success-message">두근두근, 새로운 불판이 열렸어요!<br>✨ 어떤 픽(Pick)이 모일까요?</p>
         <button type="button" class="create-success-btn" id="createSuccessBtn">확인</button>
     </div>
 </div>
@@ -1107,10 +1108,20 @@
 
   /** 불판 생성 성공 팝업 문구 — 여기서 쉽게 수정 가능 */
     const CREATE_SUCCESS_COPY = {
-        message: '두근두근, 새로운 불판이 열렸어요! ✨ 어떤 픽(Pick)이 모일까요?',
+        line1: '두근두근, 새로운 불판이 열렸어요!',
+        line2: '✨ 어떤 픽(Pick)이 모일까요?',
         buttonLabel: '확인',
         fallbackUrl: 'index.html',
     };
+
+    function renderCreateSuccessMessage(msgEl, copy) {
+        if (!msgEl) return;
+        var data = copy || CREATE_SUCCESS_COPY;
+        msgEl.innerHTML = '';
+        msgEl.appendChild(document.createTextNode(data.line1 || ''));
+        msgEl.appendChild(document.createElement('br'));
+        msgEl.appendChild(document.createTextNode(data.line2 || ''));
+    }
 
     function buildCreateSuccessRedirectUrl(postId) {
         var id = postId != null ? String(postId).trim() : '';
@@ -1157,7 +1168,7 @@
             return;
         }
 
-        msgEl.textContent = copy.message;
+        renderCreateSuccessMessage(msgEl, copy);
         btn.textContent = copy.buttonLabel;
         btn.disabled = false;
         overlay.classList.remove('is-closing');
