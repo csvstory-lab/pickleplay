@@ -256,43 +256,51 @@
         transition: top 0.3s ease-in-out;
     }
 
-    /* 불판 생성 성공 모달 — 파스텔 2D */
+    /* 불판 생성 성공 모달 — 파스텔 2D · 하단 슬라이드업 */
     .create-success-overlay {
         position: fixed;
         inset: 0;
         z-index: 100000;
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
-        padding: 24px 20px;
+        padding: 0 20px calc(28px + env(safe-area-inset-bottom, 0px));
         box-sizing: border-box;
-        background: rgba(10, 10, 12, 0.55);
+        background: rgba(10, 10, 12, 0.5);
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
+        transition: opacity 0.32s ease, visibility 0.32s ease;
     }
     .create-success-overlay.is-open {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
     }
+    .create-success-overlay.is-closing {
+        opacity: 0;
+        pointer-events: none;
+    }
     .create-success-modal {
         width: 100%;
-        max-width: 320px;
+        max-width: 360px;
         background: linear-gradient(180deg, #ffffff 0%, #fff8fc 100%);
         border-radius: 20px;
         border: 1px solid rgba(255, 133, 161, 0.18);
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
         padding: 28px 22px 22px;
         text-align: center;
-        transform: translateY(18px) scale(0.97);
+        transform: translateY(28px);
         opacity: 0;
-        transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.34s ease;
     }
     .create-success-overlay.is-open .create-success-modal {
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
         opacity: 1;
+    }
+    .create-success-overlay.is-closing .create-success-modal {
+        transform: translateY(16px);
+        opacity: 0;
     }
     .create-success-icon {
         width: 52px;
@@ -339,9 +347,16 @@
         .create-success-modal {
             transition: none;
         }
-        .create-success-overlay.is-open .create-success-modal {
+        .create-success-overlay.is-open .create-success-modal,
+        .create-success-overlay.is-closing .create-success-modal {
             transform: none;
             opacity: 1;
+        }
+        .create-success-overlay.is-closing {
+            opacity: 0;
+        }
+        .create-success-overlay.is-closing .create-success-modal {
+            opacity: 0;
         }
     }
 </style>
@@ -520,7 +535,7 @@
     <div class="create-success-modal" role="dialog" aria-modal="true" aria-labelledby="createSuccessMessage">
         <div class="create-success-icon" aria-hidden="true">✨</div>
         <p id="createSuccessMessage" class="create-success-message"></p>
-        <button type="button" class="create-success-btn" id="createSuccessBtn">불판 보러가기</button>
+        <button type="button" class="create-success-btn" id="createSuccessBtn">확인</button>
     </div>
 </div>
 
@@ -1093,27 +1108,75 @@
   /** 불판 생성 성공 팝업 문구 — 여기서 쉽게 수정 가능 */
     const CREATE_SUCCESS_COPY = {
         message: '두근두근, 새로운 불판이 열렸어요! ✨ 어떤 픽(Pick)이 모일까요?',
-        buttonLabel: '불판 보러가기',
-        redirectUrl: 'index.html',
+        buttonLabel: '확인',
+        fallbackUrl: 'index.html',
     };
 
-    function showCreateSuccessModal(overrides) {
-        const copy = Object.assign({}, CREATE_SUCCESS_COPY, overrides || {});
-        const overlay = document.getElementById('createSuccessOverlay');
-        const msgEl = document.getElementById('createSuccessMessage');
-        const btn = document.getElementById('createSuccessBtn');
-        if (!overlay || !msgEl || !btn) {
-            location.href = copy.redirectUrl;
+    function buildCreateSuccessRedirectUrl(postId) {
+        var id = postId != null ? String(postId).trim() : '';
+        if (id) {
+            return 'detail.html?id=' + encodeURIComponent(id);
+        }
+        return CREATE_SUCCESS_COPY.fallbackUrl;
+    }
+
+    function closeCreateSuccessModal(done) {
+        var overlay = document.getElementById('createSuccessOverlay');
+        if (!overlay) {
+            if (typeof done === 'function') done();
             return;
         }
+        overlay.classList.remove('is-open');
+        overlay.classList.add('is-closing');
+        var finished = false;
+        function finish() {
+            if (finished) return;
+            finished = true;
+            overlay.classList.remove('is-closing');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            if (typeof done === 'function') done();
+        }
+        overlay.addEventListener('transitionend', function onEnd(e) {
+            if (e.target !== overlay && e.target !== overlay.querySelector('.create-success-modal')) return;
+            overlay.removeEventListener('transitionend', onEnd);
+            finish();
+        });
+        window.setTimeout(finish, 420);
+    }
+
+    function showCreateSuccessModal(overrides) {
+        var copy = Object.assign({}, CREATE_SUCCESS_COPY, overrides || {});
+        var overlay = document.getElementById('createSuccessOverlay');
+        var msgEl = document.getElementById('createSuccessMessage');
+        var btn = document.getElementById('createSuccessBtn');
+        var redirectUrl = copy.redirectUrl || buildCreateSuccessRedirectUrl(copy.postId);
+
+        if (!overlay || !msgEl || !btn) {
+            location.href = redirectUrl;
+            return;
+        }
+
         msgEl.textContent = copy.message;
         btn.textContent = copy.buttonLabel;
+        btn.disabled = false;
+        overlay.classList.remove('is-closing');
+
         btn.onclick = function () {
-            location.href = copy.redirectUrl;
+            if (btn.disabled) return;
+            btn.disabled = true;
+            closeCreateSuccessModal(function () {
+                location.href = redirectUrl;
+            });
         };
-        overlay.classList.add('is-open');
+
         overlay.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                overlay.classList.add('is-open');
+            });
+        });
     }
 
     async function validateAndSubmit(e) {
@@ -1151,7 +1214,11 @@
         try {
             const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
             if (result?.cancelled) return false;
-            if (result?.ok) { submitSucceeded = true; showCreateSuccessModal(); return false; }
+            if (result?.ok) {
+                submitSucceeded = true;
+                showCreateSuccessModal({ postId: result.id });
+                return false;
+            }
         } catch (err) { if (!window.PickleCreatePage.handleInsertError(err)) { alert('DB 저장 에러: ' + (err.message || String(err))); }
         } finally { isSubmitting = false; if (!submitSucceeded) { btnSubmit.disabled = false; btnSubmit.textContent = '불판 지피기 (등록)'; } }
         return false;
