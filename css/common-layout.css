@@ -31,7 +31,7 @@ header#mainHeader {
 }
 
 .logo {
-  font-family: 'Black Han Sans', sans-serif;
+  font-family: 'Black Han Sans', sans-serif !important;
   font-size: 1.7rem;
   background: linear-gradient(90deg, var(--point-green), #86efac);
   -webkit-background-clip: text;

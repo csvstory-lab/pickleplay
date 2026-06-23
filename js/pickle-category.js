@@ -153,7 +153,6 @@
 
   function buildQueryFilters(sort, urlCategorySlug) {
     var nowIso = new Date().toISOString();
-    var dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     var dbCategory = getCategoriesApi().slugToDbCategory(urlCategorySlug);
 
     return function (q) {
@@ -171,10 +170,7 @@
 
       switch (sort) {
         case 'today_popular':
-          q = q
-            .gte('created_at', dayAgoIso)
-            .order('created_at', { ascending: false })
-            .limit(80);
+          q = q.order('created_at', { ascending: false }).limit(120);
           break;
         case 'deadline':
           q = q.order('expires_at', { ascending: true }).limit(80);
@@ -197,12 +193,12 @@
 
     if (sort === 'today_popular') {
       list.sort(function (a, b) {
-        var scoreA =
-          Number(a && a.participationScore) ||
-          (Number(a && a.totalVotes) || 0) + (Number(a && a.commentCount) || 0);
-        var scoreB =
-          Number(b && b.participationScore) ||
-          (Number(b && b.totalVotes) || 0) + (Number(b && b.commentCount) || 0);
+        var votesA = Number(a && a.totalVotes) || Number(a && a.vote_count) || 0;
+        var votesB = Number(b && b.totalVotes) || Number(b && b.vote_count) || 0;
+        var commentsA = Number(a && a.commentCount) || Number(a && a.comment_count) || 0;
+        var commentsB = Number(b && b.commentCount) || Number(b && b.comment_count) || 0;
+        var scoreA = votesA + commentsA;
+        var scoreB = votesB + commentsB;
         if (scoreB !== scoreA) return scoreB - scoreA;
         var createdA = a && a.created_at ? new Date(a.created_at).getTime() : 0;
         var createdB = b && b.created_at ? new Date(b.created_at).getTime() : 0;

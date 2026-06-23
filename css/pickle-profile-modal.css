@@ -223,7 +223,9 @@
   box-shadow: none;
 }
 
-body[data-nav-page="detail"] .pickle-profile-modal-sheet #popupMessageBtn {
+body[data-nav-page="detail"] .pickle-profile-modal-sheet #popupMessageBtn,
+body[data-nav-page="ranking"] .pickle-profile-modal-sheet #popupMessageBtn,
+body[data-nav-page="mypage"] .pickle-profile-modal-sheet #popupMessageBtn {
   display: inline-flex;
 }
 

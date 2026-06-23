@@ -462,6 +462,10 @@
     if (window.PickleFollows && window.PickleFollows.loadFollowStats) {
       await window.PickleFollows.loadFollowStats(user.id);
     }
+
+    if (window.PickleMessages && window.PickleMessages.refreshInboxBadge) {
+      await window.PickleMessages.refreshInboxBadge(user.id);
+    }
   }
 
   async function resolveAuthUserOnly() {

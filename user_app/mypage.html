@@ -125,7 +125,7 @@
     }
     .point-right { color: var(--text-sub); font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
 
-    .fandom-stats { display: flex; gap: 20px; margin-bottom: 18px; }
+    .fandom-stats { display: flex; gap: 20px; margin-bottom: 14px; }
     .stat-box {
         display: flex; flex-direction: column; cursor: pointer; transition: 0.2s;
         padding: 8px 12px; border-radius: 12px;
@@ -135,6 +135,25 @@
     .stat-box:active { background-color: rgba(255, 255, 255, 0.06); transform: scale(0.97); }
     .stat-num { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; color: var(--text-main); }
     .stat-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-top: 2px; }
+
+    .message-inbox-row { margin-bottom: 18px; }
+    .btn-message-inbox {
+        width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 13px 16px; border-radius: 14px; border: 1px solid var(--border-card);
+        background: var(--bg-elevated); color: var(--text-main);
+        font-family: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer;
+        transition: transform 0.15s, border-color 0.2s, background 0.2s;
+        position: relative;
+    }
+    .btn-message-inbox:active { transform: scale(0.98); border-color: rgba(115, 165, 255, 0.4); }
+    .btn-message-inbox .ph { font-size: 1.1rem; color: var(--point-blue); }
+    .message-inbox-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+        background: #ff4d4d; color: #fff; font-size: 0.68rem; font-weight: 900;
+        box-shadow: 0 0 10px rgba(255, 77, 77, 0.45);
+    }
+    .message-inbox-badge.hidden { display: none !important; }
 
     .exp-container {
         background-color: var(--bg-elevated);
@@ -154,7 +173,7 @@
 
     .progress-track { width: 100%; height: 8px; background-color: var(--bg-base); border-radius: 999px; overflow: hidden; position: relative; }
     .progress-fill {
-        position: absolute; top: 0; left: 0; height: 100%; width: 75%;
+        position: absolute; top: 0; left: 0; height: 100%; width: 0%;
         background: linear-gradient(90deg, var(--point-blue), var(--point-green));
         border-radius: 999px;
     }
@@ -1392,6 +1411,14 @@
             </div>
         </div>
 
+        <div class="message-inbox-row">
+            <button type="button" class="btn-message-inbox" id="btnMessageInbox" onclick="openMessageInbox()">
+                <i class="ph ph-envelope-simple" aria-hidden="true"></i>
+                메세지함
+                <span class="message-inbox-badge hidden" id="messageInboxBadge" hidden>0</span>
+            </button>
+        </div>
+
         <div class="exp-container">
             <div class="exp-header">
                 <span class="level-rank-row">
@@ -1400,13 +1427,7 @@
                     <div id="levelGuidePopover" class="level-guide-popover hidden" role="tooltip">
                         <strong>레벨업 가이드</strong>
                         <p class="level-guide-desc">랭킹 포인트가 쌓이면 레벨이 올라갑니다. 투표·댓글·팬덤 활동으로 포인트를 모아보세요!</p>
-                        <ul class="level-guide-tiers" id="levelGuideTiersList">
-                            <li>Lv.1 · 새내기 픽클러 (0~99점)</li>
-                            <li>Lv.2 · 활동 시작 (100~299점)</li>
-                            <li>Lv.3 · 인기 픽클러 (300~599점)</li>
-                            <li>Lv.4 · 영향력 확장 (600~999점)</li>
-                            <li>Lv.5 · 명예의 전당 (1,000점 이상)</li>
-                        </ul>
+                        <ul class="level-guide-tiers" id="levelGuideTiersList"></ul>
                         <button type="button" class="level-guide-more" onclick="openGuideModal()">포인트 적립 자세히 보기 ›</button>
                     </div>
                 </span>
@@ -2119,8 +2140,9 @@
 <script src="../js/pickle-profile.js"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-follows.js?v=20260608_fandom3"></script>
+<script src="../js/pickle-messages.js?v=20260617_messages1"></script>
 <script src="../js/pickle-policies.js"></script>
-<script src="../js/mypage-page.js?v=20260617_level_tiers"></script>
+<script src="../js/mypage-page.js?v=20260617_messages1"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
