@@ -1010,22 +1010,22 @@ function renderCommentItemHtml(comment, options) {
         insertResult.data && insertResult.data.id ? insertResult.data.id : null;
       var replyParentId = insertPayload.parent_id || null;
 
-      var replyAuthorId =
-        (currentPost && currentPost.author_id) ||
-        (currentPost && currentPost.user_id) ||
-        null;
-      if (
-        replyAuthorId &&
-        newReplyId &&
-        window.PickleProfile &&
-        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget
-      ) {
-        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
-          replyAuthorId,
-          currentPostId,
-          'COMMENT',
-          { commentId: newReplyId }
-        );
+      try {
+        var commentPoints =
+          (window.PickleProfile &&
+            window.PickleProfile.STAR_SCORE_GUIDE &&
+            window.PickleProfile.STAR_SCORE_GUIDE.COMMENT) ||
+          3;
+        if (window.PickleProfile && window.PickleProfile.tryIncrementSelfStarScoreFireAndForget) {
+          window.PickleProfile.tryIncrementSelfStarScoreFireAndForget(commentPoints, 'reply');
+        } else {
+          await sb.rpc('increment_star_score', { p_amount: commentPoints });
+          if (window.PickleProfile && window.PickleProfile.clearRankingPointsCache) {
+            window.PickleProfile.clearRankingPointsCache(user.id);
+          }
+        }
+      } catch (scoreErr) {
+        console.error('[Score Engine Error]', 'reply increment_star_score', scoreErr);
       }
 
       if (replyParentId && newReplyId) {
@@ -1358,21 +1358,22 @@ function renderCommentsList(comments, sortType) {
         newComment.author_avatar_html = authorSnapshot.author_avatar_html;
       }
 
-      var authorId =
-        (currentPost && currentPost.author_id) ||
-        (currentPost && currentPost.user_id) ||
-        null;
-      if (
-        authorId &&
-        window.PickleProfile &&
-        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget
-      ) {
-        window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
-          authorId,
-          currentPostId,
-          'COMMENT',
-          { commentId: newComment.id }
-        );
+      try {
+        var commentPoints =
+          (window.PickleProfile &&
+            window.PickleProfile.STAR_SCORE_GUIDE &&
+            window.PickleProfile.STAR_SCORE_GUIDE.COMMENT) ||
+          3;
+        if (window.PickleProfile && window.PickleProfile.tryIncrementSelfStarScoreFireAndForget) {
+          window.PickleProfile.tryIncrementSelfStarScoreFireAndForget(commentPoints, 'comment');
+        } else {
+          await sb.rpc('increment_star_score', { p_amount: commentPoints });
+          if (window.PickleProfile && window.PickleProfile.clearRankingPointsCache) {
+            window.PickleProfile.clearRankingPointsCache(user.id);
+          }
+        }
+      } catch (scoreErr) {
+        console.error('[Score Engine Error]', 'comment increment_star_score', scoreErr);
       }
 
       await notifyForNewComment(sb, {
@@ -2009,20 +2010,22 @@ function renderCommentsList(comments, sortType) {
       throw insertResult.error;
     }
 
-    var authorId =
-      (currentPost && currentPost.author_id) ||
-      (currentPost && currentPost.user_id) ||
-      null;
-    if (
-      authorId &&
-      window.PickleProfile &&
-      window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget
-    ) {
-      window.PickleProfile.tryAwardPostAuthorStarScoreFireAndForget(
-        authorId,
-        postId,
-        'VOTE'
-      );
+    try {
+      var votePoints =
+        (window.PickleProfile &&
+          window.PickleProfile.STAR_SCORE_GUIDE &&
+          window.PickleProfile.STAR_SCORE_GUIDE.VOTE) ||
+        1;
+      if (window.PickleProfile && window.PickleProfile.tryIncrementSelfStarScoreFireAndForget) {
+        window.PickleProfile.tryIncrementSelfStarScoreFireAndForget(votePoints, 'vote');
+      } else {
+        await sb.rpc('increment_star_score', { p_amount: votePoints });
+        if (window.PickleProfile && window.PickleProfile.clearRankingPointsCache) {
+          window.PickleProfile.clearRankingPointsCache(user.id);
+        }
+      }
+    } catch (scoreErr) {
+      console.error('[Score Engine Error]', 'vote increment_star_score', scoreErr);
     }
 
     if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {

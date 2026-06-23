@@ -627,8 +627,28 @@
     if (ins.error) throw ins.error;
     myFollowingSet.add(String(targetUserId));
 
-    if (window.PickleProfile && window.PickleProfile.tryUpdateUserScoreFireAndForget) {
-      window.PickleProfile.tryUpdateUserScoreFireAndForget(targetUserId, 'PICK_ME');
+    try {
+      var pickPoints =
+        (window.PickleProfile &&
+          window.PickleProfile.STAR_SCORE_GUIDE &&
+          window.PickleProfile.STAR_SCORE_GUIDE.PICK_ME) ||
+        10;
+      if (window.PickleProfile && window.PickleProfile.tryIncrementStarScoreFireAndForget) {
+        window.PickleProfile.tryIncrementStarScoreFireAndForget(
+          pickPoints,
+          targetUserId,
+          'pick_me'
+        );
+      } else {
+        sb.rpc('increment_star_score', {
+          p_amount: pickPoints,
+          p_target_id: targetUserId,
+        }).catch(function (err) {
+          console.error('[Score Engine Error]', 'pick_me increment_star_score', err);
+        });
+      }
+    } catch (scoreErr) {
+      console.error('[Score Engine Error]', 'pick_me increment_star_score', scoreErr);
     }
 
     return true;

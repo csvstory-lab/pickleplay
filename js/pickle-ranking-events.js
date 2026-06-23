@@ -95,8 +95,24 @@
       return;
     }
 
-    if (window.PickleProfile && window.PickleProfile.tryAwardPostAuthorFromPostIdFireAndForget) {
-      window.PickleProfile.tryAwardPostAuthorFromPostIdFireAndForget(postId, 'SHARE');
+    try {
+      var sharePoints =
+        (window.PickleProfile &&
+          window.PickleProfile.STAR_SCORE_GUIDE &&
+          window.PickleProfile.STAR_SCORE_GUIDE.SHARE) ||
+        5;
+      if (window.PickleProfile && window.PickleProfile.tryIncrementSelfStarScoreFireAndForget) {
+        window.PickleProfile.tryIncrementSelfStarScoreFireAndForget(sharePoints, 'share');
+      } else if (userId) {
+        var sbShare = getClient();
+        if (sbShare) {
+          sbShare.rpc('increment_star_score', { p_amount: sharePoints }).catch(function (err) {
+            console.error('[Score Engine Error]', 'share increment_star_score', err);
+          });
+        }
+      }
+    } catch (scoreErr) {
+      console.error('[Score Engine Error]', 'share increment_star_score', scoreErr);
     }
   }
 
@@ -142,23 +158,19 @@
       return false;
     }
 
-    var postResult = await sb
-      .from('posts')
-      .select('author_id, like_count')
-      .eq('id', postId)
-      .maybeSingle();
-
-    var post = postResult.data;
-    if (!post || !post.author_id) return true;
-
-    var currentLikes = Number(post.like_count);
-    if (!Number.isFinite(currentLikes) || currentLikes < 1) currentLikes = 1;
-
-    if (window.PickleProfile && window.PickleProfile.updateUserScore) {
-      await window.PickleProfile.updateUserScore(post.author_id, 'LIKE_MILESTONE', {
-        postId: postId,
-        currentLikes: currentLikes,
-      });
+    try {
+      if (window.PickleProfile && window.PickleProfile.tryAwardLikeMilestoneFireAndForget) {
+        window.PickleProfile.tryAwardLikeMilestoneFireAndForget(postId, 'post_like');
+      } else {
+        var sbLike = getClient();
+        if (sbLike) {
+          sbLike.rpc('award_post_like_milestone', { p_post_id: postId }).catch(function (err) {
+            console.error('[Score Engine Error]', 'award_post_like_milestone', err);
+          });
+        }
+      }
+    } catch (scoreErr) {
+      console.error('[Score Engine Error]', 'award_post_like_milestone', scoreErr);
     }
 
     return true;

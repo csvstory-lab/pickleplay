@@ -267,16 +267,23 @@
   }
 
   /**
-   * 가이드 기준 star_score 획득량 (실제 지급은 award_star_score RPC)
-   * VOTE +1 · COMMENT +3 · SHARE +5 · PICK_ME +10 · LIKE_MILESTONE +2 (10개 단위)
+   * 공식 랭킹 포인트 가이드 (increment_star_score RPC)
+   * 본인: VOTE +1 · COMMENT +3 · SHARE +5
+   * 타인: PICK_ME +10 · LIKE_MILESTONE +2(작성자, award_post_like_milestone)
+   * 서버: HONOR_TOP10 +500 · BEST_COMMENT +50 (DB 트리거)
    */
-  var STAR_SCORE_DELTAS = {
+  var STAR_SCORE_GUIDE = {
     VOTE: 1,
     COMMENT: 3,
     SHARE: 5,
     PICK_ME: 10,
     LIKE_MILESTONE: 2,
+    HONOR_TOP10: 500,
+    BEST_COMMENT: 50,
   };
+
+  /** @deprecated STAR_SCORE_GUIDE 사용 */
+  var STAR_SCORE_DELTAS = STAR_SCORE_GUIDE;
 
   function getSupabaseClientForScore() {
     if (window.PickleSupabaseBootstrap && window.PickleSupabaseBootstrap.getClient) {
@@ -336,11 +343,145 @@
     }
   }
 
+  function invalidateStarScoreCacheForUser(userId) {
+    if (userId) {
+      clearRankingPointsCache(userId);
+      notifyStarScoreUpdated(userId);
+      return;
+    }
+    clearRankingPointsCache();
+  }
+
   /**
-   * RLS 우회 저수준 star_score 증가 RPC
-   * @param {string} userId
-   * @param {number} delta
-   * @param {{ context?: string }} [options]
+   * increment_star_score RPC (p_amount, p_target_id)
+   * @param {number} amount
+   * @param {string|null|undefined} targetUserId — 생략 시 본인(auth.uid())
+   * @param {string} [context]
+   */
+  async function tryIncrementStarScore(amount, targetUserId, context) {
+    var ctx = context || 'tryIncrementStarScore';
+    var points = Math.floor(Number(amount));
+    if (!Number.isFinite(points) || points <= 0) {
+      logScoreEngineError(ctx, { message: 'invalid p_amount', amount: amount });
+      return { ok: false, reason: 'invalid_amount' };
+    }
+
+    var sb = getSupabaseClientForScore();
+    if (!sb) {
+      logScoreEngineError(ctx, { message: 'Supabase client unavailable' }, { p_amount: points });
+      return { ok: false, reason: 'no_client' };
+    }
+
+    var rpcParams = { p_amount: points };
+    if (targetUserId) {
+      rpcParams.p_target_id = String(targetUserId);
+    }
+
+    try {
+      var result = await sb.rpc('increment_star_score', rpcParams);
+
+      if (result.error) {
+        logScoreEngineError(ctx, result.error, rpcParams);
+        return { ok: false, reason: 'rpc_error', error: result.error };
+      }
+
+      var payload = result.data || {};
+      if (payload.ok === false) {
+        if (payload.reason !== 'follow_required' && payload.reason !== 'already_awarded') {
+          logScoreEngineError(ctx, payload, rpcParams);
+        }
+        return payload;
+      }
+
+      var beneficiaryId =
+        (payload && payload.user_id) ||
+        targetUserId ||
+        (function () {
+          if (window.PickleAuth && window.PickleAuth.getUser) {
+            var u = window.PickleAuth.getUser();
+            return u && u.id ? u.id : null;
+          }
+          return null;
+        })() ||
+        null;
+      invalidateStarScoreCacheForUser(beneficiaryId);
+
+      return { ok: true, data: payload };
+    } catch (err) {
+      logScoreEngineError(ctx, err, rpcParams);
+      return { ok: false, reason: 'exception', error: err };
+    }
+  }
+
+  function tryIncrementStarScoreFireAndForget(amount, targetUserId, context) {
+    tryIncrementStarScore(amount, targetUserId, context).catch(function (err) {
+      logScoreEngineError(context || 'tryIncrementStarScoreFireAndForget', err, {
+        p_amount: amount,
+        p_target_id: targetUserId || null,
+      });
+    });
+  }
+
+  /**
+   * 본인 star_score 증가 (p_target_id 생략)
+   */
+  async function tryIncrementSelfStarScore(amount, context) {
+    return tryIncrementStarScore(amount, null, context || 'tryIncrementSelfStarScore');
+  }
+
+  function tryIncrementSelfStarScoreFireAndForget(amount, context) {
+    tryIncrementStarScoreFireAndForget(amount, null, context || 'tryIncrementSelfStarScore');
+  }
+
+  /**
+   * 좋아요 10·20·30… 마일스톤 — 불판 작성자 +2 (award_post_like_milestone RPC)
+   */
+  async function tryAwardLikeMilestone(postId, context) {
+    var ctx = context || 'tryAwardLikeMilestone';
+    if (!postId) {
+      return { ok: false, awarded: false, reason: 'post_id_required' };
+    }
+
+    var sb = getSupabaseClientForScore();
+    if (!sb) {
+      logScoreEngineError(ctx, { message: 'Supabase client unavailable' }, { postId: postId });
+      return { ok: false, awarded: false, reason: 'no_client' };
+    }
+
+    try {
+      var result = await sb.rpc('award_post_like_milestone', { p_post_id: postId });
+
+      if (result.error) {
+        logScoreEngineError(ctx, result.error, { postId: postId });
+        return { ok: false, awarded: false, reason: 'rpc_error', error: result.error };
+      }
+
+      var payload = result.data || {};
+      if (payload.awarded === false && payload.reason === 'already_awarded') {
+        logScoreEngineSkip(ctx, payload, { postId: postId });
+      } else if (payload.ok === false || (payload.awarded === false && payload.reason !== 'not_milestone')) {
+        logScoreEngineError(ctx, payload, { postId: postId });
+      }
+
+      if (payload.awarded && payload.user_id) {
+        invalidateStarScoreCacheForUser(payload.user_id);
+      }
+
+      return payload;
+    } catch (err) {
+      logScoreEngineError(ctx, err, { postId: postId });
+      return { ok: false, awarded: false, reason: 'exception', error: err };
+    }
+  }
+
+  function tryAwardLikeMilestoneFireAndForget(postId, context) {
+    tryAwardLikeMilestone(postId, context).catch(function (err) {
+      logScoreEngineError(context || 'tryAwardLikeMilestoneFireAndForget', err, { postId: postId });
+    });
+  }
+
+  /**
+   * @deprecated tryIncrementStarScore 사용
    */
   async function incrementStarScore(userId, delta, options) {
     var opts = options || {};
@@ -365,8 +506,8 @@
 
     try {
       var result = await sb.rpc('increment_star_score', {
-        p_user_id: userId,
-        p_delta: amount,
+        p_amount: Math.floor(Math.abs(amount)),
+        p_target_id: userId,
       });
 
       if (result.error) {
@@ -507,6 +648,7 @@
 
   window.PickleProfile = {
     LEVEL_TIERS: LEVEL_TIERS,
+    STAR_SCORE_GUIDE: STAR_SCORE_GUIDE,
     STAR_SCORE_DELTAS: STAR_SCORE_DELTAS,
     calculateLevel: calculateLevel,
     getLevelProgress: getLevelProgress,
@@ -522,6 +664,12 @@
     clearRankingPointsCache: clearRankingPointsCache,
     getUserLevel: getUserLevel,
     extractAuthorSnapshot: extractAuthorSnapshot,
+    tryIncrementStarScore: tryIncrementStarScore,
+    tryIncrementStarScoreFireAndForget: tryIncrementStarScoreFireAndForget,
+    tryIncrementSelfStarScore: tryIncrementSelfStarScore,
+    tryIncrementSelfStarScoreFireAndForget: tryIncrementSelfStarScoreFireAndForget,
+    tryAwardLikeMilestone: tryAwardLikeMilestone,
+    tryAwardLikeMilestoneFireAndForget: tryAwardLikeMilestoneFireAndForget,
     incrementStarScore: incrementStarScore,
     updateUserScore: updateUserScore,
     tryAwardPostAuthorStarScore: tryAwardPostAuthorStarScore,
