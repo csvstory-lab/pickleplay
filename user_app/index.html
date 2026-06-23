@@ -37,9 +37,14 @@
     }
 
     body {
-        margin: 0; padding: 0; background-color: var(--bg-base) !important; color: var(--text-main) !important;
-        font-family: 'Pretendard', sans-serif; max-width: 480px; margin: 0 auto;
-        position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+        margin: 0; padding: 0;
+        font-family: 'Pretendard', sans-serif;
+        position: relative; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+    }
+
+    #app-container {
+        background-color: var(--bg-base) !important;
+        color: var(--text-main) !important;
     }
 
     /* === 메인 콘텐츠 === */
@@ -131,7 +136,8 @@
 
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
-<link rel="stylesheet" href="../css/responsive-layout.css">
+<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell1">
+<link rel="stylesheet" href="../css/mobile-shell.css?v=20260617_shell1">
 <link rel="stylesheet" href="../css/pickle-popup.css?v=20260617_popup3">
 </head>
 <body data-nav-page="home">
@@ -141,6 +147,7 @@
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
+<div id="app-container">
 <div id="common-header"></div>
 <script src="../js/common-layout.js"></script>
 
@@ -173,6 +180,7 @@
 </main>
 
 <div id="common-footer"></div>
+</div><!-- /#app-container -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>

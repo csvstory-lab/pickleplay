@@ -2,6 +2,45 @@
  * P!CKLE — 반응형 레이아웃 · 미디어 · 텍스트 넘침 방지
  */
 
+/* === PC: 모바일 레이아웃 셸 (#app-container) === */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a1e;
+}
+
+#app-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background-color: var(--bg-base, #0a0a0c);
+  color: var(--text-main, #fcfcfc);
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+@media screen and (min-width: 481px) {
+  #app-container {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 12px 48px rgba(0, 0, 0, 0.6);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  body {
+    background-color: var(--bg-base, #0a0a0c);
+  }
+
+  #app-container {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+  }
+}
+
 /* 최상위 가로 스크롤 차단 · 더블탭 줌 방지 */
 html,
 body {
