@@ -255,6 +255,95 @@
     header#mainHeader {
         transition: top 0.3s ease-in-out;
     }
+
+    /* 불판 생성 성공 모달 — 파스텔 2D */
+    .create-success-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 20px;
+        box-sizing: border-box;
+        background: rgba(10, 10, 12, 0.55);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .create-success-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    .create-success-modal {
+        width: 100%;
+        max-width: 320px;
+        background: linear-gradient(180deg, #ffffff 0%, #fff8fc 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 133, 161, 0.18);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+        padding: 28px 22px 22px;
+        text-align: center;
+        transform: translateY(18px) scale(0.97);
+        opacity: 0;
+        transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+    }
+    .create-success-overlay.is-open .create-success-modal {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    .create-success-icon {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 14px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffd4de 0%, #c8dcff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        line-height: 1;
+    }
+    .create-success-message {
+        margin: 0 0 20px;
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #2c2c2e;
+        line-height: 1.55;
+        letter-spacing: -0.02em;
+        word-break: keep-all;
+    }
+    .create-success-btn {
+        width: 100%;
+        appearance: none;
+        border: none;
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #1a2a22;
+        background: linear-gradient(135deg, #c5f0dc 0%, #b8e8ff 100%);
+        cursor: pointer;
+        transition: transform 0.15s ease, filter 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .create-success-btn:active {
+        transform: scale(0.98);
+        filter: brightness(0.97);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .create-success-overlay,
+        .create-success-modal {
+            transition: none;
+        }
+        .create-success-overlay.is-open .create-success-modal {
+            transform: none;
+            opacity: 1;
+        }
+    }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css">
@@ -426,6 +515,14 @@
 </main>
 
 <div id="common-footer"></div>
+
+<div id="createSuccessOverlay" class="create-success-overlay" aria-hidden="true">
+    <div class="create-success-modal" role="dialog" aria-modal="true" aria-labelledby="createSuccessMessage">
+        <div class="create-success-icon" aria-hidden="true">✨</div>
+        <p id="createSuccessMessage" class="create-success-message"></p>
+        <button type="button" class="create-success-btn" id="createSuccessBtn">불판 보러가기</button>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
@@ -992,6 +1089,33 @@
     }
 
     let isSubmitting = false;
+
+  /** 불판 생성 성공 팝업 문구 — 여기서 쉽게 수정 가능 */
+    const CREATE_SUCCESS_COPY = {
+        message: '두근두근, 새로운 불판이 열렸어요! ✨ 어떤 픽(Pick)이 모일까요?',
+        buttonLabel: '불판 보러가기',
+        redirectUrl: 'index.html',
+    };
+
+    function showCreateSuccessModal(overrides) {
+        const copy = Object.assign({}, CREATE_SUCCESS_COPY, overrides || {});
+        const overlay = document.getElementById('createSuccessOverlay');
+        const msgEl = document.getElementById('createSuccessMessage');
+        const btn = document.getElementById('createSuccessBtn');
+        if (!overlay || !msgEl || !btn) {
+            location.href = copy.redirectUrl;
+            return;
+        }
+        msgEl.textContent = copy.message;
+        btn.textContent = copy.buttonLabel;
+        btn.onclick = function () {
+            location.href = copy.redirectUrl;
+        };
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
     async function validateAndSubmit(e) {
         if (e && typeof e.preventDefault === 'function') { e.preventDefault(); e.stopPropagation(); }
         if (isSubmitting) return false;
@@ -1027,7 +1151,7 @@
         try {
             const result = await window.PickleCreatePage.submitPost(buildMediaPayload);
             if (result?.cancelled) return false;
-            if (result?.ok) { submitSucceeded = true; alert('🔥 불판이 활활 타오르기 시작했습니다!'); location.href = 'index.html'; return false; }
+            if (result?.ok) { submitSucceeded = true; showCreateSuccessModal(); return false; }
         } catch (err) { if (!window.PickleCreatePage.handleInsertError(err)) { alert('DB 저장 에러: ' + (err.message || String(err))); }
         } finally { isSubmitting = false; if (!submitSucceeded) { btnSubmit.disabled = false; btnSubmit.textContent = '불판 지피기 (등록)'; } }
         return false;
