@@ -1,12 +1,16 @@
 /**
- * P!CKLE — 메인 이벤트 팝업 바텀 시트
+ * P!CKLE — 메인 이벤트 팝업 바텀 시트 (Swiper 롤링, 최대 3장)
  */
 (function () {
   'use strict';
 
   var STORAGE_PREFIX = 'pickle_popup_hide_';
+  var MAX_POPUPS = 3;
+  var AUTOPLAY_DELAY = 3000;
+
   var rootEl = null;
-  var currentPopup = null;
+  var swiperInstance = null;
+  var currentPopups = [];
 
   function getClient() {
     if (window.PickleSupabase && window.PickleSupabase.getClient) {
@@ -26,7 +30,6 @@
       .replace(/"/g, '&quot;');
   }
 
-  /** 오늘 23:59:59.999 (로컬) 만료 시각 */
   function getTodayDismissExpiryMs() {
     var d = new Date();
     d.setHours(23, 59, 59, 999);
@@ -61,6 +64,136 @@
     }
   }
 
+  function dismissAllCurrentPopupsForToday() {
+    currentPopups.forEach(function (popup) {
+      if (popup && popup.id) {
+        dismissPopupForToday(popup.id);
+      }
+    });
+  }
+
+  function destroySwiper() {
+    if (swiperInstance) {
+      try {
+        swiperInstance.destroy(true, true);
+      } catch (e) {
+        /* noop */
+      }
+      swiperInstance = null;
+    }
+  }
+
+  function updateFraction(swiper) {
+    var fractionEl = document.getElementById('picklePopupFraction');
+    if (!fractionEl || !swiper) return;
+
+    var total = currentPopups.length;
+    if (total <= 1) {
+      fractionEl.classList.add('is-single');
+      fractionEl.textContent = '';
+      return;
+    }
+
+    fractionEl.classList.remove('is-single');
+    var current = (typeof swiper.realIndex === 'number' ? swiper.realIndex : swiper.activeIndex) + 1;
+    fractionEl.textContent = current + ' / ' + total;
+  }
+
+  function buildSlideHtml(popup) {
+    var title = String(popup.title || '').trim();
+    var alt = escapeHtml(title || '이벤트 팝업');
+    var link = String(popup.link_url || '').trim();
+    var imgSrc = escapeHtml(popup.image_url || '');
+
+    if (link) {
+      return (
+        '<div class="swiper-slide">' +
+        '<a class="pickle-popup-slide-link" href="' +
+        escapeHtml(link) +
+        '" target="_blank" rel="noopener noreferrer">' +
+        '<img class="pickle-popup-image" src="' +
+        imgSrc +
+        '" alt="' +
+        alt +
+        '" />' +
+        '</a>' +
+        '</div>'
+      );
+    }
+
+    return (
+      '<div class="swiper-slide">' +
+      '<a class="pickle-popup-slide-link is-static" href="#" tabindex="-1" aria-disabled="true">' +
+      '<img class="pickle-popup-image" src="' +
+      imgSrc +
+      '" alt="' +
+      alt +
+      '" />' +
+      '</a>' +
+      '</div>'
+    );
+  }
+
+  function bindStaticSlideLinks() {
+    if (!rootEl) return;
+    rootEl.querySelectorAll('.pickle-popup-slide-link.is-static').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+      });
+    });
+  }
+
+  function initSwiper(popups) {
+    destroySwiper();
+
+    var wrapper = document.getElementById('picklePopupSwiperWrapper');
+    var swiperEl = document.getElementById('picklePopupSwiper');
+    if (!wrapper || !swiperEl || !popups.length) return;
+
+    wrapper.innerHTML = popups.map(buildSlideHtml).join('');
+    bindStaticSlideLinks();
+
+    var fractionEl = document.getElementById('picklePopupFraction');
+    if (fractionEl) {
+      if (popups.length <= 1) {
+        fractionEl.classList.add('is-single');
+        fractionEl.textContent = '';
+      } else {
+        fractionEl.classList.remove('is-single');
+        fractionEl.textContent = '1 / ' + popups.length;
+      }
+    }
+
+    if (typeof window.Swiper === 'undefined') {
+      console.warn('[P!CKLE Popup] Swiper not loaded');
+      return;
+    }
+
+    var enableLoop = popups.length > 1;
+    swiperInstance = new window.Swiper(swiperEl, {
+      slidesPerView: 1,
+      spaceBetween: 0,
+      loop: enableLoop,
+      speed: 420,
+      allowTouchMove: enableLoop,
+      autoplay: enableLoop
+        ? {
+            delay: AUTOPLAY_DELAY,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          }
+        : false,
+      on: {
+        init: function (swiper) {
+          updateFraction(swiper);
+        },
+        slideChange: function (swiper) {
+          updateFraction(swiper);
+        },
+      },
+    });
+  }
+
   function ensureRoot() {
     if (rootEl) return rootEl;
 
@@ -79,9 +212,10 @@
       '    </button>' +
       '  </div>' +
       '  <div class="pickle-popup-sheet" role="document">' +
-      '    <a class="pickle-popup-image-wrap" id="picklePopupImageLink" href="#" target="_blank" rel="noopener noreferrer">' +
-      '      <img class="pickle-popup-image" id="picklePopupImage" alt="" />' +
-      '    </a>' +
+      '    <div class="pickle-popup-swiper swiper" id="picklePopupSwiper">' +
+      '      <div class="swiper-wrapper" id="picklePopupSwiperWrapper"></div>' +
+      '      <div class="pickle-popup-fraction" id="picklePopupFraction" aria-live="polite"></div>' +
+      '    </div>' +
       '    <h2 class="pickle-popup-title" id="picklePopupTitle"></h2>' +
       '  </div>' +
       '</div>';
@@ -91,9 +225,7 @@
     rootEl.querySelector('[data-popup-close]').addEventListener('click', closeSheet);
     document.getElementById('picklePopupBtnClose').addEventListener('click', closeSheet);
     document.getElementById('picklePopupBtnHideToday').addEventListener('click', function () {
-      if (currentPopup && currentPopup.id) {
-        dismissPopupForToday(currentPopup.id);
-      }
+      dismissAllCurrentPopupsForToday();
       closeSheet();
     });
 
@@ -102,64 +234,47 @@
 
   function closeSheet() {
     if (!rootEl) return;
+    destroySwiper();
     rootEl.classList.remove('is-open');
     rootEl.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    currentPopup = null;
+    currentPopups = [];
   }
 
-  function openSheet(popup) {
-    if (!popup || !popup.image_url) return;
+  function openSheet(popups) {
+    if (!popups || !popups.length) return;
 
     var el = ensureRoot();
-    currentPopup = popup;
+    currentPopups = popups.slice();
 
     var titleEl = document.getElementById('picklePopupTitle');
-    var imgEl = document.getElementById('picklePopupImage');
-    var linkEl = document.getElementById('picklePopupImageLink');
+    var titles = popups
+      .map(function (p) {
+        return String(p.title || '').trim();
+      })
+      .filter(Boolean);
 
-    var title = String(popup.title || '').trim();
     if (titleEl) {
-      titleEl.textContent = title;
+      titleEl.textContent = titles.join(', ') || '이벤트 안내';
     }
 
-    if (imgEl) {
-      imgEl.src = popup.image_url;
-      imgEl.alt = title || '이벤트 팝업';
-    }
-
-    var link = String(popup.link_url || '').trim();
-    if (linkEl) {
-      if (link) {
-        linkEl.href = link;
-        linkEl.style.pointerEvents = '';
-        linkEl.setAttribute('tabindex', '0');
-      } else {
-        linkEl.href = '#';
-        linkEl.style.pointerEvents = 'none';
-        linkEl.setAttribute('tabindex', '-1');
-        linkEl.addEventListener(
-          'click',
-          function (e) {
-            e.preventDefault();
-          },
-          { once: true }
-        );
-      }
-    }
-
-    el.setAttribute('aria-label', title || '이벤트 안내');
+    el.setAttribute('aria-label', titles[0] || '이벤트 안내');
     el.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
+    initSwiper(popups);
+
     requestAnimationFrame(function () {
       el.classList.add('is-open');
+      if (swiperInstance && swiperInstance.autoplay && swiperInstance.autoplay.start) {
+        swiperInstance.autoplay.start();
+      }
     });
   }
 
-  async function fetchActivePopup() {
+  async function fetchActivePopups() {
     var sb = getClient();
-    if (!sb) return null;
+    if (!sb) return [];
 
     var nowIso = new Date().toISOString();
     var result = await sb
@@ -169,22 +284,25 @@
       .lte('start_date', nowIso)
       .gte('end_date', nowIso)
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (result.error) {
       console.warn('[P!CKLE Popup] fetch failed', result.error);
-      return null;
+      return [];
     }
 
     var rows = result.data || [];
+    var eligible = [];
+
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
       if (!row || !row.id || !row.image_url) continue;
       if (isPopupDismissedForToday(row.id)) continue;
-      return row;
+      eligible.push(row);
+      if (eligible.length >= MAX_POPUPS) break;
     }
 
-    return null;
+    return eligible;
   }
 
   async function initMainPopup() {
@@ -193,9 +311,9 @@
     }
 
     try {
-      var popup = await fetchActivePopup();
-      if (!popup) return;
-      openSheet(popup);
+      var popups = await fetchActivePopups();
+      if (!popups.length) return;
+      openSheet(popups);
     } catch (err) {
       console.warn('[P!CKLE Popup] init failed', err);
     }
