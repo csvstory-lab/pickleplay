@@ -35,15 +35,15 @@
   bottom: 0;
   width: 100%;
   max-width: 480px;
-  max-height: calc(100vh - env(safe-area-inset-top, 0px));
+  max-height: 60vh;
   transform: translate(-50%, 100%);
-  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   background: linear-gradient(180deg, #1e1e22 0%, #141416 100%);
-  border-radius: 24px 24px 0 0;
+  border-radius: 20px 20px 0 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: none;
   box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.55);
-  padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
   font-family: 'Pentabreed', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   display: flex;
   flex-direction: column;
@@ -55,36 +55,89 @@
   transform: translate(-50%, 0);
 }
 
-.pickle-popup-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  margin: 4px auto 14px;
+/* 상단 헤더 — 투명·미니멀 */
+.pickle-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
+  padding: 14px 16px 10px;
+  background: transparent;
 }
 
-.pickle-popup-title {
-  margin: 0 4px 12px;
-  font-size: 1rem;
-  font-weight: 800;
-  color: #fcfcfc;
+.pickle-popup-hide-today {
+  appearance: none;
+  border: none;
+  margin: 0;
+  padding: 4px 0;
+  background: transparent;
+  color: #a1a1aa;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.35;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.pickle-popup-hide-today:hover,
+.pickle-popup-hide-today:active {
+  color: #fcfcfc;
+}
+
+.pickle-popup-close {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fcfcfc;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s ease, transform 0.15s ease;
   flex-shrink: 0;
 }
 
-/* 1:1 비율 고정 + 세로 70vh 상한 — 버튼 영역 항상 노출 */
+.pickle-popup-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.pickle-popup-close:active {
+  transform: scale(0.94);
+}
+
+.pickle-popup-close .ph {
+  font-size: 1.1rem;
+}
+
+/* 16:9 가로 배너 이미지 */
+.pickle-popup-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0 0 12px;
+}
+
 .pickle-popup-image-wrap {
   position: relative;
   display: block;
-  width: min(100%, 70vh);
-  max-height: 70vh;
-  aspect-ratio: 1 / 1;
-  margin: 0 auto 14px;
-  border-radius: 16px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(calc(60vh - 56px), calc(min(100vw, 480px) * 9 / 16));
+  margin: 0;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   background: #0a0a0c;
   cursor: pointer;
   text-decoration: none;
@@ -94,63 +147,26 @@
 
 .pickle-popup-image-wrap:focus-visible {
   outline: 2px solid #73a5ff;
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .pickle-popup-image {
-  position: absolute;
-  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  vertical-align: middle;
 }
 
-.pickle-popup-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  flex-shrink: 0;
-  margin-top: auto;
-}
-
-.pickle-popup-btn {
-  appearance: none;
-  border: none;
-  border-radius: 14px;
-  padding: 14px 12px;
-  font-family: 'Pentabreed', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.88rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.pickle-popup-btn:active {
-  transform: scale(0.98);
-}
-
-.pickle-popup-btn--muted {
-  background: #2c2c2e;
-  color: #a1a1aa;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.pickle-popup-btn--muted:hover {
-  color: #fcfcfc;
-  background: #3a3a3c;
-}
-
-.pickle-popup-btn--primary {
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-  color: #0a0a0c;
-  box-shadow: 0 4px 16px rgba(74, 222, 128, 0.25);
-}
-
-.pickle-popup-btn--primary:hover {
-  filter: brightness(1.05);
+.pickle-popup-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

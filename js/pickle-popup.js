@@ -72,15 +72,18 @@
     rootEl.innerHTML =
       '<div class="pickle-popup-backdrop" data-popup-close></div>' +
       '<div class="pickle-popup-sheet" role="document">' +
-      '  <div class="pickle-popup-handle" aria-hidden="true"></div>' +
-      '  <h2 class="pickle-popup-title" id="picklePopupTitle"></h2>' +
-      '  <a class="pickle-popup-image-wrap" id="picklePopupImageLink" href="#" target="_blank" rel="noopener noreferrer">' +
-      '    <img class="pickle-popup-image" id="picklePopupImage" alt="" />' +
-      '  </a>' +
-      '  <div class="pickle-popup-actions">' +
-      '    <button type="button" class="pickle-popup-btn pickle-popup-btn--muted" id="picklePopupBtnHideToday">오늘 하루 보지 않기</button>' +
-      '    <button type="button" class="pickle-popup-btn pickle-popup-btn--primary" id="picklePopupBtnClose">닫기</button>' +
+      '  <div class="pickle-popup-header">' +
+      '    <button type="button" class="pickle-popup-hide-today" id="picklePopupBtnHideToday">오늘 하루 보지 않기</button>' +
+      '    <button type="button" class="pickle-popup-close" id="picklePopupBtnClose" aria-label="닫기">' +
+      '      <i class="ph ph-x" aria-hidden="true"></i>' +
+      '    </button>' +
       '  </div>' +
+      '  <div class="pickle-popup-body">' +
+      '    <a class="pickle-popup-image-wrap" id="picklePopupImageLink" href="#" target="_blank" rel="noopener noreferrer">' +
+      '      <img class="pickle-popup-image" id="picklePopupImage" alt="" />' +
+      '    </a>' +
+      '  </div>' +
+      '  <h2 class="pickle-popup-title" id="picklePopupTitle"></h2>' +
       '</div>';
 
     document.body.appendChild(rootEl);
@@ -118,7 +121,6 @@
     var title = String(popup.title || '').trim();
     if (titleEl) {
       titleEl.textContent = title;
-      titleEl.style.display = title ? '' : 'none';
     }
 
     if (imgEl) {
