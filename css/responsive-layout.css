@@ -41,14 +41,25 @@ body {
   }
 }
 
-/* 최상위 가로 스크롤 차단 · 더블탭 줌 방지 */
-html,
+/* 최상위 가로 스크롤 차단 · 더블탭 줌 방지 (body에 max-width를 두지 않음 — #app-container가 480px 셸) */
+html {
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
+
 body {
   overflow-x: hidden;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
   touch-action: manipulation;
+}
+
+@media screen and (min-width: 481px) {
+  body {
+    background-color: #1a1a1e !important;
+  }
 }
 
 main {

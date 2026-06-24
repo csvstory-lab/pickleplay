@@ -12,7 +12,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>P!CKLE - 마이 페이지</title>
+<title>P!CKLE - 마이 ?�이지</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -36,7 +36,7 @@
         --kakao-yellow: #FEE500;
         --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
         --glow-peach: 0 4px 20px rgba(255, 133, 161, 0.22);
-        /* legacy aliases — 기존 클래스·인라인 스타일 호환 */
+        /* legacy aliases ??기존 ?�래?�·인?�인 ?��????�환 */
         --bg-color: var(--bg-base);
         --card-bg: var(--bg-card);
         --neon-green: var(--point-green);
@@ -59,7 +59,7 @@
 
     main { padding: 0 0 110px 0; position: relative; z-index: 1; }
 
-    /* 1. 프로필 상단 영역 */
+    /* 1. ?�로???�단 ?�역 */
     .profile-header {
         margin: 16px 20px 0;
         padding: 24px 20px 20px;
@@ -178,7 +178,7 @@
         border-radius: 999px;
     }
 
-    /* 2. 내 활동 탭 */
+    /* 2. ???�동 ??*/
     .my-tab-wrapper {
         display: flex; border-bottom: 1px solid var(--border-soft);
         background: rgba(10, 10, 12, 0.88);
@@ -209,7 +209,7 @@
         border-radius: 3px 3px 0 0;
     }
 
-    /* 3. 리스트 영역 */
+    /* 3. 리스???�역 */
     .list-container { padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 14px; }
     .empty-state {
         text-align: center; padding: 48px 20px;
@@ -284,7 +284,7 @@
         margin-bottom: 6px; letter-spacing: -0.02em;
     }
 
-    /* 불판 수정 슬라이드 패널 */
+    /* 불판 ?�정 ?�라?�드 ?�널 */
     #postEditPanel { z-index: 9300; background-color: var(--bg-color); left: 0; right: 0; margin: 0 auto; }
     .post-edit-content { padding: 24px 20px 40px; }
     .post-edit-section { margin-bottom: 22px; }
@@ -363,7 +363,7 @@
         text-shadow: none;
     }
 
-    /* 보관함 — 다크 소프트 글로우 쿠폰 카드 */
+    /* 보�??????�크 ?�프??글로우 쿠폰 카드 */
     .coupon-card {
         background: var(--bg-card);
         border: 1px solid var(--border-card);
@@ -448,11 +448,11 @@
     }
 
     /* ============================================== */
-    /* ⚙️ 통합 슬라이드 패널 구조 (Depth 1 & Depth 2) */
+    /* ?�️ ?�합 ?�라?�드 ?�널 구조 (Depth 1 & Depth 2) */
     /* ============================================== */
     .slide-panel {
         position: fixed; top: 0; right: 0; width: 100%; height: 100%;
-        max-width: min(480px, 100vw);
+        max-width: 480px;
         margin: 0 auto;
         background-color: var(--bg-base);
         transform: translateX(100%);
@@ -486,7 +486,7 @@
         font-size: 1.15rem; color: var(--text-main); margin: 0; letter-spacing: -0.3px;
     }
     
-    /* 설정 메뉴 리스트 스타일 */
+    /* ?�정 메뉴 리스???��???*/
     .settings-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 20px 40px 20px; min-width: 0; max-width: 100%; }
     .settings-group { margin-top: 30px; }
     .settings-group-title { font-size: 0.82rem; font-weight: 800; color: var(--point-green); margin-bottom: 10px; padding-left: 5px; }
@@ -507,7 +507,7 @@
     }
     .text-danger { color: var(--alert-red); }
 
-    /* 약관/정책 문서 패널 */
+    /* ?��?/?�책 문서 ?�널 */
     .policy-doc-card {
         background: var(--card-bg);
         padding: 20px;
@@ -549,7 +549,7 @@
         text-align: center;
     }
 
-    /* 토글 스위치 UI */
+    /* ?��? ?�위�?UI */
     .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3f3f46; transition: .3s; border-radius: 30px; }
@@ -557,7 +557,7 @@
     input:checked + .toggle-slider { background-color: var(--neon-green); }
     input:checked + .toggle-slider:before { transform: translateX(22px); }
 
-    /* ✏️ 프로필 편집 스타일 */
+    /* ?�️ ?�로???�집 ?��???*/
     .edit-content {
         flex: 1;
         overflow-y: auto;
@@ -699,7 +699,7 @@
     .profile-check-label .req { color: var(--neon-pink); font-weight: 800; }
     .profile-check-label .opt { color: var(--text-sub); font-weight: 700; }
 
-    /* 🚨 내 계정 상태 및 제재 내역 (관리자 연동 UI) */
+    /* ?�� ??계정 ?�태 �??�재 ?�역 (관리자 ?�동 UI) */
     .penalty-dashboard { display: flex; gap: 20px; margin-bottom: 25px; background: linear-gradient(135deg, rgba(255,51,51,0.05), transparent); border: 1px solid rgba(255,51,51,0.3); border-radius: 16px; padding: 20px; align-items: center; }
     .penalty-score-box { flex: 1; text-align: center; border-right: 1px solid var(--border-color); }
     .score-label { font-size: 0.85rem; font-weight: 800; color: var(--text-sub); margin-bottom: 5px; }
@@ -716,7 +716,7 @@
     .hi-date { font-size: 0.75rem; color: var(--text-sub); font-family: monospace; }
     .hi-badge { font-size: 0.75rem; font-weight: 900; padding: 4px 8px; border-radius: 6px; background: rgba(255, 51, 51, 0.1); color: var(--alert-red); }
 
-    /* 📢 공지사항 아코디언 */
+    /* ?�� 공�??�항 ?�코?�언 */
     .notice-item { border-bottom: 1px solid var(--border-color); }
     .notice-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px; cursor: pointer; transition: background-color 0.2s; }
     .notice-info { display: flex; flex-direction: column; gap: 8px; flex: 1; padding-right: 15px; }
@@ -728,13 +728,13 @@
     .notice-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; background-color: var(--card-bg); }
     .notice-body-inner { padding: 20px; font-size: 0.9rem; color: #d4d4d8; line-height: 1.6; border-top: 1px dashed #333; }
 
-    /* 📥 고객센터 & 📜 정책 탭 메뉴 공통 */
+    /* ?�� 고객?�터 & ?�� ?�책 ??메뉴 공통 */
     .tab-wrapper { display: flex; background: rgba(39, 39, 42, 0.5); border-radius: 12px; padding: 4px; margin: 20px; gap: 4px; }
     .top-tab { flex: 1; text-align: center; padding: 10px 0; border-radius: 10px; font-size: 0.88rem; font-weight: 800; color: var(--text-sub); cursor: pointer; border: none; background: transparent; transition: all 0.2s; }
     .top-tab.active { background: var(--card-bg); color: var(--neon-green); border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     .tab-area { padding: 0 20px 40px 20px; flex: 1; overflow-y: auto; }
 
-    /* === 공통 오버레이 & 바텀 시트 (마이페이지용) === */
+    /* === 공통 ?�버?�이 & 바�? ?�트 (마이?�이지?? === */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .overlay.open { opacity: 1; pointer-events: auto; }
     .bottom-sheet {
@@ -890,7 +890,7 @@
         box-shadow: 0 0 6px rgba(57, 255, 20, 0.25);
     }
 
-    /* 랭킹 가이드 모달 전용 */
+    /* ??�� 가?�드 모달 ?�용 */
     .guide-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 85%; max-width: 360px; background-color: var(--card-bg); border-radius: 20px; border: 2px solid var(--border-color); z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
     .guide-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
     .guide-modal-header { position: relative; text-align: center; margin-bottom: 20px; padding-top: 10px; }
@@ -901,7 +901,7 @@
     .guide-section-title { font-weight: 900; color: #fff; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
     .guide-li { margin-left: 15px; margin-bottom: 3px; font-size: 0.85rem; color: var(--text-sub); }
 
-    /* 포인트 내역 시트 전용 */
+    /* ?�인???�역 ?�트 ?�용 */
     .point-history-container { overflow-y: auto; flex: 1; scrollbar-width: none; }
     .point-history-container::-webkit-scrollbar { display: none; }
     .pt-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #222; }
@@ -916,7 +916,7 @@
     .pt-total-val { font-family: 'Black Han Sans', sans-serif; font-size: 2.2rem; color: var(--theme-gold); }
 
     /* ============================================== */
-    /* 🚨 권리침해 신고 폼 전용 스타일 (신규 추가된 부분) */
+    /* ?�� 권리침해 ?�고 ???�용 ?��???(?�규 추�???부�? */
     /* ============================================== */
     .legal-warning {
         width: 100%;
@@ -995,7 +995,7 @@
     }
     .btn-submit-legal:active { transform: scale(0.98); }
 
-    /* === 모던 다크 테마 보조 패치 === */
+    /* === 모던 ?�크 ?�마 보조 ?�치 === */
     .vote-result-box {
         background-color: var(--bg-elevated); border-radius: 12px;
         padding: 10px 14px; border: 1px solid var(--border-soft);
@@ -1039,14 +1039,14 @@
     }
     input:checked + .toggle-slider { background: var(--point-green) !important; }
 
-    /* 공통 헤더 고정 */
+    /* 공통 ?�더 고정 */
     #common-header {
         position: sticky;
         top: 0;
         z-index: 50;
     }
 
-    /* 프로필 아바타 · 레벨 가이드 */
+    /* ?�로???�바?� · ?�벨 가?�드 */
     .profile-avatar { cursor: pointer; }
     .level-rank-row {
         display: inline-flex;
@@ -1075,7 +1075,7 @@
         position: fixed;
         z-index: 9999;
         min-width: 240px;
-        max-width: min(300px, calc(100vw - 32px));
+        max-width: min(300px, calc(100% - 32px));
         background: var(--bg-card);
         border: 1px solid var(--border-card);
         border-radius: 12px;
@@ -1109,7 +1109,7 @@
         font-family: inherit;
     }
 
-    /* 리스트 카드 4행 레이아웃 */
+    /* 리스??카드 4???�이?�웃 */
     .card-row-meta {
         display: flex;
         align-items: center;
@@ -1188,7 +1188,7 @@
     }
     .card-result-blind i { font-size: 1rem; color: var(--point-gold); flex-shrink: 0; }
 
-    /* 로그아웃 커스텀 모달 */
+    /* 로그?�웃 커스?� 모달 */
     .mypage-confirm-modal {
         position: fixed; inset: 0; z-index: 9500;
         display: flex; align-items: center; justify-content: center;
@@ -1234,7 +1234,7 @@
         color: #0a0a0c;
     }
 
-    /* 설정 — 로그아웃 / 탈퇴 */
+    /* ?�정 ??로그?�웃 / ?�퇴 */
     .settings-auth-group { margin-top: 28px; }
     .settings-auth-row {
         display: flex;
@@ -1269,7 +1269,7 @@
     }
     .btn-withdraw-text:hover { opacity: 1; }
 
-    /* 사업자 정보 아코디언 */
+    /* ?�업???�보 ?�코?�언 */
     .company-accordion { margin-top: 24px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
     .company-accordion-toggle {
         width: 100%;
@@ -1315,14 +1315,15 @@
     }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
-<link rel="stylesheet" href="../css/responsive-layout.css">
+<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell2">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
+<script src="../js/mobile-app-shell.js?v=20260617_shell2" defer></script>
 </head>
 <body data-nav-page="mypage">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
-    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
-    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
+    <span class="landscape-warning__icon" aria-hidden="true">?��??/span>
+    <p class="landscape-warning__title">�??�아가??<br>?�클?� ?�로�?즐겨주세???��</p>
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
@@ -1331,48 +1332,48 @@
 
 <div class="overlay" id="mypageOverlay" onclick="closeAllModals()"></div>
 
-<!-- 모달/시트 영역 생략 없이 모두 유지 -->
+<!-- 모달/?�트 ?�역 ?�략 ?�이 모두 ?��? -->
 <div class="guide-modal" id="guideModal">
     <div class="guide-modal-header">
-        <button class="btn-close-modal" onclick="closeAllModals()">✕</button>
-        <h2 class="guide-modal-title">🏆 랭킹 포인트 가이드</h2>
-        <div style="font-size:0.8rem; color:var(--text-sub); margin-top:5px;">어떻게 해야 <a href="hall_of_fame.html" style="color:var(--neon-green); font-weight:800; text-decoration:none;">전당 후보작</a>에 등극할 수 있을까요?</div>
+        <button class="btn-close-modal" onclick="closeAllModals()">??/button>
+        <h2 class="guide-modal-title">?�� ??�� ?�인??가?�드</h2>
+        <div style="font-size:0.8rem; color:var(--text-sub); margin-top:5px;">?�떻�??�야 <a href="hall_of_fame.html" style="color:var(--neon-green); font-weight:800; text-decoration:none;">?�당 ?�보??/a>???�극?????�을까요?</div>
     </div>
     <div class="guide-content">
         <div class="guide-section">
-            <div class="guide-section-title">🔥 핫 불판 점수 (게시물)</div>
-            <div style="font-size:0.8rem; margin-bottom:5px;">불판의 '화력'을 측정합니다. 단기간에 몰릴수록 폭발적인 가산점이 붙습니다!</div>
-            <li class="guide-li">투표 1회 = 1점</li>
-            <li class="guide-li">댓글 1개 = 3점</li>
-            <li class="guide-li">게시물 공유 = 5점</li>
-            <li class="guide-li">좋아요 10개 달성 시 = 2점</li>
+            <div class="guide-section-title">?�� ??불판 ?�수 (게시�?</div>
+            <div style="font-size:0.8rem; margin-bottom:5px;">불판??'?�력'??측정?�니?? ?�기간에 몰릴?�록 ??��?�인 가?�점??붙습?�다!</div>
+            <li class="guide-li">?�표 1??= 1??/li>
+            <li class="guide-li">?��? 1�?= 3??/li>
+            <li class="guide-li">게시�?공유 = 5??/li>
+            <li class="guide-li">좋아??10�??�성 ??= 2??/li>
         </div>
         <div class="guide-section">
-            <div class="guide-section-title">⭐ 픽클러 점수 (유저)</div>
-            <div style="font-size:0.8rem; margin-bottom:5px;">유저의 '영향력'을 측정합니다. 팬덤과 활발한 활동이 핵심입니다.</div>
-            <li class="guide-li">나를 픽한 유저 1명당 = 10점</li>
-            <li class="guide-li">내 불판이 Top10 진입 시 = 500점</li>
-            <li class="guide-li">내 댓글이 베스트 댓글 시 = 50점</li>
+            <div class="guide-section-title">�??�클???�수 (?��?)</div>
+            <div style="font-size:0.8rem; margin-bottom:5px;">?��???'?�향????측정?�니?? ?�덤�??�발???�동???�심?�니??</div>
+            <li class="guide-li">?��? ?�한 ?��? 1명당 = 10??/li>
+            <li class="guide-li">??불판??Top10 진입 ??= 500??/li>
+            <li class="guide-li">???��???베스???��? ??= 50??/li>
         </div>
     </div>
 </div>
 
 <div class="bottom-sheet fandom-sheet-neo" id="fandomSheet" aria-hidden="true">
     <div class="sheet-header">
-        <h2 class="sheet-title" id="fandomTitle">나를 픽한 픽클러</h2>
-        <button type="button" class="btn-close-sheet" onclick="closeAllModals()" aria-label="닫기">✕</button>
+        <h2 class="sheet-title" id="fandomTitle">?��? ?�한 ?�클??/h2>
+        <button type="button" class="btn-close-sheet" onclick="closeAllModals()" aria-label="?�기">??/button>
     </div>
     <div class="fandom-list-container" id="fandomListContent"></div>
 </div>
 
 <div class="bottom-sheet" id="pointSheet">
     <div class="sheet-header">
-        <h2 class="sheet-title">💰 포인트 이용 내역</h2>
-        <button class="btn-close-sheet" onclick="closeAllModals()">✕</button>
+        <h2 class="sheet-title">?�� ?�인???�용 ?�역</h2>
+        <button class="btn-close-sheet" onclick="closeAllModals()">??/button>
     </div>
     <div class="point-history-container">
         <div class="pt-total-box">
-            <div class="pt-total-label">현재 사용 가능한 포인트</div>
+            <div class="pt-total-label">?�재 ?�용 가?�한 ?�인??/div>
             <div class="pt-total-val">0 P</div>
         </div>
     </div>
@@ -1380,12 +1381,12 @@
 
 <main>
     <div class="profile-header">
-        <button class="btn-settings" id="btnGoSettings" type="button" onclick="openPanel('settingsPanel')">⚙️</button>
+        <button class="btn-settings" id="btnGoSettings" type="button" onclick="openPanel('settingsPanel')">?�️</button>
         <div class="profile-info-row">
-            <div class="profile-avatar" id="mainAvatar">🥒</div>
+            <div class="profile-avatar" id="mainAvatar">?��</div>
             <div class="profile-text">
                 <div class="profile-name" id="mainNickname">
-                    <span id="mainNicknameText">픽클러</span>
+                    <span id="mainNicknameText">?�클??/span>
                     <span class="grade-badge" id="nicknameLevelBadge"></span>
                 </div>
                 <div class="profile-bio" id="mainBio"></div>
@@ -1394,27 +1395,27 @@
 
         <div class="point-summary-box feature-hidden" onclick="openPointSheet()">
             <div class="point-left">
-                <div class="point-val">💰 0 <span>P</span></div>
-                <div class="point-expire">⏳ 소멸 예정 포인트 없음</div>
+                <div class="point-val">?�� 0 <span>P</span></div>
+                <div class="point-expire">???�멸 ?�정 ?�인???�음</div>
             </div>
-            <div class="point-right">내역 보기 ❯</div>
+            <div class="point-right">?�역 보기 ??/div>
         </div>
 
         <div class="fandom-stats">
             <div class="stat-box" onclick="openFandomSheet('follower')">
                 <span class="stat-num" id="statFollowerCount">0</span>
-                <span class="stat-label">나를 픽한 ></span>
+                <span class="stat-label">?��? ?�한 ></span>
             </div>
             <div class="stat-box" onclick="openFandomSheet('following')">
                 <span class="stat-num" id="statFollowingCount">0</span>
-                <span class="stat-label">내가 픽한 ></span>
+                <span class="stat-label">?��? ?�한 ></span>
             </div>
         </div>
 
         <div class="message-inbox-row">
             <button type="button" class="btn-message-inbox" id="btnMessageInbox" onclick="openMessageInbox()">
                 <i class="ph ph-envelope-simple" aria-hidden="true"></i>
-                메세지함
+                메세지??
                 <span class="message-inbox-badge hidden" id="messageInboxBadge" hidden>0</span>
             </button>
         </div>
@@ -1423,83 +1424,83 @@
             <div class="exp-header">
                 <span class="level-rank-row">
                     <span class="level-badge" id="mainUserLevel"></span>
-                    <button type="button" class="btn-level-guide" id="btnLevelGuide" aria-label="레벨 가이드">?</button>
+                    <button type="button" class="btn-level-guide" id="btnLevelGuide" aria-label="?�벨 가?�드">?</button>
                     <div id="levelGuidePopover" class="level-guide-popover hidden" role="tooltip">
-                        <strong>레벨업 가이드</strong>
-                        <p class="level-guide-desc">랭킹 포인트가 쌓이면 레벨이 올라갑니다. 투표·댓글·팬덤 활동으로 포인트를 모아보세요!</p>
+                        <strong>?�벨??가?�드</strong>
+                        <p class="level-guide-desc">??�� ?�인?��? ?�이�??�벨???�라갑니?? ?�표·?��?·?�덤 ?�동?�로 ?�인?��? 모아보세??</p>
                         <ul class="level-guide-tiers" id="levelGuideTiersList"></ul>
-                        <button type="button" class="level-guide-more" onclick="openGuideModal()">포인트 적립 자세히 보기 ›</button>
+                        <button type="button" class="level-guide-more" onclick="openGuideModal()">?�인???�립 ?�세??보기 ??/button>
                     </div>
                 </span>
-                <span class="exp-text" id="expText">—</span>
+                <span class="exp-text" id="expText">??/span>
             </div>
             <div class="progress-track"><div class="progress-fill" style="width:0%;"></div></div>
         </div>
     </div>
 
     <div class="my-tab-wrapper">
-        <button class="my-tab active" id="tabCreated" onclick="switchMyTab('created')"><i class="ph-fill ph-fire tab-icon tab-icon--created" aria-hidden="true"></i><span>지핀 불판</span></button>
+        <button class="my-tab active" id="tabCreated" onclick="switchMyTab('created')"><i class="ph-fill ph-fire tab-icon tab-icon--created" aria-hidden="true"></i><span>지?� 불판</span></button>
         <button class="my-tab" id="tabVoted" onclick="switchMyTab('voted')"><i class="ph ph-hand-fist tab-icon tab-icon--voted" aria-hidden="true"></i><span>참여 기록</span></button>
-        <button class="my-tab" id="tabCommented" onclick="switchMyTab('commented')"><i class="ph ph-chat-circle-dots tab-icon tab-icon--commented" aria-hidden="true"></i><span>쓴 댓글</span></button>
-        <button class="my-tab" id="tabSaved" onclick="switchMyTab('saved')"><i class="ph ph-gift tab-icon tab-icon--saved" aria-hidden="true"></i><span>보관함</span></button>
+        <button class="my-tab" id="tabCommented" onclick="switchMyTab('commented')"><i class="ph ph-chat-circle-dots tab-icon tab-icon--commented" aria-hidden="true"></i><span>???��?</span></button>
+        <button class="my-tab" id="tabSaved" onclick="switchMyTab('saved')"><i class="ph ph-gift tab-icon tab-icon--saved" aria-hidden="true"></i><span>보�???/span></button>
     </div>
 
     <div class="list-container" id="createdArea">
-        <div class="empty-state" id="createdEmpty">아직 생성한 불판이 없습니다.</div>
+        <div class="empty-state" id="createdEmpty">?�직 ?�성??불판???�습?�다.</div>
     </div>
 
     <div class="list-container hidden" id="votedArea">
-        <div class="empty-state" id="votedEmpty">아직 참여한 불판이 없습니다.</div>
+        <div class="empty-state" id="votedEmpty">?�직 참여??불판???�습?�다.</div>
     </div>
 
     <div class="list-container hidden" id="commentedArea">
-        <div class="empty-state" id="commentedEmpty">아직 작성한 댓글이 없습니다.</div>
+        <div class="empty-state" id="commentedEmpty">?�직 ?�성???��????�습?�다.</div>
     </div>
 
     <div class="list-container hidden" id="savedArea">
-        <div class="empty-state" id="savedEmpty">보관함 불러오는 중…</div>
+        <div class="empty-state" id="savedEmpty">보�???불러?�는 중�?/div>
     </div>
 </main>
 
-<!-- 불판 수정 슬라이드 패널 (상세 설명·썸네일만 편집) -->
+<!-- 불판 ?�정 ?�라?�드 ?�널 (?�세 ?�명·?�네?�만 ?�집) -->
 <div id="postEditPanel" class="slide-panel" aria-hidden="true">
     <div class="panel-header">
         <div class="header-left">
             <button type="button" class="btn-back" onclick="closePostEditPanel()"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">불판 수정</h2>
+            <h2 class="panel-title">불판 ?�정</h2>
         </div>
-        <button type="button" class="btn-save-post-edit" id="btnSavePostEdit" onclick="updatePost()">수정 완료</button>
+        <button type="button" class="btn-save-post-edit" id="btnSavePostEdit" onclick="updatePost()">?�정 ?�료</button>
     </div>
     <div class="edit-content post-edit-content">
         <div class="post-edit-section">
-            <p class="post-edit-section-title">투표 정보 (수정 불가)</p>
+            <p class="post-edit-section-title">?�표 ?�보 (?�정 불�?)</p>
             <div class="post-edit-field">
-                <label for="editPostTitleReadonly">불판 제목</label>
+                <label for="editPostTitleReadonly">불판 ?�목</label>
                 <input type="text" id="editPostTitleReadonly" class="post-edit-readonly" readonly tabindex="-1">
             </div>
             <div class="post-edit-field">
-                <label for="editPostOptionAReadonly">A 선택지</label>
+                <label for="editPostOptionAReadonly">A ?�택지</label>
                 <input type="text" id="editPostOptionAReadonly" class="post-edit-readonly" readonly tabindex="-1">
             </div>
             <div class="post-edit-field">
-                <label for="editPostOptionBReadonly">B 선택지</label>
+                <label for="editPostOptionBReadonly">B ?�택지</label>
                 <input type="text" id="editPostOptionBReadonly" class="post-edit-readonly" readonly tabindex="-1">
             </div>
         </div>
 
         <div class="post-edit-section">
-            <p class="post-edit-section-title">수정 가능 항목</p>
+            <p class="post-edit-section-title">?�정 가????��</p>
             <div class="post-edit-field">
-                <label for="editPostDescription">상세 설명 (본문)</label>
-                <textarea id="editPostDescription" class="post-edit-textarea" maxlength="500" placeholder="불판에 대한 부가 설명을 수정할 수 있습니다."></textarea>
+                <label for="editPostDescription">?�세 ?�명 (본문)</label>
+                <textarea id="editPostDescription" class="post-edit-textarea" maxlength="500" placeholder="불판???�??부가 ?�명???�정?????�습?�다."></textarea>
             </div>
             <div class="post-edit-field">
-                <label>리스트 썸네일 (16:9)</label>
-                <p class="post-edit-hint">※ 5MB 이하, 16:9 비율 권장. 메인 피드 킹왕짱·리스트에 노출됩니다.</p>
+                <label>리스???�네??(16:9)</label>
+                <p class="post-edit-hint">??5MB ?�하, 16:9 비율 권장. 메인 ?�드 ?�왕짱·리?�트???�출?�니??</p>
                 <input type="file" id="editPostThumbInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-                <div class="post-edit-thumb-box" id="editPostThumbBox" role="button" tabindex="0" aria-label="썸네일 이미지 첨부">
-                    <div class="icon-plus">🖼️</div>
-                    <div class="upload-txt">썸네일 이미지 첨부</div>
+                <div class="post-edit-thumb-box" id="editPostThumbBox" role="button" tabindex="0" aria-label="?�네???��?지 첨�?">
+                    <div class="icon-plus">?���?/div>
+                    <div class="upload-txt">?�네???��?지 첨�?</div>
                 </div>
             </div>
         </div>
@@ -1507,182 +1508,182 @@
 </div>
 
 <!-- ============================================== -->
-<!-- ⚙️ 뎁스 1: 메인 설정 패널 -->
+<!-- ?�️ ?�스 1: 메인 ?�정 ?�널 -->
 <!-- ============================================== -->
 <div id="settingsPanel" class="slide-panel">
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('settingsPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">설정</h2>
+            <h2 class="panel-title">?�정</h2>
         </div>
     </div>
     <div class="settings-content">
         <div class="settings-group">
-            <div class="settings-group-title">내 계정 관리</div>
+            <div class="settings-group-title">??계정 관�?/div>
             <div class="settings-item" id="btnOpenProfileEdit">
-                프로필 편집 <span class="arrow-icon">›</span>
+                ?�로???�집 <span class="arrow-icon">??/span>
             </div>
             <div class="settings-item no-click">
-                SNS 계정 연동 <span class="item-subtext" id="snsLinkStatus">확인 중…</span>
+                SNS 계정 ?�동 <span class="item-subtext" id="snsLinkStatus">?�인 중�?/span>
             </div>
         </div>
 
         <div class="settings-group">
-            <div class="settings-group-title">이용 현황 및 제재 내역</div>
+            <div class="settings-group-title">?�용 ?�황 �??�재 ?�역</div>
             <div class="settings-item" onclick="openPanel('penaltyPanel')">
                 <span style="display:flex; align-items:center; gap:8px;">
-                    내 계정 상태
-                    <span id="menuPenaltyStatus" style="font-size:0.75rem; background:rgba(57,255,20,0.15); color:var(--neon-green); padding:2px 6px; border-radius:4px; font-weight:800;">[정상]</span>
+                    ??계정 ?�태
+                    <span id="menuPenaltyStatus" style="font-size:0.75rem; background:rgba(57,255,20,0.15); color:var(--neon-green); padding:2px 6px; border-radius:4px; font-weight:800;">[?�상]</span>
                 </span>
-                <span class="arrow-icon">›</span>
+                <span class="arrow-icon">??/span>
             </div>
         </div>
 
         <div class="settings-group">
-            <div class="settings-group-title">알림 및 수신 설정</div>
+            <div class="settings-group-title">?�림 �??�신 ?�정</div>
             <div class="settings-item no-click">
-                마이 픽(팔로우) 새 불판 알림
+                마이 ???�로?? ??불판 ?�림
                 <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
             </div>
             <div class="settings-item no-click">
-                내 댓글 반응 (대댓글/좋아요)
+                ???��? 반응 (?�?��?/좋아??
                 <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
             </div>
             <div class="settings-item no-click">
-                야간 푸시 알림 제한 (23시~08시)
+                ?�간 ?�시 ?�림 ?�한 (23??08??
                 <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
             </div>
             <div class="settings-item no-click">
-                마케팅 정보 수신 동의 (이벤트/혜택)
+                마�????�보 ?�신 ?�의 (?�벤???�택)
                 <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
             </div>
         </div>
 
-        <!-- 💡 서비스 이용 및 약관 그룹 -->
+        <!-- ?�� ?�비???�용 �??��? 그룹 -->
         <div class="settings-group">
-            <div class="settings-group-title">서비스 이용</div>
-            <div class="settings-item" onclick="openPanel('noticePanel')">공지사항 <span class="arrow-icon">›</span></div>
-            <div class="settings-item" onclick="openPanel('supportPanel')">고객센터 / 1:1 문의 <span class="arrow-icon">›</span></div>
-            <div class="settings-item" onclick="openPanel('policyPanel')">이용약관 및 개인정보 처리방침 <span class="arrow-icon">›</span></div>
+            <div class="settings-group-title">?�비???�용</div>
+            <div class="settings-item" onclick="openPanel('noticePanel')">공�??�항 <span class="arrow-icon">??/span></div>
+            <div class="settings-item" onclick="openPanel('supportPanel')">고객?�터 / 1:1 문의 <span class="arrow-icon">??/span></div>
+            <div class="settings-item" onclick="openPanel('policyPanel')">?�용?��? �?개인?�보 처리방침 <span class="arrow-icon">??/span></div>
         </div>
 
-        <!-- 💡 요청하신 법적 대응 및 권리 보호 그룹 삽입 -->
+        <!-- ?�� ?�청?�신 법적 ?�??�?권리 보호 그룹 ?�입 -->
         <div class="settings-group">
-            <div class="settings-group-title" style="color:var(--alert-red);">법적 대응 및 권리 보호</div>
+            <div class="settings-group-title" style="color:var(--alert-red);">법적 ?�??�?권리 보호</div>
             <div class="settings-item" style="color:var(--alert-red); background:rgba(255,51,51,0.05); border:1px solid rgba(255,51,51,0.2); border-radius:8px; margin-top:5px; padding:15px;" onclick="openPanel('legalPanel')">
-                🚨 권리침해 신고 / 게시중단 요청 <span class="arrow-icon" style="color:var(--alert-red);">›</span>
+                ?�� 권리침해 ?�고 / 게시중단 ?�청 <span class="arrow-icon" style="color:var(--alert-red);">??/span>
             </div>
         </div>
 
         <div class="settings-group settings-auth-group">
             <div class="settings-auth-row">
-                <button type="button" class="btn-logout-pill" id="btnLogout">로그아웃</button>
-                <button type="button" class="btn-withdraw-text" id="btnWithdraw">회원 탈퇴</button>
+                <button type="button" class="btn-logout-pill" id="btnLogout">로그?�웃</button>
+                <button type="button" class="btn-withdraw-text" id="btnWithdraw">?�원 ?�퇴</button>
             </div>
         </div>
 
         <div class="company-accordion" id="companyAccordion">
             <button type="button" class="company-accordion-toggle" id="btnCompanyAccordion" onclick="toggleCompanyAccordion()">
-            <span>(주)굿임팩트 사업자 정보</span>
+            <span>(�?굿임?�트 ?�업???�보</span>
             <i class="ph ph-caret-down company-accordion-chevron" id="companyAccordionChevron" aria-hidden="true"></i>
             </button>
             <div class="company-accordion-body" id="companyAccordionBody">
-                대표: 이준수 · 사업자등록번호: 123-45-67890<br>
-                주소: 서울특별시 강남구 테헤란로 123, 8층<br>
-                통신판매업신고번호: 제2026-서울강남-0001호
+                ?�?? ?��???· ?�업?�등록번?? 123-45-67890<br>
+                주소: ?�울?�별??강남�??�헤?��?123, 8�?br>
+                ?�신?�매?�신고번?? ??026-?�울강남-0001??
             </div>
-            <p class="company-disclaimer">P!CKLE은 사용자 간의 투표와 소통을 위한 플랫폼을 제공하며, 회원이 등록한 게시물 내용 및 이로 인해 발생하는 분쟁에 대하여 법적 책임을 지지 않습니다.</p>
+            <p class="company-disclaimer">P!CKLE?� ?�용??간의 ?�표?� ?�통???�한 ?�랫?�을 ?�공?�며, ?�원???�록??게시�??�용 �??�로 ?�해 발생?�는 분쟁???�?�여 법적 책임??지지 ?�습?�다.</p>
         </div>
     </div>
 </div>
 
 <!-- ============================================== -->
-<!-- ⚙️ 뎁스 2: 기존 모달들 (프로필/제재내역/공지/고객센터/정책) -->
+<!-- ?�️ ?�스 2: 기존 모달??(?�로???�재?�역/공�?/고객?�터/?�책) -->
 <!-- ============================================== -->
 <div id="profileEditPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('profileEditPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">프로필 편집</h2>
+            <h2 class="panel-title">?�로???�집</h2>
         </div>
-        <button type="button" class="btn-save" onclick="saveProfile()" style="background:none; border:none; color:var(--neon-green); font-size:1.05rem; font-weight:800; cursor:pointer;">완료</button>
+        <button type="button" class="btn-save" onclick="saveProfile()" style="background:none; border:none; color:var(--neon-green); font-size:1.05rem; font-weight:800; cursor:pointer;">?�료</button>
     </div>
     <div class="edit-content">
         <div class="edit-avatar-box">
-            <div class="edit-avatar" id="editAvatarPreview">🤤</div>
+            <div class="edit-avatar" id="editAvatarPreview">?��</div>
             <div class="avatar-action-btns">
-                <button class="btn-avatar-action" onclick="changeEmoji()">🎲 랜덤 이모지</button>
-                <button class="btn-avatar-action" onclick="document.getElementById('photoInput').click()">📷 사진 등록</button>
+                <button class="btn-avatar-action" onclick="changeEmoji()">?�� ?�덤 ?�모지</button>
+                <button class="btn-avatar-action" onclick="document.getElementById('photoInput').click()">?�� ?�진 ?�록</button>
                 <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="loadPhoto(event)">
             </div>
         </div>
         <div class="input-group">
-            <div class="input-label"><span>닉네임</span><span class="char-count" id="nickCount">0/10</span></div>
+            <div class="input-label"><span>?�네??/span><span class="char-count" id="nickCount">0/10</span></div>
             <div class="input-wrapper">
-                <input type="text" class="input-field" id="nicknameInput" value="" maxlength="10" placeholder="닉네임 입력" onkeyup="updateCharCount('nicknameInput', 'nickCount')">
-                <button class="btn-check-dup" onclick="checkDuplicate()">중복 확인</button>
+                <input type="text" class="input-field" id="nicknameInput" value="" maxlength="10" placeholder="?�네???�력" onkeyup="updateCharCount('nicknameInput', 'nickCount')">
+                <button class="btn-check-dup" onclick="checkDuplicate()">중복 ?�인</button>
             </div>
-            <div class="input-hint" id="nicknameHint" style="display:none; color:var(--neon-green); font-size:0.8rem; margin-top:8px;">사용 가능한 닉네임입니다.</div>
+            <div class="input-hint" id="nicknameHint" style="display:none; color:var(--neon-green); font-size:0.8rem; margin-top:8px;">?�용 가?�한 ?�네?�입?�다.</div>
         </div>
 
         <div class="profile-demographics">
-            <div style="font-size: 0.85rem; color: var(--neon-blue); margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; gap: 5px;">💡 취향에 맞춘 불판 최적화를 위해 알려주세요!</div>
+            <div style="font-size: 0.85rem; color: var(--neon-blue); margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; gap: 5px;">?�� 취향??맞춘 불판 최적?��? ?�해 ?�려주세??</div>
 
             <div class="profile-demo-grid">
                 <div class="profile-demo-field">
-                    <select class="profile-select" id="profileGenderSelect" aria-label="성별">
-                        <option value="">성별</option>
-                        <option value="남자">남자</option>
-                        <option value="여자">여자</option>
+                    <select class="profile-select" id="profileGenderSelect" aria-label="?�별">
+                        <option value="">?�별</option>
+                        <option value="?�자">?�자</option>
+                        <option value="?�자">?�자</option>
                     </select>
                 </div>
                 <div class="profile-demo-field">
-                    <select class="profile-select" id="profileAgeGroupSelect" aria-label="연령대">
-                        <option value="">연령대</option>
-                        <option value="10대">10대</option>
-                        <option value="20대">20대</option>
-                        <option value="30대">30대</option>
-                        <option value="40대">40대</option>
-                        <option value="50대이상">50대 이상</option>
+                    <select class="profile-select" id="profileAgeGroupSelect" aria-label="?�령?�">
+                        <option value="">?�령?�</option>
+                        <option value="10?�">10?�</option>
+                        <option value="20?�">20?�</option>
+                        <option value="30?�">30?�</option>
+                        <option value="40?�">40?�</option>
+                        <option value="50?�?�상">50?� ?�상</option>
                     </select>
                 </div>
                 <div class="profile-demo-field">
-                    <select class="profile-select" id="profileRegionSelect" aria-label="지역">
-                        <option value="">지역</option>
-                        <option value="서울">서울</option>
+                    <select class="profile-select" id="profileRegionSelect" aria-label="지??>
+                        <option value="">지??/option>
+                        <option value="?�울">?�울</option>
                         <option value="경기">경기</option>
-                        <option value="인천">인천</option>
+                        <option value="?�천">?�천</option>
                         <option value="강원">강원</option>
                         <option value="충북">충북</option>
                         <option value="충남">충남</option>
-                        <option value="대전">대전</option>
-                        <option value="세종">세종</option>
-                        <option value="전북">전북</option>
-                        <option value="전남">전남</option>
+                        <option value="?�??>?�??/option>
+                        <option value="?�종">?�종</option>
+                        <option value="?�북">?�북</option>
+                        <option value="?�남">?�남</option>
                         <option value="광주">광주</option>
                         <option value="경북">경북</option>
                         <option value="경남">경남</option>
-                        <option value="대구">대구</option>
-                        <option value="울산">울산</option>
-                        <option value="부산">부산</option>
-                        <option value="제주">제주</option>
+                        <option value="?��?>?��?/option>
+                        <option value="?�산">?�산</option>
+                        <option value="부??>부??/option>
+                        <option value="?�주">?�주</option>
                     </select>
                 </div>
             </div>
 
             <label class="profile-check-row" for="profileIsOver14">
                 <input type="checkbox" id="profileIsOver14">
-                <span class="profile-check-label"><span class="req">[필수]</span> 만 14세 이상입니다.</span>
+                <span class="profile-check-label"><span class="req">[?�수]</span> �?14???�상?�니??</span>
             </label>
             <label class="profile-check-row" for="profileMarketingAgreed">
                 <input type="checkbox" id="profileMarketingAgreed">
-                <span class="profile-check-label"><span class="opt">[선택]</span> 마케팅 정보 수신 동의 (이벤트 당첨 등 혜택 알림)</span>
+                <span class="profile-check-label"><span class="opt">[?�택]</span> 마�????�보 ?�신 ?�의 (?�벤???�첨 ???�택 ?�림)</span>
             </label>
         </div>
 
         <div class="input-group">
-            <div class="input-label"><span>상태메시지 (한줄 소개)</span><span class="char-count" id="bioCount">0/30</span></div>
-            <textarea class="textarea-field" id="bioInput" rows="3" maxlength="30" placeholder="한줄 소개를 입력해 주세요." onkeyup="updateCharCount('bioInput', 'bioCount')"></textarea>
+            <div class="input-label"><span>?�태메시지 (?�줄 ?�개)</span><span class="char-count" id="bioCount">0/30</span></div>
+            <textarea class="textarea-field" id="bioInput" rows="3" maxlength="30" placeholder="?�줄 ?�개�??�력??주세??" onkeyup="updateCharCount('bioInput', 'bioCount')"></textarea>
         </div>
     </div>
 </div>
@@ -1691,29 +1692,29 @@
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('penaltyPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">계정 상태 및 제재 내역</h2>
+            <h2 class="panel-title">계정 ?�태 �??�재 ?�역</h2>
         </div>
     </div>
     <div class="edit-content">
         <div class="penalty-dashboard">
             <div class="penalty-score-box">
-                <div class="score-label">나의 누적 벌점</div>
-                <div class="score-value" id="myPenaltyPoints">—</div>
+                <div class="score-label">?�의 ?�적 벌점</div>
+                <div class="score-value" id="myPenaltyPoints">??/div>
             </div>
             <div class="penalty-guide">
-                <div class="guide-title">⚖️ 계정 상태: <span id="myAccountStatusText" style="color:var(--neon-green);">[정상 활동 가능]</span></div>
+                <div class="guide-title">?�️ 계정 ?�태: <span id="myAccountStatusText" style="color:var(--neon-green);">[?�상 ?�동 가??</span></div>
                 <div class="guide-bar-wrap"><div class="guide-bar-fill" id="myPenaltyBarFill" style="width:0%;"></div></div>
                 <div class="guide-milestones">
-                    <div>0</div><div>30점(정지)</div><div>50점</div><div style="color:var(--alert-red);">100점(차단)</div>
+                    <div>0</div><div>30???��?)</div><div>50??/div><div style="color:var(--alert-red);">100??차단)</div>
                 </div>
             </div>
         </div>
         
-        <div style="font-size:1.05rem; font-weight:900; color:#fff; margin-bottom:15px;">🚨 상세 제재 히스토리</div>
+        <div style="font-size:1.05rem; font-weight:900; color:#fff; margin-bottom:15px;">?�� ?�세 ?�재 ?�스?�리</div>
         <div class="history-list" id="myPenaltyListBody"></div>
         <div style="margin-top:20px; font-size:0.85rem; color:var(--text-sub); line-height:1.5; background:#09090b; padding:15px; border-radius:8px; border:1px solid #27272a;">
-            💡 <strong>벌점 관련 안내</strong><br>
-            부여된 벌점은 마지막 벌점을 받은 날로부터 1개월 동안 추가 위반 없이 클린하게 활동할 경우, 누적 벌점에서 10점을 감면해 주는 <strong>'회복제도'</strong>가 적용됩니다. 건강한 픽클 커뮤니티를 위해 함께 노력해 주세요!
+            ?�� <strong>벌점 관???�내</strong><br>
+            부?�된 벌점?� 마�?�?벌점??받�? ?�로부??1개월 ?�안 추�? ?�반 ?�이 ?�린?�게 ?�동??경우, ?�적 벌점?�서 10?�을 감면??주는 <strong>'?�복?�도'</strong>가 ?�용?�니?? 건강???�클 커�??�티�??�해 ?�께 ?�력??주세??
         </div>
     </div>
 </div>
@@ -1722,36 +1723,36 @@
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('noticePanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">공지사항</h2>
+            <h2 class="panel-title">공�??�항</h2>
         </div>
     </div>
     <div style="flex: 1; overflow-y: auto;">
         <div class="notice-item" onclick="toggleNotice(this)">
             <div class="notice-header-bar">
                 <div class="notice-info">
-                    <span class="notice-badge" style="background:rgba(57,255,20,0.1); color:var(--neon-green); border:1px solid var(--neon-green);">✨ 업데이트</span>
-                    <div class="notice-item-title">P!CKLE v1.2.0 업데이트 안내 (블라인드 투표 도입!)</div>
+                    <span class="notice-badge" style="background:rgba(57,255,20,0.1); color:var(--neon-green); border:1px solid var(--neon-green);">???�데?�트</span>
+                    <div class="notice-item-title">P!CKLE v1.2.0 ?�데?�트 ?�내 (블라?�드 ?�표 ?�입!)</div>
                     <div class="notice-date">2026. 05. 18</div>
                 </div>
-                <span class="chevron-icon">▼</span>
+                <span class="chevron-icon">??/span>
             </div>
             <div class="notice-body">
                 <div class="notice-body-inner">
-                    픽클러 여러분! 👋<br><br>픽클의 도파민을 한층 끌어올려 줄 <strong>'블라인드 투표'</strong> 시스템이 업데이트되었습니다.<br>이제 투표를 완료해야만 결과를 볼 수 있습니다!
+                    ?�클???�러�? ?��<br><br>?�클???�파민을 ?�층 ?�어?�려 �?<strong>'블라?�드 ?�표'</strong> ?�스?�이 ?�데?�트?�었?�니??<br>?�제 ?�표�??�료?�야�?결과�?�????�습?�다!
                 </div>
             </div>
         </div>
         <div class="notice-item" onclick="toggleNotice(this)">
             <div class="notice-header-bar">
                 <div class="notice-info">
-                    <span class="notice-badge" style="background:rgba(0,240,255,0.1); color:var(--neon-blue); border:1px solid var(--neon-blue);">🎁 이벤트</span>
-                    <div class="notice-item-title">10만 픽클러 돌파 기념! 치킨 기프티콘 드랍 이벤트 🍗</div>
+                    <span class="notice-badge" style="background:rgba(0,240,255,0.1); color:var(--neon-blue); border:1px solid var(--neon-blue);">?�� ?�벤??/span>
+                    <div class="notice-item-title">10�??�클???�파 기념! 치킨 기프?�콘 ?�랍 ?�벤???��</div>
                     <div class="notice-date">2026. 05. 10</div>
                 </div>
-                <span class="chevron-icon">▼</span>
+                <span class="chevron-icon">??/span>
             </div>
             <div class="notice-body">
-                <div class="notice-body-inner">가입자 10만 명 돌파 기념 추첨을 통해 100분께 <strong>BBQ 치킨</strong>을 쏩니다!</div>
+                <div class="notice-body-inner">가?�자 10�?�??�파 기념 추첨???�해 100분께 <strong>BBQ 치킨</strong>???�니??</div>
             </div>
         </div>
     </div>
@@ -1761,11 +1762,11 @@
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('supportPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">고객센터</h2>
+            <h2 class="panel-title">고객?�터</h2>
         </div>
     </div>
     <div class="tab-wrapper">
-        <button class="top-tab active" id="tabFaq" onclick="switchInnerTab('faq', 'support')">자주묻는질문</button>
+        <button class="top-tab active" id="tabFaq" onclick="switchInnerTab('faq', 'support')">?�주묻는질문</button>
         <button class="top-tab" id="tabInquiry" onclick="switchInnerTab('inquiry', 'support')">1:1 문의</button>
     </div>
     <div class="tab-area">
@@ -1773,44 +1774,44 @@
             <div style="border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;">
                 <div class="notice-item" onclick="toggleNotice(this)">
                     <div class="notice-header-bar" style="padding:15px;">
-                        <div class="notice-item-title" style="font-size:0.9rem;"><span style="color:var(--neon-green);">Q.</span> 랭킹포인트 산정 기준이 궁금해요.</div>
-                        <span class="chevron-icon" style="font-size:0.9rem;">▼</span>
+                        <div class="notice-item-title" style="font-size:0.9rem;"><span style="color:var(--neon-green);">Q.</span> ??��?�인???�정 기�???궁금?�요.</div>
+                        <span class="chevron-icon" style="font-size:0.9rem;">??/span>
                     </div>
-                    <div class="notice-body"><div class="notice-body-inner" style="font-size:0.85rem; padding:15px;">투표 참여(1점), 댓글 작성(3점), 공유(5점) 등으로 합산됩니다.</div></div>
+                    <div class="notice-body"><div class="notice-body-inner" style="font-size:0.85rem; padding:15px;">?�표 참여(1??, ?��? ?�성(3??, 공유(5?? ?�으�??�산?�니??</div></div>
                 </div>
                 <div class="notice-item" onclick="toggleNotice(this)">
                     <div class="notice-header-bar" style="padding:15px;">
-                        <div class="notice-item-title" style="font-size:0.9rem;"><span style="color:var(--neon-green);">Q.</span> 쿠폰 보관함은 어디에 있나요?</div>
-                        <span class="chevron-icon" style="font-size:0.9rem;">▼</span>
+                        <div class="notice-item-title" style="font-size:0.9rem;"><span style="color:var(--neon-green);">Q.</span> 쿠폰 보�??��? ?�디???�나??</div>
+                        <span class="chevron-icon" style="font-size:0.9rem;">??/span>
                     </div>
-                    <div class="notice-body"><div class="notice-body-inner" style="font-size:0.85rem; padding:15px;">[마이페이지 ➔ 내 보관함] 탭에서 확인 가능합니다.</div></div>
+                    <div class="notice-body"><div class="notice-body-inner" style="font-size:0.85rem; padding:15px;">[마이?�이지 ????보�??? ??��???�인 가?�합?�다.</div></div>
                 </div>
             </div>
         </div>
         <div id="inquiryArea" class="hidden">
             <div style="margin-bottom:15px;">
-                <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">문의 유형 <span style="color:var(--neon-pink);">*</span></div>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">문의 ?�형 <span style="color:var(--neon-pink);">*</span></div>
                 <select style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; font-family: 'Pretendard', sans-serif; cursor: pointer;">
-                    <option value="" disabled selected>문의 유형을 선택해주세요</option>
-                    <option value="account">계정 / 로그인 문의</option>
-                    <option value="bug">오류 / 버그 제보</option>
-                    <option value="event">이벤트 / 리워드(쿠폰) 문의</option>
-                    <option value="penalty">신고 / 제재 이의제기</option>
-                    <option value="suggest" style="color:var(--neon-green); font-weight:800;">💡 새로운 카테고리 제안</option>
+                    <option value="" disabled selected>문의 ?�형???�택?�주?�요</option>
+                    <option value="account">계정 / 로그??문의</option>
+                    <option value="bug">?�류 / 버그 ?�보</option>
+                    <option value="event">?�벤??/ 리워??쿠폰) 문의</option>
+                    <option value="penalty">?�고 / ?�재 ?�의?�기</option>
+                    <option value="suggest" style="color:var(--neon-green); font-weight:800;">?�� ?�로??카테고리 ?�안</option>
                 </select>
             </div>
 
             <div style="margin-bottom:15px;">
-                <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">답변받을 이메일 <span style="color:var(--neon-pink);">*</span></div>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">?��?받을 ?�메??<span style="color:var(--neon-pink);">*</span></div>
                 <input type="email" value="pickle_love@kakao.com" style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; font-family: 'Pretendard', sans-serif;">
             </div>
 
             <div style="margin-bottom:15px;">
-                <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">문의 내용 <span style="color:var(--neon-pink);">*</span></div>
-                <textarea rows="5" placeholder="내용을 입력해주세요.&#13;&#10;카테고리 제안일 경우, 원하시는 카테고리 이름과 이유를 자유롭게 적어주세요!" style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; resize:none; font-family: 'Pretendard', sans-serif; line-height: 1.5;"></textarea>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">문의 ?�용 <span style="color:var(--neon-pink);">*</span></div>
+                <textarea rows="5" placeholder="?�용???�력?�주?�요.&#13;&#10;카테고리 ?�안??경우, ?�하?�는 카테고리 ?�름�??�유�??�유�?�� ?�어주세??" style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; resize:none; font-family: 'Pretendard', sans-serif; line-height: 1.5;"></textarea>
             </div>
 
-            <button style="width:100%; padding:15px; background:var(--neon-green); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; font-family: 'Pretendard', sans-serif; font-size: 1rem; transition: 0.2s;" onclick="alert('문의가 성공적으로 접수되었습니다.\n담당자 확인 후 이메일로 답변을 보내드립니다!'); closePanel('supportPanel');">접수하기</button>
+            <button style="width:100%; padding:15px; background:var(--neon-green); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; font-family: 'Pretendard', sans-serif; font-size: 1rem; transition: 0.2s;" onclick="alert('문의가 ?�공?�으�??�수?�었?�니??\n?�당???�인 ???�메?�로 ?��???보내?�립?�다!'); closePanel('supportPanel');">?�수?�기</button>
         </div>
     </div>
 </div>
@@ -1819,114 +1820,114 @@
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('policyPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title">약관 및 정책</h2>
+            <h2 class="panel-title">?��? �??�책</h2>
         </div>
     </div>
     <div class="tab-wrapper">
-        <button class="top-tab active" id="tabTerms" onclick="switchInnerTab('terms', 'policy')">이용약관</button>
-        <button class="top-tab" id="tabPrivacy" onclick="switchInnerTab('privacy', 'policy')">개인정보 처리방침</button>
+        <button class="top-tab active" id="tabTerms" onclick="switchInnerTab('terms', 'policy')">?�용?��?</button>
+        <button class="top-tab" id="tabPrivacy" onclick="switchInnerTab('privacy', 'policy')">개인?�보 처리방침</button>
     </div>
     <div class="tab-area">
         <div id="termsArea" class="policy-doc-card">
             <div id="termsPolicyMeta" class="policy-doc-meta"></div>
             <div id="termsPolicyBody" class="policy-doc-body">
-                <p class="policy-doc-loading">이용약관을 불러오는 중…</p>
+                <p class="policy-doc-loading">?�용?��???불러?�는 중�?/p>
             </div>
         </div>
         <div id="privacyArea" class="policy-doc-card hidden">
             <div id="privacyPolicyMeta" class="policy-doc-meta"></div>
             <div id="privacyPolicyBody" class="policy-doc-body">
-                <p class="policy-doc-loading">개인정보 처리방침을 불러오는 중…</p>
+                <p class="policy-doc-loading">개인?�보 처리방침??불러?�는 중�?/p>
             </div>
         </div>
     </div>
 </div>
 
 <!-- ============================================== -->
-<!-- 🚨 Depth 2: 권리침해 신고센터 (신규 통합된 패널) -->
+<!-- ?�� Depth 2: 권리침해 ?�고?�터 (?�규 ?�합???�널) -->
 <!-- ============================================== -->
 <div id="legalPanel" class="slide-panel depth-2-panel">
     <div class="panel-header">
         <div class="header-left">
             <button class="btn-back" onclick="closePanel('legalPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
-            <h2 class="panel-title" style="color:var(--alert-red);">권리침해 신고센터</h2>
+            <h2 class="panel-title" style="color:var(--alert-red);">권리침해 ?�고?�터</h2>
         </div>
     </div>
     <div class="edit-content" style="padding-top:20px;">
         
         <div class="legal-warning">
-            <div class="legal-w-title">⚠️ 허위 신고 시 법적 처벌 경고</div>
+            <div class="legal-w-title">?�️ ?�위 ?�고 ??법적 처벌 경고</div>
             <div class="legal-w-desc">
-                본 신고센터는 <strong>정보통신망법 제44조의2</strong>에 의거한 공식적인 법적 게시중단 요청 창구입니다.<br><br>
-                정당한 권리자(본인 또는 법적 대리인)가 아닌 자가 팬덤 활동, 단순 불만 등을 이유로 허위 신고를 할 경우, <strong>업무방해죄 및 손해배상 청구의 대상</strong>이 될 수 있으므로 신중히 작성해 주시기 바랍니다.
+                �??�고?�터??<strong>?�보?�신망법 ??4조의2</strong>???�거??공식?�인 법적 게시중단 ?�청 창구?�니??<br><br>
+                ?�당??권리??본인 ?�는 법적 ?�리인)가 ?�닌 ?��? ?�덤 ?�동, ?�순 불만 ?�을 ?�유�??�위 ?�고�???경우, <strong>?�무방해�?�??�해배상 �?��???�??/strong>???????�으므�??�중???�성??주시�?바랍?�다.
             </div>
         </div>
 
-        <label class="legal-form-label">요청자 구분 <span>*</span></label>
+        <label class="legal-form-label">?�청??구분 <span>*</span></label>
         <select class="legal-form-select" id="legalRequesterType">
-            <option value="">선택하세요</option>
-            <option value="me">권리침해 당사자 (본인)</option>
-            <option value="agency">법적 대리인 (소속사/법무법인 등)</option>
+            <option value="">?�택?�세??/option>
+            <option value="me">권리침해 ?�사??(본인)</option>
+            <option value="agency">법적 ?�리인 (?�속??법무법인 ??</option>
         </select>
 
-        <div style="margin-top:8px; margin-bottom:4px; font-size:0.9rem; font-weight:900; color:#fff;">📞 신고자 연락처 <span style="color:var(--alert-red); font-size:0.85rem;">(법적 처리 결과 통보용 · 필수)</span></div>
+        <div style="margin-top:8px; margin-bottom:4px; font-size:0.9rem; font-weight:900; color:#fff;">?�� ?�고???�락�?<span style="color:var(--alert-red); font-size:0.85rem;">(법적 처리 결과 ?�보??· ?�수)</span></div>
 
-        <label class="legal-form-label">신고자 이름 <span>*</span></label>
-        <input type="text" class="legal-form-input" id="legalReporterName" placeholder="실명 또는 법인명" maxlength="50" autocomplete="name">
+        <label class="legal-form-label">?�고???�름 <span>*</span></label>
+        <input type="text" class="legal-form-input" id="legalReporterName" placeholder="?�명 ?�는 법인�? maxlength="50" autocomplete="name">
 
-        <label class="legal-form-label">연락처 (휴대폰) <span>*</span></label>
+        <label class="legal-form-label">?�락�?(?��??? <span>*</span></label>
         <input type="tel" class="legal-form-input" id="legalReporterPhone" placeholder="010-1234-5678" maxlength="20" autocomplete="tel">
 
-        <label class="legal-form-label">이메일 <span>*</span></label>
+        <label class="legal-form-label">?�메??<span>*</span></label>
         <input type="email" class="legal-form-input" id="legalReporterEmail" placeholder="result@example.com" maxlength="120" autocomplete="email">
 
-        <label class="legal-form-label">침해 대상 게시물 URL <span>*</span></label>
+        <label class="legal-form-label">침해 ?�??게시�?URL <span>*</span></label>
         <input type="text" class="legal-form-input" id="legalTargetUrl" placeholder="https://pickle.com/issue/1234">
 
-        <label class="legal-form-label">침해 사유 <span>*</span></label>
+        <label class="legal-form-label">침해 ?�유 <span>*</span></label>
         <select class="legal-form-select" id="legalReason">
-            <option value="">선택하세요</option>
-            <option value="defamation">명예훼손 및 허위사실 유포</option>
-            <option value="copyright">저작권/초상권/퍼블리시티권 침해</option>
-            <option value="privacy">개인정보 무단 노출</option>
+            <option value="">?�택?�세??/option>
+            <option value="defamation">명예?�손 �??�위?�실 ?�포</option>
+            <option value="copyright">?�?�권/초상�??�블리시?�권 침해</option>
+            <option value="privacy">개인?�보 무단 ?�출</option>
         </select>
 
-        <label class="legal-form-label">상세 소명 내용 <span>*</span></label>
-        <textarea class="legal-form-textarea" id="legalDetail" placeholder="게시물이 어떻게 권리를 침해하고 있는지 구체적인 사실 관계를 작성해 주세요. (육하원칙 권장)"></textarea>
+        <label class="legal-form-label">?�세 ?�명 ?�용 <span>*</span></label>
+        <textarea class="legal-form-textarea" id="legalDetail" placeholder="게시물이 ?�떻�?권리�?침해?�고 ?�는지 구체?�인 ?�실 관계�? ?�성??주세?? (?�하?�칙 권장)"></textarea>
 
-        <label class="legal-form-label">신분증 또는 사업자등록증 사본 <span>*</span></label>
+        <label class="legal-form-label">?�분�??�는 ?�업?�등록증 ?�본 <span>*</span></label>
         <div class="file-upload-box" id="legalIdBox" onclick="document.getElementById('legalIdFile').click()">
-            <div class="file-icon" id="legalIdIcon">📷</div>
-            <div class="file-text" id="legalIdText">클릭하여 파일 업로드 (JPG, PNG, PDF)</div>
-            <div class="file-sub">※ 주민번호 뒷자리는 반드시 가리고 첨부해 주세요.</div>
+            <div class="file-icon" id="legalIdIcon">?��</div>
+            <div class="file-text" id="legalIdText">?�릭?�여 ?�일 ?�로??(JPG, PNG, PDF)</div>
+            <div class="file-sub">??주�?번호 ?�자리는 반드??가리고 첨�???주세??</div>
         </div>
-        <input type="file" id="legalIdFile" accept="image/*,application/pdf" style="display:none;" onchange="handleLegalFileChange(this, 'legalIdText', 'legalIdBox', '🪪 신분증 첨부 완료')">
+        <input type="file" id="legalIdFile" accept="image/*,application/pdf" style="display:none;" onchange="handleLegalFileChange(this, 'legalIdText', 'legalIdBox', '?�� ?�분�?첨�? ?�료')">
 
-        <label class="legal-form-label">위임장 (대리인인 경우 필수)</label>
+        <label class="legal-form-label">?�임??(?�리인??경우 ?�수)</label>
         <div class="file-upload-box" id="legalPowerBox" onclick="document.getElementById('legalPowerFile').click()">
-            <div class="file-icon" id="legalPowerIcon">📄</div>
-            <div class="file-text" id="legalPowerText">클릭하여 위임장 업로드</div>
+            <div class="file-icon" id="legalPowerIcon">?��</div>
+            <div class="file-text" id="legalPowerText">?�릭?�여 ?�임???�로??/div>
         </div>
-        <input type="file" id="legalPowerFile" accept="image/*,application/pdf" style="display:none;" onchange="handleLegalFileChange(this, 'legalPowerText', 'legalPowerBox', '📄 위임장 첨부 완료')">
+        <input type="file" id="legalPowerFile" accept="image/*,application/pdf" style="display:none;" onchange="handleLegalFileChange(this, 'legalPowerText', 'legalPowerBox', '?�� ?�임??첨�? ?�료')">
 
         <label class="agree-box">
             <input type="checkbox" id="legalAgree">
             <div class="agree-text">
-                본인은 위 입력한 사실이 모두 진실임을 서약하며, 허위 사실 기재 및 정당한 권한 없는 신고로 인해 픽클(플랫폼) 및 타인에게 손해가 발생할 경우 모든 민/형사상 법적 책임을 질 것에 동의합니다. (필수)
+                본인?� ???�력???�실??모두 진실?�을 ?�약?�며, ?�위 ?�실 기재 �??�당??권한 ?�는 ?�고�??�해 ?�클(?�랫?? �??�?�에�??�해가 발생??경우 모든 �??�사??법적 책임??�?것에 ?�의?�니?? (?�수)
             </div>
         </label>
 
-        <button type="button" class="btn-submit-legal" id="btnSubmitLegal" onclick="submitLegalForm()">법적 게시중단 요청서 제출</button>
+        <button type="button" class="btn-submit-legal" id="btnSubmitLegal" onclick="submitLegalForm()">법적 게시중단 ?�청???�출</button>
     </div>
 </div>
 
 <div id="logoutConfirmModal" class="mypage-confirm-modal" aria-hidden="true" role="dialog" aria-labelledby="logoutConfirmTitle">
     <div class="mypage-confirm-backdrop" onclick="closeLogoutConfirm()"></div>
     <div class="mypage-confirm-box">
-        <p id="logoutConfirmTitle">로그아웃 하시겠습니까?</p>
+        <p id="logoutConfirmTitle">로그?�웃 ?�시겠습?�까?</p>
         <div class="mypage-confirm-actions">
             <button type="button" id="btnLogoutCancel" onclick="closeLogoutConfirm()">취소</button>
-            <button type="button" id="btnLogoutConfirm">확인</button>
+            <button type="button" id="btnLogoutConfirm">?�인</button>
         </div>
     </div>
 </div>
@@ -1934,7 +1935,7 @@
 <div id="common-footer"></div>
 
 <script>
-    // --- 헤더 스크롤 ---
+    // --- ?�더 ?�크�?---
     let lastScrollTop = 0;
     window.addEventListener('scroll', function() {
         let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -1950,7 +1951,7 @@
         lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
     });
 
-    // --- 슬라이드 패널 제어 (통합 함수) ---
+    // --- ?�라?�드 ?�널 ?�어 (?�합 ?�수) ---
     function openPanel(panelId) {
         document.getElementById(panelId).classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -1959,7 +1960,7 @@
         }
         if (panelId === 'policyPanel' && window.PicklePolicies && typeof window.PicklePolicies.loadForMypage === 'function') {
             window.PicklePolicies.loadForMypage({ forceRefresh: true }).catch(function (err) {
-                console.warn('[Mypage] 약관 로드 실패', err);
+                console.warn('[Mypage] ?��? 로드 ?�패', err);
             });
         }
     }
@@ -1970,7 +1971,7 @@
         }
     }
 
-    // --- 마이페이지 메인 탭 전환 ---
+    // --- 마이?�이지 메인 ???�환 ---
     function switchMyTab(tabName) {
         ['Created', 'Voted', 'Commented', 'Saved'].forEach(name => {
             document.getElementById(`tab${name}`).classList.remove('active');
@@ -1987,7 +1988,7 @@
         }
     }
 
-    // --- 바텀 시트 및 모달 팝업 제어 ---
+    // --- 바�? ?�트 �?모달 ?�업 ?�어 ---
     const overlay = document.getElementById('mypageOverlay');
     function closeAllModals() {
         overlay.classList.remove('open');
@@ -2050,7 +2051,7 @@
             window.PickleFollows.toggleFollowFromButton(btn);
         }
     }
-    function copyPin(pinCode) { if(navigator.vibrate) navigator.vibrate([50]); alert(`쿠폰 번호 [ ${pinCode} ]\n클립보드에 복사되었습니다!`); }
+    function copyPin(pinCode) { if(navigator.vibrate) navigator.vibrate([50]); alert(`쿠폰 번호 [ ${pinCode} ]\n?�립보드??복사?�었?�니??`); }
     function showPointToast() {
         if(navigator.vibrate) navigator.vibrate([100]); 
         const toast = document.getElementById('toastPopup');
@@ -2058,8 +2059,8 @@
         setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
-    // --- 프로필 편집 (Depth 2) 로직 ---
-    const emojis = ["🤤", "😎", "🤬", "🤯", "👽", "👻", "🐾", "🍕"];
+    // --- ?�로???�집 (Depth 2) 로직 ---
+    const emojis = ["?��", "?��", "?��", "?��", "?��", "?��", "?��", "?��"];
     let currentEmojiIdx = 0;
     function changeEmoji() {
         currentEmojiIdx = (currentEmojiIdx + 1) % emojis.length;
@@ -2084,13 +2085,13 @@
         const nick = document.getElementById('nicknameInput').value;
         const hint = document.getElementById('nicknameHint');
         hint.style.display = 'block';
-        if(nick.length < 2) { hint.innerText = "2글자 이상 입력해주세요."; hint.style.color = "var(--alert-red)"; }
-        else if(nick === "운영자") { hint.innerText = "사용할 수 없는 닉네임입니다."; hint.style.color = "var(--alert-red)"; }
-        else { hint.innerText = "멋진 닉네임이네요! 사용 가능합니다."; hint.style.color = "var(--neon-green)"; }
+        if(nick.length < 2) { hint.innerText = "2글???�상 ?�력?�주?�요."; hint.style.color = "var(--alert-red)"; }
+        else if(nick === "?�영??) { hint.innerText = "?�용?????�는 ?�네?�입?�다."; hint.style.color = "var(--alert-red)"; }
+        else { hint.innerText = "멋진 ?�네?�이?�요! ?�용 가?�합?�다."; hint.style.color = "var(--neon-green)"; }
     }
-    // saveProfile() — js/mypage-page.js (Supabase auth.updateUser 영구 저장)
+    // saveProfile() ??js/mypage-page.js (Supabase auth.updateUser ?�구 ?�??
 
-    // --- 서브 탭 전환 로직 (CS / 정책 공통) ---
+    // --- ?�브 ???�환 로직 (CS / ?�책 공통) ---
     function switchInnerTab(tabName, group) {
         if(group === 'support') {
             ['Faq', 'Inquiry'].forEach(name => {
@@ -2109,7 +2110,7 @@
         }
     }
 
-    // --- 아코디언 제어 (공지사항 / FAQ 공통) ---
+    // --- ?�코?�언 ?�어 (공�??�항 / FAQ 공통) ---
     function toggleNotice(itemElement) {
         const isOpen = itemElement.classList.contains('open');
         itemElement.parentElement.querySelectorAll('.notice-item').forEach(item => {
@@ -2123,7 +2124,7 @@
         }
     }
 
-    // --- 🚨 권리침해 폼 제출 — js/pickle-legal-report.js (submitLegalForm)
+    // --- ?�� 권리침해 ???�출 ??js/pickle-legal-report.js (submitLegalForm)
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2162,11 +2163,11 @@
             if (fileName.length > 22) {
                 fileName = fileName.substring(0, 19) + '...';
             }
-            textEl.innerText = successMsg ? `✅ ${successMsg} (${fileName})` : `✅ ${fileName}`;
+            textEl.innerText = successMsg ? `??${successMsg} (${fileName})` : `??${fileName}`;
             boxEl.style.borderColor = 'var(--neon-green)';
             boxEl.style.backgroundColor = 'rgba(57, 255, 20, 0.05)';
         } else {
-            textEl.innerText = '클릭하여 파일 업로드';
+            textEl.innerText = '?�릭?�여 ?�일 ?�로??;
             boxEl.style.borderColor = '';
             boxEl.style.backgroundColor = '';
         }

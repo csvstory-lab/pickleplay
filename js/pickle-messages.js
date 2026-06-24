@@ -220,7 +220,7 @@
       '.pickle-message-inbox-item .msg-block-btn{border:1px solid rgba(255,160,146,.35);background:rgba(255,160,146,.1);color:#ffa092;border-radius:999px;padding:5px 10px;font-size:.68rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0}' +
       '.pickle-message-inbox-item .msg-block-btn:active{transform:scale(.97)}' +
       '.pickle-message-inbox-empty{text-align:center;padding:32px 12px;color:#a1a1aa;font-size:.85rem;font-weight:600}' +
-      '.pickle-message-toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);max-width:min(420px,calc(100vw - 32px));background:rgba(28,28,30,.96);color:#fcfcfc;border:1px solid rgba(74,222,128,.35);border-radius:14px;padding:12px 16px;font-size:.82rem;font-weight:700;line-height:1.45;text-align:center;z-index:10300;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;box-shadow:0 8px 24px rgba(0,0,0,.45);font-family:Pretendard,sans-serif}' +
+      '.pickle-message-toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);max-width:min(420px,calc(100% - 32px));background:rgba(28,28,30,.96);color:#fcfcfc;border:1px solid rgba(74,222,128,.35);border-radius:14px;padding:12px 16px;font-size:.82rem;font-weight:700;line-height:1.45;text-align:center;z-index:10300;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;box-shadow:0 8px 24px rgba(0,0,0,.45);font-family:Pretendard,sans-serif}' +
       '.pickle-message-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}';
     document.head.appendChild(style);
   }
