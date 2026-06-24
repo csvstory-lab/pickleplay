@@ -13,23 +13,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>P!CKLE - 불판 상세</title>
+<title>P!CKLE - ?? ??</title>
 
-<!-- 🎨 폰트 및 모던 2D 라인 아이콘(Phosphor) 패키지 로드 -->
+<!-- ?? ?? ? ?? 2D ?? ???(Phosphor) ??? ?? -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700&family=Nanum+Pen+Script&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
 <style>
-    /* 🎨 메인 피드와 완벽 동일한 트렌디 뉴트럴 파스텔톤 지정 */
+    /* ?? ?? ??? ?? ??? ??? ??? ???? ?? */
     :root {
-        --bg-base: #0a0a0c;        /* 완전 깊은 블랙 배경 */
-        --bg-card: #1c1c1e;        /* 구분이 명확한 다크 그레이 카드 */
-        --bg-elevated: #2c2c2e;    /* 버튼/태그용 칩 컬러 */
-        --point-green: #4ADE80;    /* 메인 파스텔 민트 */
-        --point-pink: #FF85A1;     /* 파스텔 코랄 핑크 */
-        --point-blue: #73A5FF;     /* 파스텔 블루 */
-        --point-gold: #FCD34D;     /* 파스텔 골드 */
+        --bg-base: #0a0a0c;        /* ?? ?? ?? ?? */
+        --bg-card: #1c1c1e;        /* ??? ??? ?? ??? ?? */
+        --bg-elevated: #2c2c2e;    /* ??/??? ? ?? */
+        --point-green: #4ADE80;    /* ?? ??? ?? */
+        --point-pink: #FF85A1;     /* ??? ?? ?? */
+        --point-blue: #73A5FF;     /* ??? ?? */
+        --point-gold: #FCD34D;     /* ??? ?? */
         --text-main: #fcfcfc;
         --text-sub: #a1a1aa;
         --border-soft: rgba(255, 255, 255, 0.08);
@@ -43,10 +43,10 @@
         position: relative; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
     }
 
-    /* === 메인 스크롤 영역 메인 패딩 === */
+    /* === ?? ??? ?? ?? ?? === */
     main { padding: 10px 0 110px 0; position: relative; z-index: 1; }
 
-    /* 1단: 작성자 프로필 */
+    /* 1?: ??? ??? */
     .post-author-box { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; }
     .author-info { display: flex; align-items: center; gap: 12px; }
     .author-pic { width: 38px; height: 38px; border-radius: 50%; background-color: var(--bg-card); display: flex; justify-content: center; align-items: center; font-size: 1.1rem; border: 1.5px solid var(--point-pink); cursor: pointer; }
@@ -56,7 +56,7 @@
     .btn-mypick { background-color: transparent; color: var(--point-green); border: 1px solid var(--point-green); padding: 4px 12px; border-radius: 16px; font-size: 0.78rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .btn-mypick.active { background-color: var(--point-green); color: #000; }
 
-    /* 2단: 카테고리명 */
+    /* 2?: ????? */
     .issue-header-box { padding: 10px 20px 14px; }
     .issue-title { font-size: 1.3rem; font-weight: 900; line-height: 1.45; margin: 0 0 12px 0; word-break: keep-all; }
     .meta-row-top { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); }
@@ -64,7 +64,7 @@
     
     #detailMetaTags, .meta-hashtag, [class*="hashtag"] { display: none !important; }
 
-    /* 3단: 본문 미디어 레이아웃 구조 */
+    /* 3?: ?? ??? ???? ?? */
     .master-media-container { padding: 0 20px; margin-bottom: 16px; position: relative; width: 100%; box-sizing: border-box; }
     .media-container { position: relative; display: flex; gap: 10px; width: 100%; box-sizing: border-box; overflow: hidden; }
     
@@ -76,21 +76,21 @@
     .media-container .split-half { border-radius: 14px; overflow: hidden; position: relative; background: var(--bg-card); border: 1px solid var(--border-soft); }
     .media-container .split-half img, .media-container .split-half iframe { width: 100%; height: 100%; object-fit: cover; border: 0; display: block; }
     
-    /* 🛠️ [디자인 수정] VS 뱃지 파스텔 블루-핑크 그라데이션 팝업 스타일 */
+    /* ??? [??? ??] VS ?? ??? ??-?? ????? ?? ??? */
     .vs-badge {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20;
         background: linear-gradient(135deg, var(--point-blue) 0%, var(--point-pink) 100%);
-        color: #0a0a0c; /* 화사한 파스텔 배경과 대비되는 다크한 텍스트로 시인성 극대화 */
+        color: #0a0a0c; /* ??? ??? ??? ???? ??? ???? ??? ??? */
         font-family: 'Black Han Sans', sans-serif; font-size: 1.05rem; 
         width: 46px; height: 46px;
         display: flex; justify-content: center; align-items: center; 
         border-radius: 50%; 
-        border: 4px solid var(--bg-base); /* 뒷배경 이미지와 뱃지를 확실히 분리해주는 두꺼운 여백 효과 */
+        border: 4px solid var(--bg-base); /* ??? ???? ??? ??? ????? ??? ?? ?? */
         box-shadow: 0 4px 15px rgba(255, 133, 161, 0.4);
     }
     .detail-desc { padding: 0 20px 12px; font-size: 0.88rem; color: var(--text-sub); line-height: 1.5; word-break: keep-all; }
 
-    /* 4단: A/B 텍스트 선택지 */
+    /* 4?: A/B ??? ??? */
     .options-box { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 10px; }
     .opt-item { background-color: var(--bg-card); padding: 16px 18px; border-radius: 14px; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-card); cursor: pointer; transition: 0.2s; }
     .opt-item.selected-a { border-color: var(--point-blue); background-color: rgba(115, 165, 255, 0.08); }
@@ -98,7 +98,7 @@
     .opt-label-a { color: var(--point-blue); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
     .opt-label-b { color: var(--point-pink); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
 
-    /* 투표 완료 피드백 */
+    /* ?? ?? ??? */
     .blind-feedback-wrapper { padding: 0 20px; margin-bottom: 16px; display: none; }
     .blind-feedback-wrapper.show { display: block; animation: slideDown 0.4s ease; }
     .blind-card { background: linear-gradient(135deg, #1c1c1e, #2c2c2e); border-radius: 16px; padding: 22px 20px; text-align: center; border: 1px solid var(--point-green); box-shadow: 0 4px 15px rgba(74, 222, 128, 0.15); }
@@ -106,7 +106,7 @@
     .blind-title { font-family: 'Pretendard', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--point-green); margin-bottom: 6px; }
     .blind-desc { font-size: 0.9rem; font-weight: 600; color: var(--text-main); line-height: 1.5; }
 
-    /* 실시간 통계 보드 */
+    /* ??? ?? ?? */
     .result-view { padding: 0 20px 16px; display: none; }
     .result-view.show { display: block; }
     .result-container { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 20px; }
@@ -146,7 +146,7 @@
     }
     .bar-fill-b .bar-inner-label { color: #fff; }
     .bar-inner-label span + span::before {
-        content: '·';
+        content: '?';
         margin: 0 3px;
         opacity: 0.85;
     }
@@ -162,7 +162,7 @@
     .result-bar-names .pick-a { color: var(--point-blue); }
     .result-bar-names .pick-b { color: var(--point-pink); text-align: right; }
 
-    /* 하단 액션 바 */
+    /* ?? ?? ? */
     .issue-footer-box { padding: 0 20px 20px; }
     .action-bar-v2 { display: flex; gap: 8px; width: 100%; box-sizing: border-box; }
     .btn-action-v2 { border: none; padding: 13px 0; border-radius: 12px; font-size: 0.85rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; color: #fff; transition: 0.15s; }
@@ -172,7 +172,7 @@
     .btn-like-v2.is-liked { background-color: rgba(255, 133, 161, 0.15); border-color: var(--point-pink); color: var(--point-pink); }
     .btn-report-v2 { flex: 2 !important; background-color: #2a1a1d; border: 1px solid rgba(255, 77, 77, 0.2); color: var(--alert-red); }
 
-    /* === 💬 댓글 영역 === */
+    /* === ?? ?? ?? === */
     .comments-section { padding: 20px 20px 40px; border-top: 1px solid var(--border-soft); position: relative; }
     .comments-header { font-size: 1rem; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
     
@@ -186,7 +186,7 @@
     .sort-menu-item:hover { background-color: var(--bg-elevated); color: var(--text-main); }
     .sort-menu-item.current-active { color: var(--point-green); font-weight: 800; background-color: rgba(74, 222, 128, 0.05); }
 
-    /* 자물쇠 스크린 */
+    /* ??? ??? */
     .comment-lock-screen { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); background: linear-gradient(to bottom, rgba(10,10,12,0.95), #0a0a0c 95%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; gap: 8px; padding-top: 40px;}
     .lock-icon { font-size: 2.2rem; margin-bottom: 4px; }
     .lock-text { font-size: 0.95rem; font-weight: 800; color: var(--point-pink); }
@@ -226,7 +226,7 @@
     .comment-reply-input:focus { border-color: var(--point-green); }
     .comment-reply-submit { background: var(--point-green) !important; color: #0a0a0c !important; border: none !important; border-radius: 10px; padding: 0 14px; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
 
-    /* 모달 및 시트 구조 */
+    /* ?? ? ?? ?? */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: 0.2s; }
     .overlay.open { opacity: 1; pointer-events: auto; }
     .share-sheet { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background-color: var(--bg-card); border-radius: 24px 24px 0 0; padding: 25px 20px 40px; z-index: 9999; transform: translateY(100%); transition: 0.25s ease-out; border-top: 1px solid var(--border-soft); }
@@ -257,92 +257,94 @@
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
-<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell5">
+<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell6">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
 </head>
 <body data-nav-page="detail">
 
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
-    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
-    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
-    <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
+    <span class="landscape-warning__icon" aria-hidden="true">???</span>
+    <p class="landscape-warning__title">? ????!<br>??? ??? ????? ??</p>
+    <p class="landscape-warning__sub">P!CKLE ? PORTRAIT MODE ONLY</p>
 </div>
+
+<div id="app-container">
 
 <div id="common-header"></div>
 <script src="../js/common-layout.js"></script>
 
 <div class="overlay" id="detailOverlay" onclick="closeModals()"></div>
 
-<!-- 공유하기 모달 -->
+<!-- ???? ?? -->
 <div class="share-sheet" id="shareSheet">
     <div class="sheet-header">
-        <h2 class="sheet-title">🔥 이 불판 친구에게 소환하기</h2>
-        <button class="btn-close-sheet" onclick="closeModals()">✕</button>
+        <h2 class="sheet-title">?? ? ?? ???? ????</h2>
+        <button class="btn-close-sheet" onclick="closeModals()">?</button>
     </div>
     <div class="share-grid">
         <div class="share-item" onclick="sendKakaoMessage()">
             <div class="share-icon" style="background-color:#FEE500; color:#000;"><i class="ph-fill ph-chat-circle"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">카카오톡</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">????</span>
         </div>
         <div class="share-item" onclick="copyLink()">
             <div class="share-icon" style="background-color:#2c2c2e; color:#fff; border:1px solid var(--border-soft);"><i class="ph ph-link"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">링크 복사</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">?? ??</span>
         </div>
         <div class="share-item" onclick="nativeShare()">
             <div class="share-icon" style="background-color:#3a3a3c; color:#fff;"><i class="ph ph-share-network"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">더보기 (OS)</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">??? (OS)</span>
         </div>
     </div>
 </div>
 
-<!-- 쪽지 작성 팝업창 -->
+<!-- ?? ?? ??? -->
 <div class="report-modal" id="messageModal">
     <div class="modal-header">
         <h3 class="modal-title" style="color: var(--point-green); display: flex; align-items: center; gap: 6px;">
-            <i class="ph-fill ph-paper-plane-tilt"></i> <span id="messageTargetNickname" style="color:#fff;">유저</span>님께 메시지
+            <i class="ph-fill ph-paper-plane-tilt"></i> <span id="messageTargetNickname" style="color:#fff;">??</span>?? ???
         </h3>
-        <button class="btn-close" onclick="closeModals()">✕</button>
+        <button class="btn-close" onclick="closeModals()">?</button>
     </div>
     <div class="modal-body">
-        <textarea class="form-textarea" id="messageContent" placeholder="상대방에게 보낼 훈수 쪽지 내용을 입력해주세요. (비방/위험 문구 입력 시 제재를 받을 수 있습니다)" style="height: 110px; font-size:0.85rem; line-height:1.4;"></textarea>
-        <button class="btn-submit-report" style="background: linear-gradient(135deg, var(--point-green), #22c55e); color: #0a0a0c;" onclick="submitDirectMessage()">보내기</button>
+        <textarea class="form-textarea" id="messageContent" placeholder="????? ?? ?? ?? ??? ??????. (??/?? ?? ?? ? ??? ?? ? ????)" style="height: 110px; font-size:0.85rem; line-height:1.4;"></textarea>
+        <button class="btn-submit-report" style="background: linear-gradient(135deg, var(--point-green), #22c55e); color: #0a0a0c;" onclick="submitDirectMessage()">???</button>
     </div>
 </div>
 
-<!-- 신고하기 모달 -->
+<!-- ???? ?? -->
 <div class="report-modal" id="reportModal">
     <div class="modal-header">
-        <h3 class="modal-title">🚨 이 불판 신고하기</h3>
-        <button class="btn-close" onclick="closeModals()">✕</button>
+        <h3 class="modal-title">?? ? ?? ????</h3>
+        <button class="btn-close" onclick="closeModals()">?</button>
     </div>
     <div class="modal-body">
         <select class="form-select" id="reportReason">
-            <option value="" disabled selected>신고 사유를 선택해주세요</option>
-            <option value="spam">불법 홍보 및 상업적 도배</option>
-            <option value="abuse">욕설 / 혐오 / 비방</option>
-            <option value="nsfw">음란물 / 선정성</option>
+            <option value="" disabled selected>?? ??? ??????</option>
+            <option value="spam">?? ?? ? ??? ??</option>
+            <option value="abuse">?? / ?? / ??</option>
+            <option value="nsfw">??? / ???</option>
         </select>
-        <textarea class="form-textarea" id="reportDetail" placeholder="상세 사유를 입력해주세요. (필수)"></textarea>
-        <button class="btn-submit-report" onclick="submitReport()">신고 접수</button>
+        <textarea class="form-textarea" id="reportDetail" placeholder="?? ??? ??????. (??)"></textarea>
+        <button class="btn-submit-report" onclick="submitReport()">?? ??</button>
     </div>
 </div>
 
 <main>
-    <!-- 1단: 작성자 프로필 -->
+    <!-- 1?: ??? ??? -->
     <div class="post-author-box">
         <div class="author-info">
-            <div class="author-pic" id="detailAuthorPic">🔥</div>
+            <div class="author-pic" id="detailAuthorPic">??</div>
             <div class="author-text">
-                <div class="name"><span id="detailAuthorName">픽클러</span> <span class="grade-badge" id="detailAuthorLevelBadge" hidden></span></div>
+                <div class="name"><span id="detailAuthorName">???</span> <span class="grade-badge" id="detailAuthorLevelBadge" hidden></span></div>
             </div>
         </div>
-        <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ 나의 픽</button>
+        <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ ?? ?</button>
     </div>
 
-    <!-- 2단: 카테고리명 동적 연동 -->
+    <!-- 2?: ????? ?? ?? -->
     <div class="issue-header-box">
-        <h2 class="issue-title" id="detailTitle">불판 불러오는 중…</h2>
+        <h2 class="issue-title" id="detailTitle">?? ???? ??</h2>
         <div class="meta-row-top">
             <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;"></span>
             <span>/</span>
@@ -352,28 +354,28 @@
 
     <p class="detail-desc post-content-area" id="detailDescription" hidden></p>
 
-    <!-- 3단: 본문 미디어 콘텐츠 -->
+    <!-- 3?: ?? ??? ??? -->
     <div class="master-media-container post-content-area" id="videoContainer">
-        <div class="detail-media-empty"><span>⏳</span><p>미디어 로딩 중…</p></div>
+        <div class="detail-media-empty"><span>?</span><p>??? ?? ??</p></div>
     </div>
 
-    <!-- 4단: A/B 텍스트 선택지 -->
+    <!-- 4?: A/B ??? ??? -->
     <div class="options-box vote-content" id="optionsBox">
         <div class="opt-item" id="optBtnA" onclick="castVote('A', event, this)">
-            <span class="opt-label-a">A</span> <span id="optTextA">…</span>
+            <span class="opt-label-a">A</span> <span id="optTextA">?</span>
         </div>
         <div class="opt-item" id="optBtnB" onclick="castVote('B', event, this)">
-            <span class="opt-label-b">B</span> <span id="optTextB">…</span>
+            <span class="opt-label-b">B</span> <span id="optTextB">?</span>
         </div>
     </div>
 
-    <!-- 투표 완료 피드백 레이어 -->
+    <!-- ?? ?? ??? ??? -->
     <div class="blind-feedback-wrapper" id="blindFeedback">
         <div class="blind-card">
-            <div class="blind-icon">🤫🔒</div>
-            <div class="blind-title">투표가 완료되었습니다!</div>
-            <div class="blind-desc">이 불판의 결과는<br>
-                <strong style="color:var(--point-gold);">투표 종료되면</strong> 결과를 확인(알림)하실 수 있습니다!!</div>
+            <div class="blind-icon">????</div>
+            <div class="blind-title">??? ???????!</div>
+            <div class="blind-desc">? ??? ???<br>
+                <strong style="color:var(--point-gold);">?? ????</strong> ??? ??(??)?? ? ????!!</div>
         </div>
     </div>
 
@@ -391,45 +393,45 @@
                     <span class="bar-inner-label"><span id="resultPctB">0%</span><span id="resultCountB">0</span></span>
                 </div>
             </div>
-            <p style="text-align:center; font-size:0.85rem; margin:8px 0 0 0;" id="resultTotalVotes">🔥 0명 참전</p>
+            <p style="text-align:center; font-size:0.85rem; margin:8px 0 0 0;" id="resultTotalVotes">?? 0? ??</p>
         </div>
     </div>
 
-    <!-- 하단 액션 컨트롤 바 -->
+    <!-- ?? ?? ??? ? -->
     <div class="issue-footer-box">
         <div class="action-bar-v2">
-            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 친구 소환하기</button>
-            <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">좋아요 (0)</span></button>
-            <button class="btn-action-v2 btn-report-v2" onclick="openReportModal()"><i class="ph ph-warning-circle"></i> 신고</button>
+            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> ?? ????</button>
+            <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">??? (0)</span></button>
+            <button class="btn-action-v2 btn-report-v2" onclick="openReportModal()"><i class="ph ph-warning-circle"></i> ??</button>
         </div>
     </div>
 
-    <!-- 댓글 섹션 -->
+    <!-- ?? ?? -->
     <div class="comments-section">
         <div class="comments-header">
-            <span id="detailCommentCount" style="font-weight:800;">댓글 (0)</span>
+            <span id="detailCommentCount" style="font-weight:800;">?? (0)</span>
             
             <div class="custom-sort-dropdown" id="customSortDropdown">
                 <div class="sort-trigger-btn" onclick="toggleSortDropdownMenu(event)">
-                    <span id="sortLabelText">최신순</span> <i class="ph ph-caret-down-bold" style="font-size:0.75rem;"></i>
+                    <span id="sortLabelText">???</span> <i class="ph ph-caret-down-bold" style="font-size:0.75rem;"></i>
                 </div>
                 <div class="sort-dropdown-menu" id="sortDropdownMenu">
-                    <div class="sort-menu-item current-active" id="sortOptLatest" onclick="selectCommentSort('latest')">최신순</div>
-                    <div class="sort-menu-item" id="sortOptPopular" onclick="selectCommentSort('popular')">인기순</div>
+                    <div class="sort-menu-item current-active" id="sortOptLatest" onclick="selectCommentSort('latest')">???</div>
+                    <div class="sort-menu-item" id="sortOptPopular" onclick="selectCommentSort('popular')">???</div>
                 </div>
             </div>
         </div>
         
         <div class="comment-lock-screen" id="commentLock">
-            <div class="lock-icon">🔒</div>
-            <div class="lock-text">투표 후 댓글을 볼 수 있어요!</div>
-            <div class="lock-subtext">지금 참전하고 훈수를 확인하세요.</div>
+            <div class="lock-icon">??</div>
+            <div class="lock-text">?? ? ??? ? ? ???!</div>
+            <div class="lock-subtext">?? ???? ??? ?????.</div>
         </div>
         
         <div class="comment-active-area" id="commentActive">
             <div class="comment-input-box">
-                <input type="text" class="comment-input" id="detailCommentInput" placeholder="훈수를 자유롭게 남겨보세요." maxlength="2000">
-                <button type="button" class="comment-submit" id="detailCommentSubmit">등록</button>
+                <input type="text" class="comment-input" id="detailCommentInput" placeholder="??? ???? ?????." maxlength="2000">
+                <button type="button" class="comment-submit" id="detailCommentSubmit">??</button>
             </div>
             <div class="comment-list" id="detailCommentList"></div>
         </div>
@@ -500,14 +502,14 @@
             window.PickleMessages.openCompose();
             return;
         }
-        showToastFallback('메시지 기능을 불러오지 못했습니다.');
+        showToastFallback('??? ??? ???? ?????.');
     }
 
     async function submitDirectMessage() {
         if (window.PickleMessages && window.PickleMessages.submitDirectMessage) {
             return window.PickleMessages.submitDirectMessage();
         }
-        showToastFallback('메시지 기능을 불러오지 못했습니다.');
+        showToastFallback('??? ??? ???? ?????.');
     }
 
     function showToastFallback(msg) {
@@ -518,7 +520,7 @@
         }
     }
 
-    // 레거시 closeModals — 공통 쪽지 UI도 함께 닫기
+    // ??? closeModals ? ?? ?? UI? ?? ??
     async function loadProfilePopupCounts(uid) {
         document.getElementById('popupFollowerCount').textContent = '0';
         document.getElementById('popupFollowingCount').textContent = '0';
@@ -526,13 +528,13 @@
 
         try {
             if (window.supabase) {
-                // 1. 나를 픽한 유저 (Following 대상이 수신인인 총합)
+                // 1. ?? ?? ?? (Following ??? ???? ??)
                 const { count: followerCount, error: err1 } = await supabase
                     .from('follows')
                     .select('*', { count: 'exact', head: true })
                     .eq('following_id', uid);
                     
-                // 2. 내가 픽한 유저 (Follower 주체가 나인 총합)
+                // 2. ?? ?? ?? (Follower ??? ?? ??)
                 const { count: followingCount, error: err2 } = await supabase
                     .from('follows')
                     .select('*', { count: 'exact', head: true })
@@ -542,7 +544,7 @@
                 if (!err2 && followingCount !== null) document.getElementById('popupFollowingCount').textContent = followingCount;
             }
         } catch (err) {
-            console.log('통계 데이터 스크리닝 방어:', err);
+            console.log('?? ??? ???? ??:', err);
         }
     }
 
@@ -553,7 +555,7 @@
 
     function selectCommentSort(sortType) {
         document.getElementById('sortDropdownMenu').classList.remove('active-show');
-        var label = sortType === 'latest' ? '최신순' : '인기순';
+        var label = sortType === 'latest' ? '???' : '???';
         document.getElementById('sortLabelText').textContent = label;
         
         document.getElementById('sortOptLatest').classList.toggle('current-active', sortType === 'latest');
@@ -569,7 +571,7 @@
                 }
             }
         } catch (err) {
-            console.error("댓글 로드 정렬 크래시 방어:", err);
+            console.error("?? ?? ?? ??? ??:", err);
         }
     }
 
@@ -580,7 +582,7 @@
 
     document.addEventListener('click', function(e) {
         var replyBtn = e.target.closest('.comment-action-btn');
-        if (replyBtn && replyBtn.textContent.indexOf('답글') !== -1) {
+        if (replyBtn && replyBtn.textContent.indexOf('??') !== -1) {
             e.preventDefault();
             var commentItem = replyBtn.closest('.comment-item');
             if (commentItem) {
@@ -603,7 +605,7 @@
 
         if (willLike) {
             currentCount += 1;
-            likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
+            likeTextSpan.innerHTML = '??? (' + currentCount + ')';
             likeBtn.querySelector('i').className = 'ph-fill ph-heart';
 
             var postId = new URLSearchParams(window.location.search).get('id');
@@ -614,7 +616,7 @@
             }
         } else {
             currentCount = Math.max(0, currentCount - 1);
-            likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
+            likeTextSpan.innerHTML = '??? (' + currentCount + ')';
             likeBtn.querySelector('i').className = 'ph ph-heart';
         }
     }
@@ -624,29 +626,29 @@
         var detailEl = document.getElementById('reportDetail');
         var detail = detailEl ? detailEl.value.trim() : '';
 
-        if (!reason) { alert('신고 사유를 선택해주세요.'); return; }
-        if (!detail) { alert('신고 상세 내용을 입력해주세요. (필수)'); return; }
+        if (!reason) { alert('?? ??? ??????.'); return; }
+        if (!detail) { alert('?? ?? ??? ??????. (??)'); return; }
 
         var postId = window.PickleDetail && typeof window.PickleDetail.getCurrentPostId === 'function'
             ? window.PickleDetail.getCurrentPostId() : new URLSearchParams(window.location.search).get('id');
 
-        if (!postId) { alert('불판 정보를 찾을 수 없습니다.'); return; }
+        if (!postId) { alert('?? ??? ?? ? ????.'); return; }
 
         try {
             var result = await window.PicklePenalties.submitContentReport({
                 targetType: 'post', targetId: postId, reason: reason, detail: detail,
             });
-            if (!result.ok) { alert('신고 접수에 실패했습니다.'); return; }
-            alert('🚨 신고가 정상적으로 접수되었습니다. 깨끗한 픽클을 만들어주셔서 감사합니다!');
+            if (!result.ok) { alert('?? ??? ??????.'); return; }
+            alert('?? ??? ????? ???????. ??? ??? ?????? ?????!');
             closeModals();
-        } catch (err) { alert('신고 접수 실패'); }
+        } catch (err) { alert('?? ?? ??'); }
     }
 
     function getSharePayload() {
         var post = (window.PickleDetail && typeof window.PickleDetail.getCurrentPost === 'function') ? window.PickleDetail.getCurrentPost() : null;
         return {
-            title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
-            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. 당신의 선택은?') : '픽클 불판에 참전하세요!',
+            title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - ??',
+            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. ??? ????') : '?? ??? ?????!',
             imageUrl: 'https://pickleplay.kr/images/default_share.jpg'
         };
     }
@@ -660,7 +662,7 @@
     }
 
     function sendKakaoMessage() {
-        if (!ensureKakaoReady()) { alert('카카오톡 모듈 로딩 중...'); return; }
+        if (!ensureKakaoReady()) { alert('???? ?? ?? ?...'); return; }
         var share = getSharePayload();
         var shareUrl = window.location.href;
         try {
@@ -670,16 +672,16 @@
                     title: share.title, description: share.text, imageUrl: share.imageUrl,
                     link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
                 },
-                buttons: [{ title: '🔥 참전하러 가기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
+                buttons: [{ title: '?? ???? ??', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
             });
             recordDetailShare('kakao');
             closeModals();
-        } catch (e) { alert('카카오 공유 실패'); }
+        } catch (e) { alert('??? ?? ??'); }
     }
 
     function copyLink() {
         navigator.clipboard.writeText(window.location.href).then(function() {
-            alert("불판 주소가 복사되었습니다!");
+            alert("?? ??? ???????!");
             recordDetailShare('copy');
             closeModals();
         });
@@ -690,7 +692,7 @@
         if (navigator.share) {
             navigator.share({ title: share.title, text: share.text, url: window.location.href }).catch(console.error);
             recordDetailShare('native');
-        } else { alert('링크 복사를 이용해주세요.'); }
+        } else { alert('?? ??? ??????.'); }
         closeModals();
     }
 
@@ -709,5 +711,6 @@
     }
 </script>
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js"></script>
+</div><!-- /#app-container -->
 </body>
 </html>

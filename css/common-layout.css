@@ -13,13 +13,10 @@
   --border-soft: rgba(255, 255, 255, 0.08);
 }
 
-/* === 상단 헤더 === */
+/* === 상단 헤더 (셸 고정 — pickle-app-shell.css) === */
 header#mainHeader {
-  position: sticky;
-  top: 0;
   background-color: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(15px);
-  z-index: 120;
   border-bottom: 1px solid var(--border-soft);
 }
 
@@ -98,18 +95,9 @@ header#mainHeader {
   border: 2px solid var(--bg-base);
 }
 
-/* === 오버레이 & 카테고리 바텀시트 === */
+/* === 오버레이 & 카테고리 바텀시트 (표시/숨김 — pickle-app-shell.css) === */
 .noti-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background-color: rgba(0, 0, 0, 0.7);
-  z-index: 9998;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
 }
 
 .noti-overlay.open {
@@ -118,23 +106,15 @@ header#mainHeader {
 }
 
 .bottom-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-width: 480px;
-  margin: 0 auto;
   background-color: var(--bg-card);
   border-radius: 24px 24px 0 0;
   padding: 25px 20px 40px;
-  z-index: 9999;
-  transform: translateY(100%);
   transition: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
   border-top: 1px solid var(--border-soft);
 }
 
 .bottom-sheet.open {
-  transform: translateY(0);
+  transform: translateX(-50%);
 }
 
 .sheet-header {
@@ -177,15 +157,8 @@ header#mainHeader {
   cursor: pointer;
 }
 
-/* === 하단 네비게이션 바 (다크 테마) === */
+/* === 하단 네비게이션 바 (다크 테마 · 위치는 pickle-app-shell.css) === */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-width: 480px;
-  margin: 0 auto;
-  z-index: 1000;
   display: flex;
   justify-content: space-around;
   align-items: center;

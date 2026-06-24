@@ -1,0 +1,221 @@
+/**
+ * P!CKLE — 앱 셸 · 오버레이 · 헤더 (전 페이지 공통)
+ */
+
+:root {
+  --pickle-header-h: 60px;
+  --pickle-shell-max: 480px;
+  --pickle-shell-bg: #0b0b0b;
+  --pickle-gutter-bg: #222222;
+}
+
+/* === 1. Body & Container === */
+html {
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  background-color: var(--pickle-gutter-bg);
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  min-height: 100vh;
+  width: 100%;
+  max-width: none !important;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  background-color: var(--pickle-gutter-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+#app-container,
+[data-role="page"] {
+  width: 100%;
+  max-width: var(--pickle-shell-max);
+  position: relative;
+  background-color: var(--pickle-shell-bg) !important;
+  min-height: 100vh;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+  overflow-x: hidden;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  color: var(--text-main, #fcfcfc);
+  padding-top: var(--pickle-header-h);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media screen and (max-width: 480px) {
+  html,
+  body {
+    background-color: var(--pickle-shell-bg);
+  }
+
+  #app-container,
+  [data-role="page"] {
+    box-shadow: none;
+    max-width: 100%;
+  }
+}
+
+/* === 4. Header — fixed 480px === */
+header#mainHeader,
+body > header,
+#app-container > .panel-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--pickle-shell-max);
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+#common-header {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#mainHeader .top-row,
+body > header .top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#confetti-container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--pickle-shell-max);
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+  margin: 0 !important;
+  right: auto !important;
+}
+
+.detail-view,
+.slide-panel,
+.sub-panel,
+.noti-overlay,
+.overlay,
+.create-success-overlay,
+.pickle-profile-modal-overlay,
+.ranking-guide-overlay,
+.auth-modal-overlay,
+.mypage-confirm-modal,
+.pickle-popup-root,
+.guide-modal,
+.report-modal {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--pickle-shell-max);
+  height: 100vh;
+  z-index: 9999;
+  box-sizing: border-box;
+  display: none !important;
+  margin: 0 !important;
+  right: auto !important;
+}
+
+/* 활성화 상태 */
+.detail-view.open,
+.slide-panel.open,
+.sub-panel.open {
+  display: flex !important;
+  flex-direction: column;
+  transform: translateX(-50%) !important;
+}
+
+.noti-overlay.open,
+.overlay.open,
+.ranking-guide-overlay.is-visible,
+.auth-modal-overlay.open,
+.mypage-confirm-modal.open {
+  display: block !important;
+  transform: translateX(-50%) !important;
+}
+
+.create-success-overlay.is-open {
+  display: flex !important;
+  align-items: flex-end;
+  justify-content: center;
+  transform: translateX(-50%) !important;
+}
+
+.pickle-profile-modal-overlay.open {
+  display: block !important;
+  transform: translateX(-50%) !important;
+}
+
+.pickle-popup-root.is-open {
+  display: block !important;
+  transform: translateX(-50%) !important;
+  pointer-events: auto;
+}
+
+.guide-modal.open,
+.report-modal.open {
+  display: block !important;
+  top: 50%;
+  height: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* 바텀시트 — 하단 고정 */
+.bottom-sheet,
+.share-sheet,
+.pickle-profile-modal-sheet {
+  position: fixed;
+  top: auto;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--pickle-shell-max);
+  height: auto;
+  max-height: 88vh;
+  z-index: 9999;
+  box-sizing: border-box;
+  display: none !important;
+  margin: 0 !important;
+  right: auto !important;
+}
+
+.bottom-sheet.open,
+.share-sheet.open,
+.pickle-profile-modal-sheet.open {
+  display: block !important;
+  transform: translateX(-50%) !important;
+}
+
+/* 하단 네비 */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--pickle-shell-max);
+  z-index: 1000;
+  box-sizing: border-box;
+  margin: 0 !important;
+  right: auto !important;
+}
