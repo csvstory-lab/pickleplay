@@ -12,11 +12,11 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>P!CKLE - ?�합 불판 결과 발표 (?�두�??�거 깔끔 버전)</title>
+<title>P!CKLE - 통합 불판 결과 발표 (테두리 제거 깔끔 버전)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
-<!-- ?�� 카카??SDK ?�크립트 추�? -->
+<!-- 💡 카카오 SDK 스크립트 추가 -->
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js" integrity="sha384-kdLEaAosA22O27B8K2180I02y8z2NFsB2TfHq87Xq1XnWeA/e/RkOksb0kzoofbZ" crossorigin="anonymous"></script>
 
 <style>
@@ -42,7 +42,7 @@
 
     main { padding-bottom: 100px; }
 
-    /* 1. ?�성???�로??*/
+    /* 1. 작성자 프로필 */
     .post-author-box { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: var(--bg-color); }
     .author-info { display: flex; align-items: center; gap: 12px; }
     .author-pic { width: 40px; height: 40px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; border: 2px solid var(--theme-beer); }
@@ -50,17 +50,17 @@
     .author-text .name { font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 6px; }
     .grade-badge { background: linear-gradient(90deg, #ff8c00, #ff0055); font-size: 0.6rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; color: #fff; }
 
-    /* 2. ?�목 ?�역 */
+    /* 2. 제목 영역 */
     .issue-header-box { padding: 5px 20px 10px 20px; background-color: var(--bg-color); }
     .issue-title { font-size: 1.45rem; font-weight: 900; line-height: 1.4; margin: 0 0 12px 0; word-break: keep-all; text-align: center; }
     .timer-badge.closed { display: inline-flex; align-items: center; background-color: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #52525b; padding: 3px 8px; border-radius: 8px; font-family: 'Black Han Sans', sans-serif; font-size: 0.8rem; margin-bottom: 10px; }
 
-    /* 3. 최종 결과 게이지�??�널 */
+    /* 3. 최종 결과 게이지바 패널 */
     .gauge-wrapper { padding: 15px 20px 20px 20px; background-color: var(--bg-color); }
     .gauge-title { text-align: center; font-family: 'Black Han Sans', sans-serif; font-size: 1.5rem; margin-bottom: 20px; color: var(--neon-green); text-shadow: 0 0 10px rgba(57, 255, 20, 0.4); animation: pulseHint 2s infinite; }
     @keyframes pulseHint { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
-    /* ?�� ?�두�?border) ?�거 ?�료! */
+    /* 💡 테두리(border) 제거 완료! */
     .food-gauge-container { width: 100%; height: 56px; background-color: #222; border-radius: 28px; position: relative; display: flex; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.8); overflow: hidden; }
     .gauge-fill-a { background: linear-gradient(90deg, #b38000, var(--theme-beer)); height: 100%; width: 0%; transition: width 1.5s cubic-bezier(0.2, 1, 0.3, 1); display: flex; align-items: center; padding-left: 20px; }
     .gauge-fill-b { background: linear-gradient(270deg, #008f4c, var(--theme-soju)); height: 100%; width: 0%; transition: width 1.5s cubic-bezier(0.2, 1, 0.3, 1); display: flex; align-items: center; justify-content: flex-end; padding-right: 20px; }
@@ -71,7 +71,7 @@
     .icon-a { left: 0; transform: translate(-100%, -50%); transition: left 1.5s cubic-bezier(0.2, 1, 0.3, 1); }
     .icon-b { right: 0; transform: translate(100%, -50%); transition: right 1.5s cubic-bezier(0.2, 1, 0.3, 1); }
 
-    /* 4. 마스??미디??관??구역 */
+    /* 4. 마스터 미디어 관제 구역 */
     .master-media-container { padding: 0 20px 10px 20px; }
     .video-container-horizontal { height: 40vh; display: flex; flex-direction: column; gap: 10px; position: relative; }
     .split-half { flex: 1; position: relative; cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center; border-radius: 16px; border: 2px solid var(--border-color); }
@@ -83,7 +83,7 @@
     .play-state-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 3rem; color: rgba(255,255,255,0.8); pointer-events: none; opacity: 0; transition: 0.2s; }
     .play-state-icon.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 
-    /* 5. ?�표 결과 리스???�션 박스 */
+    /* 5. 투표 결과 리스트 옵션 박스 */
     .options-box { padding: 5px 20px 20px 20px; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 10;}
     .opt-item { background-color: var(--card-bg); padding: 18px 20px; border-radius: 16px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 15px; border: 2px solid var(--border-color); cursor: pointer; opacity: 0.6; }
     .opt-item.my-pick { border-color: var(--theme-soju); background-color: rgba(0, 230, 118, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); }
@@ -92,7 +92,7 @@
     .opt-label-b { color: var(--theme-soju); font-family: 'Black Han Sans', sans-serif; font-size: 1.5rem; }
     .my-pick-badge { font-size: 0.75rem; background-color: var(--theme-soju); color: #000; padding: 3px 8px; border-radius: 12px; font-weight: 900; }
 
-    /* 6. ?�단 ?�계 �??�션 �?*/
+    /* 6. 하단 통계 및 액션 바 */
     .issue-footer-box { padding: 15px 20px; border-top: 1px dashed #3f3f46; border-bottom: 1px solid var(--border-color); background: var(--bg-color); }
     .stats-row { display: flex; justify-content: center; gap: 15px; font-size: 0.85rem; font-weight: 700; color: #d4d4d8; margin-bottom: 15px; }
     
@@ -103,7 +103,7 @@
     .btn-share { flex: 1.5; background: linear-gradient(135deg, #a020f0, var(--neon-pink)); color: #fff; border: none; box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3); }
     .icon-svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* 7. ?��? ?�션 */
+    /* 7. 댓글 섹션 */
     .comments-section { padding: 20px; min-height: 300px; position: relative; }
     .comments-header { font-size: 1.1rem; font-weight: 800; margin-bottom: 15px; display: flex; justify-content: space-between; }
     .comment-input-box { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -117,11 +117,11 @@
     .comment-pick-b { color: var(--theme-soju); font-size: 0.7rem; border: 1px solid var(--theme-soju); padding: 2px 6px; border-radius: 4px; }
     .comment-text { font-size: 0.95rem; line-height: 1.4; }
 
-    /* 축포 ?�니메이??*/
+    /* 축포 애니메이션 */
     #confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
     .confetti-piece { position: absolute; top: -20px; width: 10px; height: 20px; border-radius: 2px; animation: fall linear forwards; }
     @keyframes fall { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg) scale(0.8); opacity: 0; } }
-/* === ?�이브리??공유 바�? ?�트 === */
+/* === 하이브리드 공유 바텀 시트 === */
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .overlay.open { opacity: 1; pointer-events: auto; }
     
@@ -145,7 +145,7 @@
     .icon-os { background-color: #fff; color: #000; } 
     .share-label { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); text-align: center; }
 
-    /* 8. ?�령·?�별 ?�세 ?�계 (취향 ?��?) */
+    /* 8. 연령·성별 상세 통계 (취향 넛지) */
     .taste-stats-wrap {
         position: relative;
         margin: 0 20px 20px;
@@ -272,15 +272,14 @@
     .taste-unlock-btn:active { transform: translate(6px, 6px); box-shadow: none; }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
-<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell2">
+<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell3">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
-<script src="../js/mobile-app-shell.js?v=20260617_shell2" defer></script>
 </head>
 <body data-nav-page="result">
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
-    <span class="landscape-warning__icon" aria-hidden="true">?��??/span>
-    <p class="landscape-warning__title">�??�아가??<br>?�클?� ?�로�?즐겨주세???��</p>
+    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
+    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
     <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
@@ -293,18 +292,18 @@
 
 <div class="share-sheet" id="shareSheet">
     <div class="sheet-header">
-        <h2 class="sheet-title">?�� ??민심 ?�톡방에 배달?�기</h2>
-        <button class="btn-close-sheet" onclick="closeShareSheet()">??/button>
+        <h2 class="sheet-title">📢 이 민심 단톡방에 배달하기</h2>
+        <button class="btn-close-sheet" onclick="closeShareSheet()">✕</button>
     </div>
     
     <div class="share-banner">
-        <p>?�리 ?� ?�리 굳히�? 결과�??�톡방에 공유?�고<br><span>보너??+10P</span> 챙겨가?�요! ?�️</p>
+        <p>우리 팀 승리 굳히기! 결과를 단톡방에 공유하고<br><span>보너스 +10P</span> 챙겨가세요! ⚡️</p>
     </div>
 
     <div class="share-grid">
         <div class="share-item" onclick="sendKakaoResultMessage()">
             <div class="share-icon icon-kakao"><svg class="icon-svg" style="stroke:none; fill:currentColor;" viewBox="0 0 24 24"><path d="M12 4c-4.97 0-9 3.185-9 7.115 0 2.54 1.7 4.76 4.3 6.01-.2.75-.73 2.67-.74 2.74-.02.16.1.18.2.14.08-.03 2.47-1.63 3.48-2.32.57.06 1.15.1 1.76.1 4.97 0 9-3.185 9-7.115S16.97 4 12 4z"/></svg></div>
-            <span class="share-label">카카?�톡</span>
+            <span class="share-label">카카오톡</span>
         </div>
         <div class="share-item" onclick="copyEventLink()">
             <div class="share-icon icon-link"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>
@@ -320,7 +319,7 @@
 <main>
     <div class="post-author-box">
         <div class="author-info">
-            <div class="author-pic">?��</div>
+            <div class="author-pic">🤤</div>
             <div class="author-text">
                 <div class="name">쩝쩝박사 <span class="grade-badge">Lv.1</span></div>
             </div>
@@ -328,51 +327,51 @@
     </div>
 
     <div class="issue-header-box">
-        <div style="text-align: center;"><div class="timer-badge closed">?�� ?�표 마감 불판</div></div>
-        <h2 class="issue-title">금요???�근 ???�트?�스 박살?�는 최고??조합?�? 치맥 vs ?�쏘</h2>
+        <div style="text-align: center;"><div class="timer-badge closed">🚨 투표 마감 불판</div></div>
+        <h2 class="issue-title">금요일 퇴근 후 스트레스 박살내는 최고의 조합은? 치맥 vs 삼쏘</h2>
     </div>
 
     <div class="gauge-wrapper" id="gaugeWrapper">
-        <div class="gauge-title" id="resultTitle">?�� 최종 불판 결과</div>
+        <div class="gauge-title" id="resultTitle">🔥 최종 불판 결과</div>
         <div class="food-gauge-container">
             <div class="gauge-fill-a" id="gaugeFillA"><span class="inner-pct" id="innerPctA">45%</span></div>
             <div class="gauge-fill-b" id="gaugeFillB"><span class="inner-pct" id="innerPctB">55%</span></div>
-            <div class="food-icon icon-a" id="iconA">?��</div>
-            <div class="food-icon icon-b" id="iconB">?��</div>
+            <div class="food-icon icon-a" id="iconA">🍺</div>
+            <div class="food-icon icon-b" id="iconB">🍶</div>
         </div>
     </div>
 
     <div class="taste-stats-wrap is-locked" id="tasteStatsWrap">
         <div class="taste-stats-head">
-            <h3>?�� ?�령·?�별 ?�세 ?�계</h3>
-            <p>?��? 비슷???�클?�들?� ?�떻�?골랐?�까?</p>
+            <h3>📊 연령·성별 상세 통계</h3>
+            <p>나와 비슷한 픽클러들은 어떻게 골랐을까?</p>
         </div>
         <div class="taste-stats-content" id="tasteStatsContent">
             <div class="taste-stat-card">
-                <h4><span class="tag-a">A</span> 치맥 ???�별 분포</h4>
-                <div class="taste-gender-row"><span>?�성 62%</span><span>?�성 38%</span></div>
+                <h4><span class="tag-a">A</span> 치맥 — 성별 분포</h4>
+                <div class="taste-gender-row"><span>여성 62%</span><span>남성 38%</span></div>
                 <div class="gender-bar"><div class="gb-f" style="width:62%;"></div><div class="gb-m" style="width:38%;"></div></div>
             </div>
             <div class="taste-stat-card">
-                <h4><span class="tag-b">B</span> ?�쏘 ???�별 분포</h4>
-                <div class="taste-gender-row"><span>?�성 48%</span><span>?�성 52%</span></div>
+                <h4><span class="tag-b">B</span> 삼쏘 — 성별 분포</h4>
+                <div class="taste-gender-row"><span>여성 48%</span><span>남성 52%</span></div>
                 <div class="gender-bar"><div class="gb-f" style="width:48%;"></div><div class="gb-m" style="width:52%;"></div></div>
             </div>
             <div class="taste-stat-card">
-                <h4>?�령?��?B(?�쏘) ?�택 비율</h4>
+                <h4>연령대별 B(삼쏘) 선택 비율</h4>
                 <div class="taste-age-bars">
-                    <div class="taste-age-row"><span>10?�</span><div class="taste-age-track"><div class="taste-age-fill" style="width:35%;"></div></div><span>35%</span></div>
-                    <div class="taste-age-row"><span>20?�</span><div class="taste-age-track"><div class="taste-age-fill" style="width:58%;"></div></div><span>58%</span></div>
-                    <div class="taste-age-row"><span>30?�</span><div class="taste-age-track"><div class="taste-age-fill" style="width:61%;"></div></div><span>61%</span></div>
-                    <div class="taste-age-row"><span>40?�</span><div class="taste-age-track"><div class="taste-age-fill" style="width:72%;"></div></div><span>72%</span></div>
+                    <div class="taste-age-row"><span>10대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:35%;"></div></div><span>35%</span></div>
+                    <div class="taste-age-row"><span>20대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:58%;"></div></div><span>58%</span></div>
+                    <div class="taste-age-row"><span>30대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:61%;"></div></div><span>61%</span></div>
+                    <div class="taste-age-row"><span>40대</span><div class="taste-age-track"><div class="taste-age-fill" style="width:72%;"></div></div><span>72%</span></div>
                     <div class="taste-age-row"><span>50+</span><div class="taste-age-track"><div class="taste-age-fill" style="width:68%;"></div></div><span>68%</span></div>
                 </div>
             </div>
         </div>
         <div class="taste-stats-lock" id="tasteStatsLock" role="presentation">
             <button type="button" class="taste-unlock-btn" id="tasteUnlockBtn">
-                <span class="lock-icon" aria-hidden="true">?��</span>
-                <span>?��? ?�하???�클?�들?� �?골랐?�까?<br>취향 ?�계 ?�어보기</span>
+                <span class="lock-icon" aria-hidden="true">🔒</span>
+                <span>나와 통하는 픽클러들은 뭘 골랐을까?<br>취향 통계 열어보기</span>
             </button>
         </div>
     </div>
@@ -380,56 +379,56 @@
     <div class="master-media-container">
         <div class="video-container-horizontal" id="videoContainer">
             <div class="split-half split-top" onclick="togglePlay(this)">
-                <div class="media-placeholder">A. 바삭??치킨 ?�진/?�상 ?��?��</div>
-                <div class="play-state-icon">??/div>
+                <div class="media-placeholder">A. 바삭한 치킨 사진/영상 🍗🍺</div>
+                <div class="play-state-icon">▶</div>
             </div>
             <div class="vs-badge">VS</div>
             <div class="split-half split-bottom" onclick="togglePlay(this)">
-                <div class="media-placeholder">B. 지글지글 ?�겹???�진/?�상 ?��?��</div>
-                <div class="play-state-icon">??/div>
+                <div class="media-placeholder">B. 지글지글 삼겹살 사진/영상 🥓🍶</div>
+                <div class="play-state-icon">▶</div>
             </div>
         </div>
     </div>
 
     <div class="options-box" id="optionsBox">
-        <div class="opt-item" onclick="alert('?��? 마감??불판?�니??')">
-            <div class="opt-label-group"><span class="opt-label-a">A</span> 무조�?치맥 ?��?��</div>
+        <div class="opt-item" onclick="alert('이미 마감된 불판입니다!')">
+            <div class="opt-label-group"><span class="opt-label-a">A</span> 무조건 치맥 🍗🍺</div>
         </div>
-        <div class="opt-item my-pick" onclick="alert('?��? 마감??불판?�니??')">
-            <div class="opt-label-group"><span class="opt-label-b">B</span> 무조�??�쏘 ?��?��</div>
-            <span class="my-pick-badge">?�의 ??/span>
+        <div class="opt-item my-pick" onclick="alert('이미 마감된 불판입니다!')">
+            <div class="opt-label-group"><span class="opt-label-b">B</span> 무조건 삼쏘 🥓🍶</div>
+            <span class="my-pick-badge">나의 픽</span>
         </div>
     </div>
 
     <div class="issue-footer-box">
         <div class="stats-row">
-            <span>?�� 32,104 최종 참여</span>
-            <span>?�� 2,042 ?��?</span>
+            <span>🔥 32,104 최종 참여</span>
+            <span>💬 2,042 댓글</span>
         </div>
         <div class="action-bar">
-            <button class="btn-action" onclick="this.style.color='var(--neon-pink)'">?�️ 4.8K</button>
-            <button class="btn-action" onclick="document.querySelector('.comments-section').scrollIntoView({behavior: 'smooth'})">?�� ?��?�?/button>
+            <button class="btn-action" onclick="this.style.color='var(--neon-pink)'">❤️ 4.8K</button>
+            <button class="btn-action" onclick="document.querySelector('.comments-section').scrollIntoView({behavior: 'smooth'})">💬 댓글창</button>
             
             <button class="btn-action btn-share" onclick="openShareSheet()">
                 <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                ?�� 민심 ?�파?�기
+                📢 민심 전파하기
             </button>
         </div>
     </div>
 
     <div class="comments-section">
-        <div class="comments-header"><span>?��? (2,042)</span><span style="font-size: 0.8rem; color: var(--text-sub);">?�기????/span></div>
+        <div class="comments-header"><span>댓글 (2,042)</span><span style="font-size: 0.8rem; color: var(--text-sub);">인기순 ▾</span></div>
         <div class="comment-active-area">
             <div class="comment-input-box">
-                <input type="text" class="comment-input" placeholder="?�리??기쁨???��?�??�겨보세??">
-                <button class="comment-submit">?�록</button>
+                <input type="text" class="comment-input" placeholder="승리의 기쁨을 댓글로 남겨보세요!">
+                <button class="comment-submit">등록</button>
             </div>
             <div class="comment-list">
                 <div class="comment-item">
-                    <div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem;">?��</div>
+                    <div class="author-pic" style="width: 36px; height: 36px; font-size: 1rem;">🥓</div>
                     <div class="comment-content">
-                        <div class="comment-user"><span>?�식??/span><span class="comment-pick-b">B ??/span></div>
-                        <div class="comment-text">?�트?�스 받을 ???�겹??기름?�로 ?�장 코팅?�고 ?�주 �??�이켜야 진정???�링?? ?�리 ?�ㅅ</div>
+                        <div class="comment-user"><span>육식파</span><span class="comment-pick-b">B 픽</span></div>
+                        <div class="comment-text">스트레스 받을 땐 삼겹살 기름으로 위장 코팅하고 소주 쫙 들이켜야 진정한 힐링임. 승리 ㅅㅅ</div>
                     </div>
                 </div>
             </div>
@@ -440,7 +439,7 @@
 <div id="common-footer"></div>
 
 <script>
-    // ?? [중요] 카카??JS ?��? ?�으?�요!
+    // 🚀 [중요] 카카오 JS 키를 넣으세요!
     // Kakao.init('YOUR_KAKAO_JAVASCRIPT_KEY'); 
 
     function openShareSheet() {
@@ -455,17 +454,17 @@
         document.body.style.overflow = '';
     }
 
-    // 카카??공유
+    // 카카오 공유
     function sendKakaoResultMessage() {
         if (!Kakao.isInitialized()) {
-            alert('카카??SDK가 초기?�되지 ?�았?�니?? 코드??JS ?��? ?�력?�주?�요.');
+            alert('카카오 SDK가 초기화되지 않았습니다. 코드에 JS 키를 입력해주세요.');
             return;
         }
         Kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
-                title: '?�� 최종 결과 발표: 치맥 vs ?�쏘',
-                description: '?�도?�인 민심???�택?�? ?�클?�서 ?�인?�세??',
+                title: '🔥 최종 결과 발표: 치맥 vs 삼쏘',
+                description: '압도적인 민심의 선택은? 픽클에서 확인하세요!',
                 imageUrl: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=800&q=80',
                 link: {
                     mobileWebUrl: window.location.href,
@@ -474,7 +473,7 @@
             },
             buttons: [
                 {
-                    title: '결과 ?�인?�기',
+                    title: '결과 확인하기',
                     link: {
                         mobileWebUrl: window.location.href,
                         webUrl: window.location.href,
@@ -487,7 +486,7 @@
 
     function copyEventLink() {
         navigator.clipboard.writeText(window.location.href).then(() => {
-            alert("결과 링크가 복사?�었?�니?? 친구?�에�?공유?�보?�요.");
+            alert("결과 링크가 복사되었습니다! 친구들에게 공유해보세요.");
             closeShareSheet();
         });
     }
@@ -496,13 +495,13 @@
         if (navigator.share) {
             navigator.share({
                 title: 'P!CKLE 불판 마감 결과 발표!',
-                text: '치맥 vs ?�쏘 최종 민심 결과가 ?�왔?? ?�인?�봐 ?��',
+                text: '치맥 vs 삼쏘 최종 민심 결과가 나왔어! 확인해봐 📢',
                 url: window.location.href,
             }).then(() => {
                 closeShareSheet();
             }).catch(console.error);
         } else {
-            alert('?�재 브라?��??�서??기본 공유 기능??지?�하지 ?�습?�다. 링크 복사�??�용?�주?�요.');
+            alert('현재 브라우저에서는 기본 공유 기능을 지원하지 않습니다. 링크 복사를 이용해주세요.');
         }
     }
 
@@ -510,7 +509,7 @@
     function togglePlay(element) {
         isPlaying = !isPlaying;
         const icon = element.querySelector('.play-state-icon');
-        icon.innerText = isPlaying ? '?? : '??;
+        icon.innerText = isPlaying ? '⏸' : '▶';
         icon.classList.add('show');
         setTimeout(() => icon.classList.remove('show'), 800);
     }
@@ -548,7 +547,7 @@
                 if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
                 
                 if (userPick === winningPick) {
-                    document.getElementById('resultTitle').innerHTML = '?�� ???�이 민심 ?�리! ?��';
+                    document.getElementById('resultTitle').innerHTML = '👑 내 픽이 민심 승리! 👑';
                     fireConfetti();
                 }
             }, 1200);

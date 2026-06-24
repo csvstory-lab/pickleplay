@@ -41,12 +41,13 @@ body {
   }
 }
 
-/* 최상위 가로 스크롤 차단 · 더블탭 줌 방지 (body에 max-width를 두지 않음 — #app-container가 480px 셸) */
+/* 최상위 가로 스크롤 차단 · 더블탭 줌 방지 */
 html {
   overflow-x: hidden;
   width: 100%;
   box-sizing: border-box;
   touch-action: manipulation;
+  background-color: #1a1a1e;
 }
 
 body {
@@ -56,9 +57,29 @@ body {
   touch-action: manipulation;
 }
 
+/* PC: 좌우 여백(다크 그터) — body는 각 페이지 인라인 max-width:480px·margin:auto로 중앙 정렬 */
 @media screen and (min-width: 481px) {
   body {
-    background-color: #1a1a1e !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1a1a1e;
+  }
+
+  body:not(:has(#app-container)) {
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #app-container {
+    flex: 1 0 auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  html {
+    background-color: var(--bg-base, #0a0a0c);
   }
 }
 
