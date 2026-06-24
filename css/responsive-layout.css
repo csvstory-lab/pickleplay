@@ -2,14 +2,14 @@
  * P!CKLE — 반응형 레이아웃 · 미디어 · 텍스트 넘침 방지
  */
 
-/* === PC: 모바일 레이아웃 셸 (#app-container) === */
+/* === PC: 모바일 레이아웃 셸 (#app-container · [data-role="page"]) === */
 body {
   margin: 0;
   padding: 0;
-  background-color: #1a1a1e;
 }
 
-#app-container {
+#app-container,
+[data-role="page"] {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
@@ -21,15 +21,8 @@ body {
   box-sizing: border-box;
 }
 
-@media screen and (min-width: 481px) {
-  #app-container {
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.06),
-      0 12px 48px rgba(0, 0, 0, 0.6);
-  }
-}
-
 @media screen and (max-width: 480px) {
+  html,
   body {
     background-color: var(--bg-base, #0a0a0c);
   }
@@ -47,7 +40,6 @@ html {
   width: 100%;
   box-sizing: border-box;
   touch-action: manipulation;
-  background-color: #1a1a1e;
 }
 
 body {
@@ -57,29 +49,118 @@ body {
   touch-action: manipulation;
 }
 
-/* PC: 좌우 여백(다크 그터) — body는 각 페이지 인라인 max-width:480px·margin:auto로 중앙 정렬 */
+/* === PC(481px+): 검정 거터 · 480px 셸 그림자 · 고정 레이어 중앙 정렬 === */
 @media screen and (min-width: 481px) {
+  html,
   body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #1a1a1e;
+    background-color: #000000 !important;
   }
 
+  #app-container,
   body:not(:has(#app-container)) {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  /* 서브페이지 헤더 — 셸 너비 내 정상 배치 */
+  body > header,
+  #app-container > header,
+  #common-header header#mainHeader {
+    width: 100%;
     max-width: 480px;
     margin-left: auto;
     margin-right: auto;
+    box-sizing: border-box;
   }
 
-  #app-container {
-    flex: 1 0 auto;
+  body > header .top-row,
+  #app-container header .top-row,
+  #mainHeader .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
   }
-}
 
-@media screen and (max-width: 480px) {
-  html {
-    background-color: var(--bg-base, #0a0a0c);
+  /* 풀스크린 오버레이 — 480px 영역 위에 겹침 */
+  .noti-overlay,
+  .overlay,
+  .create-success-overlay,
+  .pickle-profile-modal-overlay,
+  .ranking-guide-overlay,
+  .auth-modal-overlay,
+  .mypage-confirm-modal,
+  #confetti-container,
+  .pickle-popup-root {
+    left: 50% !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%);
+  }
+
+  /* 바텀시트 — 슬라이드업 애니메이션 유지 */
+  .bottom-sheet,
+  .share-sheet {
+    left: 50% !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%) translateY(100%);
+  }
+
+  .bottom-sheet.open,
+  .share-sheet.open {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* 슬라이드인 패널 (이벤트 상세 · 마이페이지 · 설정) */
+  .detail-view,
+  .slide-panel,
+  .sub-panel {
+    left: 50% !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%) translateX(100%);
+  }
+
+  .detail-view.open,
+  .slide-panel.open,
+  .sub-panel.open {
+    transform: translateX(-50%) translateX(0);
+  }
+
+  /* 하단 네비게이션 */
+  .bottom-nav {
+    left: 50% !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%);
+  }
+
+  /* 프로필 모달 시트 */
+  .pickle-profile-modal-sheet {
+    left: 50% !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: translateX(-50%) translateY(100%);
+  }
+
+  .pickle-profile-modal-sheet.open {
+    transform: translateX(-50%) translateY(0);
   }
 }
 
