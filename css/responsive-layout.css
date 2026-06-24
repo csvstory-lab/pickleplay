@@ -2,35 +2,40 @@
  * P!CKLE — 반응형 레이아웃 · 미디어 · 텍스트 넘침 방지
  */
 
-/* === PC: 모바일 레이아웃 셸 (#app-container · [data-role="page"]) === */
+/* === 1. 배경색 분리 · 480px 메인 셸 중앙 정렬 === */
 body {
   margin: 0;
   padding: 0;
+  background-color: #222222;
 }
 
 #app-container,
-[data-role="page"] {
+[data-role="page"],
+body:not(:has(#app-container)) {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
+  background-color: #0b0b0b !important;
   min-height: 100vh;
   position: relative;
-  background-color: var(--bg-base, #0a0a0c);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
   color: var(--text-main, #fcfcfc);
   overflow-x: hidden;
   box-sizing: border-box;
 }
 
 @media screen and (max-width: 480px) {
-  html,
   body {
-    background-color: var(--bg-base, #0a0a0c);
+    background-color: var(--bg-base, #0b0b0b);
+  }
+
+  #app-container,
+  body:not(:has(#app-container)) {
+    box-shadow: none;
   }
 
   #app-container {
-    width: 100%;
     max-width: 100%;
-    box-shadow: none;
   }
 }
 
@@ -40,6 +45,7 @@ html {
   width: 100%;
   box-sizing: border-box;
   touch-action: manipulation;
+  background-color: #222222;
 }
 
 body {
@@ -49,26 +55,59 @@ body {
   touch-action: manipulation;
 }
 
-/* === PC(481px+): 검정 거터 · 480px 셸 그림자 · 고정 레이어 중앙 정렬 === */
+/* === PC(481px+): 오버레이 · 헤더 480px 영역 고정 === */
 @media screen and (min-width: 481px) {
   html,
   body {
-    background-color: #000000 !important;
+    background-color: #222222 !important;
   }
 
-  #app-container,
-  body:not(:has(#app-container)) {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* 2. 서브/오버레이 페이지 — 메인 480px 위에 포개기 */
+  .detail-view,
+  .slide-panel,
+  .sub-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
   }
 
-  /* 서브페이지 헤더 — 셸 너비 내 정상 배치 */
+  .detail-view:not(.open),
+  .slide-panel:not(.open),
+  .sub-panel:not(.open) {
+    transform: translateX(calc(-50% + 100%)) !important;
+  }
+
+  .detail-view.open,
+  .slide-panel.open,
+  .sub-panel.open {
+    transform: translateX(-50%) !important;
+  }
+
+  /* 3. 서브페이지 헤더/상단바 — 480px 중앙 정렬 */
   body > header,
   #app-container > header,
-  #common-header header#mainHeader {
-    width: 100%;
+  #common-header {
+    position: sticky;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 120;
+  }
+
+  #common-header header#mainHeader {
+    max-width: 480px;
+    width: 100%;
     box-sizing: border-box;
   }
 
@@ -82,7 +121,7 @@ body {
     box-sizing: border-box;
   }
 
-  /* 풀스크린 오버레이 — 480px 영역 위에 겹침 */
+  /* 기타 고정 레이어 — 480px 셸 위 정렬 */
   .noti-overlay,
   .overlay,
   .create-success-overlay,
@@ -90,77 +129,57 @@ body {
   .ranking-guide-overlay,
   .auth-modal-overlay,
   .mypage-confirm-modal,
-  #confetti-container,
   .pickle-popup-root {
+    position: fixed !important;
+    top: 0 !important;
     left: 50% !important;
-    right: auto !important;
+    transform: translateX(-50%) !important;
     width: 100% !important;
     max-width: 480px !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    transform: translateX(-50%);
+    height: 100vh !important;
+    z-index: 9999 !important;
+    right: auto !important;
+    margin: 0 !important;
   }
 
-  /* 바텀시트 — 슬라이드업 애니메이션 유지 */
   .bottom-sheet,
   .share-sheet {
+    position: fixed !important;
     left: 50% !important;
     right: auto !important;
     width: 100% !important;
     max-width: 480px !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    transform: translateX(-50%) translateY(100%);
+    margin: 0 !important;
+    transform: translateX(-50%) translateY(100%) !important;
   }
 
   .bottom-sheet.open,
   .share-sheet.open {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) !important;
   }
 
-  /* 슬라이드인 패널 (이벤트 상세 · 마이페이지 · 설정) */
-  .detail-view,
-  .slide-panel,
-  .sub-panel {
-    left: 50% !important;
-    right: auto !important;
-    width: 100% !important;
-    max-width: 480px !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    transform: translateX(-50%) translateX(100%);
-  }
-
-  .detail-view.open,
-  .slide-panel.open,
-  .sub-panel.open {
-    transform: translateX(-50%) translateX(0);
-  }
-
-  /* 하단 네비게이션 */
   .bottom-nav {
+    position: fixed !important;
     left: 50% !important;
     right: auto !important;
     width: 100% !important;
     max-width: 480px !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    transform: translateX(-50%);
+    margin: 0 !important;
+    transform: translateX(-50%) !important;
   }
 
-  /* 프로필 모달 시트 */
   .pickle-profile-modal-sheet {
+    position: fixed !important;
     left: 50% !important;
     right: auto !important;
     width: 100% !important;
     max-width: 480px !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    transform: translateX(-50%) translateY(100%);
+    margin: 0 !important;
+    transform: translateX(-50%) translateY(100%) !important;
   }
 
   .pickle-profile-modal-sheet.open {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) !important;
   }
 }
 
