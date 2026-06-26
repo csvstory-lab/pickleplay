@@ -576,153 +576,137 @@
             </div>
 
             <div class="sc-title" style="margin-top: 30px; border-bottom: none; margin-bottom: 15px; color:var(--neon-pink); border-left: 4px solid var(--neon-pink); padding-left: 10px;">
-                🚀 커뮤니티 폭발력 및 활성도 딥다이브 (Growth & Engagement)
-            </div>
-            <div class="core-kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
-                <div class="core-card" style="border-color: rgba(255,0,127,0.5);">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🚀 불판 바이럴 지수 (외부 공유 전환율)</span><span class="core-val" style="color:var(--neon-pink);" id="kpiViral">18.5%</span></div>
-                    <div style="font-size:1.5rem;">🔗</div>
-                </div>
-                <div class="core-card" style="border-color: rgba(0,240,255,0.5);">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🔥 투표/도파민 전환율 (조회 대비 투표)</span><span class="core-val" style="color:var(--neon-blue);" id="kpiConversion">42.8%</span></div>
-                    <div style="font-size:1.5rem;">👆</div>
-                </div>
-                <div class="core-card" style="border-color: rgba(255,204,0,0.5);">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">⏱️ 불판 초기 점화 속도 (최초 10명 도달)</span><span class="core-val" style="color:var(--theme-gold);" id="kpiIgnition">12분 30초</span></div>
-                    <div style="font-size:1.5rem;">⚡</div>
-                </div>
-            </div>
+              🚀 커뮤니티 폭발력 및 활성도 딥다이브 (Growth & Engagement)
+          </div>
+          <!-- 기존 repeat(3, 1fr)에서 repeat(4, 1fr)로 변경 -->
+          <div class="core-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+              <div class="core-card" style="border-color: rgba(255,0,127,0.5);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🚀 불판 바이럴 지수 (외부 공유 전환율)</span><span class="core-val" style="color:var(--neon-pink);" id="kpiViral">18.5%</span></div>
+                  <div style="font-size:1.5rem;">🔗</div>
+              </div>
+              <div class="core-card" style="border-color: rgba(0,240,255,0.5);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🔥 투표/도파민 전환율 (조회 대비 투표)</span><span class="core-val" style="color:var(--neon-blue);" id="kpiConversion">42.8%</span></div>
+                  <div style="font-size:1.5rem;">👆</div>
+              </div>
+              <div class="core-card" style="border-color: rgba(255,204,0,0.5);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">⏱️ 불판 초기 점화 속도 (최초 10명 도달)</span><span class="core-val" style="color:var(--theme-gold);" id="kpiIgnition">12분 30초</span></div>
+                  <div style="font-size:1.5rem;">⚡</div>
+              </div>
+              <!-- ✨ 신규 추가: 재방문률 카드 -->
+              <div class="core-card" style="border-color: rgba(57,255,20,0.5);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🧲 D+7 재방문률 (유저 리텐션)</span><span class="core-val" style="color:var(--neon-green);" id="kpiRetention">68.2%</span></div>
+                  <div style="font-size:1.5rem;">🔄</div>
+              </div>
+          </div>
 
-            <div class="demo-kpi-grid">
-                <div class="demo-card c1" onclick="openStatModal('순 방문자 (UV)')">
-                    <div class="demo-top">
-                        <div class="demo-title"><span>👥 순 방문자 (UV)</span><span class="demo-trend trend-up">▲ 12.4%</span></div>
-                        <div class="demo-val">124,510</div>
-                    </div>
-                    <div class="demo-stats">
-                        <div class="d-row">
-                            <div class="d-label"><span>👩 78%</span><span>👨 22%</span></div>
-                            <div class="gender-bar"><div class="gb-f" style="width: 78%;"></div><div class="gb-m" style="width: 22%;"></div></div>
-                        </div>
-                        <div class="d-row">
-                            <div class="age-bars">
-                                <div class="ab top" style="height: 100%;"></div>
-                                <div class="ab second" style="height: 80%;"></div>
-                                <div class="ab" style="height: 40%;"></div>
-                                <div class="ab" style="height: 20%;"></div>
-                                <div class="ab" style="height: 10%;"></div>
-                            </div>
-                            <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="demo-card c2" onclick="openStatModal('신규 가입자')">
-                    <div class="demo-top">
-                        <div class="demo-title"><span>✨ 신규 가입자</span><span class="demo-trend trend-up">▲ 5.2%</span></div>
-                        <div class="demo-val" id="statCountUsers">—</div>
-                    </div>
-                    <div class="demo-stats">
-                        <div class="d-row">
-                            <div class="d-label"><span>👩 85%</span><span>👨 15%</span></div>
-                            <div class="gender-bar"><div class="gb-f" style="width: 85%;"></div><div class="gb-m" style="width: 15%;"></div></div>
-                        </div>
-                        <div class="d-row">
-                            <div class="age-bars">
-                                <div class="ab top" style="height: 100%;"></div>
-                                <div class="ab second" style="height: 60%;"></div>
-                                <div class="ab" style="height: 20%;"></div>
-                                <div class="ab" style="height: 10%;"></div>
-                                <div class="ab" style="height: 5%;"></div>
-                            </div>
-                            <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="demo-card c3" onclick="openStatModal('총 투표수 (Votes)')">
-                    <div class="demo-top">
-                        <div class="demo-title"><span>🗳️ 총 투표수 (Votes)</span><span class="demo-trend trend-up">▲ 24.1%</span></div>
-                        <div class="demo-val" style="color:var(--neon-pink);" id="statCountVotes">—</div>
-                    </div>
-                    <div class="demo-stats">
-                        <div class="d-row">
-                            <div class="d-label"><span>👩 72%</span><span>👨 28%</span></div>
-                            <div class="gender-bar"><div class="gb-f" style="width: 72%;"></div><div class="gb-m" style="width: 28%;"></div></div>
-                        </div>
-                        <div class="d-row">
-                            <div class="age-bars">
-                                <div class="ab second" style="height: 70%;"></div>
-                                <div class="ab top" style="height: 100%;"></div>
-                                <div class="ab" style="height: 50%;"></div>
-                                <div class="ab" style="height: 20%;"></div>
-                                <div class="ab" style="height: 10%;"></div>
-                            </div>
-                            <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="demo-card c4" onclick="openStatModal('신규 생성 불판')">
-                    <div class="demo-top">
-                        <div class="demo-title"><span>🔥 신규 생성 불판</span><span class="demo-trend trend-down">▼ 2.1%</span></div>
-                        <div class="demo-val" id="statCountPosts">—</div>
-                    </div>
-                    <div class="demo-stats">
-                        <div class="d-row">
-                            <div class="d-label"><span>👩 65%</span><span>👨 35%</span></div>
-                            <div class="gender-bar"><div class="gb-f" style="width: 65%;"></div><div class="gb-m" style="width: 35%;"></div></div>
-                        </div>
-                        <div class="d-row">
-                            <div class="age-bars">
-                                <div class="ab" style="height: 50%;"></div>
-                                <div class="ab top" style="height: 100%;"></div>
-                                <div class="ab second" style="height: 80%;"></div>
-                                <div class="ab" style="height: 30%;"></div>
-                                <div class="ab" style="height: 10%;"></div>
-                            </div>
-                            <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="demo-card c5" onclick="openStatModal('신규 작성 댓글')">
-                    <div class="demo-top">
-                        <div class="demo-title"><span>💬 신규 작성 댓글</span><span class="demo-trend trend-up">▲ 8.5%</span></div>
-                        <div class="demo-val" id="statCountComments">—</div>
-                    </div>
-                    <div class="demo-stats">
-                        <div class="d-row">
-                            <div class="d-label"><span>👩 80%</span><span>👨 20%</span></div>
-                            <div class="gender-bar"><div class="gb-f" style="width: 80%;"></div><div class="gb-m" style="width: 20%;"></div></div>
-                        </div>
-                        <div class="d-row">
-                            <div class="age-bars">
-                                <div class="ab top" style="height: 100%;"></div>
-                                <div class="ab second" style="height: 60%;"></div>
-                                <div class="ab" style="height: 20%;"></div>
-                                <div class="ab" style="height: 10%;"></div>
-                                <div class="ab" style="height: 5%;"></div>
-                            </div>
-                            <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-title">📈 기간 내 핵심 지표 일별 추이 (그래프)</div>
-                <div style="margin-bottom: 20px;">
-                    <select id="chartMetricSelect" class="admin-input" style="width: 250px;" onchange="updateTrendChart()">
-                        <option value="dopamine">도파민 지수 (인당 평균 투표 수)</option>
-                        <option value="signups">신규 가입자 수</option>
-                        <option value="votes">총 투표수 (Votes)</option>
-                        <option value="uv" selected>순 방문자 (UV)</option>
-                        <option value="posts">일일 신규 생성 불판 수</option>
-                    </select>
-                </div>
+          <div class="demo-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
                 
-                <div class="chart-wrapper">
+            <div class="demo-card c2" onclick="openStatModal('신규 가입자')">
+                <div class="demo-top">
+                    <div class="demo-title"><span>✨ 신규 가입자</span><span class="demo-trend trend-up">▲ 5.2%</span></div>
+                    <div class="demo-val" id="statCountUsers">—</div>
+                </div>
+                <div class="demo-stats">
+                    <div class="d-row">
+                        <div class="d-label"><span>👩 85%</span><span>👨 15%</span></div>
+                        <div class="gender-bar"><div class="gb-f" style="width: 85%;"></div><div class="gb-m" style="width: 15%;"></div></div>
+                    </div>
+                    <div class="d-row">
+                        <div class="age-bars">
+                            <div class="ab top" style="height: 100%;"></div>
+                            <div class="ab second" style="height: 60%;"></div>
+                            <div class="ab" style="height: 20%;"></div>
+                            <div class="ab" style="height: 10%;"></div>
+                            <div class="ab" style="height: 5%;"></div>
+                        </div>
+                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-card c3" onclick="openStatModal('총 투표수 (Votes)')">
+                <div class="demo-top">
+                    <div class="demo-title"><span>🗳️ 총 투표수 (Votes)</span><span class="demo-trend trend-up">▲ 24.1%</span></div>
+                    <div class="demo-val" style="color:var(--neon-pink);" id="statCountVotes">—</div>
+                </div>
+                <div class="demo-stats">
+                    <div class="d-row">
+                        <div class="d-label"><span>👩 72%</span><span>👨 28%</span></div>
+                        <div class="gender-bar"><div class="gb-f" style="width: 72%;"></div><div class="gb-m" style="width: 28%;"></div></div>
+                    </div>
+                    <div class="d-row">
+                        <div class="age-bars">
+                            <div class="ab second" style="height: 70%;"></div>
+                            <div class="ab top" style="height: 100%;"></div>
+                            <div class="ab" style="height: 50%;"></div>
+                            <div class="ab" style="height: 20%;"></div>
+                            <div class="ab" style="height: 10%;"></div>
+                        </div>
+                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-card c4" onclick="openStatModal('신규 생성 불판')">
+                <div class="demo-top">
+                    <div class="demo-title"><span>🔥 신규 생성 불판</span><span class="demo-trend trend-down">▼ 2.1%</span></div>
+                    <div class="demo-val" id="statCountPosts">—</div>
+                </div>
+                <div class="demo-stats">
+                    <div class="d-row">
+                        <div class="d-label"><span>👩 65%</span><span>👨 35%</span></div>
+                        <div class="gender-bar"><div class="gb-f" style="width: 65%;"></div><div class="gb-m" style="width: 35%;"></div></div>
+                    </div>
+                    <div class="d-row">
+                        <div class="age-bars">
+                            <div class="ab" style="height: 50%;"></div>
+                            <div class="ab top" style="height: 100%;"></div>
+                            <div class="ab second" style="height: 80%;"></div>
+                            <div class="ab" style="height: 30%;"></div>
+                            <div class="ab" style="height: 10%;"></div>
+                        </div>
+                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-card c5" onclick="openStatModal('신규 작성 댓글')">
+                <div class="demo-top">
+                    <div class="demo-title"><span>💬 신규 작성 댓글</span><span class="demo-trend trend-up">▲ 8.5%</span></div>
+                    <div class="demo-val" id="statCountComments">—</div>
+                </div>
+                <div class="demo-stats">
+                    <div class="d-row">
+                        <div class="d-label"><span>👩 80%</span><span>👨 20%</span></div>
+                        <div class="gender-bar"><div class="gb-f" style="width: 80%;"></div><div class="gb-m" style="width: 20%;"></div></div>
+                    </div>
+                    <div class="d-row">
+                        <div class="age-bars">
+                            <div class="ab top" style="height: 100%;"></div>
+                            <div class="ab second" style="height: 60%;"></div>
+                            <div class="ab" style="height: 20%;"></div>
+                            <div class="ab" style="height: 10%;"></div>
+                            <div class="ab" style="height: 5%;"></div>
+                        </div>
+                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">📈 기간 내 핵심 지표 일별 추이 (그래프)</div>
+          <div style="margin-bottom: 20px;">
+            <select id="chartMetricSelect" class="admin-input" style="width: 250px;" onchange="updateTrendChart()">
+              <option value="votes" selected>총 투표수 (Votes)</option>
+              <option value="dopamine">도파민 지수 (인당 평균 투표 수)</option>
+              <option value="signups">신규 가입자 수</option>
+              <option value="posts">일일 신규 생성 불판 수</option>
+              <option value="retention">D+7 재방문률 (유저 리텐션)</option>
+          </select>
+          </div>
+          
+          <div class="chart-wrapper">
                     <div class="y-axis" id="chartYAxis">
                         <span>150k</span>
                         <span>100k</span>
@@ -772,21 +756,66 @@
         </div>
 
         <div id="viewGa4" class="view-panel">
-            <div class="ga-embed-container">
-                <div class="ga-icon">🌐</div>
-                <h3 class="ga-title">구글 애널리틱스 (GA4) 통합 대시보드</h3>
-                <p class="ga-desc">
-                    픽클 앱의 <strong>방문자 수(MAU/DAU), 유입 경로, 페이지 이탈률, 사용자 체류 시간</strong> 등<br>
-                    고도화된 트래픽 통계 데이터는 서버 부하를 방지하기 위해 구글 애널리틱스에서 전담하여 처리합니다.<br><br>
-                    하단 버튼을 클릭하여 GA4 대시보드로 이동하세요.
-                </p>
-                <button class="btn-ga-link" onclick="window.open('https://analytics.google.com/', '_blank')">
-                    📈 구글 애널리틱스 대시보드 바로가기 ↗
-                </button>
-            </div>
-        </div>
+          <div class="filter-bar" style="border-color: #3f3f46; background: rgba(255,255,255,0.02);">
+              <div style="display:flex; align-items:center; gap:15px;">
+                  <span style="font-size:1.4rem;">🌐</span>
+                  <h3 style="font-size:1.1rem; font-weight:900; color:#fff; margin:0;">GA4 객관적 트래픽 & 오디언스 리포트</h3>
+              </div>
+              <div class="date-inputs">
+                  <select class="admin-input" id="gaDateRange">
+                      <option value="today">오늘 (Today)</option>
+                      <option value="7days" selected>최근 7일</option>
+                      <option value="30days">최근 30일</option>
+                  </select>
+                  <button type="button" class="btn-search" style="background:#fff; color:#000;" onclick="loadGa4Data()">🔄 실시간 동기화</button>
+              </div>
+          </div>
 
-    </div>
+          <!-- 핵심 4대 지표 -->
+          <div class="core-kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:15px;">
+              <div class="core-card" style="border-style: solid; border-color: rgba(255,255,255,0.1);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">👥 순 방문자 (Active Users)</span><span class="core-val" id="gaActiveUsers" style="color:#fff;">— 명</span></div>
+                  <div style="font-size:1.5rem; opacity:0.8;">📈</div>
+              </div>
+              <div class="core-card" style="border-style: solid; border-color: rgba(57,255,20,0.4);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">👀 총 조회수 (Page Views)</span><span class="core-val" id="gaPageViews" style="color:var(--neon-green);">— 회</span></div>
+                  <div style="font-size:1.5rem; opacity:0.8;">📱</div>
+              </div>
+              <div class="core-card" style="border-style: solid; border-color: rgba(0,240,255,0.4);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">⏱️ 1인 평균 체류시간</span><span class="core-val" id="gaEngagementTime" style="color:var(--neon-blue);">—</span></div>
+                  <div style="font-size:1.5rem; opacity:0.8;">⏳</div>
+              </div>
+              <div class="core-card" style="border-style: solid; border-color: rgba(255,0,127,0.4);">
+                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🚪 총 세션 수 (Visits)</span><span class="core-val" id="gaSessions" style="color:var(--neon-pink);">— 회</span></div>
+                  <div style="font-size:1.5rem; opacity:0.8;">🔄</div>
+              </div>
+          </div>
+
+          <!-- 하단 차트 영역 (자동 렌더링을 위해 비워둠) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+              <div style="display:flex; flex-direction:column; gap:15px;">
+                  <div class="chart-card" style="margin-top:0;">
+                      <div class="chart-title" style="margin-bottom:15px; font-size:1rem;">🔗 주요 트래픽 유입 경로 (Acquisition)</div>
+                      <div class="stat-breakdown-section" id="gaAcqContainer" style="gap:10px;">데이터 대기 중...</div>
+                  </div>
+                  <div class="chart-card" style="margin-top:0;">
+                      <div class="chart-title" style="margin-bottom:15px; font-size:1rem;">📱 접속 기기 및 OS 환경 (Devices & OS)</div>
+                      <div class="stat-breakdown-section" id="gaOsContainer" style="gap:15px;">데이터 대기 중...</div>
+                  </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:15px;">
+                  <div class="chart-card" style="margin-top:0;">
+                      <div class="chart-title" style="margin-bottom:15px; font-size:1rem;">👥 구글 빅데이터 기준 성별 (Gender)</div>
+                      <div class="stat-breakdown-section" id="gaGenderContainer" style="gap:10px;">데이터 대기 중...</div>
+                      <div style="font-size:0.75rem; color:#a1a1aa; margin-top:10px; text-align:right;">* 트래픽이 적을 경우 구글 보안 정책상 블라인드 처리될 수 있습니다.</div>
+                  </div>
+                  <div class="chart-card" style="margin-top:0;">
+                      <div class="chart-title" style="margin-bottom:15px; font-size:1rem;">📍 지리적 트래픽 분포 (Geography)</div>
+                      <div class="stat-breakdown-section" id="gaRegionContainer" style="gap:10px;">데이터 대기 중...</div>
+                  </div>
+              </div>
+          </div>
+      </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -794,43 +823,43 @@
   <script>
     var CHART_DATES = ['06/01', '06/02', '06/03', '06/04', '06/05', '06/06', '06/07', '06/08'];
 
-    var CHART_METRICS = {
-      dopamine: {
-        name: '도파민 지수 (인당 평균 투표 수)',
-        yLabels: ['5.0회', '3.3회', '1.7회', '0'],
-        values: [3.6, 3.9, 4.0, 4.2, 4.5, 4.3, 4.6, 4.4],
-        max: 5,
-        format: function (v) { return v.toFixed(1) + '회'; }
-      },
-      signups: {
-        name: '신규 가입자 수',
-        yLabels: ['500', '333', '167', '0'],
-        values: [280, 310, 295, 350, 420, 380, 450, 410],
-        max: 500,
-        format: function (v) { return v.toLocaleString('ko-KR') + '명'; }
-      },
-      votes: {
-        name: '총 투표수 (Votes)',
-        yLabels: ['150k', '100k', '50k', '0'],
-        values: [95000, 102000, 98000, 118000, 135000, 124000, 142000, 128000],
-        max: 150000,
-        format: function (v) { return Math.round(v / 1000) + 'k'; }
-      },
-      uv: {
-        name: '순 방문자 (UV)',
-        yLabels: ['150k', '100k', '50k', '0'],
-        values: [85000, 92000, 90000, 110000, 135000, 124000, 141000, 120000],
-        max: 150000,
-        format: function (v) { return Math.round(v / 1000) + 'k'; }
-      },
-      posts: {
-        name: '일일 신규 생성 불판 수',
-        yLabels: ['400', '267', '133', '0'],
-        values: [210, 245, 230, 280, 320, 290, 340, 310],
-        max: 400,
-        format: function (v) { return v.toLocaleString('ko-KR') + '개'; }
-      }
-    };
+var CHART_METRICS = {
+  dopamine: {
+    name: '도파민 지수 (인당 평균 투표 수)',
+    yLabels: ['5.0회', '3.3회', '1.7회', '0'],
+    values: [3.6, 3.9, 4.0, 4.2, 4.5, 4.3, 4.6, 4.4],
+    max: 5,
+    format: function (v) { return v.toFixed(1) + '회'; }
+  },
+  signups: {
+    name: '신규 가입자 수',
+    yLabels: ['500', '333', '167', '0'],
+    values: [280, 310, 295, 350, 420, 380, 450, 410],
+    max: 500,
+    format: function (v) { return v.toLocaleString('ko-KR') + '명'; }
+  },
+  votes: {
+    name: '총 투표수 (Votes)',
+    yLabels: ['150k', '100k', '50k', '0'],
+    values: [95000, 102000, 98000, 118000, 135000, 124000, 142000, 128000],
+    max: 150000,
+    format: function (v) { return Math.round(v / 1000) + 'k'; }
+  },
+  posts: {
+    name: '일일 신규 생성 불판 수',
+    yLabels: ['400', '267', '133', '0'],
+    values: [210, 245, 230, 280, 320, 290, 340, 310],
+    max: 400,
+    format: function (v) { return v.toLocaleString('ko-KR') + '개'; }
+  },
+  retention: {
+    name: 'D+7 재방문률 (유저 리텐션)',
+    yLabels: ['100%', '66%', '33%', '0%'],
+    values: [62.5, 64.0, 65.2, 63.8, 67.5, 68.2, 70.1, 68.2],
+    max: 100,
+    format: function (v) { return v.toFixed(1) + '%'; }
+  }
+};
 
     function calcBarHeightPercent(value, max) {
       if (!max || max <= 0) return 0;
@@ -1285,5 +1314,103 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>
+
+<script>
+    // GA4 데이터를 Supabase 함수를 통해 불러오는 통신 코드 (날짜 동기화 및 평균 체류시간 업그레이드)
+    // GA4 객관적 트래픽 데이터를 불러오는 통신 코드
+    // 5개의 리포트를 받아와서 화면을 그리는 최종 통신 코드
+    async function loadGa4Data() {
+        var btn = document.querySelector('#viewGa4 .btn-search');
+        if (!btn) return;
+        
+        var dateSelect = document.getElementById('gaDateRange');
+        var startDate = '7daysAgo';
+        if (dateSelect && dateSelect.value === 'today') startDate = 'today';
+        else if (dateSelect && dateSelect.value === '30days') startDate = '30daysAgo';
+        
+        var originalText = btn.textContent;
+        btn.textContent = '🔄 데이터 렌더링 중...';
+        btn.disabled = true;
+
+        try {
+            var sb = getStatSupabaseClient(); 
+            var { data, error } = await sb.functions.invoke('ga4-analytics', {
+                body: { startDate: startDate, endDate: 'today' }
+            });
+
+            if (error) throw error;
+            console.log("📊 GA4 전체 리포트:", data);
+            
+            // 1. 최상단 핵심 지표 업데이트
+            if (data.kpi && data.kpi.rows) {
+                var kpiRow = data.kpi.rows[0].metricValues;
+                var activeUsers = Number(kpiRow[0].value || 0);
+                var engagementRaw = Number(kpiRow[1].value || 0);
+                var pageViews = Number(kpiRow[2].value || 0);
+                var sessions = Number(kpiRow[3].value || 0);
+
+                var avgSec = activeUsers > 0 ? (engagementRaw / activeUsers) : 0;
+                var m = Math.floor(avgSec / 60);
+                var s = Math.round(avgSec % 60);
+
+                document.getElementById('gaActiveUsers').textContent = activeUsers.toLocaleString('ko-KR') + ' 명';
+                document.getElementById('gaPageViews').textContent = pageViews.toLocaleString('ko-KR') + ' 회';
+                document.getElementById('gaSessions').textContent = sessions.toLocaleString('ko-KR') + ' 회';
+                document.getElementById('gaEngagementTime').textContent = m > 0 ? `${m}분 ${s}초` : `${s}초`;
+            }
+
+            // 2. 가로 막대 그래프 자동 생성 함수
+            function renderBarChart(containerId, reportData, colors) {
+                var container = document.getElementById(containerId);
+                if (!reportData || !reportData.rows || reportData.rows.length === 0) {
+                    container.innerHTML = '<div style="color:#a1a1aa; font-size:0.85rem; padding:10px 0;">데이터가 충분하지 않거나 집계 중입니다.</div>';
+                    return;
+                }
+                
+                var total = reportData.rows.reduce((sum, row) => sum + Number(row.metricValues[0].value), 0);
+                var html = '';
+                
+                // 조회수 많은 순서대로 정렬 후 최대 5개까지만 노출
+                var sortedRows = reportData.rows.sort((a,b) => Number(b.metricValues[0].value) - Number(a.metricValues[0].value)).slice(0, 5);
+
+                sortedRows.forEach((row, idx) => {
+                    var name = row.dimensionValues[0].value;
+                    var val = Number(row.metricValues[0].value);
+                    var pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                    var color = colors[idx % colors.length];
+                    
+                    // 영문 이름 한글화 처리 (보기 좋게)
+                    if(name === 'Organic Social') name = '소셜 미디어 (인스타/카톡)';
+                    if(name === 'Direct') name = '직접 접속 (URL/북마크)';
+                    if(name === 'Organic Search') name = '검색 엔진 (구글/네이버)';
+                    if(name === 'female') name = '여성 (Female)';
+                    if(name === 'male') name = '남성 (Male)';
+
+                    html += `
+                    <div class="stat-hbar-row" style="margin-bottom:8px;">
+                        <div class="stat-hbar-label-row"><span class="stat-hbar-label">${name}</span><span class="stat-hbar-pct" style="color:${color};">${pct}%</span></div>
+                        <div class="stat-hbar-track" style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px;"><div class="stat-hbar-fill" style="width:${pct}%; background:${color}; box-shadow:none; height:100%; border-radius:4px;"></div></div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+
+            // 3. 각 영역별 그래프 그리기 실행 (다양한 네온 컬러 적용)
+            renderBarChart('gaAcqContainer', data.acq, ['#ff007f', '#00f0ff', '#ffb700', '#a1a1aa']); // 유입경로
+            renderBarChart('gaOsContainer', data.os, ['#fff', '#39ff14', '#a1a1aa']); // 접속 기기
+            renderBarChart('gaGenderContainer', data.demo, ['#ff007f', '#00f0ff']); // 성별
+            renderBarChart('gaRegionContainer', data.region, ['#00f0ff', '#39ff14', '#ffb700', '#a1a1aa', '#fff']); // 지역
+
+            alert('✔️ [풀 연동 완료] 모든 그래프에 실제 트래픽 데이터가 적용되었습니다!');
+
+        } catch (err) {
+            console.error('[GA4 Sync Error]', err);
+            alert('구글 데이터 연동 중 오류가 발생했습니다: ' + (err.message || err));
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
