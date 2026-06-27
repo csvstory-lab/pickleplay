@@ -2434,7 +2434,6 @@
       bindProfileSelectFilledState();
       bindLogout();
       bindWithdraw();
-      bindPostEditThumbInput();
       mypageTabLoaded.created = true;
       await Promise.all([
         loadCreatedPosts(user.id),
