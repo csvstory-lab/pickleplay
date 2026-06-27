@@ -1688,6 +1688,45 @@ function renderCommentsList(comments, sortType) {
     return !!(currentPost && currentPostId && !detailHasVoted && !isPostExpired(currentPost));
   }
 
+  function hashPostIdToAssetSet(postId) {
+    var str = String(postId || '');
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) | 0;
+    }
+    return (Math.abs(hash) % 7) + 1;
+  }
+
+  function getPickleVoteAssetPath(side, setIndex) {
+    var idx = Math.max(1, Math.min(7, Number(setIndex) || 1));
+    var suffix = side === 'B' ? 'B' : 'A';
+    return 'asset/asset_' + suffix + '_' + idx + '.png';
+  }
+
+  function buildVoteOptionInnerHtml(side, optionText, setIndex) {
+    var labelClass = side === 'B' ? 'opt-label-b' : 'opt-label-a';
+    var labelLetter = side === 'B' ? 'B' : 'A';
+    var textId = side === 'B' ? 'optTextB' : 'optTextA';
+    var src = getPickleVoteAssetPath(side, setIndex);
+    return (
+      '<img class="opt-pickle-char" src="' +
+      escapeHtml(src) +
+      '" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+      '<div class="opt-item-body">' +
+      '<span class="' +
+      labelClass +
+      '">' +
+      labelLetter +
+      '</span>' +
+      '<span class="opt-text" id="' +
+      textId +
+      '">' +
+      escapeHtml(optionText || '') +
+      '</span>' +
+      '</div>'
+    );
+  }
+
   function bindDetailMediaVoteHandlers() {
     var container = $('videoContainer');
     if (!container) return;
@@ -2184,15 +2223,14 @@ function renderCommentsList(comments, sortType) {
     var titleEl = $('detailTitle');
     if (titleEl) titleEl.textContent = post.title || '';
 
+    var assetSet = hashPostIdToAssetSet(post.id);
     var optA = $('optBtnA');
     var optB = $('optBtnB');
     if (optA) {
-      optA.innerHTML =
-        '<span class="opt-label-a">A</span> ' + escapeHtml(post.option_a || '');
+      optA.innerHTML = buildVoteOptionInnerHtml('A', post.option_a || '', assetSet);
     }
     if (optB) {
-      optB.innerHTML =
-        '<span class="opt-label-b">B</span> ' + escapeHtml(post.option_b || '');
+      optB.innerHTML = buildVoteOptionInnerHtml('B', post.option_b || '', assetSet);
     }
 
     var descEl = $('detailDescription');

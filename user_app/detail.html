@@ -92,7 +92,47 @@
 
     /* 4?: A/B ??? ??? */
     .options-box { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 10px; }
-    .opt-item { background-color: var(--bg-card); padding: 16px 18px; border-radius: 14px; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-card); cursor: pointer; transition: 0.2s; }
+    .opt-item {
+        position: relative;
+        overflow: visible;
+        background-color: var(--bg-card);
+        padding: 14px 16px 14px 64px;
+        min-height: 68px;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--border-card);
+        cursor: pointer;
+        transition: 0.2s;
+        box-sizing: border-box;
+    }
+    .opt-pickle-char {
+        position: absolute;
+        left: 8px;
+        bottom: 4px;
+        width: 52px;
+        height: auto;
+        max-height: 64px;
+        object-fit: contain;
+        pointer-events: none;
+        z-index: 2;
+        filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.28));
+    }
+    .opt-item-body {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+    .opt-text {
+        flex: 1;
+        line-height: 1.35;
+        word-break: keep-all;
+        color: var(--text-main);
+    }
     .opt-item.selected-a { border-color: var(--point-blue); background-color: rgba(115, 165, 255, 0.08); }
     .opt-item.selected-b { border-color: var(--point-pink); background-color: rgba(255, 133, 161, 0.08); }
     .opt-label-a { color: var(--point-blue); font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; }
@@ -367,10 +407,18 @@
     <!-- 4?: A/B ??? ??? -->
     <div class="options-box vote-content" id="optionsBox">
         <div class="opt-item" id="optBtnA" onclick="castVote('A', event, this)">
-            <span class="opt-label-a">A</span> <span id="optTextA">?</span>
+            <img class="opt-pickle-char" src="asset/asset_A_1.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+            <div class="opt-item-body">
+                <span class="opt-label-a">A</span>
+                <span class="opt-text" id="optTextA">?</span>
+            </div>
         </div>
         <div class="opt-item" id="optBtnB" onclick="castVote('B', event, this)">
-            <span class="opt-label-b">B</span> <span id="optTextB">?</span>
+            <img class="opt-pickle-char" src="asset/asset_B_1.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+            <div class="opt-item-body">
+                <span class="opt-label-b">B</span>
+                <span class="opt-text" id="optTextB">?</span>
+            </div>
         </div>
     </div>
 
@@ -465,7 +513,7 @@
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
-<script src="../js/pickle-detail.js?v=20260617_inline1"></script>
+<script src="../js/pickle-detail.js?v=20260617_picklechar1"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <script>
