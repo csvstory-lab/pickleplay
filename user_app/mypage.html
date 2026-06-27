@@ -315,12 +315,25 @@
         font-size: 0.82rem; font-weight: 800; color: var(--neon-green);
         margin: 0 0 10px 4px; letter-spacing: -0.2px;
     }
-    .post-edit-readonly {
+    .post-edit-readonly,
+    .post-edit-input {
         width: 100%; padding: 12px 14px; border-radius: 12px;
-        border: 1px solid #3f3f46; background: #27272a; color: #a1a1aa;
         font-size: 0.92rem; font-family: inherit; box-sizing: border-box;
     }
-    .post-edit-readonly:focus { outline: none; }
+    .post-edit-readonly {
+        border: 1px solid #3f3f46; background: #27272a; color: #a1a1aa;
+    }
+    .post-edit-input {
+        border: 1px solid #3f3f46; background: #09090b; color: #fff;
+    }
+    .post-edit-readonly:focus,
+    .post-edit-input:focus { outline: none; border-color: var(--neon-green); }
+    .post-edit-vote-lock-notice {
+        font-size: 0.78rem; font-weight: 700; color: #fbbf24;
+        margin: 0 0 12px 4px; line-height: 1.45;
+        padding: 10px 12px; border-radius: 10px;
+        background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25);
+    }
     .post-edit-field { margin-bottom: 12px; }
     .post-edit-field label {
         display: block; font-size: 0.78rem; font-weight: 800;
@@ -332,17 +345,14 @@
         font-size: 0.92rem; font-family: inherit; resize: vertical; box-sizing: border-box;
     }
     .post-edit-textarea:focus { outline: none; border-color: var(--neon-green); }
-    .post-edit-hint { font-size: 0.72rem; color: #71717a; margin: 0 0 8px 4px; line-height: 1.4; }
-    .post-edit-thumb-box {
-        width: 100%; aspect-ratio: 16 / 9; border: 2px dashed #52525b; border-radius: 16px;
-        background-color: rgba(39, 39, 42, 0.35); display: flex; justify-content: center;
-        align-items: center; flex-direction: column; cursor: pointer; overflow: hidden;
-        color: var(--text-sub); transition: 0.2s; box-sizing: border-box;
+    .btn-delete-post {
+        width: 100%; padding: 14px 16px; border-radius: 14px;
+        border: 1px solid rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.08);
+        color: #fca5a5; font-size: 0.92rem; font-weight: 800; cursor: pointer;
+        font-family: inherit; transition: 0.2s;
     }
-    .post-edit-thumb-box.uploaded { border-color: var(--neon-green); border-style: solid; background-color: rgba(57, 255, 20, 0.08); }
-    .post-edit-thumb-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .post-edit-thumb-box .icon-plus { font-size: 2rem; margin-bottom: 6px; }
-    .post-edit-thumb-box .upload-txt { font-size: 0.88rem; font-weight: 700; text-align: center; line-height: 1.35; }
+    .btn-delete-post:active { background: rgba(248, 113, 113, 0.16); }
+    .btn-delete-post:disabled { opacity: 0.55; cursor: not-allowed; }
     .btn-save-post-edit {
         background: none; border: none; color: var(--neon-green);
         font-size: 1rem; font-weight: 800; cursor: pointer; padding: 4px 0;
@@ -1486,7 +1496,7 @@
     </div>
 </main>
 
-<!-- 불판 수정 슬라이드 패널 (상세 설명·썸네일만 편집) -->
+<!-- 불판 수정 슬라이드 패널 -->
 <div id="postEditPanel" class="slide-panel" aria-hidden="true">
     <div class="panel-header">
         <div class="header-left">
@@ -1497,36 +1507,32 @@
     </div>
     <div class="edit-content post-edit-content">
         <div class="post-edit-section">
-            <p class="post-edit-section-title">투표 정보 (수정 불가)</p>
+            <p class="post-edit-section-title" id="editPostVoteSectionTitle">투표 정보</p>
+            <p id="editPostVoteLockNotice" class="post-edit-vote-lock-notice" hidden>투표가 시작되어 제목과 선택지를 수정할 수 없습니다.</p>
             <div class="post-edit-field">
-                <label for="editPostTitleReadonly">불판 제목</label>
-                <input type="text" id="editPostTitleReadonly" class="post-edit-readonly" readonly tabindex="-1">
+                <label for="editPostTitle">불판 제목</label>
+                <input type="text" id="editPostTitle" class="post-edit-input" maxlength="80" autocomplete="off">
             </div>
             <div class="post-edit-field">
-                <label for="editPostOptionAReadonly">A 선택지</label>
-                <input type="text" id="editPostOptionAReadonly" class="post-edit-readonly" readonly tabindex="-1">
+                <label for="editPostOptionA">A 선택지</label>
+                <input type="text" id="editPostOptionA" class="post-edit-input" maxlength="20" autocomplete="off">
             </div>
             <div class="post-edit-field">
-                <label for="editPostOptionBReadonly">B 선택지</label>
-                <input type="text" id="editPostOptionBReadonly" class="post-edit-readonly" readonly tabindex="-1">
+                <label for="editPostOptionB">B 선택지</label>
+                <input type="text" id="editPostOptionB" class="post-edit-input" maxlength="20" autocomplete="off">
             </div>
         </div>
 
         <div class="post-edit-section">
-            <p class="post-edit-section-title">수정 가능 항목</p>
+            <p class="post-edit-section-title">상세 설명</p>
             <div class="post-edit-field">
                 <label for="editPostDescription">상세 설명 (본문)</label>
                 <textarea id="editPostDescription" class="post-edit-textarea" maxlength="500" placeholder="불판에 대한 부가 설명을 수정할 수 있습니다."></textarea>
             </div>
-            <div class="post-edit-field">
-                <label>리스트 썸네일 (16:9)</label>
-                <p class="post-edit-hint">※ 5MB 이하, 16:9 비율 권장. 메인 피드 킹왕짱·리스트에 노출됩니다.</p>
-                <input type="file" id="editPostThumbInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-                <div class="post-edit-thumb-box" id="editPostThumbBox" role="button" tabindex="0" aria-label="썸네일 이미지 첨부">
-                    <div class="icon-plus">🖼️</div>
-                    <div class="upload-txt">썸네일 이미지 첨부</div>
-                </div>
-            </div>
+        </div>
+
+        <div class="post-edit-section">
+            <button type="button" class="btn-delete-post" id="btnDeletePost" onclick="deletePost()">🗑️ 불판 삭제</button>
         </div>
     </div>
 </div>
@@ -2167,7 +2173,7 @@
 <script src="../js/pickle-follows.js?v=20260617_guide1"></script>
 <script src="../js/pickle-messages.js?v=20260617_messages3"></script>
 <script src="../js/pickle-policies.js"></script>
-<script src="../js/mypage-page.js?v=20260617_messages3"></script>
+<script src="../js/mypage-page.js?v=20260617_postedit1"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 

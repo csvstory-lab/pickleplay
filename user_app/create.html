@@ -206,6 +206,20 @@
     .legal-warning-box { background: rgba(255, 77, 77, 0.04); border: 1px solid rgba(255, 77, 77, 0.2); border-radius: 14px; padding: 16px; margin-top: 22px; }
     .legal-warning-title { font-size: 0.85rem; font-weight: 900; color: var(--alert-red); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
     .legal-warning-text { font-size: 0.75rem; color: var(--text-sub); line-height: 1.5; word-break: keep-all; }
+    .legal-typo-warning {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: rgba(252, 211, 77, 0.1);
+        border: 1px solid rgba(255, 133, 161, 0.55);
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--point-gold);
+        line-height: 1.55;
+        word-break: keep-all;
+        box-shadow: 0 0 0 1px rgba(252, 211, 77, 0.12);
+    }
+    .legal-typo-warning strong { color: var(--point-pink); font-weight: 900; }
     
     /* 🛠️ [수정 9] 동의 체크박스 UI 디자인 */
     .legal-check-wrap { display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer; }
@@ -522,6 +536,7 @@
         <div class="legal-warning-text">
             음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
         </div>
+        <p class="legal-typo-warning" role="note">⚠️ 누군가 <strong>픽(투표)</strong>을 시작하면 <strong>제목과 선택지를 수정할 수 없습니다.</strong> 오타가 없는지 한 번 더 확인해 주세요!</p>
         <!-- 잃어버린 체크박스 복구 -->
         <label class="legal-check-wrap">
             <input type="checkbox" id="legalAgreeCheck">

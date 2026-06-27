@@ -1635,88 +1635,63 @@
 
   var editPostState = {
     postId: null,
-    thumbFile: null,
-    existingThumbUrl: null,
+    totalVotes: 0,
+    voteFieldsEditable: false,
   };
 
-  var THUMB_MAX_BYTES = 5 * 1024 * 1024;
+  function applyPostEditVoteFieldsState(totalVotes) {
+    var locked = (Number(totalVotes) || 0) >= 1;
+    var titleEl = document.getElementById('editPostTitle');
+    var optAEl = document.getElementById('editPostOptionA');
+    var optBEl = document.getElementById('editPostOptionB');
+    var noticeEl = document.getElementById('editPostVoteLockNotice');
+    var sectionTitleEl = document.getElementById('editPostVoteSectionTitle');
 
-  // TODO: 투표 공정성을 위해 제목과 A/B 선택지는 수정 불가(Read-only) 처리
-  function renderEditThumbBox(urlOrFile) {
-    var box = document.getElementById('editPostThumbBox');
-    if (!box) return;
-
-    if (!urlOrFile) {
-      box.classList.remove('uploaded');
-      box.innerHTML =
-        '<div class="icon-plus">🖼️</div>' +
-        '<div class="upload-txt">썸네일 이미지 첨부</div>';
-      return;
-    }
-
-    if (typeof urlOrFile === 'string') {
-      box.classList.add('uploaded');
-      box.innerHTML =
-        '<img src="' + escapeHtml(urlOrFile) + '" alt="썸네일 미리보기">';
-      return;
-    }
-
-    if (urlOrFile instanceof File) {
-      var reader = new FileReader();
-      reader.onload = function (ev) {
-        box.classList.add('uploaded');
-        box.innerHTML =
-          '<img src="' + ev.target.result + '" alt="새 썸네일 미리보기">';
-      };
-      reader.readAsDataURL(urlOrFile);
-    }
-  }
-
-  function bindPostEditThumbInput() {
-    var thumbInput = document.getElementById('editPostThumbInput');
-    var box = document.getElementById('editPostThumbBox');
-    if (!thumbInput || !box) return;
-
-    box.onclick = function () {
-      thumbInput.click();
-    };
-    box.onkeydown = function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        thumbInput.click();
+    [titleEl, optAEl, optBEl].forEach(function (el) {
+      if (!el) return;
+      if (locked) {
+        el.readOnly = true;
+        el.setAttribute('readonly', '');
+        el.classList.remove('post-edit-input');
+        el.classList.add('post-edit-readonly');
+        el.setAttribute('tabindex', '-1');
+      } else {
+        el.readOnly = false;
+        el.removeAttribute('readonly');
+        el.classList.remove('post-edit-readonly');
+        el.classList.add('post-edit-input');
+        el.removeAttribute('tabindex');
       }
-    };
+    });
 
-    thumbInput.onchange = function () {
-      var file = thumbInput.files && thumbInput.files[0];
-      if (!file) return;
-
-      if (file.size > THUMB_MAX_BYTES) {
-        alert('썸네일 용량이 너무 큽니다. 5MB 이하의 파일을 올려주세요.');
-        thumbInput.value = '';
-        return;
-      }
-
-      editPostState.thumbFile = file;
-      renderEditThumbBox(file);
-    };
+    if (noticeEl) {
+      if (locked) noticeEl.removeAttribute('hidden');
+      else noticeEl.setAttribute('hidden', '');
+    }
+    if (sectionTitleEl) {
+      sectionTitleEl.textContent = locked
+        ? '투표 정보 (수정 불가)'
+        : '투표 정보';
+    }
   }
 
   async function openPostEditPanel(postId) {
     editPostState = {
       postId: postId,
-      thumbFile: null,
-      existingThumbUrl: null,
+      totalVotes: 0,
+      voteFieldsEditable: false,
     };
 
-    var titleEl = document.getElementById('editPostTitleReadonly');
-    var optAEl = document.getElementById('editPostOptionAReadonly');
-    var optBEl = document.getElementById('editPostOptionBReadonly');
+    var titleEl = document.getElementById('editPostTitle');
+    var optAEl = document.getElementById('editPostOptionA');
+    var optBEl = document.getElementById('editPostOptionB');
     var descEl = document.getElementById('editPostDescription');
-    var thumbInput = document.getElementById('editPostThumbInput');
     var panel = document.getElementById('postEditPanel');
+    var deleteBtn = document.getElementById('btnDeletePost');
 
     if (!panel || !titleEl) return;
+
+    if (deleteBtn) deleteBtn.disabled = false;
 
     try {
       var sb = getSupabaseClient();
@@ -1725,9 +1700,7 @@
 
       var result = await sb
         .from('posts')
-        .select(
-          'id, author_id, title, option_a_name, option_b_name, description, thumbnail_url'
-        )
+        .select('id, author_id, title, option_a_name, option_b_name, description')
         .eq('id', postId)
         .maybeSingle();
 
@@ -1742,16 +1715,20 @@
         return;
       }
 
+      var voteMap = await fetchVoteStatsMap(sb, [postId]);
+      var stats = voteMap.get(postId) || { votesA: 0, votesB: 0, total: 0 };
+      var totalVotes = Number(stats.total) || 0;
+
+      editPostState.totalVotes = totalVotes;
+      editPostState.voteFieldsEditable = totalVotes === 0;
+
       var post = result.data;
       titleEl.value = post.title || '';
       optAEl.value = post.option_a_name || '';
       optBEl.value = post.option_b_name || '';
       if (descEl) descEl.value = post.description || '';
 
-      editPostState.existingThumbUrl = post.thumbnail_url || null;
-      if (thumbInput) thumbInput.value = '';
-      renderEditThumbBox(post.thumbnail_url || null);
-      bindPostEditThumbInput();
+      applyPostEditVoteFieldsState(totalVotes);
 
       panel.classList.add('open');
       panel.setAttribute('aria-hidden', 'false');
@@ -1771,13 +1748,36 @@
       panel.setAttribute('aria-hidden', 'true');
     }
     document.body.style.overflow = '';
-    editPostState = { postId: null, thumbFile: null, existingThumbUrl: null };
+    editPostState = { postId: null, totalVotes: 0, voteFieldsEditable: false };
+  }
+
+  function validateEditableVoteFields(title, optionA, optionB) {
+    if (!title) {
+      alert('불판 제목을 입력해주세요!');
+      return false;
+    }
+    if (title.length < 2) {
+      alert('불판 제목은 2자 이상 입력해 주세요.');
+      return false;
+    }
+    if (!optionA || !optionB) {
+      alert('A/B 선택지 내용을 완성해주세요!');
+      return false;
+    }
+    if (optionA === optionB) {
+      alert('A와 B 선택지는 서로 달라야 합니다!');
+      return false;
+    }
+    return true;
   }
 
   async function updatePost() {
     var postId = editPostState.postId;
     if (!postId) return;
 
+    var titleEl = document.getElementById('editPostTitle');
+    var optAEl = document.getElementById('editPostOptionA');
+    var optBEl = document.getElementById('editPostOptionB');
     var descEl = document.getElementById('editPostDescription');
     var saveBtn = document.getElementById('btnSavePostEdit');
     var description = descEl ? descEl.value.trim() : '';
@@ -1786,50 +1786,27 @@
     var user = await requireAuth();
     if (!user) return;
 
+    var payload = { description: description };
+
+    if (editPostState.voteFieldsEditable) {
+      var title = titleEl ? titleEl.value.trim() : '';
+      var optionA = optAEl ? optAEl.value.trim() : '';
+      var optionB = optBEl ? optBEl.value.trim() : '';
+      if (!validateEditableVoteFields(title, optionA, optionB)) return;
+      payload.title = title;
+      payload.option_a_name = optionA;
+      payload.option_b_name = optionB;
+    }
+
     if (saveBtn) {
       saveBtn.disabled = true;
       saveBtn.textContent = '저장 중…';
     }
 
     try {
-      var finalThumbnailUrl = editPostState.existingThumbUrl || null;
-
-      var fileInput = document.getElementById('editPostThumbInput');
-      var thumbFile =
-        (fileInput && fileInput.files && fileInput.files[0]) ||
-        editPostState.thumbFile ||
-        null;
-
-      if (thumbFile) {
-        var fileExt = thumbFile.name.split('.').pop();
-        var fileName = 'thumb_update_' + Date.now() + '.' + fileExt;
-
-        var uploadResult = await sb.storage
-          .from('post_media')
-          .upload('thumbnails/' + fileName, thumbFile, {
-            cacheControl: '3600',
-            upsert: false,
-            contentType: thumbFile.type || undefined,
-          });
-
-        if (uploadResult.error) {
-          alert('썸네일 수정 업로드 실패: ' + uploadResult.error.message);
-          return;
-        }
-
-        var publicUrlResult = sb.storage
-          .from('post_media')
-          .getPublicUrl('thumbnails/' + fileName);
-
-        finalThumbnailUrl = publicUrlResult.data.publicUrl;
-      }
-
       var updateResult = await sb
         .from('posts')
-        .update({
-          description: description,
-          thumbnail_url: finalThumbnailUrl,
-        })
+        .update(payload)
         .eq('id', postId)
         .eq('author_id', user.id)
         .select('id')
@@ -1849,9 +1826,9 @@
     } catch (err) {
       console.error('[P!CKLE Mypage] 불판 수정 실패', err);
       var msg = String(err.message || err).toLowerCase();
-      if (msg.indexOf('description') !== -1 || msg.indexOf('thumbnail_url') !== -1) {
+      if (msg.indexOf('description') !== -1) {
         alert(
-          'DB 컬럼이 누락되었습니다. Supabase에서 description·thumbnail_url 마이그레이션을 실행해 주세요.'
+          'DB 컬럼이 누락되었습니다. Supabase에서 description 마이그레이션을 실행해 주세요.'
         );
       } else {
         alert('불판 수정에 실패했습니다. ' + (err.message || String(err)));
@@ -1864,9 +1841,67 @@
     }
   }
 
+  async function deletePost() {
+    var postId = editPostState.postId;
+    if (!postId) return;
+
+    var titleEl = document.getElementById('editPostTitle');
+    var titlePreview = titleEl && titleEl.value.trim()
+      ? titleEl.value.trim()
+      : '이 불판';
+
+    if (
+      !confirm(
+        '정말로 "' +
+          titlePreview +
+          '" 불판을 삭제하시겠습니까?\n삭제하면 복구할 수 없습니다.'
+      )
+    ) {
+      return;
+    }
+
+    var sb = getSupabaseClient();
+    var user = await requireAuth();
+    if (!user) return;
+
+    var deleteBtn = document.getElementById('btnDeletePost');
+    var saveBtn = document.getElementById('btnSavePostEdit');
+    if (deleteBtn) deleteBtn.disabled = true;
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      var deleteResult = await sb
+        .from('posts')
+        .delete()
+        .eq('id', postId)
+        .eq('author_id', user.id)
+        .select('id')
+        .maybeSingle();
+
+      if (deleteResult.error) throw deleteResult.error;
+      if (!deleteResult.data) {
+        throw new Error('삭제 권한이 없거나 불판을 찾을 수 없습니다.');
+      }
+
+      alert('불판이 삭제되었습니다.');
+      closePostEditPanel();
+
+      if (currentUser && currentUser.id) {
+        await loadCreatedPosts(currentUser.id);
+      }
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 불판 삭제 실패', err);
+      alert('불판 삭제에 실패했습니다. ' + (err.message || String(err)));
+    } finally {
+      if (deleteBtn) deleteBtn.disabled = false;
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
   window.openPostEditPanel = openPostEditPanel;
   window.closePostEditPanel = closePostEditPanel;
   window.updatePost = updatePost;
+  window.deletePost = deletePost;
 
   async function loadCreatedPosts(userId) {
     var container = document.getElementById('createdArea');
