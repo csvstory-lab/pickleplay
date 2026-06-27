@@ -1011,6 +1011,23 @@ function renderCommentItemHtml(comment, options) {
     }
   }
 
+  function focusMainCommentInput() {
+    var lockScreen = $('commentLock');
+    var activeArea = $('commentActive');
+    if (lockScreen) lockScreen.style.display = 'none';
+    if (activeArea) activeArea.classList.add('show');
+
+    var input = $('detailCommentInput');
+    if (!input) return;
+
+    input.focus({ preventScroll: false });
+    try {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (_e) {
+      input.scrollIntoView(true);
+    }
+  }
+
   function onCommentListClick(e) {
     var likeBtn = e.target.closest('.comment-like-btn');
     if (likeBtn) {
@@ -1022,7 +1039,7 @@ function renderCommentItemHtml(comment, options) {
     var replyBtn = e.target.closest('.comment-reply-btn');
     if (replyBtn) {
       e.preventDefault();
-      toggleReplyForm(replyBtn.getAttribute('data-comment-id'));
+      focusMainCommentInput();
       return;
     }
 

@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>P!CKLE - ?? ??</title>
+<title>P!CKLE - 불판 상세</title>
 
 <!-- ?? ?? ? ?? 2D ?? ???(Phosphor) ??? ?? -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
@@ -146,7 +146,7 @@
     }
     .bar-fill-b .bar-inner-label { color: #fff; }
     .bar-inner-label span + span::before {
-        content: '?';
+        content: '·';
         margin: 0 3px;
         opacity: 0.85;
     }
@@ -264,9 +264,9 @@
 <body data-nav-page="detail">
 
 <div id="landscape-warning" class="landscape-warning" aria-hidden="true">
-    <span class="landscape-warning__icon" aria-hidden="true">???</span>
-    <p class="landscape-warning__title">? ????!<br>??? ??? ????? ??</p>
-    <p class="landscape-warning__sub">P!CKLE ? PORTRAIT MODE ONLY</p>
+    <span class="landscape-warning__icon" aria-hidden="true">📱↻</span>
+    <p class="landscape-warning__title">목 돌아가요!<br>픽클은 세로로 즐겨주세요 🥒</p>
+    <p class="landscape-warning__sub">P!CKLE · PORTRAIT MODE ONLY</p>
 </div>
 
 <div id="app-container">
@@ -279,21 +279,21 @@
 <!-- ???? ?? -->
 <div class="share-sheet" id="shareSheet">
     <div class="sheet-header">
-        <h2 class="sheet-title">?? ? ?? ???? ????</h2>
-        <button class="btn-close-sheet" onclick="closeModals()">?</button>
+        <h2 class="sheet-title">🔥 이 불판 친구에게 소환하기</h2>
+        <button class="btn-close-sheet" onclick="closeModals()">✕</button>
     </div>
     <div class="share-grid">
         <div class="share-item" onclick="sendKakaoMessage()">
             <div class="share-icon" style="background-color:#FEE500; color:#000;"><i class="ph-fill ph-chat-circle"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">????</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">카카오톡</span>
         </div>
         <div class="share-item" onclick="copyLink()">
             <div class="share-icon" style="background-color:#2c2c2e; color:#fff; border:1px solid var(--border-soft);"><i class="ph ph-link"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">?? ??</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">링크 복사</span>
         </div>
         <div class="share-item" onclick="nativeShare()">
             <div class="share-icon" style="background-color:#3a3a3c; color:#fff;"><i class="ph ph-share-network"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">??? (OS)</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">더보기 (OS)</span>
         </div>
     </div>
 </div>
@@ -302,31 +302,31 @@
 <div class="report-modal" id="messageModal">
     <div class="modal-header">
         <h3 class="modal-title" style="color: var(--point-green); display: flex; align-items: center; gap: 6px;">
-            <i class="ph-fill ph-paper-plane-tilt"></i> <span id="messageTargetNickname" style="color:#fff;">??</span>?? ???
+            <i class="ph-fill ph-paper-plane-tilt"></i> <span id="messageTargetNickname" style="color:#fff;">유저</span>님께 쪽지
         </h3>
-        <button class="btn-close" onclick="closeModals()">?</button>
+        <button class="btn-close" onclick="closeModals()">✕</button>
     </div>
     <div class="modal-body">
-        <textarea class="form-textarea" id="messageContent" placeholder="????? ?? ?? ?? ??? ??????. (??/?? ?? ?? ? ??? ?? ? ????)" style="height: 110px; font-size:0.85rem; line-height:1.4;"></textarea>
-        <button class="btn-submit-report" style="background: linear-gradient(135deg, var(--point-green), #22c55e); color: #0a0a0c;" onclick="submitDirectMessage()">???</button>
+        <textarea class="form-textarea" id="messageContent" placeholder="상대방에게 보낼 훈수 쪽지 내용을 입력해주세요. (비방/위험 문구 입력 시 제재를 받을 수 있습니다.)" style="height: 110px; font-size:0.85rem; line-height:1.4;"></textarea>
+        <button class="btn-submit-report" style="background: linear-gradient(135deg, var(--point-green), #22c55e); color: #0a0a0c;" onclick="submitDirectMessage()">보내기</button>
     </div>
 </div>
 
 <!-- ???? ?? -->
 <div class="report-modal" id="reportModal">
     <div class="modal-header">
-        <h3 class="modal-title">?? ? ?? ????</h3>
-        <button class="btn-close" onclick="closeModals()">?</button>
+        <h3 class="modal-title">🚨 이 불판 신고하기</h3>
+        <button class="btn-close" onclick="closeModals()">✕</button>
     </div>
     <div class="modal-body">
         <select class="form-select" id="reportReason">
-            <option value="" disabled selected>?? ??? ??????</option>
-            <option value="spam">?? ?? ? ??? ??</option>
-            <option value="abuse">?? / ?? / ??</option>
-            <option value="nsfw">??? / ???</option>
+            <option value="" disabled selected>신고 사유를 선택해주세요</option>
+            <option value="spam">스팸 및 도배</option>
+            <option value="abuse">욕설 / 혐오 / 차별</option>
+            <option value="nsfw">음란 / 불법</option>
         </select>
-        <textarea class="form-textarea" id="reportDetail" placeholder="?? ??? ??????. (??)"></textarea>
-        <button class="btn-submit-report" onclick="submitReport()">?? ??</button>
+        <textarea class="form-textarea" id="reportDetail" placeholder="상세 내용을 입력해주세요. (필수)"></textarea>
+        <button class="btn-submit-report" onclick="submitReport()">신고 접수</button>
     </div>
 </div>
 
@@ -334,17 +334,17 @@
     <!-- 1?: ??? ??? -->
     <div class="post-author-box">
         <div class="author-info">
-            <div class="author-pic" id="detailAuthorPic">??</div>
+            <div class="author-pic" id="detailAuthorPic">👤</div>
             <div class="author-text">
-                <div class="name"><span id="detailAuthorName">???</span> <span class="grade-badge" id="detailAuthorLevelBadge" hidden></span></div>
+                <div class="name"><span id="detailAuthorName">무명</span> <span class="grade-badge" id="detailAuthorLevelBadge" hidden></span></div>
             </div>
         </div>
-        <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ ?? ?</button>
+        <button type="button" class="btn-mypick follow" id="detailFollowBtn" data-user-id="" aria-pressed="false">+ 나를 픽</button>
     </div>
 
     <!-- 2?: ????? ?? ?? -->
     <div class="issue-header-box">
-        <h2 class="issue-title" id="detailTitle">?? ???? ??</h2>
+        <h2 class="issue-title" id="detailTitle">불판 불러오는 중...</h2>
         <div class="meta-row-top">
             <span id="detailCategoryText" style="color:var(--point-green); font-weight:800;"></span>
             <span>/</span>
@@ -356,7 +356,7 @@
 
     <!-- 3?: ?? ??? ??? -->
     <div class="master-media-container post-content-area" id="videoContainer">
-        <div class="detail-media-empty"><span>?</span><p>??? ?? ??</p></div>
+        <div class="detail-media-empty"><span>🔥</span><p>미디어 로딩 중...</p></div>
     </div>
 
     <!-- 4?: A/B ??? ??? -->
@@ -372,10 +372,10 @@
     <!-- ?? ?? ??? ??? -->
     <div class="blind-feedback-wrapper" id="blindFeedback">
         <div class="blind-card">
-            <div class="blind-icon">????</div>
-            <div class="blind-title">??? ???????!</div>
-            <div class="blind-desc">? ??? ???<br>
-                <strong style="color:var(--point-gold);">?? ????</strong> ??? ??(??)?? ? ????!!</div>
+            <div class="blind-icon">🎉🔥</div>
+            <div class="blind-title">투표 완료!</div>
+            <div class="blind-desc">블라인드 투표 중!<br>
+                <strong style="color:var(--point-gold);">화력 지원</strong>하고 훈수(댓글)도 달아보세요!!</div>
         </div>
     </div>
 
@@ -393,45 +393,45 @@
                     <span class="bar-inner-label"><span id="resultPctB">0%</span><span id="resultCountB">0</span></span>
                 </div>
             </div>
-            <p style="text-align:center; font-size:0.85rem; margin:8px 0 0 0;" id="resultTotalVotes">?? 0? ??</p>
+            <p style="text-align:center; font-size:0.85rem; margin:8px 0 0 0;" id="resultTotalVotes">총 0표 참여</p>
         </div>
     </div>
 
     <!-- ?? ?? ??? ? -->
     <div class="issue-footer-box">
         <div class="action-bar-v2">
-            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> ?? ????</button>
-            <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">??? (0)</span></button>
-            <button class="btn-action-v2 btn-report-v2" onclick="openReportModal()"><i class="ph ph-warning-circle"></i> ??</button>
+            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 화력 지원</button>
+            <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">좋아요 (0)</span></button>
+            <button class="btn-action-v2 btn-report-v2" onclick="openReportModal()"><i class="ph ph-warning-circle"></i> 신고</button>
         </div>
     </div>
 
     <!-- ?? ?? -->
     <div class="comments-section">
         <div class="comments-header">
-            <span id="detailCommentCount" style="font-weight:800;">?? (0)</span>
+            <span id="detailCommentCount" style="font-weight:800;">댓글 (0)</span>
             
             <div class="custom-sort-dropdown" id="customSortDropdown">
                 <div class="sort-trigger-btn" onclick="toggleSortDropdownMenu(event)">
-                    <span id="sortLabelText">???</span> <i class="ph ph-caret-down-bold" style="font-size:0.75rem;"></i>
+                    <span id="sortLabelText">최신순</span> <i class="ph ph-caret-down-bold" style="font-size:0.75rem;"></i>
                 </div>
                 <div class="sort-dropdown-menu" id="sortDropdownMenu">
-                    <div class="sort-menu-item current-active" id="sortOptLatest" onclick="selectCommentSort('latest')">???</div>
-                    <div class="sort-menu-item" id="sortOptPopular" onclick="selectCommentSort('popular')">???</div>
+                    <div class="sort-menu-item current-active" id="sortOptLatest" onclick="selectCommentSort('latest')">최신순</div>
+                    <div class="sort-menu-item" id="sortOptPopular" onclick="selectCommentSort('popular')">인기순</div>
                 </div>
             </div>
         </div>
         
         <div class="comment-lock-screen" id="commentLock">
-            <div class="lock-icon">??</div>
-            <div class="lock-text">?? ? ??? ? ? ???!</div>
-            <div class="lock-subtext">?? ???? ??? ?????.</div>
+            <div class="lock-icon">🔒</div>
+            <div class="lock-text">투표 후 댓글을 남길 수 있어요!</div>
+            <div class="lock-subtext">화력 지원하고 훈수를 남겨보세요.</div>
         </div>
         
         <div class="comment-active-area" id="commentActive">
             <div class="comment-input-box">
-                <input type="text" class="comment-input" id="detailCommentInput" placeholder="??? ???? ?????." maxlength="2000">
-                <button type="button" class="comment-submit" id="detailCommentSubmit">??</button>
+                <input type="text" class="comment-input" id="detailCommentInput" placeholder="댓글을 자유롭게 남겨보세요." maxlength="2000">
+                <button type="button" class="comment-submit" id="detailCommentSubmit">등록</button>
             </div>
             <div class="comment-list" id="detailCommentList"></div>
         </div>
@@ -460,7 +460,7 @@
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
-<script src="../js/pickle-detail.js?v=20260617_notif1"></script>
+<script src="../js/pickle-detail.js?v=20260617_detailfix1"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <script>
@@ -502,14 +502,14 @@
             window.PickleMessages.openCompose();
             return;
         }
-        showToastFallback('??? ??? ???? ?????.');
+        showToastFallback('쪽지 기능을 준비 중입니다.');
     }
 
     async function submitDirectMessage() {
         if (window.PickleMessages && window.PickleMessages.submitDirectMessage) {
             return window.PickleMessages.submitDirectMessage();
         }
-        showToastFallback('??? ??? ???? ?????.');
+        showToastFallback('쪽지 기능을 준비 중입니다.');
     }
 
     function showToastFallback(msg) {
@@ -544,7 +544,7 @@
                 if (!err2 && followingCount !== null) document.getElementById('popupFollowingCount').textContent = followingCount;
             }
         } catch (err) {
-            console.log('?? ??? ???? ??:', err);
+            console.log('팔로우 수 조회 실패:', err);
         }
     }
 
@@ -555,7 +555,7 @@
 
     function selectCommentSort(sortType) {
         document.getElementById('sortDropdownMenu').classList.remove('active-show');
-        var label = sortType === 'latest' ? '???' : '???';
+        var label = sortType === 'latest' ? '최신순' : '인기순';
         document.getElementById('sortLabelText').textContent = label;
         
         document.getElementById('sortOptLatest').classList.toggle('current-active', sortType === 'latest');
@@ -571,25 +571,13 @@
                 }
             }
         } catch (err) {
-            console.error("?? ?? ?? ??? ??:", err);
+            console.error("댓글 정렬 변경 실패:", err);
         }
     }
 
     document.addEventListener('click', function() {
         var menu = document.getElementById('sortDropdownMenu');
         if(menu) menu.classList.remove('active-show');
-    });
-
-    document.addEventListener('click', function(e) {
-        var replyBtn = e.target.closest('.comment-action-btn');
-        if (replyBtn && replyBtn.textContent.indexOf('??') !== -1) {
-            e.preventDefault();
-            var commentItem = replyBtn.closest('.comment-item');
-            if (commentItem) {
-                var replyForm = commentItem.querySelector('.comment-reply-form');
-                if (replyForm) replyForm.classList.toggle('show');
-            }
-        }
     });
 
     function handleLikeToggle() {
@@ -605,7 +593,7 @@
 
         if (willLike) {
             currentCount += 1;
-            likeTextSpan.innerHTML = '??? (' + currentCount + ')';
+            likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
             likeBtn.querySelector('i').className = 'ph-fill ph-heart';
 
             var postId = new URLSearchParams(window.location.search).get('id');
@@ -616,7 +604,7 @@
             }
         } else {
             currentCount = Math.max(0, currentCount - 1);
-            likeTextSpan.innerHTML = '??? (' + currentCount + ')';
+            likeTextSpan.innerHTML = '좋아요 (' + currentCount + ')';
             likeBtn.querySelector('i').className = 'ph ph-heart';
         }
     }
@@ -626,29 +614,29 @@
         var detailEl = document.getElementById('reportDetail');
         var detail = detailEl ? detailEl.value.trim() : '';
 
-        if (!reason) { alert('?? ??? ??????.'); return; }
-        if (!detail) { alert('?? ?? ??? ??????. (??)'); return; }
+        if (!reason) { alert('신고 사유를 선택해주세요.'); return; }
+        if (!detail) { alert('상세 내용을 입력해주세요. (필수)'); return; }
 
         var postId = window.PickleDetail && typeof window.PickleDetail.getCurrentPostId === 'function'
             ? window.PickleDetail.getCurrentPostId() : new URLSearchParams(window.location.search).get('id');
 
-        if (!postId) { alert('?? ??? ?? ? ????.'); return; }
+        if (!postId) { alert('불판 정보를 찾을 수 없습니다.'); return; }
 
         try {
             var result = await window.PicklePenalties.submitContentReport({
                 targetType: 'post', targetId: postId, reason: reason, detail: detail,
             });
-            if (!result.ok) { alert('?? ??? ??????.'); return; }
-            alert('?? ??? ????? ???????. ??? ??? ?????? ?????!');
+            if (!result.ok) { alert('신고 접수에 실패했습니다.'); return; }
+            alert('신고가 정상적으로 접수되었습니다. 검토 후 조치하겠습니다!');
             closeModals();
-        } catch (err) { alert('?? ?? ??'); }
+        } catch (err) { alert('신고 전송 실패'); }
     }
 
     function getSharePayload() {
         var post = (window.PickleDetail && typeof window.PickleDetail.getCurrentPost === 'function') ? window.PickleDetail.getCurrentPost() : null;
         return {
-            title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - ??',
-            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. ??? ????') : '?? ??? ?????!',
+            title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
+            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. 지금 참전하세요!') : '지금 참전하세요!',
             imageUrl: 'https://pickleplay.kr/images/default_share.jpg'
         };
     }
@@ -662,7 +650,7 @@
     }
 
     function sendKakaoMessage() {
-        if (!ensureKakaoReady()) { alert('???? ?? ?? ?...'); return; }
+        if (!ensureKakaoReady()) { alert('카카오톡 로딩 중...'); return; }
         var share = getSharePayload();
         var shareUrl = window.location.href;
         try {
@@ -672,16 +660,16 @@
                     title: share.title, description: share.text, imageUrl: share.imageUrl,
                     link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
                 },
-                buttons: [{ title: '?? ???? ??', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
+                buttons: [{ title: '불판 보러가기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
             });
             recordDetailShare('kakao');
             closeModals();
-        } catch (e) { alert('??? ?? ??'); }
+        } catch (e) { alert('공유 전송 실패'); }
     }
 
     function copyLink() {
         navigator.clipboard.writeText(window.location.href).then(function() {
-            alert("?? ??? ???????!");
+            alert("불판 주소가 복사되었습니다!");
             recordDetailShare('copy');
             closeModals();
         });
@@ -692,7 +680,7 @@
         if (navigator.share) {
             navigator.share({ title: share.title, text: share.text, url: window.location.href }).catch(console.error);
             recordDetailShare('native');
-        } else { alert('?? ??? ??????.'); }
+        } else { alert('링크 복사를 이용해주세요.'); }
         closeModals();
     }
 
