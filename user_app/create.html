@@ -1095,7 +1095,7 @@
             const urlA = await window.PickleMedia.uploadPostImage(fileA, userId, { aspectRatio: 9/16 });
             const urlB = await window.PickleMedia.uploadPostImage(fileB, userId, { aspectRatio: 9/16 });
             if (!urlA || !urlB) throw new Error('텍스트 카드 이미지 업로드에 실패했습니다.');
-            return { media_mode: 'vs', media_orientation: 'vertical', media_url_1: urlA, media_url_2: urlB };
+            return { media_mode: 'vs', media_orientation: 'vertical', media_url_1: urlA, media_url_2: urlB, media_is_text_card: true };
         }
 
         const layout = getMediaLayout(); const uploadOpts = { aspectRatio: layout === 'vertical' ? 9 / 16 : 16 / 9 };

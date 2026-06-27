@@ -154,6 +154,10 @@
     return 'asset/asset_' + suffix + '_' + idx + '.png';
   }
 
+  function isColorboxPost(post) {
+    return !!(post && post.media_is_text_card === true);
+  }
+
   function buildPickleCharImg(side, setIndex) {
     var src = getPickleVoteAssetPath(side, setIndex);
     return (
@@ -167,7 +171,8 @@
     var mode = resolveMediaMode(post);
     var title = post.title || '불판';
     var layout = resolveMediaLayout(post);
-    var assetSet = hashPostIdToAssetSet(post.id);
+    var showPickleChar = isColorboxPost(post);
+    var assetSet = showPickleChar ? hashPostIdToAssetSet(post.id) : 0;
 
     if (mode === 'text' || (!post.media_url_1 && !post.media_url_2)) {
       return (
@@ -202,7 +207,6 @@
           '<img src="' +
           escapeHtml(single.src) +
           '" alt="">' +
-          buildPickleCharImg('A', assetSet) +
           '</div>'
         );
       }
@@ -219,8 +223,8 @@
         '<div class="media-container ' +
         layoutClass +
         '">' +
-        buildSplitHalf('A', mediaA, post.option_a, title, assetSet) +
-        buildSplitHalf('B', mediaB, post.option_b, title, assetSet) +
+        buildSplitHalf('A', mediaA, post.option_a, title, assetSet, showPickleChar) +
+        buildSplitHalf('B', mediaB, post.option_b, title, assetSet, showPickleChar) +
         '<div class="vs-badge">VS</div>' +
         '</div>'
       );
@@ -232,7 +236,7 @@
     );
   }
 
-  function buildSplitHalf(side, media, label, title, assetSet) {
+  function buildSplitHalf(side, media, label, title, assetSet, showPickleChar) {
     var sideClass = side === 'A' ? 'split-left' : 'split-right';
     var inner = '';
 
@@ -264,6 +268,11 @@
         '</div>';
     }
 
+    var charHtml =
+      showPickleChar && assetSet
+        ? buildPickleCharImg(side, assetSet)
+        : '';
+
     return (
       '<div class="split-half media-vote-tap ' +
       sideClass +
@@ -273,7 +282,7 @@
       escapeHtml(side + ' 선택 · ' + (label || '투표')) +
       '">' +
       inner +
-      buildPickleCharImg(side, assetSet) +
+      charHtml +
       '</div>'
     );
   }

@@ -31,6 +31,7 @@
       layout_style: null,
       option_a_image_url: null,
       option_b_image_url: null,
+      media_is_text_card: false,
     };
   }
 
@@ -55,8 +56,10 @@
 
   /** create.html buildMediaPayload 결과 → posts 테이블 컬럼 */
   function mapMediaForPosts(mediaFields) {
+    var isTextCard = mediaFields && mediaFields.media_is_text_card === true;
+
     if (!mediaFields || mediaFields.media_mode === 'text') {
-      return emptyMedia();
+      return Object.assign(emptyMedia(), { media_is_text_card: isTextCard });
     }
 
     var layout =
@@ -73,6 +76,7 @@
           layout_style: null,
           option_a_image_url: null,
           option_b_image_url: null,
+          media_is_text_card: false,
         };
       }
       return {
@@ -82,6 +86,7 @@
         layout_style: null,
         option_a_image_url: null,
         option_b_image_url: null,
+        media_is_text_card: false,
       };
     }
 
@@ -97,6 +102,7 @@
           layout_style: layout,
           option_a_image_url: null,
           option_b_image_url: null,
+          media_is_text_card: false,
         };
       }
 
@@ -107,6 +113,7 @@
         layout_style: layout,
         option_a_image_url: url1,
         option_b_image_url: url2,
+        media_is_text_card: isTextCard,
       };
     }
 
@@ -523,6 +530,20 @@
       .insert([payload])
       .select('id, thumbnail_url')
       .single();
+    if (
+      insertResult.error &&
+      payload.media_is_text_card &&
+      String(insertResult.error.message || '')
+        .toLowerCase()
+        .indexOf('media_is_text_card') !== -1
+    ) {
+      delete payload.media_is_text_card;
+      insertResult = await sb
+        .from('posts')
+        .insert([payload])
+        .select('id, thumbnail_url')
+        .single();
+    }
     if (insertResult.error) {
       console.error('[P!CKLE Create] posts.insert 실패', insertResult.error);
       alert('DB 저장 에러: ' + (insertResult.error.message || String(insertResult.error)));
