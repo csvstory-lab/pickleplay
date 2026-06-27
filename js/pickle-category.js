@@ -282,7 +282,7 @@
     if (state.unseenOnly) {
       msg =
         state.category === 'all'
-          ? '아직 참여하지 않은 불판이 없습니다.<br>모든 불판에 참전하셨네요!'
+          ? '아직 참여하지 않은 불판이 없습니다.<br>모든 불판에 참여하셨네요!'
           : catLabel + '에서 참여하지 않은 불판이 없습니다.';
     } else if (state.category === 'all') {
       msg = '아직 지펴진 불판이 없습니다.';

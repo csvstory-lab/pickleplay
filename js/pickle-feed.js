@@ -449,7 +449,7 @@
       renderFeedCategoryBadge(post) +
       '<span class="feed-meta-participants">🔥 ' +
       safeTotalVotes(post).toLocaleString() +
-      '명 참전</span>' +
+      '명 참여</span>' +
       '<span class="feed-meta-timer' +
       timer.endedClass +
       '"' +

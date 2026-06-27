@@ -380,7 +380,7 @@
             <div class="blind-icon">🎉🔥</div>
             <div class="blind-title">투표 완료!</div>
             <div class="blind-desc">블라인드 투표 중!<br>
-                <strong style="color:var(--point-gold);">화력 지원</strong>하고 훈수(댓글)도 달아보세요!!</div>
+                <strong style="color:var(--point-gold);">픽 공유</strong>하고 훈수(댓글)도 달아보세요!!</div>
         </div>
     </div>
 
@@ -405,7 +405,7 @@
     <!-- ?? ?? ??? ? -->
     <div class="issue-footer-box">
         <div class="action-bar-v2">
-            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 화력 지원</button>
+            <button class="btn-action-v2 btn-share-v2" onclick="openShareSheet()"><i class="ph-fill ph-share-network"></i> 픽 공유하기</button>
             <button class="btn-action-v2 btn-like-v2" id="detailLikeBtn" onclick="handleLikeToggle()"><i class="ph ph-heart"></i> <span id="likeCountText">좋아요 (0)</span></button>
             <button class="btn-action-v2 btn-report-v2" onclick="openReportModal()"><i class="ph ph-warning-circle"></i> 신고</button>
         </div>
@@ -430,7 +430,7 @@
         <div class="comment-lock-screen" id="commentLock">
             <div class="lock-icon">🔒</div>
             <div class="lock-text">투표 후 댓글을 남길 수 있어요!</div>
-            <div class="lock-subtext">화력 지원하고 훈수를 남겨보세요.</div>
+            <div class="lock-subtext">픽 공유하고 훈수를 남겨보세요.</div>
         </div>
         
         <div class="comment-active-area" id="commentActive">
@@ -641,7 +641,7 @@
         var post = (window.PickleDetail && typeof window.PickleDetail.getCurrentPost === 'function') ? window.PickleDetail.getCurrentPost() : null;
         return {
             title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
-            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. 지금 참전하세요!') : '지금 참전하세요!',
+            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. 지금 투표하세요!') : '지금 투표하세요!',
             imageUrl: 'https://pickleplay.kr/images/default_share.jpg'
         };
     }

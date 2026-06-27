@@ -1131,7 +1131,7 @@ function renderCommentItemHtml(comment, options) {
     var lockSub = document.querySelector('#commentLock .lock-subtext');
     if (lockSub) {
       lockSub.textContent =
-        '지금 참전하고 ' +
+        '지금 투표하고 ' +
         Number(count || 0).toLocaleString() +
         '개의 훈수를 확인하세요.';
     }
@@ -1601,7 +1601,7 @@ function renderCommentsList(comments, sortType) {
     if (!statsEl) return;
 
     var total = voteStats && voteStats.total ? voteStats.total : 0;
-    var label = total > 0 ? '🔥 ' + total.toLocaleString() + '명 참전' : '🔥 NEW';
+    var label = total > 0 ? '🔥 ' + total.toLocaleString() + '명 참여' : '🔥 NEW';
 
     statsEl.innerHTML =
       '<span>' +
@@ -1941,7 +1941,7 @@ function renderCommentsList(comments, sortType) {
     if (labelB) labelB.textContent = post.option_b || '';
     if (totalEl) {
       totalEl.textContent =
-        '🔥 ' + Number(pct.total).toLocaleString() + '명 참전';
+        '🔥 ' + Number(pct.total).toLocaleString() + '명 참여';
     }
 
     if (resultRevealDone || opts.skipFake) {

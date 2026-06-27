@@ -426,7 +426,7 @@
       '<div class="poll-header">' +
       '<span class="poll-fire"><i class="ph ph-fire" aria-hidden="true"></i> ' +
       votes +
-      '명 참전 중</span>' +
+      '명 참여 중</span>' +
       '<span class="poll-time">' +
       escapeHtml(timeLabel) +
       '</span>' +
