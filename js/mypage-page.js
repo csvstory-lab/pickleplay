@@ -1639,6 +1639,48 @@
     voteFieldsEditable: false,
   };
 
+  var POST_EDIT_DELETE_LOCKED_MSG =
+    '투표가 시작된 불판은 삭제할 수 없습니다. 고객센터로 문의해 주세요.';
+
+  function isPostEditDeleteLocked() {
+    return (Number(editPostState.totalVotes) || 0) >= 1;
+  }
+
+  function notifyPostEditDeleteLocked() {
+    alert(POST_EDIT_DELETE_LOCKED_MSG);
+  }
+
+  function applyPostEditDeleteState(totalVotes) {
+    var locked = (Number(totalVotes) || 0) >= 1;
+    var deleteBtn = document.getElementById('btnDeletePost');
+    var deleteWrap = document.getElementById('btnDeletePostWrap');
+
+    if (deleteBtn) {
+      deleteBtn.disabled = locked;
+      deleteBtn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    }
+    if (deleteWrap) {
+      deleteWrap.classList.toggle('is-locked', locked);
+      deleteWrap.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    }
+  }
+
+  function bindPostEditDeleteGuard() {
+    var deleteWrap = document.getElementById('btnDeletePostWrap');
+    if (!deleteWrap || deleteWrap.dataset.boundDeleteGuard) return;
+    deleteWrap.dataset.boundDeleteGuard = '1';
+
+    deleteWrap.addEventListener('click', function (e) {
+      if (isPostEditDeleteLocked()) {
+        e.preventDefault();
+        e.stopPropagation();
+        notifyPostEditDeleteLocked();
+        return;
+      }
+      deletePost();
+    });
+  }
+
   function applyPostEditVoteFieldsState(totalVotes) {
     var locked = (Number(totalVotes) || 0) >= 1;
     var titleEl = document.getElementById('editPostTitle');
@@ -1673,6 +1715,8 @@
         ? '투표 정보 (수정 불가)'
         : '투표 정보';
     }
+
+    applyPostEditDeleteState(totalVotes);
   }
 
   async function openPostEditPanel(postId) {
@@ -1687,11 +1731,8 @@
     var optBEl = document.getElementById('editPostOptionB');
     var descEl = document.getElementById('editPostDescription');
     var panel = document.getElementById('postEditPanel');
-    var deleteBtn = document.getElementById('btnDeletePost');
 
     if (!panel || !titleEl) return;
-
-    if (deleteBtn) deleteBtn.disabled = false;
 
     try {
       var sb = getSupabaseClient();
@@ -1844,6 +1885,11 @@
   async function deletePost() {
     var postId = editPostState.postId;
     if (!postId) return;
+
+    if (isPostEditDeleteLocked()) {
+      notifyPostEditDeleteLocked();
+      return;
+    }
 
     var titleEl = document.getElementById('editPostTitle');
     var titlePreview = titleEl && titleEl.value.trim()
@@ -2434,6 +2480,7 @@
       bindProfileSelectFilledState();
       bindLogout();
       bindWithdraw();
+      bindPostEditDeleteGuard();
       mypageTabLoaded.created = true;
       await Promise.all([
         loadCreatedPosts(user.id),

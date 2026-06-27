@@ -344,8 +344,15 @@
         font-size: 0.92rem; font-family: inherit; resize: vertical; box-sizing: border-box;
     }
     .post-edit-textarea:focus { outline: none; border-color: var(--neon-green); }
-    .btn-delete-post {
+    .post-edit-delete-wrap {
         flex: 3;
+        min-width: 0;
+        display: flex;
+    }
+    .post-edit-delete-wrap.is-locked { cursor: not-allowed; }
+    .post-edit-delete-wrap.is-locked .btn-delete-post { pointer-events: none; }
+    .post-edit-delete-wrap .btn-delete-post { flex: 1; width: 100%; }
+    .btn-delete-post {
         min-width: 0;
         padding: 16px 10px;
         border-radius: 14px;
@@ -1559,7 +1566,9 @@
 
         <div class="post-edit-section post-edit-actions">
             <button type="button" class="btn-save-post-edit" id="btnSavePostEdit" onclick="updatePost()">수정 완료</button>
-            <button type="button" class="btn-delete-post" id="btnDeletePost" onclick="deletePost()">🗑️ 삭제</button>
+            <div class="post-edit-delete-wrap" id="btnDeletePostWrap">
+                <button type="button" class="btn-delete-post" id="btnDeletePost">🗑️ 삭제</button>
+            </div>
         </div>
     </div>
 </div>
@@ -2200,7 +2209,7 @@
 <script src="../js/pickle-follows.js?v=20260617_guide1"></script>
 <script src="../js/pickle-messages.js?v=20260617_messages3"></script>
 <script src="../js/pickle-policies.js"></script>
-<script src="../js/mypage-page.js?v=20260617_postedit3"></script>
+<script src="../js/mypage-page.js?v=20260617_postedit4"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
