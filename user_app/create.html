@@ -361,23 +361,7 @@
         }
     }
 
-    .template-chip {
-        flex-shrink: 0;
-        padding: 10px 16px;
-        border-radius: 20px;
-        border: 1px solid rgba(74, 222, 128, 0.35);
-        background: var(--bg-elevated);
-        color: var(--text-main);
-        font-size: 0.82rem;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: 0.2s;
-        white-space: nowrap;
-    }
-    .template-chip:active { transform: scale(0.97); }
-    .chip-scroll::-webkit-scrollbar { display: none; }
-
+    .helper-text { font-size: 0.75rem; color: var(--point-pink, #FF85A1); margin-left: 8px; font-weight: 600; letter-spacing: -0.3px; display: inline-block; }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
 <link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell6">
@@ -440,20 +424,10 @@
 
     <form id="createPostForm" novalidate>
     <div class="form-group">
-        <label class="form-label">어떤 주제로 불판을 지펴볼까요?</label>
+        <label class="form-label">어떤 주제로 불판을 지펴볼까요? <span class="helper-text">만들고 싶은 주제를 선택할 수 있어요!</span></label>
         <button type="button" class="btn-open-category" id="btnOpenCategory" onclick="toggleCategorySheet()">📂 카테고리 선택</button>
         <input type="hidden" id="selectedCategorySlug" value="">
     </div>
-
-    <section class="template-section" style="background: rgba(74, 222, 128, 0.05); border: 1px solid rgba(74, 222, 128, 0.2); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
-        <div style="font-size: 0.85rem; font-weight: 700; color: #4ADE80; margin-bottom: 12px;">💡 막막할 땐 추천 템플릿을 눌러보세요!</div>
-        <div class="chip-scroll" style="display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none;">
-            <button type="button" class="template-chip" onclick="applyTemplate('vs')">⚖️ VS 밸런스</button>
-            <button type="button" class="template-chip" onclick="applyTemplate('love')">💔 연애/썸</button>
-            <button type="button" class="template-chip" onclick="applyTemplate('money')">💸 돈/재테크</button>
-            <button type="button" class="template-chip" onclick="applyTemplate('whatif')">🤔 만약에</button>
-        </div>
-    </section>
 
     <div class="form-group">
         <label class="form-label">불판 제목</label>
@@ -466,7 +440,7 @@
     </div>
 
     <div class="form-group form-group-thumbnail">
-        <label class="form-label">리스트 노출용 썸네일 이미지<span class="form-hint" style="color:var(--point-blue);">(필수)</span></label>
+        <label class="form-label">리스트 노출용 썸네일 이미지<span class="form-hint" style="color:var(--point-blue);">(필수)</span> <span class="helper-text">4가지 방법으로 썸네일을 만들 수 있어요!</span></label>
         <p class="upload-size-hint">(※ 리스트에만 노출 · 터치해서 썸네일을 선택하세요)</p>
         <div class="thumb-preview-box ratio-16-9" id="thumbPreviewBox" onclick="openThumbnailSheet()" role="button" tabindex="0" aria-label="썸네일 선택">
             <div id="thumbLiveText" class="thumb-live-text" style="display: none;"></div>
@@ -480,7 +454,7 @@
     <div class="form-divider" aria-hidden="true"></div>
 
     <div class="form-group">
-        <label class="form-label">불판 진행 기간</label>
+        <label class="form-label">불판 진행 기간 <span class="helper-text">최대 7일까지 설정할 수 있어요!</span></label>
         <div class="duration-grid">
             <button type="button" class="duration-btn active" onclick="setDuration(this, '24h')">24시간</button>
             <button type="button" class="duration-btn" onclick="setDuration(this, '3')">3일</button>
@@ -499,7 +473,7 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label">불판에 올릴 미디어 형태</label>
+        <label class="form-label">불판에 올릴 미디어 형태 <span class="helper-text">컬러카드, 사진, 영상 링크를 선택 적용 할 수 있어요!</span></label>
         
         <div class="toggle-wrapper">
             <button type="button" class="toggle-btn active highlight" id="btnText" onclick="setMainMode('text')">🎨 텍스트 카드</button>
@@ -586,47 +560,6 @@
 <script src="../js/pickle-points.js"></script>
 <script src="../js/create-page.js"></script>
 <script>
-
-    const CREATE_POST_TEMPLATES = {
-        vs: {
-            title: '둘 중 하나만 고를 수 있다면?',
-            optionA: '안정적인 선택',
-            optionB: '모험적인 선택',
-        },
-        love: {
-            title: '썸 상황, 너라면 어떻게 할 거야?',
-            optionA: '먼저 연락한다',
-            optionB: '좀 더 기다린다',
-        },
-        money: {
-            title: '월급날, 가장 먼저 하는 일은?',
-            optionA: '저축·투자부터',
-            optionB: '오늘만큼은 소비',
-        },
-        whatif: {
-            title: '만약에 갑자기 로또에 당첨된다면?',
-            optionA: '바로 은퇴·여행',
-            optionB: '일은 계속 다닌다',
-        },
-    };
-
-    function applyTemplate(type) {
-        const template = CREATE_POST_TEMPLATES[type];
-        if (!template) return;
-
-        const titleEl = document.getElementById('inputTitle');
-        const optionAEl = document.getElementById('inputA');
-        const optionBEl = document.getElementById('inputB');
-
-        if (titleEl) titleEl.value = template.title;
-        if (optionAEl) optionAEl.value = template.optionA;
-        if (optionBEl) optionBEl.value = template.optionB;
-
-        if (typeof updateLivePreviews === 'function') {
-            updateLivePreviews();
-        }
-    }
-    window.applyTemplate = applyTemplate;
 
     async function loadCategories() {
         if (!window.PickleCategories || !window.PickleCategories.loadCategoriesForCreate) return;
