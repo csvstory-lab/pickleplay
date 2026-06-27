@@ -139,10 +139,38 @@
     return String(layout).toLowerCase() === 'vertical' ? 'vertical' : 'horizontal';
   }
 
+  function hashPostIdToAssetSet(postId) {
+    var str = String(postId || '');
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) | 0;
+    }
+    return (Math.abs(hash) % 7) + 1;
+  }
+
+  function getPickleVoteAssetPath(side, setIndex) {
+    var idx = Math.max(1, Math.min(7, Number(setIndex) || 1));
+    var suffix = side === 'B' ? 'B' : 'A';
+    return 'asset/asset_' + suffix + '_' + idx + '.png';
+  }
+
+  function buildPickleCharImg(side, setIndex) {
+    var src = getPickleVoteAssetPath(side, setIndex);
+    var flipClass = side === 'B' ? ' media-pickle-char--flip' : '';
+    return (
+      '<img class="media-pickle-char' +
+      flipClass +
+      '" src="' +
+      escapeHtml(src) +
+      '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
+    );
+  }
+
   function buildDetailMediaHtml(post) {
     var mode = resolveMediaMode(post);
     var title = post.title || '불판';
     var layout = resolveMediaLayout(post);
+    var assetSet = hashPostIdToAssetSet(post.id);
 
     if (mode === 'text' || (!post.media_url_1 && !post.media_url_2)) {
       return (
@@ -177,6 +205,7 @@
           '<img src="' +
           escapeHtml(single.src) +
           '" alt="">' +
+          buildPickleCharImg('A', assetSet) +
           '</div>'
         );
       }
@@ -193,8 +222,8 @@
         '<div class="media-container ' +
         layoutClass +
         '">' +
-        buildSplitHalf('A', mediaA, post.option_a, title) +
-        buildSplitHalf('B', mediaB, post.option_b, title) +
+        buildSplitHalf('A', mediaA, post.option_a, title, assetSet) +
+        buildSplitHalf('B', mediaB, post.option_b, title, assetSet) +
         '<div class="vs-badge">VS</div>' +
         '</div>'
       );
@@ -206,7 +235,7 @@
     );
   }
 
-  function buildSplitHalf(side, media, label, title) {
+  function buildSplitHalf(side, media, label, title, assetSet) {
     var sideClass = side === 'A' ? 'split-left' : 'split-right';
     var inner = '';
 
@@ -247,6 +276,7 @@
       escapeHtml(side + ' 선택 · ' + (label || '투표')) +
       '">' +
       inner +
+      buildPickleCharImg(side, assetSet) +
       '</div>'
     );
   }
