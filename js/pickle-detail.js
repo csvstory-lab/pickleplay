@@ -8,7 +8,9 @@
   var timerInterval = null;
   var currentPostId = null;
   var likedCommentIdSet = Object.create(null);
-  var openReplyParentId = null;
+  var replyDraftParentId = null;
+  var replyDraftAuthorName = '';
+  var defaultCommentPlaceholder = '';
   var commentListDelegationBound = false;
   var commentFormBound = false;
   var replySubmitInFlight = false;
@@ -510,6 +512,7 @@
 
   function renderCommentActionsHtml(comment, options) {
     options = options || {};
+    var cName = commentAuthorLabel(comment);
     var likeCount = Number(comment.like_count);
     if (!Number.isFinite(likeCount) || likeCount < 0) likeCount = 0;
     var liked = isCommentLiked(comment.id);
@@ -517,17 +520,9 @@
     var replyBtn =
       '<button type="button" class="comment-action-btn comment-reply-btn" data-comment-id="' +
       escapeHtml(comment.id) +
+      '" data-author-name="' +
+      escapeHtml(cName) +
       '">💬 답글</button>';
-
-    var replyForm =
-      '<div class="comment-reply-form hidden" data-parent-id="' +
-      escapeHtml(comment.id) +
-      '">' +
-      '<input type="text" class="comment-reply-input" maxlength="2000" placeholder="답글을 입력하세요">' +
-      '<button type="button" class="comment-reply-submit" data-parent-id="' +
-      escapeHtml(comment.id) +
-      '">등록</button>' +
-      '</div>';
 
     return (
       '<div class="comment-actions">' +
@@ -539,8 +534,7 @@
       likeCount.toLocaleString() +
       '</span></button>' +
       replyBtn +
-      '</div>' +
-      replyForm
+      '</div>'
     );
   }
 // 👉 [수정 1] 팝업창 생성을 위해 프로필에 ID 및 닉네임 데이터 심기 및 커서 포인터 추가
@@ -855,7 +849,7 @@ function renderCommentItemHtml(comment, options) {
     document.querySelectorAll('.comment-reply-form').forEach(function (form) {
       form.classList.add('hidden');
     });
-    openReplyParentId = null;
+    clearReplyDraft();
   }
 
   function toggleReplyForm(parentId) {
@@ -866,15 +860,15 @@ function renderCommentItemHtml(comment, options) {
     );
     if (!form) return;
 
-    if (openReplyParentId === parentId && !form.classList.contains('hidden')) {
+    if (replyDraftParentId === parentId && !form.classList.contains('hidden')) {
       form.classList.add('hidden');
-      openReplyParentId = null;
+      clearReplyDraft();
       return;
     }
 
     closeAllReplyForms();
     form.classList.remove('hidden');
-    openReplyParentId = parentId;
+    replyDraftParentId = parentId;
     var input = form.querySelector('.comment-reply-input');
     if (input) input.focus();
   }
@@ -1011,15 +1005,55 @@ function renderCommentItemHtml(comment, options) {
     }
   }
 
+  function clearReplyDraft() {
+    replyDraftParentId = null;
+    replyDraftAuthorName = '';
+    var banner = $('detailReplyBanner');
+    if (banner) banner.classList.add('hidden');
+    var input = $('detailCommentInput');
+    if (input) {
+      input.placeholder =
+        defaultCommentPlaceholder || '댓글을 자유롭게 남겨보세요.';
+    }
+  }
+
   function focusMainCommentInput() {
     var lockScreen = $('commentLock');
     var activeArea = $('commentActive');
     if (lockScreen) lockScreen.style.display = 'none';
     if (activeArea) activeArea.classList.add('show');
+  }
+
+  function startReplyToComment(commentId, authorNameFromBtn) {
+    if (!commentId) return;
+
+    focusMainCommentInput();
+
+    var comment = commentByIdCache[commentId];
+    var authorName =
+      (authorNameFromBtn && String(authorNameFromBtn).trim()) ||
+      (comment ? commentAuthorLabel(comment) : '');
+
+    if (!authorName) {
+      var el = document.querySelector(
+        '[data-comment-id="' + String(commentId).replace(/"/g, '\\"') + '"]'
+      );
+      authorName =
+        (el && el.getAttribute('data-author-name')) || '픽클러';
+    }
+
+    replyDraftParentId = commentId;
+    replyDraftAuthorName = authorName;
+
+    var banner = $('detailReplyBanner');
+    var nameEl = $('detailReplyTargetName');
+    if (nameEl) nameEl.textContent = '@' + authorName;
+    if (banner) banner.classList.remove('hidden');
 
     var input = $('detailCommentInput');
     if (!input) return;
 
+    input.placeholder = '@' + authorName + '에게 답글 남기기…';
     input.focus({ preventScroll: false });
     try {
       input.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1039,27 +1073,11 @@ function renderCommentItemHtml(comment, options) {
     var replyBtn = e.target.closest('.comment-reply-btn');
     if (replyBtn) {
       e.preventDefault();
-      focusMainCommentInput();
+      startReplyToComment(
+        replyBtn.getAttribute('data-comment-id'),
+        replyBtn.getAttribute('data-author-name')
+      );
       return;
-    }
-
-    var replySubmit = e.target.closest('.comment-reply-submit');
-    if (replySubmit) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (replySubmitInFlight || replySubmit.disabled) return;
-      submitReply(replySubmit.getAttribute('data-parent-id'));
-    }
-  }
-
-  function onCommentListKeydown(e) {
-    var replyInput = e.target.closest('.comment-reply-input');
-    if (replyInput && e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (replySubmitInFlight) return;
-      var form = replyInput.closest('.comment-reply-form');
-      var parentId = form ? form.getAttribute('data-parent-id') : null;
-      if (parentId) submitReply(parentId);
     }
   }
 
@@ -1068,7 +1086,6 @@ function renderCommentItemHtml(comment, options) {
     if (!rootEl || commentListDelegationBound) return;
 
     rootEl.addEventListener('click', onCommentListClick);
-    rootEl.addEventListener('keydown', onCommentListKeydown);
     commentListDelegationBound = true;
   }
 
@@ -1285,6 +1302,7 @@ function renderCommentsList(comments, sortType) {
       }
 
       var authorSnapshot = extractCommentAuthorSnapshot(user);
+      var parentIdForInsert = replyDraftParentId || null;
       var insertPayload = {
         user_id: user.id,
         post_id: currentPostId,
@@ -1296,13 +1314,46 @@ function renderCommentsList(comments, sortType) {
         author_avatar_html: authorSnapshot.author_avatar_html,
       };
 
+      if (parentIdForInsert) {
+        insertPayload.parent_id = parentIdForInsert;
+      }
+
+      var insertSelect =
+        'id, content, filtered_content, created_at, user_id, parent_id, author_nickname, author_avatar_html';
+
       var insertResult = await sb
         .from('comments')
         .insert(insertPayload)
-        .select(
-          'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html'
-        )
+        .select(insertSelect)
         .single();
+
+      if (insertResult.error && isCommentAuthorSnapshotColumnError(insertResult.error)) {
+        delete insertPayload.author_nickname;
+        delete insertPayload.author_avatar_html;
+        insertResult = await sb
+          .from('comments')
+          .insert(insertPayload)
+          .select(
+            'id, content, filtered_content, created_at, user_id, parent_id, users:user_id ( nickname )'
+          )
+          .single();
+      }
+
+      if (insertResult.error && isCommentParentIdColumnError(insertResult.error)) {
+        delete insertPayload.parent_id;
+        insertResult = await sb
+          .from('comments')
+          .insert(insertPayload)
+          .select(
+            'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html'
+          )
+          .single();
+        if (!insertResult.error) {
+          alert(
+            '대댓글 기능을 사용하려면 supabase/34_comments_parent_id.sql 을 실행해 주세요.'
+          );
+        }
+      }
 
       if (insertResult.error && isCommentSchemaColumnError(insertResult.error)) {
         delete insertPayload.author_nickname;
@@ -1355,14 +1406,24 @@ function renderCommentsList(comments, sortType) {
         });
       }
 
+      if (parentIdForInsert && newComment && newComment.id) {
+        await sendReplyNotification(sb, parentIdForInsert, newComment.id, user.id);
+      }
+
       if (inputEl) inputEl.value = '';
+      clearReplyDraft();
 
       await loadComments(currentPostId);
     } catch (err) {
       console.error('[P!CKLE Detail] 댓글 등록 실패', err);
-      alert(
-        '댓글 등록에 실패했습니다. ' + (err.message || String(err))
-      );
+      var msg = String(err.message || err);
+      if (msg.indexOf('parent_id') !== -1) {
+        alert(
+          '대댓글 기능을 사용하려면 supabase/34_comments_parent_id.sql 을 실행해 주세요.'
+        );
+      } else {
+        alert('댓글 등록에 실패했습니다. ' + msg);
+      }
     } finally {
       commentSubmitInFlight = false;
       if (submitBtn) {
@@ -1378,6 +1439,20 @@ function renderCommentsList(comments, sortType) {
 
     var submitBtn = $('detailCommentSubmit');
     var inputEl = $('detailCommentInput');
+    var cancelBtn = $('detailReplyCancel');
+
+    if (inputEl && !defaultCommentPlaceholder) {
+      defaultCommentPlaceholder =
+        inputEl.getAttribute('placeholder') || '댓글을 자유롭게 남겨보세요.';
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        clearReplyDraft();
+        if (inputEl) inputEl.focus();
+      });
+    }
 
     if (submitBtn) {
       submitBtn.addEventListener('click', function (e) {

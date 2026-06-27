@@ -208,7 +208,10 @@
         margin: 0;
         line-height: 1.5;
     }
-    .comment-item { display: flex; flex-direction: column; gap: 8px; }
+    .comment-item { display: flex; flex-direction: row; gap: 10px; align-items: flex-start; width: 100%; }
+        .comment-item--reply .author-pic { width: 32px !important; height: 32px !important; font-size: 0.85rem !important; }
+        .comment-reply-marker { margin-right: 4px; color: var(--point-green); font-size: 0.75rem; }
+        .comment-thread { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     .comment-main-row { display: flex; gap: 10px; width: 100%; }
     .comment-content { flex: 1; background-color: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-soft); }
     .comment-user { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; display: flex; justify-content: space-between; }
@@ -219,7 +222,11 @@
     .comment-action-btn:active { transform: scale(0.95); }
     .comment-action-btn.is-liked { color: var(--point-pink) !important; border-color: var(--point-pink) !important; background: rgba(255, 133, 161, 0.1) !important; }
     
-    .comment-replies { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 0 16px; padding-left: 10px; border-left: 2px solid var(--border-soft); }
+    .comment-replies { display: flex; flex-direction: column; gap: 10px; margin: 0 0 0 46px; padding-left: 12px; border-left: 2px solid rgba(74, 222, 128, 0.25); }
+        .comment-reply-banner { display: none; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.28); font-size: 0.82rem; color: var(--text-sub); }
+        .comment-reply-banner:not(.hidden) { display: flex; }
+        .comment-reply-banner strong { color: var(--point-green); font-weight: 800; }
+        .comment-reply-banner-cancel { background: none; border: none; color: var(--text-sub); font-size: 1rem; cursor: pointer; padding: 4px 8px; line-height: 1; }
     .comment-reply-form { display: none; gap: 8px; margin-top: 6px; width: 100%; }
     .comment-reply-form.show { display: flex !important; }
     .comment-reply-input { flex: 1; background: var(--bg-base) !important; border: 1px solid var(--border-soft) !important; border-radius: 10px; padding: 8px 12px; color: #fff; font-size: 0.85rem; outline: none; }
@@ -429,6 +436,10 @@
         </div>
         
         <div class="comment-active-area" id="commentActive">
+            <div class="comment-reply-banner hidden" id="detailReplyBanner" aria-live="polite">
+                <span>답글 남기는 중: <strong id="detailReplyTargetName"></strong></span>
+                <button type="button" class="comment-reply-banner-cancel" id="detailReplyCancel" aria-label="답글 취소">✖</button>
+            </div>
             <div class="comment-input-box">
                 <input type="text" class="comment-input" id="detailCommentInput" placeholder="댓글을 자유롭게 남겨보세요." maxlength="2000">
                 <button type="button" class="comment-submit" id="detailCommentSubmit">등록</button>
@@ -460,7 +471,7 @@
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
-<script src="../js/pickle-detail.js?v=20260617_detailfix1"></script>
+<script src="../js/pickle-detail.js?v=20260617_reply1"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <script>
