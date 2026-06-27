@@ -284,8 +284,31 @@
         margin-bottom: 6px; letter-spacing: -0.02em;
     }
 
-    /* 불판 수정 슬라이드 패널 */
-    #postEditPanel { z-index: 9300; background-color: var(--bg-color); left: 0; right: 0; margin: 0 auto; }
+    /* 불판 수정 슬라이드 패널 — 480px 셸 중앙 고정 */
+    #postEditPanel {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 480px;
+        height: 100%;
+        z-index: 10000;
+        background-color: var(--bg-base);
+        display: none !important;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        box-sizing: border-box;
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+    #postEditPanel.open {
+        display: flex !important;
+        transform: translateX(0) !important;
+    }
     .post-edit-content { padding: 24px 20px 40px; }
     .post-edit-section { margin-bottom: 22px; }
     .post-edit-section-title {
