@@ -327,12 +327,14 @@
     }
     .post-edit-readonly:focus,
     .post-edit-input:focus { outline: none; border-color: var(--neon-green); }
-    .post-edit-vote-lock-notice {
+    .post-edit-content .notice-box {
         font-size: 0.78rem; font-weight: 700; color: #fbbf24;
-        margin: 0 0 12px 4px; line-height: 1.45;
-        padding: 10px 12px; border-radius: 10px;
+        margin: 0 0 18px; line-height: 1.5;
+        padding: 12px 14px; border-radius: 10px;
         background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25);
+        word-break: keep-all;
     }
+    .post-edit-content .notice-box[hidden] { display: none !important; }
     .post-edit-field { margin-bottom: 12px; }
     .post-edit-field label {
         display: block; font-size: 0.78rem; font-weight: 800;
@@ -1539,9 +1541,9 @@
         </div>
     </div>
     <div class="edit-content post-edit-content">
+        <div id="editPostVoteLockNotice" class="notice-box" hidden role="note">⚠️ 이미 투표가 시작된 불판입니다. 공정한 투표를 위해 [제목, 선택지, 삭제]는 수정이 제한됩니다. (상세 설명만 수정 가능합니다.)</div>
         <div class="post-edit-section">
             <p class="post-edit-section-title" id="editPostVoteSectionTitle">투표 정보</p>
-            <p id="editPostVoteLockNotice" class="post-edit-vote-lock-notice" hidden>투표가 시작되어 제목과 선택지를 수정할 수 없습니다.</p>
             <div class="post-edit-field">
                 <label for="editPostTitle">불판 제목</label>
                 <input type="text" id="editPostTitle" class="post-edit-input" maxlength="80" autocomplete="off">
@@ -2209,7 +2211,7 @@
 <script src="../js/pickle-follows.js?v=20260617_guide1"></script>
 <script src="../js/pickle-messages.js?v=20260617_messages3"></script>
 <script src="../js/pickle-policies.js"></script>
-<script src="../js/mypage-page.js?v=20260617_postedit4"></script>
+<script src="../js/mypage-page.js?v=20260617_postedit5"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 

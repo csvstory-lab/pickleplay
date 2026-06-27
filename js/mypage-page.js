@@ -1681,12 +1681,28 @@
     });
   }
 
-  function applyPostEditVoteFieldsState(totalVotes) {
-    var locked = (Number(totalVotes) || 0) >= 1;
+  function applyPostEditNoticeVisibility(totalVotes) {
+    var noticeEl = document.getElementById('editPostVoteLockNotice');
+    if (!noticeEl) return;
+
+    if ((Number(totalVotes) || 0) >= 1) {
+      noticeEl.removeAttribute('hidden');
+      noticeEl.style.display = '';
+    } else {
+      noticeEl.setAttribute('hidden', '');
+      noticeEl.style.display = 'none';
+    }
+  }
+
+  function applyPostEditLockState(totalVotes) {
+    var total = Number(totalVotes) || 0;
+    var locked = total >= 1;
+
+    applyPostEditNoticeVisibility(total);
+
     var titleEl = document.getElementById('editPostTitle');
     var optAEl = document.getElementById('editPostOptionA');
     var optBEl = document.getElementById('editPostOptionB');
-    var noticeEl = document.getElementById('editPostVoteLockNotice');
     var sectionTitleEl = document.getElementById('editPostVoteSectionTitle');
 
     [titleEl, optAEl, optBEl].forEach(function (el) {
@@ -1706,17 +1722,17 @@
       }
     });
 
-    if (noticeEl) {
-      if (locked) noticeEl.removeAttribute('hidden');
-      else noticeEl.setAttribute('hidden', '');
-    }
     if (sectionTitleEl) {
       sectionTitleEl.textContent = locked
         ? '투표 정보 (수정 불가)'
         : '투표 정보';
     }
 
-    applyPostEditDeleteState(totalVotes);
+    applyPostEditDeleteState(total);
+  }
+
+  function applyPostEditVoteFieldsState(totalVotes) {
+    applyPostEditLockState(totalVotes);
   }
 
   async function openPostEditPanel(postId) {
@@ -1733,6 +1749,8 @@
     var panel = document.getElementById('postEditPanel');
 
     if (!panel || !titleEl) return;
+
+    applyPostEditLockState(0);
 
     try {
       var sb = getSupabaseClient();
@@ -1769,7 +1787,7 @@
       optBEl.value = post.option_b_name || '';
       if (descEl) descEl.value = post.description || '';
 
-      applyPostEditVoteFieldsState(totalVotes);
+      applyPostEditLockState(totalVotes);
 
       panel.classList.add('open');
       panel.setAttribute('aria-hidden', 'false');
@@ -1790,6 +1808,7 @@
     }
     document.body.style.overflow = '';
     editPostState = { postId: null, totalVotes: 0, voteFieldsEditable: false };
+    applyPostEditNoticeVisibility(0);
   }
 
   function validateEditableVoteFields(title, optionA, optionB) {
