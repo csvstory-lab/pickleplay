@@ -156,11 +156,8 @@
 
   function buildPickleCharImg(side, setIndex) {
     var src = getPickleVoteAssetPath(side, setIndex);
-    var flipClass = side === 'B' ? ' media-pickle-char--flip' : '';
     return (
-      '<img class="media-pickle-char' +
-      flipClass +
-      '" src="' +
+      '<img class="media-pickle-char" src="' +
       escapeHtml(src) +
       '" alt="" aria-hidden="true" loading="lazy" decoding="async">'
     );

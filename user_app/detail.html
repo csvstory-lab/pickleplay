@@ -80,16 +80,24 @@
     .media-pickle-char {
         position: absolute;
         bottom: -5px;
-        right: 5%;
-        width: 50%;
-        max-width: 150px;
+        left: 5%;
+        width: 55%;
+        max-width: 160px;
         height: auto;
         z-index: 10;
+        opacity: 0.95;
+        transform: none;
         pointer-events: none;
         object-fit: contain;
-        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
     }
-    .media-pickle-char--flip { transform: scaleX(-1); }
+    .media-pickle-char:hover,
+    .media-pickle-char:active,
+    .split-half:hover .media-pickle-char,
+    .split-half:active .media-pickle-char,
+    .single-media-wrap:hover .media-pickle-char,
+    .single-media-wrap:active .media-pickle-char {
+        transform: none !important;
+    }
     .single-media-wrap.single-media-image {
         position: relative;
         overflow: hidden;
@@ -480,7 +488,7 @@
 <script src="../js/auth.js"></script>
 <script src="../js/pickle-notifications.js"></script>
 <script src="../js/media-upload.js?v=20260608_media2"></script>
-<script src="../js/pickle-media-view.js?v=20260617_mediachar1"></script>
+<script src="../js/pickle-media-view.js?v=20260617_mediachar2"></script>
 <script src="../js/pickle-profile.js?v=20260617_guide1"></script>
 <script src="../js/pickle-categories.js"></script>
 <script src="../js/pickle-ranking-events.js?v=20260617_guide1"></script>
