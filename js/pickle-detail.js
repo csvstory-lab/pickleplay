@@ -8,9 +8,7 @@
   var timerInterval = null;
   var currentPostId = null;
   var likedCommentIdSet = Object.create(null);
-  var replyDraftParentId = null;
-  var replyDraftAuthorName = '';
-  var defaultCommentPlaceholder = '';
+  var openInlineReplyParentId = null;
   var commentListDelegationBound = false;
   var commentFormBound = false;
   var replySubmitInFlight = false;
@@ -839,50 +837,94 @@ function renderCommentItemHtml(comment, options) {
   }
 
   function setReplySubmitButtonsDisabled(disabled, activeBtn) {
-    document.querySelectorAll('.comment-reply-submit').forEach(function (btn) {
+    document.querySelectorAll('.comment-inline-reply-submit').forEach(function (btn) {
       btn.disabled = disabled;
       btn.textContent = disabled && btn === activeBtn ? '등록 중…' : '등록';
     });
   }
 
-  function closeAllReplyForms() {
-    document.querySelectorAll('.comment-reply-form').forEach(function (form) {
-      form.classList.add('hidden');
+  function closeInlineReplyForm() {
+    document.querySelectorAll('.comment-inline-reply-form').forEach(function (form) {
+      form.remove();
     });
-    clearReplyDraft();
+    openInlineReplyParentId = null;
   }
 
-  function toggleReplyForm(parentId) {
-    if (!parentId) return;
-
-    var form = document.querySelector(
-      '.comment-reply-form[data-parent-id="' + String(parentId).replace(/"/g, '') + '"]'
+  function buildInlineReplyFormHtml(parentId) {
+    return (
+      '<div class="comment-inline-reply-form" data-parent-id="' +
+      escapeHtml(parentId) +
+      '">' +
+      '<input type="text" class="comment-inline-reply-input" maxlength="2000" placeholder="답글을 입력하세요...">' +
+      '<button type="button" class="comment-inline-reply-submit" data-parent-id="' +
+      escapeHtml(parentId) +
+      '">등록</button>' +
+      '<button type="button" class="comment-inline-reply-cancel">취소</button>' +
+      '</div>'
     );
-    if (!form) return;
+  }
 
-    if (replyDraftParentId === parentId && !form.classList.contains('hidden')) {
-      form.classList.add('hidden');
-      clearReplyDraft();
+  function openInlineReplyForm(parentId, anchorItem) {
+    if (!parentId || !anchorItem) return;
+
+    var existing = document.querySelector('.comment-inline-reply-form');
+    if (
+      existing &&
+      existing.getAttribute('data-parent-id') === String(parentId)
+    ) {
+      closeInlineReplyForm();
       return;
     }
 
-    closeAllReplyForms();
-    form.classList.remove('hidden');
-    replyDraftParentId = parentId;
-    var input = form.querySelector('.comment-reply-input');
-    if (input) input.focus();
+    closeInlineReplyForm();
+
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = buildInlineReplyFormHtml(parentId);
+    var form = wrapper.firstElementChild;
+    if (!form) return;
+
+    anchorItem.insertAdjacentElement('afterend', form);
+    openInlineReplyParentId = parentId;
+
+    var input = form.querySelector('.comment-inline-reply-input');
+    if (input) {
+      input.focus({ preventScroll: false });
+    }
+  }
+
+  function focusMainCommentInput() {
+    var lockScreen = $('commentLock');
+    var activeArea = $('commentActive');
+    if (lockScreen) lockScreen.style.display = 'none';
+    if (activeArea) activeArea.classList.add('show');
+  }
+
+  function startReplyToComment(commentId, replyBtn) {
+    if (!commentId) return;
+
+    focusMainCommentInput();
+
+    var commentItem = replyBtn ? replyBtn.closest('.comment-item') : null;
+    if (!commentItem) {
+      commentItem = document.getElementById('comment-' + commentId);
+    }
+    if (!commentItem) return;
+
+    openInlineReplyForm(commentId, commentItem);
   }
 
   async function submitReply(parentId) {
     if (!parentId || !currentPostId || replySubmitInFlight) return;
 
     var form = document.querySelector(
-      '.comment-reply-form[data-parent-id="' + String(parentId).replace(/"/g, '') + '"]'
+      '.comment-inline-reply-form[data-parent-id="' +
+        String(parentId).replace(/"/g, '') +
+        '"]'
     );
     if (!form) return;
 
-    var inputEl = form.querySelector('.comment-reply-input');
-    var submitBtn = form.querySelector('.comment-reply-submit');
+    var inputEl = form.querySelector('.comment-inline-reply-input');
+    var submitBtn = form.querySelector('.comment-inline-reply-submit');
     var rawText = inputEl ? inputEl.value : '';
 
     if (!rawText.trim()) {
@@ -989,7 +1031,7 @@ function renderCommentItemHtml(comment, options) {
       }
 
       if (inputEl) inputEl.value = '';
-      closeAllReplyForms();
+      closeInlineReplyForm();
       await loadComments(currentPostId);
     } catch (err) {
       console.error('[P!CKLE Detail] 답글 등록 실패', err);
@@ -1005,63 +1047,6 @@ function renderCommentItemHtml(comment, options) {
     }
   }
 
-  function clearReplyDraft() {
-    replyDraftParentId = null;
-    replyDraftAuthorName = '';
-    var banner = $('detailReplyBanner');
-    if (banner) banner.classList.add('hidden');
-    var input = $('detailCommentInput');
-    if (input) {
-      input.placeholder =
-        defaultCommentPlaceholder || '댓글을 자유롭게 남겨보세요.';
-    }
-  }
-
-  function focusMainCommentInput() {
-    var lockScreen = $('commentLock');
-    var activeArea = $('commentActive');
-    if (lockScreen) lockScreen.style.display = 'none';
-    if (activeArea) activeArea.classList.add('show');
-  }
-
-  function startReplyToComment(commentId, authorNameFromBtn) {
-    if (!commentId) return;
-
-    focusMainCommentInput();
-
-    var comment = commentByIdCache[commentId];
-    var authorName =
-      (authorNameFromBtn && String(authorNameFromBtn).trim()) ||
-      (comment ? commentAuthorLabel(comment) : '');
-
-    if (!authorName) {
-      var el = document.querySelector(
-        '[data-comment-id="' + String(commentId).replace(/"/g, '\\"') + '"]'
-      );
-      authorName =
-        (el && el.getAttribute('data-author-name')) || '픽클러';
-    }
-
-    replyDraftParentId = commentId;
-    replyDraftAuthorName = authorName;
-
-    var banner = $('detailReplyBanner');
-    var nameEl = $('detailReplyTargetName');
-    if (nameEl) nameEl.textContent = '@' + authorName;
-    if (banner) banner.classList.remove('hidden');
-
-    var input = $('detailCommentInput');
-    if (!input) return;
-
-    input.placeholder = '@' + authorName + '에게 답글 남기기…';
-    input.focus({ preventScroll: false });
-    try {
-      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } catch (_e) {
-      input.scrollIntoView(true);
-    }
-  }
-
   function onCommentListClick(e) {
     var likeBtn = e.target.closest('.comment-like-btn');
     if (likeBtn) {
@@ -1070,15 +1055,38 @@ function renderCommentItemHtml(comment, options) {
       return;
     }
 
+    var replyCancel = e.target.closest('.comment-inline-reply-cancel');
+    if (replyCancel) {
+      e.preventDefault();
+      closeInlineReplyForm();
+      return;
+    }
+
+    var replySubmit = e.target.closest('.comment-inline-reply-submit');
+    if (replySubmit) {
+      e.preventDefault();
+      if (replySubmitInFlight || replySubmit.disabled) return;
+      submitReply(replySubmit.getAttribute('data-parent-id'));
+      return;
+    }
+
     var replyBtn = e.target.closest('.comment-reply-btn');
     if (replyBtn) {
       e.preventDefault();
-      startReplyToComment(
-        replyBtn.getAttribute('data-comment-id'),
-        replyBtn.getAttribute('data-author-name')
-      );
+      startReplyToComment(replyBtn.getAttribute('data-comment-id'), replyBtn);
       return;
     }
+  }
+
+  function onCommentListKeydown(e) {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    var replyInput = e.target.closest('.comment-inline-reply-input');
+    if (!replyInput) return;
+    e.preventDefault();
+    if (replySubmitInFlight) return;
+    var form = replyInput.closest('.comment-inline-reply-form');
+    var parentId = form ? form.getAttribute('data-parent-id') : null;
+    if (parentId) submitReply(parentId);
   }
 
   function bindCommentListDelegationOnce() {
@@ -1086,6 +1094,7 @@ function renderCommentItemHtml(comment, options) {
     if (!rootEl || commentListDelegationBound) return;
 
     rootEl.addEventListener('click', onCommentListClick);
+    rootEl.addEventListener('keydown', onCommentListKeydown);
     commentListDelegationBound = true;
   }
 
@@ -1129,6 +1138,7 @@ function renderCommentItemHtml(comment, options) {
   }
 // 👉 [수정 2] 정렬(sortType) 파라미터 추가 및 인기순(좋아요 순) 정렬 로직 적용
 function renderCommentsList(comments, sortType) {
+  closeInlineReplyForm();
   var listEl = $('detailCommentList');
   if (!listEl) return;
 
@@ -1302,7 +1312,6 @@ function renderCommentsList(comments, sortType) {
       }
 
       var authorSnapshot = extractCommentAuthorSnapshot(user);
-      var parentIdForInsert = replyDraftParentId || null;
       var insertPayload = {
         user_id: user.id,
         post_id: currentPostId,
@@ -1314,46 +1323,13 @@ function renderCommentsList(comments, sortType) {
         author_avatar_html: authorSnapshot.author_avatar_html,
       };
 
-      if (parentIdForInsert) {
-        insertPayload.parent_id = parentIdForInsert;
-      }
-
-      var insertSelect =
-        'id, content, filtered_content, created_at, user_id, parent_id, author_nickname, author_avatar_html';
-
       var insertResult = await sb
         .from('comments')
         .insert(insertPayload)
-        .select(insertSelect)
+        .select(
+          'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html'
+        )
         .single();
-
-      if (insertResult.error && isCommentAuthorSnapshotColumnError(insertResult.error)) {
-        delete insertPayload.author_nickname;
-        delete insertPayload.author_avatar_html;
-        insertResult = await sb
-          .from('comments')
-          .insert(insertPayload)
-          .select(
-            'id, content, filtered_content, created_at, user_id, parent_id, users:user_id ( nickname )'
-          )
-          .single();
-      }
-
-      if (insertResult.error && isCommentParentIdColumnError(insertResult.error)) {
-        delete insertPayload.parent_id;
-        insertResult = await sb
-          .from('comments')
-          .insert(insertPayload)
-          .select(
-            'id, content, filtered_content, created_at, user_id, author_nickname, author_avatar_html'
-          )
-          .single();
-        if (!insertResult.error) {
-          alert(
-            '대댓글 기능을 사용하려면 supabase/34_comments_parent_id.sql 을 실행해 주세요.'
-          );
-        }
-      }
 
       if (insertResult.error && isCommentSchemaColumnError(insertResult.error)) {
         delete insertPayload.author_nickname;
@@ -1406,24 +1382,14 @@ function renderCommentsList(comments, sortType) {
         });
       }
 
-      if (parentIdForInsert && newComment && newComment.id) {
-        await sendReplyNotification(sb, parentIdForInsert, newComment.id, user.id);
-      }
-
       if (inputEl) inputEl.value = '';
-      clearReplyDraft();
 
       await loadComments(currentPostId);
     } catch (err) {
       console.error('[P!CKLE Detail] 댓글 등록 실패', err);
-      var msg = String(err.message || err);
-      if (msg.indexOf('parent_id') !== -1) {
-        alert(
-          '대댓글 기능을 사용하려면 supabase/34_comments_parent_id.sql 을 실행해 주세요.'
-        );
-      } else {
-        alert('댓글 등록에 실패했습니다. ' + msg);
-      }
+      alert(
+        '댓글 등록에 실패했습니다. ' + (err.message || String(err))
+      );
     } finally {
       commentSubmitInFlight = false;
       if (submitBtn) {
@@ -1439,20 +1405,6 @@ function renderCommentsList(comments, sortType) {
 
     var submitBtn = $('detailCommentSubmit');
     var inputEl = $('detailCommentInput');
-    var cancelBtn = $('detailReplyCancel');
-
-    if (inputEl && !defaultCommentPlaceholder) {
-      defaultCommentPlaceholder =
-        inputEl.getAttribute('placeholder') || '댓글을 자유롭게 남겨보세요.';
-    }
-
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        clearReplyDraft();
-        if (inputEl) inputEl.focus();
-      });
-    }
 
     if (submitBtn) {
       submitBtn.addEventListener('click', function (e) {
