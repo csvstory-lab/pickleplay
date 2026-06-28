@@ -67,6 +67,9 @@
   };
 
   var SYSTEM_ASSETS_BUCKET = 'system_assets';
+  var SITE_META_JSON_PATH = 'site_meta.json';
+  var DEFAULT_OG_PUBLIC =
+    'https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/og/default_og.png';
   var systemImageUploadsInitialized = false;
   var POINT_CONFIG_INVALIDATION_KEY = 'pickle_point_config_invalidation';
 
@@ -454,6 +457,42 @@
     return res.data;
   }
 
+  function buildPublishedSiteMeta(generalConfig) {
+    var c = Object.assign({}, DEFAULT_GENERAL, generalConfig || {});
+    var ogImage = String(c.og_image_url || '').trim();
+    return {
+      meta_title: String(c.meta_title || DEFAULT_GENERAL.meta_title).trim(),
+      meta_description: String(c.meta_description || DEFAULT_GENERAL.meta_description).trim(),
+      meta_keywords: String(c.meta_keywords || DEFAULT_GENERAL.meta_keywords).trim(),
+      og_image_url: ogImage || DEFAULT_OG_PUBLIC,
+      site_origin: 'https://pickleplay.kr',
+      updated_at: new Date().toISOString(),
+      version: Date.now(),
+    };
+  }
+
+  /**
+   * 카카오 스크랩 봇·Edge Middleware용 site_meta.json 배포
+   */
+  async function publishSiteMetaJson(getSupabaseClient, generalConfig) {
+    var sb = getSupabaseClient();
+    var payload = buildPublishedSiteMeta(generalConfig);
+    var body = JSON.stringify(payload, null, 2);
+    var blob = new Blob([body], { type: 'application/json' });
+    var res = await sb.storage.from(SYSTEM_ASSETS_BUCKET).upload(SITE_META_JSON_PATH, blob, {
+      upsert: true,
+      contentType: 'application/json',
+      cacheControl: '60',
+    });
+
+    if (res.error) {
+      console.warn('[AdminSettings] site_meta.json 배포 실패:', res.error.message || res.error);
+      return payload;
+    }
+
+    return payload;
+  }
+
   async function saveSystemSettings(getSupabaseClient) {
     var sb = getSupabaseClient();
     var payload = collectAllSettings();
@@ -467,16 +506,21 @@
       .eq('id', 1);
 
     if (res.error) throw res.error;
+
+    var publishedMeta = await publishSiteMetaJson(getSupabaseClient, payload.general_config);
     notifyPointConfigChanged();
-    notifyGeneralConfigChanged();
+    notifyGeneralConfigChanged(publishedMeta && publishedMeta.version);
     return res.data;
   }
 
   var GENERAL_CONFIG_INVALIDATION_KEY = 'pickle_general_config_invalidation';
 
-  function notifyGeneralConfigChanged() {
+  function notifyGeneralConfigChanged(version) {
     try {
-      localStorage.setItem(GENERAL_CONFIG_INVALIDATION_KEY, String(Date.now()));
+      localStorage.setItem(
+        GENERAL_CONFIG_INVALIDATION_KEY,
+        String(version != null ? version : Date.now())
+      );
     } catch (e) {
       /* ignore */
     }
@@ -672,6 +716,8 @@
     renderSystemImagePreview: renderSystemImagePreview,
     notifyPointConfigChanged: notifyPointConfigChanged,
     notifyGeneralConfigChanged: notifyGeneralConfigChanged,
+    publishSiteMetaJson: publishSiteMetaJson,
+    buildPublishedSiteMeta: buildPublishedSiteMeta,
     forceAdminPasswordChange: forceAdminPasswordChange,
     initAdminPasswordChange: initAdminPasswordChange,
   };
