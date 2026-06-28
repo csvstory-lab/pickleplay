@@ -889,7 +889,9 @@
           content: {
             title: eventTitle,
             description: '지금 바로 픽클(P!CKLE)에서 혜택을 확인해 보세요!',
-            imageUrl: 'https://pickleplay.kr/images/default_share.jpg',
+            imageUrl: (window.PickleShare && window.PickleShare.getDefaultOgImageUrl
+              ? window.PickleShare.getDefaultOgImageUrl()
+              : (window.PICKLE_OG_DEFAULTS && window.PICKLE_OG_DEFAULTS.imageUrl) || ''),
             link: {
               mobileWebUrl: currentUrl,
               webUrl: currentUrl,

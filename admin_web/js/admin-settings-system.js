@@ -168,18 +168,25 @@
 
     var sb = getSupabaseClient();
     var ext = sanitizeImageExt(file.name);
-    var path =
-      cfg.folder +
-      '/' +
-      Date.now() +
-      '_' +
-      Math.random().toString(36).slice(2, 10) +
-      '.' +
-      ext;
+    var path;
+    if (type === 'og') {
+      path = 'og/default_og.' + ext;
+    } else if (type === 'favicon') {
+      path = 'favicon/default_favicon.' + ext;
+    } else {
+      path =
+        cfg.folder +
+        '/' +
+        Date.now() +
+        '_' +
+        Math.random().toString(36).slice(2, 10) +
+        '.' +
+        ext;
+    }
 
     var uploadRes = await sb.storage.from(SYSTEM_ASSETS_BUCKET).upload(path, file, {
       cacheControl: '3600',
-      upsert: false,
+      upsert: type === 'og' || type === 'favicon',
       contentType: file.type || 'image/png',
     });
 

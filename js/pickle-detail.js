@@ -2178,10 +2178,9 @@ function renderCommentsList(comments, sortType) {
 
     if (window.PickleSystemSettings && window.PickleSystemSettings.updateOpenGraph) {
       var shareImage =
-        post.thumbnail_url ||
-        post.option_a_image_url ||
-        post.option_b_image_url ||
-        '';
+        (window.PickleShare && window.PickleShare.resolvePostShareImageUrl
+          ? window.PickleShare.resolvePostShareImageUrl(post)
+          : post.thumbnail_url || post.media_url_1 || post.media_url_2 || '');
       window.PickleSystemSettings.updateOpenGraph({
         title: post.title || 'P!CKLE 불판',
         description:
@@ -2313,6 +2312,17 @@ function renderCommentsList(comments, sortType) {
     }
   }
 
+  function getSharePayload() {
+    if (window.PickleShare && window.PickleShare.buildPostSharePayload) {
+      return window.PickleShare.buildPostSharePayload(currentPost);
+    }
+    return {
+      title: currentPost && currentPost.title ? 'P!CKLE - ' + currentPost.title : 'P!CKLE - 불판',
+      text: '지금 투표하세요!',
+      imageUrl: '',
+    };
+  }
+
   window.PickleDetail = {
     load: loadDetail,
     getCurrentPost: function () {
@@ -2321,6 +2331,7 @@ function renderCommentsList(comments, sortType) {
     getCurrentPostId: function () {
       return currentPostId;
     },
+    getSharePayload: getSharePayload,
     isPostExpired: isPostExpired,
     castVote: castVote,
     submitComment: submitComment,

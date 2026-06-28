@@ -13,6 +13,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<!-- P!CKLE static OG (카카오 스크랩 봇용) -->
+<meta name="description" content="세상의 모든 논쟁거리, 픽클에서 투표하고 이야기하세요!">
+<meta name="keywords" content="투표,밸런스게임,도파민,픽클,이슈,커뮤니티,MBTI,연애상담,썰">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="P!CKLE">
+<meta property="og:title" content="픽클 (P!CKLE) - 도파민 터지는 투표 커뮤니티">
+<meta property="og:description" content="세상의 모든 논쟁거리, 픽클에서 투표하고 이야기하세요!">
+<meta property="og:image" content="https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/og/default_og.png">
+<meta property="og:url" content="https://pickleplay.kr/user_app/detail.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="픽클 (P!CKLE) - 도파민 터지는 투표 커뮤니티">
+<meta name="twitter:description" content="세상의 모든 논쟁거리, 픽클에서 투표하고 이야기하세요!">
+<meta name="twitter:image" content="https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/og/default_og.png">
 <title>P!CKLE - 불판 상세</title>
 
 <!-- ?? ?? ? ?? 2D ?? ???(Phosphor) ??? ?? -->
@@ -483,7 +496,9 @@
 <script src="../js/supabase-config.js"></script>
 <script src="../js/supabase-bootstrap.js"></script>
 <script src="../js/supabase-client.js"></script>
-<script src="../js/pickle-system-settings.js?v=20260617_sys1"></script>
+<script src="../js/pickle-og-defaults.js"></script>
+<script src="../js/pickle-share.js"></script>
+<script src="../js/pickle-system-settings.js?v=20260617_sys2"></script>
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>
@@ -500,7 +515,7 @@
 <script src="../js/pickle-user-sanction.js"></script>
 <script src="../js/pickle-points.js"></script>
 <script src="../js/pickle-penalties.js"></script>
-<script src="../js/pickle-detail.js?v=20260617_og1"></script>
+<script src="../js/pickle-detail.js?v=20260617_og2"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 <script>
@@ -673,11 +688,17 @@
     }
 
     function getSharePayload() {
-        var post = (window.PickleDetail && typeof window.PickleDetail.getCurrentPost === 'function') ? window.PickleDetail.getCurrentPost() : null;
+        if (window.PickleDetail && typeof window.PickleDetail.getSharePayload === 'function') {
+            return window.PickleDetail.getSharePayload();
+        }
+        var fallbackImage =
+            (window.PickleShare && window.PickleShare.getDefaultOgImageUrl
+                ? window.PickleShare.getDefaultOgImageUrl()
+                : (window.PICKLE_OG_DEFAULTS && window.PICKLE_OG_DEFAULTS.imageUrl) || '');
         return {
-            title: (post && post.title) ? 'P!CKLE - ' + post.title : 'P!CKLE - 불판',
-            text: post ? ((post.option_a || '') + ' vs ' + (post.option_b || '') + '. 지금 투표하세요!') : '지금 투표하세요!',
-            imageUrl: 'https://pickleplay.kr/images/default_share.jpg'
+            title: 'P!CKLE - 불판',
+            text: '지금 투표하세요!',
+            imageUrl: fallbackImage,
         };
     }
 
@@ -692,6 +713,10 @@
     function sendKakaoMessage() {
         if (!ensureKakaoReady()) { alert('카카오톡 로딩 중...'); return; }
         var share = getSharePayload();
+        if (!share.imageUrl) {
+            alert('공유 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            return;
+        }
         var shareUrl = window.location.href;
         try {
             Kakao.Share.sendDefault({

@@ -8,6 +8,8 @@
 --   gen_snsYoutube          → sns_youtube
 -- 초기 스키마·시드: supabase/61_system_settings.sql
 -- Storage 버킷: system_assets (PUBLIC) + 62_storage_system_assets.sql
+-- OG 이미지는 관리자 업로드 시 system_assets/og/default_og.{ext} 고정 경로(upsert)로 저장됩니다.
+-- 정적 HTML og:image URL 과 js/pickle-og-defaults.js imageUrl 을 동기화하세요.
 -- =============================================================================
 
 -- 이미 61에서 생성됨. 재실행 시 general_config 기본값만 병합하고 싶다면:

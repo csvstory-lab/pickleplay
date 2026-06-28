@@ -18,7 +18,8 @@
     block_drag: true,
     block_screenshot: false,
     favicon_url: '',
-    og_image_url: '',
+    og_image_url:
+      (window.PICKLE_OG_DEFAULTS && window.PICKLE_OG_DEFAULTS.imageUrl) || '',
     meta_title: '픽클 (P!CKLE) - 도파민 터지는 투표 커뮤니티',
     meta_description: '세상의 모든 논쟁거리, 픽클에서 투표하고 이야기하세요!',
     meta_keywords: '투표,밸런스게임,도파민,픽클,이슈,커뮤니티,MBTI,연애상담,썰',
@@ -68,7 +69,11 @@
   }
 
   function normalizeGeneralConfig(raw) {
-    return Object.assign({}, DEFAULT_GENERAL, raw && typeof raw === 'object' ? raw : {});
+    var merged = Object.assign({}, DEFAULT_GENERAL, raw && typeof raw === 'object' ? raw : {});
+    if (!merged.og_image_url && window.PICKLE_OG_DEFAULTS && window.PICKLE_OG_DEFAULTS.imageUrl) {
+      merged.og_image_url = window.PICKLE_OG_DEFAULTS.imageUrl;
+    }
+    return merged;
   }
 
   function readSessionCache() {
