@@ -2176,6 +2176,25 @@ function renderCommentsList(comments, sortType) {
     cachedVoteStats = voteStats || { votesA: 0, votesB: 0, total: 0 };
     document.title = 'P!CKLE - ' + (post.title || '불판 상세');
 
+    if (window.PickleSystemSettings && window.PickleSystemSettings.updateOpenGraph) {
+      var shareImage =
+        post.thumbnail_url ||
+        post.option_a_image_url ||
+        post.option_b_image_url ||
+        '';
+      window.PickleSystemSettings.updateOpenGraph({
+        title: post.title || 'P!CKLE 불판',
+        description:
+          post.description ||
+          (post.option_a_name && post.option_b_name
+            ? post.option_a_name + ' vs ' + post.option_b_name
+            : ''),
+        image: shareImage,
+        url: window.location.href,
+        type: 'article',
+      });
+    }
+
     if (window.PickleRankingEvents && window.PickleRankingEvents.recordPostView) {
       window.PickleRankingEvents.recordPostView(post.id);
     }

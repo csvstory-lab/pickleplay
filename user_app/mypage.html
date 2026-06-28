@@ -607,16 +607,31 @@
     }
     .policy-doc-error { color: var(--alert-red); }
 
-    .settings-company-footer {
-        margin-top: 28px;
-        padding: 20px 5px 12px;
-        border-top: 1px solid var(--border-color);
-        font-size: 0.75rem;
-        color: var(--text-sub);
-        line-height: 1.65;
-        word-break: keep-all;
-        text-align: center;
+    .site-sns-links {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-soft);
     }
+    .site-sns-links[hidden] { display: none !important; }
+    .site-sns-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-soft);
+        color: var(--text-main);
+        font-size: 1.25rem;
+        text-decoration: none;
+        transition: transform 0.15s, border-color 0.15s;
+    }
+    .site-sns-link:active { transform: scale(0.94); border-color: var(--point-blue); }
 
     /* 토글 스위치 UI */
     .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
@@ -1650,15 +1665,17 @@
             </div>
         </div>
 
+        <div class="site-sns-links" id="siteSnsLinks" hidden aria-label="공식 SNS 채널"></div>
+
         <div class="company-accordion" id="companyAccordion">
             <button type="button" class="company-accordion-toggle" id="btnCompanyAccordion" onclick="toggleCompanyAccordion()">
-            <span>(주)굿임팩트 사업자 정보</span>
+            <span id="companyAccordionTitle">(주)픽클컴퍼니 사업자 정보</span>
             <i class="ph ph-caret-down company-accordion-chevron" id="companyAccordionChevron" aria-hidden="true"></i>
             </button>
             <div class="company-accordion-body" id="companyAccordionBody">
-                대표: 이준수 · 사업자등록번호: 123-45-67890<br>
-                주소: 서울특별시 강남구 테헤란로 123, 8층<br>
-                통신판매업신고번호: 제2026-서울강남-0001호
+                대표: 홍길동 · 사업자등록번호: 123-45-67890<br>
+                주소: 서울특별시 성동구 뚝섬로 123, 픽클타워 7층<br>
+                통신판매업신고번호: 제 2026-서울성동-1234호
             </div>
             <p class="company-disclaimer">P!CKLE은 사용자 간의 투표와 소통을 위한 플랫폼을 제공하며, 회원이 등록한 게시물 내용 및 이로 인해 발생하는 분쟁에 대하여 법적 책임을 지지 않습니다.</p>
         </div>
@@ -2200,6 +2217,7 @@
 <script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
 <script src="../js/supabase-bootstrap.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/pickle-system-settings.js?v=20260617_sys1"></script>
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
 <script src="../js/auth.js"></script>

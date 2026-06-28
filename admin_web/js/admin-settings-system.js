@@ -461,7 +461,18 @@
 
     if (res.error) throw res.error;
     notifyPointConfigChanged();
+    notifyGeneralConfigChanged();
     return res.data;
+  }
+
+  var GENERAL_CONFIG_INVALIDATION_KEY = 'pickle_general_config_invalidation';
+
+  function notifyGeneralConfigChanged() {
+    try {
+      localStorage.setItem(GENERAL_CONFIG_INVALIDATION_KEY, String(Date.now()));
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   /**
@@ -653,6 +664,7 @@
     uploadSystemImage: uploadSystemImage,
     renderSystemImagePreview: renderSystemImagePreview,
     notifyPointConfigChanged: notifyPointConfigChanged,
+    notifyGeneralConfigChanged: notifyGeneralConfigChanged,
     forceAdminPasswordChange: forceAdminPasswordChange,
     initAdminPasswordChange: initAdminPasswordChange,
   };

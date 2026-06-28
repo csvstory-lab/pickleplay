@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>P!CKLE — 시스템 점검 중</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<style>
+    :root {
+        --bg-base: #0a0a0c;
+        --point-green: #4ADE80;
+        --point-pink: #FF85A1;
+        --point-blue: #73A5FF;
+        --text-main: #fcfcfc;
+        --text-sub: #a1a1aa;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: 'Pretendard', sans-serif;
+        background: radial-gradient(circle at top, rgba(115, 165, 255, 0.12), transparent 45%),
+            radial-gradient(circle at bottom, rgba(255, 133, 161, 0.1), transparent 40%),
+            var(--bg-base);
+        color: var(--text-main);
+    }
+    .maintenance-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 36px 28px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(28, 28, 30, 0.92);
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+    .maintenance-icon { font-size: 3rem; margin-bottom: 16px; }
+    .maintenance-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin: 0 0 12px;
+        background: linear-gradient(135deg, var(--point-blue), var(--point-pink));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .maintenance-message {
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: var(--text-sub);
+        word-break: keep-all;
+        margin: 0 0 24px;
+        white-space: pre-wrap;
+    }
+    .maintenance-brand {
+        font-size: 0.78rem;
+        color: #71717a;
+        font-weight: 700;
+    }
+</style>
+</head>
+<body>
+<main class="maintenance-card" role="main">
+    <div class="maintenance-icon" aria-hidden="true">🛠️</div>
+    <h1 class="maintenance-title">시스템 점검 중</h1>
+    <p class="maintenance-message" id="maintenanceMessage">안정적인 서비스 제공을 위해 시스템 점검 중입니다.</p>
+    <p class="maintenance-brand">P!CKLE</p>
+</main>
+<script>
+(function () {
+    var params = new URLSearchParams(window.location.search);
+    var msg = params.get('msg');
+    if (msg) {
+        var el = document.getElementById('maintenanceMessage');
+        if (el) el.textContent = decodeURIComponent(msg);
+    }
+})();
+</script>
+</body>
+</html>
