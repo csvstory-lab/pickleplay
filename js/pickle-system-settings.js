@@ -73,6 +73,9 @@
     if (!merged.og_image_url && window.PICKLE_OG_DEFAULTS && window.PICKLE_OG_DEFAULTS.imageUrl) {
       merged.og_image_url = window.PICKLE_OG_DEFAULTS.imageUrl;
     }
+    if (!merged.favicon_url && window.PICKLE_PWA_DEFAULTS && window.PICKLE_PWA_DEFAULTS.faviconUrl) {
+      merged.favicon_url = window.PICKLE_PWA_DEFAULTS.faviconUrl;
+    }
     return merged;
   }
 
@@ -161,17 +164,55 @@
     el.setAttribute('content', content);
   }
 
-  function applyFavicon(url) {
-    if (!url) return;
-    var link =
-      document.querySelector('link[rel="icon"]') ||
-      document.querySelector('link[rel="shortcut icon"]');
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
+  function resolveFaviconUrl(cfg) {
+    var url = cfg && cfg.favicon_url ? String(cfg.favicon_url).trim() : '';
+    if (url) return url;
+    if (window.PICKLE_PWA_DEFAULTS && window.PICKLE_PWA_DEFAULTS.faviconUrl) {
+      return window.PICKLE_PWA_DEFAULTS.faviconUrl;
     }
-    link.href = url;
+    return '';
+  }
+
+  function upsertHeadLink(rel, href, attrs) {
+    if (!href) return;
+    var selector = 'link[rel="' + rel + '"]';
+    var el = document.querySelector(selector);
+    if (!el) {
+      el = document.createElement('link');
+      el.setAttribute('rel', rel);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('href', href);
+    if (attrs && typeof attrs === 'object') {
+      Object.keys(attrs).forEach(function (key) {
+        if (attrs[key] == null || attrs[key] === '') {
+          el.removeAttribute(key);
+        } else {
+          el.setAttribute(key, attrs[key]);
+        }
+      });
+    }
+  }
+
+  function applyWebAppIcons(cfg) {
+    var url = resolveFaviconUrl(cfg);
+    if (!url) return;
+
+    var isIco = /\.ico($|\?)/i.test(url);
+    upsertHeadLink('icon', url, isIco ? {} : { type: 'image/png' });
+    upsertHeadLink('apple-touch-icon', url);
+    upsertHeadLink(
+      'manifest',
+      (window.PICKLE_PWA_DEFAULTS && window.PICKLE_PWA_DEFAULTS.manifestUrl) ||
+        '/manifest.json'
+    );
+
+    var themeColor =
+      (window.PICKLE_PWA_DEFAULTS && window.PICKLE_PWA_DEFAULTS.themeColor) || '#0a0a0c';
+    upsertMetaByName('theme-color', themeColor);
+    upsertMetaByName('apple-mobile-web-app-title', 'P!CKLE');
+    upsertMetaByName('apple-mobile-web-app-capable', 'yes');
+    upsertMetaByName('mobile-web-app-capable', 'yes');
   }
 
   function applyHeadMeta(cfg, overrides) {
@@ -208,7 +249,7 @@
       upsertMetaByName('google-site-verification', cfg.google_verification);
     }
 
-    applyFavicon(cfg.favicon_url);
+    applyWebAppIcons(cfg);
   }
 
   function redirectToMaintenance(message) {

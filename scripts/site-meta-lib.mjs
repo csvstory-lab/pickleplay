@@ -11,6 +11,14 @@ export const DEFAULT_OG_IMAGE =
   SUPABASE_PROJECT_REF +
   '.supabase.co/storage/v1/object/public/system_assets/og/default_og.png';
 
+export const DEFAULT_FAVICON =
+  'https://' +
+  SUPABASE_PROJECT_REF +
+  '.supabase.co/storage/v1/object/public/system_assets/favicon/default_favicon.png';
+
+export const PWA_MARKER_START = '<!-- P!CKLE-PWA:START -->';
+export const PWA_MARKER_END = '<!-- P!CKLE-PWA:END -->';
+
 export const PUBLISHED_META_JSON_URL =
   'https://' +
   SUPABASE_PROJECT_REF +
@@ -21,6 +29,7 @@ export const DEFAULT_SITE_META = {
   meta_description: '세상의 모든 논쟁거리, 픽클에서 투표하고 이야기하세요!',
   meta_keywords: '투표,밸런스게임,도파민,픽클,이슈,커뮤니티,MBTI,연애상담,썰',
   og_image_url: DEFAULT_OG_IMAGE,
+  favicon_url: DEFAULT_FAVICON,
   site_origin: 'https://pickleplay.kr',
 };
 
@@ -40,6 +49,7 @@ export function normalizeSiteMeta(raw) {
   ).trim();
   const keywords = String(src.meta_keywords || DEFAULT_SITE_META.meta_keywords).trim();
   const ogImage = String(src.og_image_url || DEFAULT_SITE_META.og_image_url).trim();
+  const favicon = String(src.favicon_url || DEFAULT_SITE_META.favicon_url).trim();
   const siteOrigin = String(src.site_origin || DEFAULT_SITE_META.site_origin).trim();
 
   return {
@@ -47,9 +57,58 @@ export function normalizeSiteMeta(raw) {
     meta_description: description,
     meta_keywords: keywords,
     og_image_url: ogImage || DEFAULT_OG_IMAGE,
+    favicon_url: favicon || DEFAULT_FAVICON,
     site_origin: siteOrigin.replace(/\/$/, ''),
     updated_at: src.updated_at || null,
     version: src.version || null,
+  };
+}
+
+export function buildPwaHeadBlock(faviconUrl) {
+  const icon = escapeHtmlAttr(faviconUrl || DEFAULT_FAVICON);
+  return (
+    PWA_MARKER_START +
+    '\n' +
+    '<link rel="manifest" href="/manifest.json">\n' +
+    '<link rel="icon" type="image/png" href="' +
+    icon +
+    '">\n' +
+    '<link rel="apple-touch-icon" href="' +
+    icon +
+    '">\n' +
+    '<meta name="mobile-web-app-capable" content="yes">\n' +
+    '<meta name="apple-mobile-web-app-capable" content="yes">\n' +
+    '<meta name="apple-mobile-web-app-title" content="P!CKLE">\n' +
+    '<meta name="theme-color" content="#0a0a0c">\n' +
+    PWA_MARKER_END
+  );
+}
+
+function iconMimeType(url) {
+  return /\.ico($|\?)/i.test(String(url || '')) ? 'image/x-icon' : 'image/png';
+}
+
+export function buildWebManifest(meta) {
+  const cfg = normalizeSiteMeta(meta);
+  const icon = cfg.favicon_url || DEFAULT_FAVICON;
+  const mime = iconMimeType(icon);
+  return {
+    id: '/',
+    name: cfg.meta_title || DEFAULT_SITE_META.meta_title,
+    short_name: 'P!CKLE',
+    description: cfg.meta_description || DEFAULT_SITE_META.meta_description,
+    start_url: '/',
+    scope: '/',
+    display: 'standalone',
+    orientation: 'portrait-primary',
+    background_color: '#0a0a0c',
+    theme_color: '#0a0a0c',
+    lang: 'ko-KR',
+    icons: [
+      { src: icon, sizes: '192x192', type: mime, purpose: 'any' },
+      { src: icon, sizes: '512x512', type: mime, purpose: 'any' },
+      { src: icon, sizes: '512x512', type: mime, purpose: 'maskable' },
+    ],
   };
 }
 
@@ -124,6 +183,7 @@ export function buildPublishedMetaPayload(generalConfig) {
     meta_description: cfg.meta_description,
     meta_keywords: cfg.meta_keywords,
     og_image_url: cfg.og_image_url,
+    favicon_url: cfg.favicon_url,
     site_origin: cfg.site_origin,
     updated_at: new Date().toISOString(),
     version: Date.now(),

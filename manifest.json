@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "픽클 (P!CKLE)",
+  "short_name": "P!CKLE",
+  "description": "나의 일상과 고민, 픽클에서 투표하고 이야기하세요!",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0a0a0c",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/favicon/default_favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/favicon/default_favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/favicon/default_favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

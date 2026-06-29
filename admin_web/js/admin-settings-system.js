@@ -70,6 +70,8 @@
   var SITE_META_JSON_PATH = 'site_meta.json';
   var DEFAULT_OG_PUBLIC =
     'https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/og/default_og.png';
+  var DEFAULT_FAVICON_PUBLIC =
+    'https://jszgznanptutwxcsnrep.supabase.co/storage/v1/object/public/system_assets/favicon/default_favicon.png';
   var systemImageUploadsInitialized = false;
   var POINT_CONFIG_INVALIDATION_KEY = 'pickle_point_config_invalidation';
 
@@ -460,11 +462,13 @@
   function buildPublishedSiteMeta(generalConfig) {
     var c = Object.assign({}, DEFAULT_GENERAL, generalConfig || {});
     var ogImage = String(c.og_image_url || '').trim();
+    var favicon = String(c.favicon_url || '').trim();
     return {
       meta_title: String(c.meta_title || DEFAULT_GENERAL.meta_title).trim(),
       meta_description: String(c.meta_description || DEFAULT_GENERAL.meta_description).trim(),
       meta_keywords: String(c.meta_keywords || DEFAULT_GENERAL.meta_keywords).trim(),
       og_image_url: ogImage || DEFAULT_OG_PUBLIC,
+      favicon_url: favicon || DEFAULT_FAVICON_PUBLIC,
       site_origin: 'https://pickleplay.kr',
       updated_at: new Date().toISOString(),
       version: Date.now(),

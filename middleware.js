@@ -5,6 +5,7 @@
 import {
   injectSiteMetaIntoHtml,
   fetchPublishedSiteMeta,
+  buildWebManifest,
 } from './scripts/site-meta-lib.mjs';
 
 const META_CACHE_MS = 60 * 1000;
@@ -32,6 +33,22 @@ function resolveHtmlPath(pathname) {
 
 export default async function middleware(request) {
   const url = new URL(request.url);
+
+  if (url.pathname === '/manifest.json') {
+    const meta = await getSiteMeta();
+    if (meta) {
+      const body = JSON.stringify(buildWebManifest(meta), null, 2);
+      return new Response(body, {
+        status: 200,
+        headers: {
+          'content-type': 'application/manifest+json; charset=utf-8',
+          'cache-control': 'public, max-age=60, must-revalidate',
+        },
+      });
+    }
+    return;
+  }
+
   const htmlPath = resolveHtmlPath(url.pathname);
   if (!htmlPath) return;
 
@@ -66,5 +83,5 @@ export default async function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/', '/index.html', '/user_app/:path*.html'],
+  matcher: ['/', '/index.html', '/user_app/:path*.html', '/manifest.json'],
 };
