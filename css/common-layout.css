@@ -27,16 +27,32 @@ header#mainHeader {
   padding: 12px 20px;
 }
 
+.logo-link {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: var(--point-green);
+  -webkit-tap-highlight-color: transparent;
+}
+
 .logo {
-  font-family: 'Black Han Sans', sans-serif !important;
-  font-size: 1.7rem;
-  background: linear-gradient(90deg, var(--point-green), #86efac);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  cursor: pointer;
   margin: 0;
-  filter: none;
+  padding: 0;
+  line-height: 0;
+  font-size: 0;
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: unset;
+  cursor: pointer;
+}
+
+.logo-svg {
+  display: block;
+  height: clamp(28px, 4.2vw, 32px);
+  width: auto;
+  max-width: min(140px, 42vw);
 }
 
 .header-actions {

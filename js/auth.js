@@ -513,6 +513,8 @@
 
   function extractNavHrefFromOnclick(el) {
     if (!el) return null;
+    var hrefAttr = el.getAttribute('href');
+    if (hrefAttr && /\.html/.test(hrefAttr)) return hrefAttr;
     const onclick = el.getAttribute('onclick') || '';
     var navMatch = onclick.match(/navigateWhenAuthReady\s*\(\s*['"]([^'"]+)['"]/);
     if (navMatch) return navMatch[1];
@@ -528,7 +530,7 @@
       'click',
       function (e) {
         const navBtn = e.target.closest('.bottom-nav .nav-btn');
-        const logo = e.target.closest('.logo');
+        const logo = e.target.closest('.logo-link, .logo');
         const el = navBtn || (logo && extractNavHrefFromOnclick(logo) ? logo : null);
         if (!el) return;
 
@@ -548,7 +550,7 @@
   function upgradeInlineNavHandlers() {
     document
       .querySelectorAll(
-        '.bottom-nav .nav-btn[onclick], .logo[onclick*="navigateWhenAuthReady"], .logo[onclick*="location.href"]'
+        '.bottom-nav .nav-btn[onclick], .logo-link[href], .logo[onclick*="navigateWhenAuthReady"], .logo[onclick*="location.href"]'
       )
       .forEach(function (el) {
         const href = extractNavHrefFromOnclick(el);
