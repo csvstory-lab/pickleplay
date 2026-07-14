@@ -511,7 +511,7 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/pickle-og-defaults.js"></script>
 <script src="../js/pickle-pwa-defaults.js"></script>
-<script src="../js/pickle-share.js"></script>
+<script src="../js/pickle-share.js?v=20260715_dynamic_og1"></script>
 <script src="../js/pickle-system-settings.js?v=20260617_sys2"></script>
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
@@ -712,7 +712,10 @@
         return {
             title: 'P!CKLE - 불판',
             text: '지금 투표하세요!',
-            imageUrl: fallbackImage,
+            imageUrl:
+                (window.PickleShare && window.PickleShare.buildDynamicPostOgImageUrl
+                    ? window.PickleShare.buildDynamicPostOgImageUrl(new URLSearchParams(window.location.search).get('id'))
+                    : '') || fallbackImage,
         };
     }
 

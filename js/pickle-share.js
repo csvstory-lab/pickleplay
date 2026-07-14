@@ -31,7 +31,34 @@
     return '';
   }
 
+  function getSupabaseProjectUrl() {
+    if (window.PickleSupabase && window.PickleSupabase.getProjectUrl) {
+      var projectUrl =
+        typeof window.PickleSupabase.getProjectUrl === 'function'
+          ? window.PickleSupabase.getProjectUrl()
+          : window.PickleSupabase.getProjectUrl;
+      return String(projectUrl || '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+    }
+    if (window.PICKLE_SUPABASE_CONFIG && window.PICKLE_SUPABASE_CONFIG.url) {
+      return String(window.PICKLE_SUPABASE_CONFIG.url).replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+    }
+    return 'https://jszgznanptutwxcsnrep.supabase.co';
+  }
+
+  function buildDynamicPostOgImageUrl(postOrId) {
+    var postId = typeof postOrId === 'string' ? postOrId : postOrId && postOrId.id;
+    if (!postId) return '';
+    return (
+      getSupabaseProjectUrl() +
+      '/functions/v1/generate-og?postId=' +
+      encodeURIComponent(String(postId))
+    );
+  }
+
   function resolvePostShareImageUrl(post) {
+    var dynamicOgUrl = buildDynamicPostOgImageUrl(post);
+    if (dynamicOgUrl) return dynamicOgUrl;
+
     var candidates = [
       post && post.thumbnail_url,
       post && post.media_url_1,
@@ -63,6 +90,7 @@
   window.PickleShare = {
     resolveAbsoluteImageUrl: resolveAbsoluteImageUrl,
     getDefaultOgImageUrl: getDefaultOgImageUrl,
+    buildDynamicPostOgImageUrl: buildDynamicPostOgImageUrl,
     resolvePostShareImageUrl: resolvePostShareImageUrl,
     buildPostSharePayload: buildPostSharePayload,
   };
