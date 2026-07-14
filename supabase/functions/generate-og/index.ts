@@ -8,7 +8,7 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import satori from 'https://esm.sh/satori@0.10.14';
-import initWasm, { Resvg } from 'https://esm.sh/@resvg/resvg-wasm@2.6.2';
+import { Resvg, initWasm } from 'https://esm.sh/@resvg/resvg-wasm@2.6.2';
 import { corsHeaders, handleCorsPreflight, jsonResponse } from '../_shared/cors.ts';
 
 const WIDTH = 1080;
