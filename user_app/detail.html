@@ -299,8 +299,20 @@
     .sheet-title { font-weight: 800; font-size: 1.1rem; }
     .btn-close-sheet { background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer; }
     
-    .share-grid { display: flex; justify-content: space-around; }
-    .share-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+    .share-grid { 
+        display: flex; 
+        flex-wrap: wrap; 
+        justify-content: center; 
+        gap: 20px 15px; 
+    }
+    .share-item { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 8px; 
+        cursor: pointer; 
+        width: 28%; /* 한 줄에 3개씩 들어가고 남은 건 다음 줄 중앙에 배치됨 */
+    }
     .share-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; }
     
     .report-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 85%; max-width: 360px; background-color: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-soft); z-index: 10000; opacity: 0; pointer-events: none; transition: 0.2s; }
@@ -348,17 +360,34 @@
         <button class="btn-close-sheet" onclick="closeModals()">✕</button>
     </div>
     <div class="share-grid">
+        <!-- 1. 카카오톡 -->
         <div class="share-item" onclick="sendKakaoMessage()">
             <div class="share-icon" style="background-color:#FEE500; color:#000;"><i class="ph-fill ph-chat-circle"></i></div>
             <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">카카오톡</span>
         </div>
+
+        <!-- 2. 인스타 스토리 -->
+        <div class="share-item" onclick="nativeShare()">
+            <div class="share-icon" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color:#fff;"><i class="ph-fill ph-instagram-logo"></i></div>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">인스타 스토리</span>
+        </div>
+
+        <!-- 3. X (트위터) -->
+        <div class="share-item" onclick="nativeShare()">
+            <div class="share-icon" style="background-color:#000000; color:#fff; border:1px solid var(--border-soft);"><i class="ph ph-x-logo"></i></div>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">X (트위터)</span>
+        </div>
+
+        <!-- 4. 링크 복사 -->
         <div class="share-item" onclick="copyLink()">
             <div class="share-icon" style="background-color:#2c2c2e; color:#fff; border:1px solid var(--border-soft);"><i class="ph ph-link"></i></div>
             <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">링크 복사</span>
         </div>
+
+        <!-- 5. 더보기 (OS) -->
         <div class="share-item" onclick="nativeShare()">
             <div class="share-icon" style="background-color:#3a3a3c; color:#fff;"><i class="ph ph-share-network"></i></div>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">더보기 (OS)</span>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">더보기</span>
         </div>
     </div>
 </div>
