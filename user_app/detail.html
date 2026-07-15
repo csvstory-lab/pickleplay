@@ -750,12 +750,23 @@
     }
 
     function copyLink() {
-        navigator.clipboard.writeText(window.location.href).then(function() {
-            alert("불판 주소가 복사되었습니다!");
-            recordDetailShare('copy');
-            closeModals();
-        });
-    }
+    // 1. 현재 불판의 ID를 확실하게 가져옵니다.
+    var postId = new URLSearchParams(window.location.search).get('id');
+    
+    // 2. ID가 있으면 정확한 불판 주소를 조립하고, 없으면 현재 주소를 씁니다.
+    var shareUrl = postId 
+        ? window.location.origin + window.location.pathname + '?id=' + postId 
+        : window.location.href;
+
+    navigator.clipboard.writeText(shareUrl).then(function() {
+        alert("불판 주소가 복사되었습니다!");
+        recordDetailShare('copy');
+        closeModals();
+    }).catch(function(err) {
+        console.error('링크 복사 실패:', err);
+        alert('링크 복사에 실패했습니다.');
+    });
+}
 
     function nativeShare() {
         var share = getSharePayload();
