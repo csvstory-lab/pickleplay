@@ -9,7 +9,7 @@ serve(async (req) => {
   }
 
   const host = url.host || "jszgznanptutwxcsnrep.supabase.co";
-  const ogImageUrl = `https://${host}/functions/v1/generate-og?id=${postId}`;
+  const ogImageUrl = `https://${host}/functions/v1/generate-og?postId=${postId}`;
   const targetUrl = `https://pickleplay.kr/user_app/detail.html?id=${postId}`;
 
   const html = `<!DOCTYPE html>
