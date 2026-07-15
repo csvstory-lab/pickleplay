@@ -25,16 +25,22 @@ serve(async (req) => {
   <meta property="og:url" content="${targetUrl}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="${ogImageUrl}">
+  
   <script>window.location.replace("${targetUrl}");</script>
 </head>
 <body></body>
 </html>`;
 
-  return new Response(html, {
+  // 🚨 [핵심 처방 1] 외계어 방지: 한글을 강제로 UTF-8 바이트 덩어리로 변환합니다.
+  const body = new TextEncoder().encode(html);
+
+  // 🚨 [핵심 처방 2] 코드 노출 방지: 브라우저가 무조건 HTML로 읽도록 엄격하게 헤더를 세팅합니다.
+  const headers = new Headers();
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+
+  return new Response(body, {
     status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-    },
+    headers: headers,
   });
 });
