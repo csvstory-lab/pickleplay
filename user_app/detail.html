@@ -367,7 +367,7 @@
         </div>
 
         <!-- 2. 인스타 스토리 -->
-        <div class="share-item" onclick="nativeShare()">
+        <div class="share-item" onclick="shareToInstaStory()">
             <div class="share-icon" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color:#fff;"><i class="ph-fill ph-instagram-logo"></i></div>
             <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">인스타 스토리</span>
         </div>
@@ -811,6 +811,48 @@
             navigator.share({ title: share.title, text: share.text, url: shareUrl }).catch(console.error);
             recordDetailShare('native');
         } else { alert('링크 복사를 이용해주세요.'); }
+        closeModals();
+    }
+
+    async function shareToInstaStory() {
+        var share = getSharePayload();
+        var postId = new URLSearchParams(window.location.search).get('id');
+        var shareUrl = postId ? window.location.origin + window.location.pathname + '?id=' + postId : window.location.href;
+
+        try {
+            // 1. 갤러리 자동 다운로드 (Blob 변환 후 a 태그 클릭 유도)
+            const response = await fetch(share.imageUrl);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = 'pickle_story.png'; // 갤러리에 저장될 파일명
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            a.remove();
+
+            // 2. 링크 클립보드 복사
+            await navigator.clipboard.writeText(shareUrl);
+
+            // 3. 유저 안내 및 인스타그램 앱 호출
+            alert("📷 투표 이미지가 갤러리에 저장되었고, 링크가 복사되었습니다!\n\n인스타그램을 열고\n1. 갤러리에서 방금 저장된 이미지를 스토리에 올리세요.\n2. [🔗링크 스티커]를 눌러 복사된 주소를 붙여넣어주세요!");
+
+            // 인스타그램 앱 카메라/스토리 화면 호출 시도 (설치되어 있을 경우)
+            window.location.href = "instagram://story-camera";
+
+            // 스토리 카메라 다이렉트 호출 실패 시 기본 인스타그램 앱 호출
+            setTimeout(function() {
+                window.location.href = "instagram://";
+            }, 500);
+
+            recordDetailShare('instagram_story');
+        } catch (err) {
+            console.error("인스타 스토리 공유 준비 실패:", err);
+            alert("이미지 저장에 실패했습니다. '더보기'를 이용해 주세요.");
+        }
         closeModals();
     }
 
