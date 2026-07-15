@@ -511,7 +511,7 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/pickle-og-defaults.js"></script>
 <script src="../js/pickle-pwa-defaults.js"></script>
-<script src="../js/pickle-share.js?v=20260715_dynamic_og1"></script>
+<script src="../js/pickle-share.js?v=20260715_dynamic_og2"></script>
 <script src="../js/pickle-system-settings.js?v=20260617_sys2"></script>
 <script src="../js/pickle-oauth-callback-guard.js"></script>
 <script src="../js/pickle-inapp-browser.js"></script>
@@ -752,10 +752,11 @@
     function copyLink() {
     // 1. 현재 불판의 ID를 확실하게 가져옵니다.
     var postId = new URLSearchParams(window.location.search).get('id');
-    
-    // 2. ID가 있으면 정확한 불판 주소를 조립하고, 없으면 현재 주소를 씁니다.
-    var shareUrl = postId 
-        ? window.location.origin + window.location.pathname + '?id=' + postId 
+
+    // 2. ID가 있으면 카카오톡/SNS 크롤러 봇용 톨게이트(share-redirect)를 거치는 주소로 조립하고,
+    //    없으면 현재 주소를 씁니다.
+    var shareUrl = postId
+        ? 'https://jszgznanptutwxcsnrep.supabase.co/functions/v1/share-redirect?id=' + postId
         : window.location.href;
 
     navigator.clipboard.writeText(shareUrl).then(function() {
@@ -770,8 +771,12 @@
 
     function nativeShare() {
         var share = getSharePayload();
+        var postId = new URLSearchParams(window.location.search).get('id');
+        var shareUrl = postId
+            ? 'https://jszgznanptutwxcsnrep.supabase.co/functions/v1/share-redirect?id=' + postId
+            : window.location.href;
         if (navigator.share) {
-            navigator.share({ title: share.title, text: share.text, url: window.location.href }).catch(console.error);
+            navigator.share({ title: share.title, text: share.text, url: shareUrl }).catch(console.error);
             recordDetailShare('native');
         } else { alert('링크 복사를 이용해주세요.'); }
         closeModals();
