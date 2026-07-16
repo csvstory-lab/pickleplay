@@ -782,14 +782,9 @@
     }
 
     function copyLink() {
-    // 1. 현재 불판의 ID를 확실하게 가져옵니다.
-    var postId = new URLSearchParams(window.location.search).get('id');
-
-    // 2. 복사되는 링크는 Edge Function 주소가 아니라, 유저가 실제로 보는
-    //    픽클 웹 브라우저 주소여야 한다 (Edge Function 주소는 카톡/SNS 크롤러 봇 전용).
-    var shareUrl = postId
-        ? 'https://pickleplay.kr/user_app/detail.html?id=' + postId
-        : window.location.href;
+    // 복사되는 링크는 무조건 현재 브라우저의 전체 주소(window.location.href)여야 한다.
+    // (Edge Function 주소는 카톡/SNS 크롤러 봇 전용이라 유저에게 노출되면 안 된다.)
+    var shareUrl = window.location.href;
 
     navigator.clipboard.writeText(shareUrl).then(function() {
         alert("불판 주소가 복사되었습니다!");
@@ -803,11 +798,10 @@
 
     async function nativeShare() {
         var share = getSharePayload();
-        var postId = new URLSearchParams(window.location.search).get('id');
-        // OS 공유 시 실제로 열리는 링크도 Edge Function 주소가 아니라 픽클 웹 브라우저 주소여야 한다.
-        var shareUrl = postId
-            ? 'https://pickleplay.kr/user_app/detail.html?id=' + postId
-            : window.location.href;
+        var shareUrl = window.location.href;
+        // 인스타그램 등 일부 앱이 navigator.share()의 url 파라미터를 무시하는 문제가 있어,
+        // text 안에 "제목 + 줄바꿈 + URL"을 합쳐 넣어 어떤 앱에서도 URL이 누락되지 않게 한다.
+        var shareText = share.title + '\n\n' + shareUrl;
 
         if (!navigator.share) {
             alert('링크 복사를 이용해주세요.');
@@ -815,8 +809,8 @@
             return;
         }
 
-        // 기본값: 파일 첨부 없이 링크 + 제목만 공유 (폴백)
-        var shareData = { title: share.title, url: shareUrl };
+        // 기본값: 파일 첨부 없이 제목 + (제목+URL을 합친) 텍스트만 공유 (폴백)
+        var shareData = { title: share.title, text: shareText };
 
         try {
             // OS 공유 시트에 썸네일이 뜨도록, 동적 OG 이미지를 fetch해서 File로 변환해 첨부를 시도한다.
@@ -830,7 +824,7 @@
             }
         } catch (err) {
             // 기기/브라우저가 파일 공유를 지원하지 않거나 이미지 fetch에 실패해도,
-            // shareData는 이미 url/title만 담긴 안전한 상태이므로 그대로 진행한다.
+            // shareData는 이미 title/text(제목+URL)만 담긴 안전한 상태이므로 그대로 진행한다.
             console.warn('[P!CKLE] 공유 이미지 첨부에 실패해 링크만 공유합니다.', err);
         }
 
