@@ -21,7 +21,7 @@
 
   function getDefaultOgImageUrl() {
     if (window.PickleSystemSettings && window.PickleSystemSettings.getGeneralConfig) {
-      var cfg = window.PickleSystemSettings.getGeneralConfig();
+      var cfg = window.PickleSystemSettings.getGeneralConfig(); 
       var fromDb = resolveAbsoluteImageUrl(cfg && cfg.og_image_url);
       if (fromDb) return fromDb;
     }
@@ -87,11 +87,68 @@
     };
   }
 
+  var SITE_ORIGIN = 'https://pickleplay.kr';
+
+  // 유저에게 보여주고 복사/공유되는 링크는 항상 이 "실제 웹 브라우저 주소"여야 한다.
+  // (Edge Function 주소는 카톡/SNS 크롤러 봇 전용이라 그대로 노출되면 안 된다.)
+  function buildCanonicalPostUrl(postId) {
+    if (postId) {
+      return SITE_ORIGIN + '/user_app/detail.html?id=' + encodeURIComponent(String(postId));
+    }
+    return (window.location && window.location.href) || SITE_ORIGIN;
+  }
+
+  function fetchShareImageFile(imageUrl) {
+    if (!imageUrl) return Promise.resolve(null);
+    return fetch(imageUrl)
+      .then(function (res) {
+        if (!res.ok) throw new Error('image_fetch_failed');
+        return res.blob();
+      })
+      .then(function (blob) {
+        return new File([blob], 'pickle_share.png', { type: blob.type || 'image/png' });
+      })
+      .catch(function (err) {
+        console.warn('[P!CKLE] 공유 이미지 준비 실패, 텍스트/링크만 공유합니다.', err);
+        return null;
+      });
+  }
+
+  // OS Web Share API 공유. 이미지를 파일로 첨부할 수 있으면 title+text(제목+URL 결합)로,
+  // 없거나 지원하지 않으면 title+text(제목만)+url로 안전하게 폴백한다.
+  function shareNative(payload) {
+    var title = (payload && payload.title) || 'P!CKLE - 불판';
+    var url = (payload && payload.url) || buildCanonicalPostUrl();
+    var imageUrl = payload && payload.imageUrl;
+    var text = title + '\n\n' + url;
+
+    if (!navigator.share) {
+      return Promise.reject(new Error('web_share_unsupported'));
+    }
+
+    return fetchShareImageFile(imageUrl).then(function (imageFile) {
+      if (imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+        return navigator.share({
+          files: [imageFile], // 썸네일 이미지 첨부
+          title: title,
+          text: text, // 텍스트 안에 URL을 합쳐서 전송 (파일 첨부 시 url 무시하는 앱 방어)
+        });
+      }
+      return navigator.share({
+        title: title,
+        text: title,
+        url: url,
+      });
+    });
+  }
+
   window.PickleShare = {
     resolveAbsoluteImageUrl: resolveAbsoluteImageUrl,
     getDefaultOgImageUrl: getDefaultOgImageUrl,
     buildDynamicPostOgImageUrl: buildDynamicPostOgImageUrl,
     resolvePostShareImageUrl: resolvePostShareImageUrl,
     buildPostSharePayload: buildPostSharePayload,
+    buildCanonicalPostUrl: buildCanonicalPostUrl,
+    shareNative: shareNative,
   };
 })();
