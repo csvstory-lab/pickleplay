@@ -3,20 +3,26 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 serve(async (req) => {
   const url = new URL(req.url);
   const postId = url.searchParams.get("id");
+  const targetUrl = postId ? `https://pickleplay.kr/user_app/detail.html?id=${postId}` : "https://pickleplay.kr";
 
-  if (!postId) {
-    return Response.redirect("https://pickleplay.kr", 302);
+  // 1. 방문자의 정체(User-Agent) 파악하기
+  const userAgent = req.headers.get("user-agent")?.toLowerCase() || "";
+  const isBot = userAgent.includes("bot") || userAgent.includes("kakaotalk-scrap") || userAgent.includes("facebook") || userAgent.includes("twitter") || userAgent.includes("slack");
+
+  // 🚨 [핵심 해결책] 2. 방문자가 '사람'이면 HTML 없이 즉시 불판으로 순간이동! (외계어 원천 차단)
+  if (!isBot) {
+    return Response.redirect(targetUrl, 302);
   }
 
+  // 3. 방문자가 '봇(카카오톡 등)'이면 썸네일용 태그만 전달
   const host = url.host || "jszgznanptutwxcsnrep.supabase.co";
   const ogImageUrl = `https://${host}/functions/v1/generate-og?postId=${postId}`;
-  const targetUrl = `https://pickleplay.kr/user_app/detail.html?id=${postId}`;
 
   const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>톡 쏘는 논쟁과 재미 - 픽클 (P!CKLE)</title>
+  <title>P!CKLE - 픽클</title>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="P!CKLE">
   <meta property="og:title" content="톡 쏘는 논쟁과 재미 - 픽클 (P!CKLE)">
@@ -25,22 +31,14 @@ serve(async (req) => {
   <meta property="og:url" content="${targetUrl}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="${ogImageUrl}">
-  
-  <script>window.location.replace("${targetUrl}");</script>
 </head>
 <body></body>
 </html>`;
 
-  // 🚨 [핵심 처방 1] 외계어 방지: 한글을 강제로 UTF-8 바이트 덩어리로 변환합니다.
+  // 봇이 외계어로 읽지 못하도록 UTF-8 바이트 단위로 강제 인코딩하여 전달
   const body = new TextEncoder().encode(html);
-
-  // 🚨 [핵심 처방 2] 코드 노출 방지: 브라우저가 무조건 HTML로 읽도록 엄격하게 헤더를 세팅합니다.
-  const headers = new Headers();
-  headers.set("Content-Type", "text/html; charset=utf-8");
-  headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-
   return new Response(body, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
     status: 200,
-    headers: headers,
   });
 });
