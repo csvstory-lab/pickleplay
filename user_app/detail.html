@@ -300,9 +300,8 @@
     .btn-close-sheet { background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer; }
     
     .share-grid { 
-        display: flex; 
-        flex-wrap: wrap; 
-        justify-content: center; 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); /* PC/모바일 공통: 항상 3열 x 2행으로 고정 */
         gap: 20px 15px; 
     }
     .share-item { 
@@ -311,9 +310,17 @@
         align-items: center; 
         gap: 8px; 
         cursor: pointer; 
-        width: 28%; /* 한 줄에 3개씩 들어가고 남은 건 다음 줄 중앙에 배치됨 */
+        width: 100%; /* grid 컬럼이 폭을 균등 분배하므로 아이템은 컬럼을 100% 채움 */
     }
     .share-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; }
+
+    .share-loading-toast {
+        position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%) translateY(10px);
+        background: rgba(20, 20, 22, 0.92); color: #fff; padding: 12px 22px; border-radius: 30px;
+        font-size: 0.85rem; font-weight: 700; z-index: 10001; opacity: 0; pointer-events: none;
+        transition: 0.2s ease-out; white-space: nowrap;
+    }
+    .share-loading-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     
     .report-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 85%; max-width: 360px; background-color: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-soft); z-index: 10000; opacity: 0; pointer-events: none; transition: 0.2s; }
     .report-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
@@ -389,8 +396,17 @@
             <div class="share-icon" style="background-color:#3a3a3c; color:#fff;"><i class="ph ph-share-network"></i></div>
             <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">더보기</span>
         </div>
+
+        <!-- 6. 이미지 저장하기 -->
+        <div class="share-item" onclick="saveImageDirect()">
+            <div class="share-icon" style="background-color:#454548; color:#fff; border:1px solid var(--border-soft);"><i class="ph ph-download-simple"></i></div>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">이미지 저장</span>
+        </div>
     </div>
 </div>
+
+<!-- 이미지 저장/공유 처리 중 로딩 피드백 -->
+<div id="shareLoadingToast" class="share-loading-toast" aria-hidden="true">이미지 생성 중입니다...</div>
 
 <!-- ?? ?? ??? -->
 <div class="report-modal" id="messageModal">
@@ -887,6 +903,48 @@
             alert("이미지 저장에 실패했습니다. '더보기'를 이용해 주세요.");
         }
         closeModals();
+    }
+
+    function showShareLoading(message) {
+        var toast = document.getElementById('shareLoadingToast');
+        if (!toast) return;
+        toast.textContent = message || '처리 중입니다...';
+        toast.classList.add('show');
+    }
+
+    function hideShareLoading() {
+        var toast = document.getElementById('shareLoadingToast');
+        if (toast) toast.classList.remove('show');
+    }
+
+    // '이미지 저장하기' 버튼: 불판 상태(진행 중=9:16 / 종료=1:1)에 맞는 이미지를
+    // generate-og가 자동으로 내려주므로, 프론트는 해당 URL을 그대로 다운로드만 하면 된다.
+    async function saveImageDirect() {
+        var share = getSharePayload();
+        if (!share.imageUrl) {
+            alert('공유 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            return;
+        }
+
+        var isClosed = (window.PickleDetail && typeof window.PickleDetail.isPostExpired === 'function')
+            ? window.PickleDetail.isPostExpired(window.PickleDetail.getCurrentPost())
+            : false;
+        var downloadFilename = isClosed ? 'pickle_result.png' : 'pickle_story.png';
+
+        showShareLoading('이미지 생성 중입니다...');
+        try {
+            if (!(window.PickleShare && window.PickleShare.downloadImageDirect)) {
+                throw new Error('download_helper_missing');
+            }
+            await window.PickleShare.downloadImageDirect(share.imageUrl, downloadFilename);
+            recordDetailShare('download');
+        } catch (err) {
+            console.error('이미지 저장 실패:', err);
+            alert('이미지 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        } finally {
+            hideShareLoading();
+            closeModals();
+        }
     }
 
     function castVote(choice, event, element) {
