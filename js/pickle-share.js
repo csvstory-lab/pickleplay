@@ -142,6 +142,28 @@
     });
   }
 
+  // PC/미지원 기기 폴백용 — 이미지를 fetch해서 Blob으로 만든 뒤 <a download>로 즉시 기기(갤러리/다운로드 폴더)에 저장.
+  // Web Share API를 아예 지원하지 않는 환경(대부분의 PC 브라우저)에서 사용.
+  function downloadImageDirect(imageUrl, filename) {
+    if (!imageUrl) return Promise.reject(new Error('image_url_required'));
+    return fetch(imageUrl)
+      .then(function (res) {
+        if (!res.ok) throw new Error('image_fetch_failed');
+        return res.blob();
+      })
+      .then(function (blob) {
+        var blobUrl = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = filename || 'pickle_share.png';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+        a.remove();
+      });
+  }
+
   window.PickleShare = {
     resolveAbsoluteImageUrl: resolveAbsoluteImageUrl,
     getDefaultOgImageUrl: getDefaultOgImageUrl,
@@ -150,5 +172,6 @@
     buildPostSharePayload: buildPostSharePayload,
     buildCanonicalPostUrl: buildCanonicalPostUrl,
     shareNative: shareNative,
+    downloadImageDirect: downloadImageDirect,
   };
 })();
