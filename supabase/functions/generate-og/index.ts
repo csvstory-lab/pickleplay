@@ -525,7 +525,7 @@ function buildResultFooter(totalParticipants: number): SatoriElement {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-end',
-          gap: 8,
+          gap: 16, // 로고가 커진 만큼 슬로건과의 간격도 함께 넓혀 시각적 균형 유지
         },
       },
       h(
@@ -533,8 +533,8 @@ function buildResultFooter(totalParticipants: number): SatoriElement {
         { style: { fontSize: 22, fontWeight: 600, color: '#aaaaaa' } },
         '톡 쏘는 논쟁과 재미 - 픽클',
       ),
-      // 9:16 헤더와 동일한 SVG 소스를 재사용, 높이 40px에 맞춰 우측 정렬.
-      buildLogoSvg(160, 40),
+      // 9:16 헤더와 동일한 SVG 소스를 재사용, 높이 55px(비율 유지 width 220px)에 맞춰 우측 정렬.
+      buildLogoSvg(220, 55),
     ),
   );
 }
