@@ -10,6 +10,11 @@
   var currentUser = null;
   var currentUserRankingPoints = 0;
   var profileDbRow = null;
+  var verificationDbRow = null;
+  // TODO: 포트원 관리자 콘솔 > 연동 정보 > 채널 관리 탭에서 확인한 값으로 교체하세요.
+  var PORTONE_STORE_ID = 'store-여기에-발급받은-storeId-붙여넣기';
+  var PORTONE_CHANNEL_KEY = 'channel-key-여기에-발급받은-채널키-붙여넣기';
+  var VERIFICATION_ENABLED = true;
 
   var GENDER_LEGACY_MAP = {
     male: '남자',
@@ -335,6 +340,154 @@
       console.warn('[P!CKLE Mypage] profile demographics fetch error', err);
       profileDbRow = null;
       return null;
+    }
+  }
+
+  async function loadVerificationStatus(userId) {
+    if (!userId) {
+      verificationDbRow = null;
+      return null;
+    }
+    try {
+      var sb = getSupabaseClient();
+      var res = await sb
+        .from('users')
+        .select('phone_verified, phone_verified_at')
+        .eq('id', userId)
+        .maybeSingle();
+      if (res.error) {
+        console.warn('[P!CKLE Mypage] verification status fetch failed', res.error);
+        verificationDbRow = null;
+        return null;
+      }
+      verificationDbRow = res.data || null;
+      return verificationDbRow;
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] verification status fetch error', err);
+      verificationDbRow = null;
+      return null;
+    }
+  }
+
+  function renderVerificationStatus() {
+    var isVerified = !!(verificationDbRow && verificationDbRow.phone_verified);
+
+    var menuBadge = document.getElementById('verificationStatusBadge');
+    if (menuBadge) {
+      if (isVerified) {
+        menuBadge.textContent = '인증완료';
+        menuBadge.style.background = 'rgba(57,255,20,0.15)';
+        menuBadge.style.color = 'var(--neon-green)';
+      } else {
+        menuBadge.textContent = '미인증';
+        menuBadge.style.background = 'rgba(255,255,255,0.08)';
+        menuBadge.style.color = 'var(--text-sub)';
+      }
+    }
+
+    var icon = document.getElementById('verificationStatusIcon');
+    var title = document.getElementById('verificationStatusTitle');
+    var sub = document.getElementById('verificationStatusSub');
+    var btn = document.getElementById('btnStartVerification');
+    if (!icon || !title || !sub || !btn) return;
+
+    if (isVerified) {
+      icon.textContent = '✅';
+      title.textContent = '인증회원이에요';
+      var verifiedAt = verificationDbRow.phone_verified_at
+        ? new Date(verificationDbRow.phone_verified_at).toLocaleDateString('ko-KR')
+        : '';
+      sub.textContent = verifiedAt ? verifiedAt + '에 본인인증을 완료했어요.' : '본인인증을 완료했어요.';
+      btn.style.display = 'none';
+    } else {
+      icon.textContent = '🔒';
+      title.textContent = '아직 인증 전이에요';
+      sub.textContent = '1분이면 끝나요. 휴대폰 본인인증만 하면 바로 인증회원이 돼요.';
+      btn.style.display = '';
+    }
+  }
+
+  function bindVerificationPanelOpen() {
+    var menuBtn = document.getElementById('btnOpenVerification');
+    if (menuBtn) {
+      menuBtn.addEventListener('click', async function () {
+        if (currentUser && currentUser.id) {
+          await loadVerificationStatus(currentUser.id);
+        }
+        renderVerificationStatus();
+        if (typeof openPanel === 'function') {
+          openPanel('verificationPanel');
+        }
+      });
+    }
+
+    var startBtn = document.getElementById('btnStartVerification');
+    if (startBtn) {
+      startBtn.addEventListener('click', startPhoneVerification);
+    }
+  }
+
+  async function startPhoneVerification() {
+    if (!VERIFICATION_ENABLED || PORTONE_STORE_ID.indexOf('여기에') !== -1) {
+      alert('본인인증 서비스 연결을 준비 중입니다. 조금만 기다려주세요!');
+      return;
+    }
+    if (typeof PortOne === 'undefined') {
+      alert('본인인증 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    var btn = document.getElementById('btnStartVerification');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '인증창 여는 중…';
+    }
+
+    try {
+      var identityVerificationId = 'identity-verification-' + crypto.randomUUID();
+
+      var response = await PortOne.requestIdentityVerification({
+        storeId: PORTONE_STORE_ID,
+        channelKey: PORTONE_CHANNEL_KEY,
+        identityVerificationId: identityVerificationId,
+      });
+
+      if (response && response.code !== undefined) {
+        // 사용자가 인증창을 닫았거나, 인증 자체가 실패한 경우
+        alert(response.message || '본인인증이 취소되었거나 실패했습니다.');
+        return;
+      }
+
+      if (btn) btn.textContent = '인증 확인 중…';
+
+      var sb = getSupabaseClient();
+      var callbackRes = await sb.functions.invoke('verify-phone-callback', {
+        body: { identityVerificationId: identityVerificationId },
+      });
+
+      if (callbackRes.error || !callbackRes.data || !callbackRes.data.ok) {
+        var reason = callbackRes.data && callbackRes.data.reason;
+        if (reason === 'duplicate_identity') {
+          alert('이미 다른 계정에서 인증된 휴대폰 번호입니다.');
+        } else {
+          alert('본인인증 확인에 실패했습니다. 다시 시도해주세요.');
+        }
+        return;
+      }
+
+      alert('본인인증이 완료되었습니다! 🎉');
+      if (currentUser && currentUser.id) {
+        await loadVerificationStatus(currentUser.id);
+      }
+      renderVerificationStatus();
+    } catch (err) {
+      console.error('[P!CKLE Mypage] phone verification failed', err);
+      alert('본인인증 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '📱 본인인증 시작하기';
+      }
     }
   }
 
@@ -2177,6 +2330,7 @@
     voted: false,
     commented: false,
     saved: false,
+    report: false,
   };
 
   async function onTabSwitch(tabName) {
@@ -2191,6 +2345,99 @@
     } else if (tabName === 'saved') {
       await loadSavedCoupons(currentUser.id);
       mypageTabLoaded.saved = true;
+    } else if (tabName === 'report') {
+      await loadReportTab();
+      mypageTabLoaded.report = true;
+    }
+  }
+
+  var BADGE_TRACK_LABEL = {
+    participation: '참여',
+    creation: '창작',
+    conviction: '소신',
+    trust: '신뢰',
+    ranking: '랭킹',
+  };
+
+  function isProfileCompleteForReport() {
+    return !!(
+      profileDbRow &&
+      profileDbRow.gender &&
+      profileDbRow.age_group &&
+      profileDbRow.region
+    );
+  }
+
+  function renderBadgeGrid(badges) {
+    var grid = document.getElementById('reportBadgeGrid');
+    if (!grid) return;
+    if (!badges || !badges.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-sub); font-size:0.8rem; padding:12px;">뱃지를 준비 중이에요.</div>';
+      return;
+    }
+    grid.innerHTML = badges.map(function (b) {
+      var earnedStyle = b.earned
+        ? 'background:#111113; border:1px solid #39ff14;'
+        : 'background:#0c0c0e; border:1px solid #27272a; opacity:0.45;';
+      return (
+        '<div title="' + escapeHtmlAttr(b.description) + '" style="' + earnedStyle + ' border-radius:12px; padding:12px 6px; text-align:center;">' +
+        '<div style="font-size:1.4rem; margin-bottom:4px;">' + (b.earned ? b.icon : '🔒') + '</div>' +
+        '<div style="font-size:0.7rem; color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtmlAttr(b.name) + '</div>' +
+        '<div style="font-size:0.62rem; color:var(--text-sub); margin-top:2px;">' + (BADGE_TRACK_LABEL[b.track] || '') + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function escapeHtmlAttr(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  async function loadReportTab() {
+    var lockedBox = document.getElementById('reportLockedBox');
+    var unlockedBox = document.getElementById('reportUnlockedBox');
+    if (!lockedBox || !unlockedBox) return;
+
+    if (!isProfileCompleteForReport()) {
+      lockedBox.classList.remove('hidden');
+      unlockedBox.classList.add('hidden');
+      return;
+    }
+
+    lockedBox.classList.add('hidden');
+    unlockedBox.classList.remove('hidden');
+
+    try {
+      var sb = getSupabaseClient();
+
+      var reportRes = await sb.rpc('pickle_get_my_report');
+      if (!reportRes.error && reportRes.data && reportRes.data.ok) {
+        var r = reportRes.data;
+        var minorityEl = document.getElementById('reportMinorityRatio');
+        var streakEl = document.getElementById('reportStreak');
+        var catEl = document.getElementById('reportFavoriteCategory');
+        var participantsEl = document.getElementById('reportCreatedParticipants');
+
+        if (minorityEl) minorityEl.textContent = r.minority_ratio + '%';
+        if (streakEl) streakEl.textContent = r.streak_days + '일';
+        if (participantsEl) participantsEl.textContent = r.created_total_participants + '명';
+        if (catEl) {
+          var label = r.favorite_category;
+          if (window.PickleCategories && window.PickleCategories.labelFromSlug && r.favorite_category) {
+            label = window.PickleCategories.labelFromSlug(r.favorite_category) || r.favorite_category;
+          }
+          catEl.textContent = label || '아직 없어요';
+        }
+      }
+
+      var badgeRes = await sb.rpc('pickle_sync_my_badges');
+      if (!badgeRes.error && badgeRes.data && badgeRes.data.ok) {
+        renderBadgeGrid(badgeRes.data.badges);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Mypage] 리포트 로드 실패', err);
     }
   }
 
@@ -2485,13 +2732,16 @@
       }
 
       await loadProfileDbRow(user.id);
+      await loadVerificationStatus(user.id);
 
       if (window.PickleCategories && window.PickleCategories.load) {
         await window.PickleCategories.load();
       }
 
       await renderProfile(user);
+      renderVerificationStatus();
       bindProfileEditOpen();
+      bindVerificationPanelOpen();
       bindProfileAvatarClick();
       syncLevelGuideList();
       bindLevelGuide();
