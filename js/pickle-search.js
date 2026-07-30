@@ -675,7 +675,7 @@
     }
 
     var userResult = await sb
-      .from('users')
+      .from('user_public_profiles')
       .select('id')
       .ilike('nickname', pattern)
       .limit(30);
