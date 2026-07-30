@@ -246,7 +246,7 @@
     ];
 
     for (var i = 0; i < fieldSets.length; i += 1) {
-      var result = await sb.from('users').select(fieldSets[i]).in('id', uniqueIds);
+      var result = await sb.from('user_public_profiles').select(fieldSets[i]).in('id', uniqueIds);
       if (result.error) continue;
       (result.data || []).forEach(function (row) {
         if (row && row.id) map.set(String(row.id), row);
@@ -914,7 +914,7 @@
         applyProfileModalBio(bioEl, '');
         return;
       }
-      var res = await sb.from('users').select('bio').eq('id', uid).maybeSingle();
+      var res = await sb.from('user_public_profiles').select('bio').eq('id', uid).maybeSingle();
       applyProfileModalBio(bioEl, res.data ? res.data.bio : '');
     } catch (err) {
       console.warn('[P!CKLE Follows] profile bio failed', err);
