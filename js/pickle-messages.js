@@ -104,7 +104,7 @@
       }
     }
 
-    var res = await sb.from('users').select('star_score').eq('id', userId).maybeSingle();
+    var res = await sb.from('user_public_profiles').select('star_score').eq('id', userId).maybeSingle();
     if (res.error || !res.data) return 1;
     var score = Number(res.data.star_score) || 0;
     if (score >= 1000) return 5;
@@ -543,7 +543,7 @@
     var nickMap = Object.create(null);
 
     if (senderIds.length) {
-      var usersRes = await sb.from('users').select('id, nickname').in('id', senderIds);
+      var usersRes = await sb.from('user_public_profiles').select('id, nickname').in('id', senderIds);
       if (!usersRes.error && usersRes.data) {
         usersRes.data.forEach(function (u) {
           if (u && u.id) nickMap[u.id] = u.nickname || '픽클러';
