@@ -2376,13 +2376,18 @@
       return;
     }
     grid.innerHTML = badges.map(function (b) {
-      var earnedStyle = b.earned
+      var cardStyle = b.earned
         ? 'background:#111113; border:1px solid #39ff14;'
-        : 'background:#0c0c0e; border:1px solid #27272a; opacity:0.45;';
+        : 'background:#0c0c0e; border:1px solid #27272a;';
+      var iconStyle = b.earned
+        ? 'filter:none; opacity:1;'
+        : 'filter:grayscale(100%) brightness(0.7); opacity:0.55;';
+      var textStyle = b.earned ? 'color:#fff;' : 'color:var(--text-sub);';
       return (
-        '<div title="' + escapeHtmlAttr(b.description) + '" style="' + earnedStyle + ' border-radius:12px; padding:12px 6px; text-align:center;">' +
-        '<div style="font-size:1.4rem; margin-bottom:4px;">' + (b.earned ? b.icon : '🔒') + '</div>' +
-        '<div style="font-size:0.7rem; color:#fff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtmlAttr(b.name) + '</div>' +
+        '<div title="' + escapeHtmlAttr(b.description) + '" style="' + cardStyle + ' border-radius:12px; padding:12px 6px; text-align:center; position:relative;">' +
+        (b.earned ? '' : '<div style="position:absolute; top:4px; right:6px; font-size:0.65rem;">🔒</div>') +
+        '<div style="font-size:1.4rem; margin-bottom:4px; ' + iconStyle + '">' + b.icon + '</div>' +
+        '<div style="font-size:0.7rem; ' + textStyle + ' font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtmlAttr(b.name) + '</div>' +
         '<div style="font-size:0.62rem; color:var(--text-sub); margin-top:2px;">' + (BADGE_TRACK_LABEL[b.track] || '') + '</div>' +
         '</div>'
       );
