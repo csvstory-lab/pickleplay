@@ -272,7 +272,7 @@
     ];
 
     for (var i = 0; i < fieldSets.length; i += 1) {
-      var result = await sb.from('users').select(fieldSets[i]).in('id', userIds);
+      var result = await sb.from('user_public_profiles').select(fieldSets[i]).in('id', userIds);
       if (result.error) continue;
       (result.data || []).forEach(function (row) {
         if (row && row.id) userAvatarMap.set(String(row.id), row);
