@@ -265,19 +265,12 @@
       'login.html?redirect=' + encodeURIComponent(redirect) + '&from=vote';
   }
 
-  async function goDetail(id) {
+async function goDetail(id) {
     if (!id) return;
 
+    // 로그인 여부와 상관없이 상세 페이지는 누구나 볼 수 있도록 변경.
+    // 투표/댓글/좋아요 시점의 로그인 요구는 pickle-detail.js 에 이미 구현되어 있음.
     var target = detailUrl(id);
-    var loggedIn = await hasActiveSession();
-
-    if (!loggedIn) {
-      if (confirm(FEED_LOGIN_PROMPT)) {
-        redirectToLoginForFeed(target);
-      }
-      return;
-    }
-
     window.location.href = target;
   }
 
