@@ -223,11 +223,13 @@
     .my-tab .tab-icon--voted { color: var(--point-blue); }
     .my-tab .tab-icon--commented { color: var(--point-green); }
     .my-tab .tab-icon--saved { color: var(--point-gold); }
+    .my-tab .tab-icon--report { color: #c084fc; }
     .my-tab.active { color: var(--text-main); }
     .my-tab.active .tab-icon--created { color: #ffb89e; }
     .my-tab.active .tab-icon--voted { color: #9ec0ff; }
     .my-tab.active .tab-icon--commented { color: #7ddea3; }
     .my-tab.active .tab-icon--saved { color: #fde68a; }
+    .my-tab.active .tab-icon--report { color: #d8b4fe; }
     .my-tab.active::after {
         content: ''; position: absolute; bottom: 0; left: 18%; width: 64%; height: 3px;
         background: linear-gradient(90deg, var(--point-blue), var(--point-pink));
@@ -1554,6 +1556,7 @@
         <button class="my-tab" id="tabVoted" onclick="switchMyTab('voted')"><i class="ph ph-hand-fist tab-icon tab-icon--voted" aria-hidden="true"></i><span>참여 기록</span></button>
         <button class="my-tab" id="tabCommented" onclick="switchMyTab('commented')"><i class="ph ph-chat-circle-dots tab-icon tab-icon--commented" aria-hidden="true"></i><span>쓴 댓글</span></button>
         <button class="my-tab" id="tabSaved" onclick="switchMyTab('saved')"><i class="ph ph-gift tab-icon tab-icon--saved" aria-hidden="true"></i><span>보관함</span></button>
+        <button class="my-tab" id="tabReport" onclick="switchMyTab('report')"><i class="ph ph-chart-bar tab-icon tab-icon--report" aria-hidden="true"></i><span>나의 리포트</span></button>
     </div>
 
     <div class="list-container" id="createdArea">
@@ -1570,6 +1573,39 @@
 
     <div class="list-container hidden" id="savedArea">
         <div class="empty-state" id="savedEmpty">보관함 불러오는 중…</div>
+    </div>
+
+    <div class="list-container hidden" id="reportArea">
+        <div id="reportLockedBox" style="background:#111113; border:1px solid #27272a; border-radius:16px; padding:24px 18px; text-align:center;">
+            <div style="font-size:1.8rem; margin-bottom:10px;">🔒</div>
+            <div style="font-size:1rem; font-weight:900; color:#fff; margin-bottom:6px;">나만의 픽클 리포트</div>
+            <div style="font-size:0.85rem; color:var(--text-sub); line-height:1.6; margin-bottom:18px;">성별·연령대·지역을 채우면<br>나만 볼 수 있는 리포트와 뱃지가 열려요</div>
+            <button type="button" onclick="document.getElementById('btnOpenProfileEdit').click()" style="padding:12px 24px; border-radius:12px; border:none; background:var(--neon-green); color:#09090b; font-weight:900; font-size:0.9rem; cursor:pointer;">프로필 채우기</button>
+        </div>
+
+        <div id="reportUnlockedBox" class="hidden">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+                <div style="background:#111113; border:1px solid #27272a; border-radius:14px; padding:16px 14px;">
+                    <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:6px;">소수의견 지수</div>
+                    <div id="reportMinorityRatio" style="font-size:1.3rem; font-weight:900; color:var(--neon-green);">—</div>
+                </div>
+                <div style="background:#111113; border:1px solid #27272a; border-radius:14px; padding:16px 14px;">
+                    <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:6px;">연속 참여일</div>
+                    <div id="reportStreak" style="font-size:1.3rem; font-weight:900; color:#fff;">—</div>
+                </div>
+                <div style="background:#111113; border:1px solid #27272a; border-radius:14px; padding:16px 14px;">
+                    <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:6px;">최애 카테고리</div>
+                    <div id="reportFavoriteCategory" style="font-size:1.05rem; font-weight:900; color:#fff;">—</div>
+                </div>
+                <div style="background:#111113; border:1px solid #27272a; border-radius:14px; padding:16px 14px;">
+                    <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:6px;">내 불판 총 참여자</div>
+                    <div id="reportCreatedParticipants" style="font-size:1.3rem; font-weight:900; color:#fff;">—</div>
+                </div>
+            </div>
+
+            <div style="font-size:0.95rem; font-weight:900; color:#fff; margin-bottom:10px;">🏅 내 뱃지</div>
+            <div id="reportBadgeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
+        </div>
     </div>
 </main>
 
@@ -1634,6 +1670,13 @@
             </div>
             <div class="settings-item no-click">
                 SNS 계정 연동 <span class="item-subtext" id="snsLinkStatus">확인 중…</span>
+            </div>
+            <div class="settings-item" id="btnOpenVerification">
+                <span style="display:flex; align-items:center; gap:8px;">
+                    본인인증
+                    <span id="verificationStatusBadge" style="font-size:0.75rem; background:rgba(255,255,255,0.08); color:var(--text-sub); padding:2px 6px; border-radius:4px; font-weight:800;">확인 중…</span>
+                </span>
+                <span class="arrow-icon">›</span>
             </div>
         </div>
 
@@ -1795,6 +1838,30 @@
         <div class="input-group">
             <div class="input-label"><span>상태메시지 (한줄 소개)</span><span class="char-count" id="bioCount">0/30</span></div>
             <textarea class="textarea-field" id="bioInput" rows="3" maxlength="30" placeholder="한줄 소개를 입력해 주세요." onkeyup="updateCharCount('bioInput', 'bioCount')"></textarea>
+        </div>
+    </div>
+</div>
+
+<div id="verificationPanel" class="slide-panel depth-2-panel">
+    <div class="panel-header">
+        <div class="header-left">
+            <button class="btn-back" onclick="closePanel('verificationPanel')"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+            <h2 class="panel-title">본인인증</h2>
+        </div>
+    </div>
+    <div class="edit-content">
+        <div style="background:#09090b; border:1px solid #27272a; border-radius:12px; padding:18px; margin-bottom:20px;">
+            <div style="font-size:0.95rem; font-weight:900; color:#fff; margin-bottom:10px;">✅ 본인인증하면 이런 게 열려요</div>
+            <div style="font-size:0.85rem; color:var(--text-sub); line-height:1.7;">
+                브랜드 설문 · 광고 참여 · 포인트 적립 · 쿠폰 지급 · 경품 수령 · 스토어 이용 · 명예의 전당 심사 · 인증 배지
+            </div>
+        </div>
+
+        <div id="verificationStatusBox" style="text-align:center; padding:30px 15px;">
+            <div id="verificationStatusIcon" style="font-size:2.5rem; margin-bottom:12px;">🔒</div>
+            <div id="verificationStatusTitle" style="font-size:1.05rem; font-weight:900; color:#fff; margin-bottom:6px;">아직 인증 전이에요</div>
+            <div id="verificationStatusSub" style="font-size:0.85rem; color:var(--text-sub); margin-bottom:24px;">1분이면 끝나요. 휴대폰 본인인증만 하면 바로 인증회원이 돼요.</div>
+            <button type="button" id="btnStartVerification" class="btn-avatar-action" style="width:100%; padding:14px; font-size:0.95rem; font-weight:800;">📱 본인인증 시작하기</button>
         </div>
     </div>
 </div>
@@ -2084,7 +2151,7 @@
 
     // --- 마이페이지 메인 탭 전환 ---
     function switchMyTab(tabName) {
-        ['Created', 'Voted', 'Commented', 'Saved'].forEach(name => {
+        ['Created', 'Voted', 'Commented', 'Saved', 'Report'].forEach(name => {
             document.getElementById(`tab${name}`).classList.remove('active');
             document.getElementById(`${name.toLowerCase()}Area`).classList.add('hidden');
         });
@@ -2257,6 +2324,7 @@
 <script src="../js/pickle-follows.js?v=20260617_guide1"></script>
 <script src="../js/pickle-messages.js?v=20260617_messages3"></script>
 <script src="../js/pickle-policies.js"></script>
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 <script src="../js/mypage-page.js?v=20260617_postedit5"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
