@@ -13,6 +13,25 @@
     return hash.indexOf('access_token=') !== -1 || hash.indexOf('type=recovery') !== -1;
   }
 
+  /** 카카오/구글 인증이 실패해서 에러와 함께 돌아온 경우를 감지 */
+  function getOAuthErrorFromHash() {
+    var raw = (window.location.hash || '').replace(/^#/, '');
+    if (!raw && window.location.search) {
+      raw = window.location.search.replace(/^\?/, '');
+    }
+    if (!raw || raw.indexOf('error') === -1) return null;
+
+    var params = new URLSearchParams(raw);
+    var error = params.get('error');
+    if (!error) return null;
+
+    return {
+      error: error,
+      code: params.get('error_code') || '',
+      description: params.get('error_description') || '',
+    };
+  }
+
   function isOAuthCallbackHash() {
     return isOAuthCallback();
   }
@@ -200,6 +219,16 @@
   markOAuthPending();
   installLoginAlertGuard();
 
+  (function reportOAuthErrorIfAny() {
+    var oauthErr = getOAuthErrorFromHash();
+    if (!oauthErr) return;
+    console.error('[P!CKLE OAuth] 소셜 로그인 실패:', oauthErr);
+    var friendly = '소셜 로그인에 실패했습니다';
+    if (oauthErr.description) friendly += ' (' + decodeURIComponent(oauthErr.description) + ')';
+    alert(friendly + '\n다시 시도해도 안 되면 관리자에게 문의해주세요.');
+    clearOAuthHashFromUrl();
+  })();
+
   window.PickleOAuthCallbackGuard = {
     isOAuthCallback: isOAuthCallback,
     isOAuthCallbackHash: isOAuthCallbackHash,
@@ -209,5 +238,6 @@
     getKakaoOAuthRedirectTo: getKakaoOAuthRedirectTo,
     waitForOAuthSession: waitForOAuthSession,
     clearOAuthHashFromUrl: clearOAuthHashFromUrl,
+    getOAuthErrorFromHash: getOAuthErrorFromHash,
   };
 })();
