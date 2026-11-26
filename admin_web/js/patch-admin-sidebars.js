@@ -39,8 +39,7 @@ function buildSidebar(activeKeys) {
         <li class="nav-sub-item${ac('board_list')}" onclick="location.href='admin_board_list.html'">· 일반 불판 관리</li>
         <li class="nav-sub-item${ac('spawn')}" onclick="return false;">· 스폰(최애) 불판 설정</li>
         <li class="nav-item${ac('ads')}" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
-        <li class="nav-sub-item${ac('ads_client')}" onclick="location.href='admin_ads.html'">· 광고주 및 정산 관리</li>
-        <li class="nav-sub-item${ac('ads_partner')}" onclick="location.href='admin_ads.html#agencies'">· 파트너(대행사) 관리</li>
+        <li class="nav-sub-item${ac('ads_client')}" onclick="location.href='admin_ads.html'">· 광고주/대행사 정산 관리</li>
         <li class="nav-item${ac('events')}" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
         <li class="nav-item${ac('reports')}" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
         <li class="nav-item${ac('ai')}" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
