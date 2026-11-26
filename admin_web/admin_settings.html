@@ -434,7 +434,7 @@
                     <div class="setting-card" style="grid-column: span 2;">
                         <div class="sc-title">📜 포인트 공통 정책 (Policy)</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div class="sc-item"><div class="sc-label"><strong>포인트 유효 기간 설정</strong><span>지급일 기준 소멸 기한</span></div><select class="sc-select p-input" id="point_expiryPeriod" disabled><option value="30d">30일</option><option value="6m">6개월</option><option value="1y" selected>1년</option></select></div>
+                            <div class="sc-item"><div class="sc-label"><strong>포인트 유효 기간 설정</strong><span>현재 미적용 — 포인트 교환(현금화) 기능이 생기기 전까지는 소멸시키지 않습니다</span></div><select class="sc-select p-input" id="point_expiryPeriod" disabled><option value="none" selected>적용 안 함 (소멸 없음)</option><option value="30d">30일</option><option value="6m">6개월</option><option value="1y">1년</option></select></div>
                             <div class="sc-item"><div class="sc-label"><strong>1일 최대 적립 한도 (어뷰징 방지)</strong><span>가입/초대 보상을 제외한 1일 상한선</span></div><div class="input-with-suffix"><input type="number" id="point_dailyCap" value="1000" class="p-input" disabled><span>P</span></div></div>
                         </div>
                     </div>

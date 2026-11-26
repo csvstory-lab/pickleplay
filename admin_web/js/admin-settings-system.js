@@ -45,7 +45,7 @@
     ugc_comment: 1,
     honor_weekly_best: 500,
     honor_best_comment: 50,
-    expiry_period: '1y',
+    expiry_period: 'none',
     daily_cap: 1000,
   };
 
