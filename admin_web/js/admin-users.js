@@ -1363,6 +1363,29 @@
     return result;
   }
 
+  // 관리자/스폰서/대행사 등 user_roles 에 등록된 "내부·파트너 계정"은 일반 회원이 아니므로
+  // 회원 목록에서 제외한다. (admin-provision-user 로 계정을 만들면 auth.users 트리거가
+  // public.users 에도 자동으로 프로필을 만들어버리기 때문에, 그대로 두면 회원 목록에 섞여 보임)
+  async function excludeStaffAccounts(rows) {
+    if (!rows || !rows.length) return rows || [];
+    try {
+      var sb = getSupabaseClient();
+      var res = await sb.from('user_roles').select('email');
+      if (res.error || !res.data) return rows;
+      var staffEmails = new Set(
+        res.data.map(function (r) { return String(r.email || '').trim().toLowerCase(); })
+      );
+      if (!staffEmails.size) return rows;
+      return rows.filter(function (u) {
+        var email = String(u.email || '').trim().toLowerCase();
+        return !email || !staffEmails.has(email);
+      });
+    } catch (err) {
+      console.warn('[Admin Users] 내부 계정 필터링 실패(목록은 그대로 표시)', err);
+      return rows;
+    }
+  }
+
   async function loadUsers() {
     var tbody = $('usersTableBody');
     if (tbody) {
@@ -1374,7 +1397,7 @@
       var result = await fetchUsersFromSupabase();
 
       if (result.error) throw result.error;
-      usersCache = result.data || [];
+      usersCache = await excludeStaffAccounts(result.data || []);
       applyFilters();
     } catch (err) {
       console.error('[Admin Users]', err);
