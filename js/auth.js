@@ -17,6 +17,66 @@
     google: 'google',
   };
 
+  // ── 친구 초대(추천인) 코드 캡처 ─────────────────────────────────────────
+  // login.html?ref=<추천인 user id> 로 들어온 경우, 카카오 로그인 등으로
+  // 페이지를 여러 번 이동하는 동안에도 잃어버리지 않도록 세션 저장소에 보관해둔다.
+  var REFERRAL_CODE_STORAGE_KEY = 'pickle_referral_code';
+
+  function captureReferralCodeFromUrl() {
+    try {
+      var params = new URLSearchParams(window.location.search || '');
+      var ref = (params.get('ref') || '').trim();
+      if (ref) {
+        sessionStorage.setItem(REFERRAL_CODE_STORAGE_KEY, ref);
+      }
+    } catch (e) {
+      /* ignore (privacy 모드 등 sessionStorage 접근 불가) */
+    }
+  }
+  captureReferralCodeFromUrl();
+
+  async function tryRegisterReferral(sb, userId) {
+    var code;
+    try {
+      code = sessionStorage.getItem(REFERRAL_CODE_STORAGE_KEY);
+    } catch (e) {
+      return;
+    }
+    if (!code || !userId) return;
+
+    try {
+      var res = await sb.rpc('register_referral', { p_inviter_id: code });
+      if (res.error) {
+        console.warn('[P!CKLE Referral] register_referral 실패', res.error);
+        return;
+      }
+      var payload = res.data;
+      if (payload && payload.ok && payload.referral_id) {
+        if (window.PicklePoints && window.PicklePoints.awardPoints) {
+          await window.PicklePoints.awardPoints(userId, 'referral_invitee', {
+            sourceId: payload.referral_id,
+          }).catch(function (err) {
+            console.warn('[P!CKLE Referral] referral_invitee 지급 실패', err);
+          });
+        }
+        try {
+          sessionStorage.removeItem(REFERRAL_CODE_STORAGE_KEY);
+        } catch (e) {
+          /* ignore */
+        }
+      } else if (payload && !payload.ok && payload.reason !== 'signup_window_expired') {
+        // already_registered 등은 더 이상 재시도할 필요 없음
+        try {
+          sessionStorage.removeItem(REFERRAL_CODE_STORAGE_KEY);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Referral] register_referral 호출 오류', err);
+    }
+  }
+
   function getClient() {
     if (typeof window.getPickleSupabaseClient === 'function') {
       return window.getPickleSupabaseClient();
@@ -637,6 +697,9 @@
             console.warn('[P!CKLE Points] signup bonus skipped', err);
           });
         }
+        tryRegisterReferral(sb, rawUser.id).catch(function (err) {
+          console.warn('[P!CKLE Referral] 추천인 등록 skipped', err);
+        });
         authContextCache = {
           session,
           user,

@@ -1346,6 +1346,42 @@
     alert('주소가 복사되었습니다.');
   }
 
+  function buildReferralLink(userId) {
+    var url = new URL('login.html', window.location.href);
+    url.searchParams.set('ref', userId);
+    return url.toString();
+  }
+
+  async function requestReferralShare() {
+    if (!currentUser || !currentUser.id) {
+      alert('로그인 정보를 확인할 수 없습니다. 새로고침 후 다시 시도해 주세요.');
+      return;
+    }
+
+    var shareUrl = buildReferralLink(currentUser.id);
+    var title = 'P!CKLE — 밸런스게임 투표하러 가기';
+    var text = '친구가 초대한 P!CKLE에서 밸런스게임 투표하고 같이 포인트 받자!';
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: title, text: text, url: shareUrl });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        console.warn('[P!CKLE Mypage] 초대 링크 공유 실패, 클립보드 fallback', err);
+      }
+    }
+
+    try {
+      await copyShareUrlToClipboard(shareUrl);
+      alert('초대 링크가 복사되었습니다! 친구에게 공유해보세요.');
+    } catch (err) {
+      console.error('[P!CKLE Mypage] 초대 링크 복사 실패', err);
+      alert('링크 복사에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+  }
+  window.shareReferralLink = requestReferralShare;
+
   async function requestPostShare(post) {
     if (!post || !post.id) return;
 
