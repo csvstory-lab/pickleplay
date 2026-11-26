@@ -411,10 +411,22 @@
     if (!isInternal) return;
     if (!confirm('이 캠페인을 지금 바로 종료하시겠습니까? 종료 후에는 날짜를 되돌릴 수 없습니다 (수정 화면에서 기간은 다시 바꿀 수 있습니다).')) return;
 
-    var res = await sb.from('sponsor_campaigns').update({ campaign_end_at: new Date().toISOString() }).eq('id', campaignId);
+    var row = listRows.filter(function (r) { return r.campaign_id === campaignId; })[0];
+    var nowIso = new Date().toISOString();
+
+    var res = await sb.from('sponsor_campaigns').update({ campaign_end_at: nowIso }).eq('id', campaignId);
     if (res.error) {
       alert('처리에 실패했습니다: ' + res.error.message);
       return;
+    }
+
+    // 유저 피드는 sponsor_campaigns.campaign_end_at 이 아니라 posts.expires_at 을 기준으로
+    // 노출 여부를 판단하므로, 같이 당겨줘야 실제로 유저 화면에서도 즉시 내려간다.
+    if (row && row.post_id) {
+      var postRes = await sb.from('posts').update({ expires_at: nowIso }).eq('id', row.post_id);
+      if (postRes.error) {
+        console.warn('[AdminSponsor] 조기종료 — 유저 피드 노출 종료 반영 실패(캠페인 정보는 정상 종료됨)', postRes.error);
+      }
     }
     await loadList();
   }
@@ -669,6 +681,9 @@
         media_url_1: mediaUrl1,
         media_url_2: mediaUrl2,
         visibility_status: 'visible',
+        // 유저 피드는 posts.expires_at > now 인 글만 노출함(sponsor_campaigns.campaign_end_at 와는
+        // 별개 컬럼). 이게 빠져 있으면 NULL로 저장되어 "노출 기간"을 다 채워도 피드에 영원히 안 보임.
+        expires_at: endIso,
       };
 
       var campaignPayload = {
