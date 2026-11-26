@@ -74,6 +74,9 @@
     .form-group { margin-bottom: 24px; }
     .form-label { font-size: 0.88rem; font-weight: 800; margin-bottom: 10px; display: block; color: #d4d4d8; }
     .form-hint { font-size: 0.75rem; color: var(--point-pink); font-weight: 600; margin-left: 4px; }
+    .form-label.label-with-count { display: flex; justify-content: space-between; align-items: baseline; }
+    .char-count { font-size: 0.75rem; color: #71717a; font-weight: 600; white-space: nowrap; }
+    .char-count.limit-near { color: var(--point-pink, #FF85A1); }
     
     .btn-open-category {
         width: 100%; box-sizing: border-box; background-color: #222225; color: #fff; border: 1px solid #3a3a3c;
@@ -225,7 +228,9 @@
     .ab-badge { position: absolute; top: 50%; left: 16px; transform: translateY(-50%); font-family: 'Black Han Sans', sans-serif; font-size: 1.15rem; }
     .ab-badge.a { color: var(--point-blue); }
     .ab-badge.b { color: var(--point-pink); }
-    .ab-input { padding-left: 45px; }
+    .ab-input { padding-left: 45px; padding-right: 52px; }
+    .ab-char-count { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); font-size: 0.72rem; color: #71717a; font-weight: 700; pointer-events: none; }
+    .ab-char-count.limit-near { color: var(--point-pink, #FF85A1); }
 
     /* 법적 서약 정보 경고 */
     .legal-warning-box { background: rgba(255, 77, 77, 0.04); border: 1px solid rgba(255, 77, 77, 0.2); border-radius: 14px; padding: 16px; margin-top: 22px; }
@@ -470,8 +475,8 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label">불판 제목</label>
-        <input type="text" id="inputTitle" class="input-box" placeholder="유저들의 도파민을 자극할 제목을 적어주세요!" oninput="if(typeof updateLivePreviews === 'function') updateLivePreviews();">
+        <label class="form-label label-with-count">불판 제목 <span class="char-count" id="titleCharCount">0/40</span></label>
+        <input type="text" id="inputTitle" class="input-box" maxlength="40" placeholder="유저들의 도파민을 자극할 제목을 적어주세요!" oninput="updateCreateCharCount('inputTitle','titleCharCount'); if(typeof updateLivePreviews === 'function') updateLivePreviews();">
     </div>
 
     <div class="form-group">
@@ -543,11 +548,13 @@
         <div class="ab-input-group">
             <div class="ab-input-wrapper a">
                 <span class="ab-badge a">A</span>
-                <input type="text" id="inputA" class="input-box ab-input" maxlength="20" placeholder="A 선택지 내용을 적어주세요" oninput="if(typeof updateLivePreviews === 'function') updateLivePreviews();">
+                <input type="text" id="inputA" class="input-box ab-input" maxlength="30" placeholder="A 선택지 내용을 적어주세요" oninput="updateCreateCharCount('inputA','aCharCount'); if(typeof updateLivePreviews === 'function') updateLivePreviews();">
+                <span class="ab-char-count" id="aCharCount">0/30</span>
             </div>
             <div class="ab-input-wrapper b">
                 <span class="ab-badge b">B</span>
-                <input type="text" id="inputB" class="input-box ab-input" maxlength="20" placeholder="B 선택지 내용을 적어주세요" oninput="if(typeof updateLivePreviews === 'function') updateLivePreviews();">
+                <input type="text" id="inputB" class="input-box ab-input" maxlength="30" placeholder="B 선택지 내용을 적어주세요" oninput="updateCreateCharCount('inputB','bCharCount'); if(typeof updateLivePreviews === 'function') updateLivePreviews();">
+                <span class="ab-char-count" id="bCharCount">0/30</span>
             </div>
         </div>
     </div>
@@ -656,6 +663,17 @@
         if (end.getTime() > getMaxEndDate().getTime()) { alert('불판 마감일은 최대 7일 이내로만 설정할 수 있습니다.'); if (endInput) endInput.value = ''; return false; }
         return true;
     }
+
+    // 📏 글자수 카운터 (제목 / A·B 선택지) — maxlength 가까워지면 색상으로 알려줌
+    window.updateCreateCharCount = function(inputId, countId) {
+        var input = document.getElementById(inputId);
+        var countEl = document.getElementById(countId);
+        if (!input || !countEl) return;
+        var max = input.maxLength > 0 ? input.maxLength : 0;
+        var len = input.value.length;
+        countEl.textContent = max > 0 ? (len + '/' + max) : String(len);
+        countEl.classList.toggle('limit-near', max > 0 && len >= max);
+    };
 
     // 💡 실시간 A/B · 썸네일 텍스트 미리보기 연동
     window.updateLivePreviews = function() {

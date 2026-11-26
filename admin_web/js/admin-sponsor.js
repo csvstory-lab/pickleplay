@@ -598,15 +598,42 @@
     var managerName = $('f_manager_name').value.trim();
     var managerMobile = $('f_manager_mobile').value.trim();
     var managerEmail = $('f_manager_email').value.trim();
-    var startIso = fromLocalInput($('f_start').value);
-    var endIso = fromLocalInput($('f_end').value);
+    var startRaw = $('f_start').value;
+    var endRaw = $('f_end').value;
+    var startIso = fromLocalInput(startRaw);
+    var endIso = fromLocalInput(endRaw);
     var title = $('f_title').value.trim();
     var optA = $('f_opt_a').value.trim();
     var optB = $('f_opt_b').value.trim();
     var winRateRaw = $('f_win_rate').value;
 
-    if (!company || !brand || !managerName || !managerMobile || !managerEmail || !startIso || !endIso || !title || !optA || !optB || winRateRaw === '') {
-      alert('필수 항목(*)을 모두 입력해 주세요.');
+    // 필수 항목을 하나씩 짚어서 안내 — "날짜가 비어있음"과 "존재하지 않는 날짜(예: 11/31)를 입력해 브라우저가
+    // 값을 비워버린 경우"를 구분해줘야, 화면엔 입력된 것처럼 보이는데 왜 저장이 안 되는지 헷갈리지 않는다.
+    var missing = [];
+    if (!company) missing.push('기업명');
+    if (!brand) missing.push('브랜드명');
+    if (!managerName) missing.push('담당자명');
+    if (!managerMobile) missing.push('담당자 휴대폰');
+    if (!managerEmail) missing.push('담당자 이메일');
+    if (!title) missing.push('불판 메인 질문');
+    if (!optA) missing.push('A픽 텍스트');
+    if (!optB) missing.push('B픽 텍스트');
+    if (winRateRaw === '') missing.push('당첨 확률');
+
+    if (!startIso) {
+      alert(startRaw
+        ? '캠페인 시작일시가 올바르지 않습니다. 실제로 존재하는 날짜인지 다시 확인해 주세요. (예: 11월은 30일까지만 있습니다)'
+        : '캠페인 시작일시를 입력해 주세요.');
+      return;
+    }
+    if (!endIso) {
+      alert(endRaw
+        ? '캠페인 종료일시가 올바르지 않습니다. 실제로 존재하는 날짜인지 다시 확인해 주세요. (예: 11월은 30일까지만 있습니다)'
+        : '캠페인 종료일시를 입력해 주세요.');
+      return;
+    }
+    if (missing.length) {
+      alert('다음 필수 항목(*)을 입력해 주세요:\n- ' + missing.join('\n- '));
       return;
     }
     var winRate = Number(winRateRaw);
