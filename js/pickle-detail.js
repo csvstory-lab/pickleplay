@@ -748,95 +748,9 @@ function renderCommentItemHtml(comment, options) {
     }
   }
 
-  function buildCommentNotificationLink(postId, commentId) {
-    var link = 'detail.html?id=' + encodeURIComponent(postId);
-    if (commentId) {
-      link += '#comment-' + encodeURIComponent(commentId);
-    }
-    return link;
-  }
-
-  async function deliverNotification(sb, payload) {
-    if (!sb || !payload || !payload.userId || !payload.message) return false;
-
-    var notiType = payload.type || 'comment';
-    var linkUrl = payload.linkUrl || null;
-
-    var insertRes = await sb.from('notifications').insert({
-      user_id: payload.userId,
-      type: notiType,
-      message: payload.message,
-      link_url: linkUrl,
-    });
-
-    if (!insertRes.error) return true;
-
-    console.error('알림 전송 실패:', insertRes.error);
-
-    var rpcRes = await sb.rpc('pickle_insert_notification', {
-      p_user_id: payload.userId,
-      p_type: notiType,
-      p_message: payload.message,
-      p_link_url: linkUrl,
-    });
-
-    if (!rpcRes.error) return true;
-
-    console.error('[P!CKLE Detail] 알림 RPC 실패:', rpcRes.error);
-
-    if (notiType === 'reply') {
-      var fallbackRes = await sb.rpc('pickle_insert_notification', {
-        p_user_id: payload.userId,
-        p_type: 'comment',
-        p_message: payload.message,
-        p_link_url: linkUrl,
-      });
-
-      if (!fallbackRes.error) return true;
-      console.error('[P!CKLE Detail] 알림 RPC(comment fallback) 실패:', fallbackRes.error);
-    }
-
-    return false;
-  }
-
-  async function resolveParentCommentAuthor(sb, parentId) {
-    if (!parentId) return null;
-
-    var cached = commentByIdCache[parentId];
-    if (cached && cached.user_id) return cached.user_id;
-
-    var parentRes = await sb
-      .from('comments')
-      .select('user_id')
-      .eq('id', parentId)
-      .single();
-
-    if (parentRes.error) {
-      console.error('알림 전송 실패: 부모 댓글 조회 실패', parentRes.error);
-      return null;
-    }
-
-    if (!parentRes.data || !parentRes.data.user_id) {
-      console.error('알림 전송 실패: 부모 댓글 작성자를 찾을 수 없습니다.');
-      return null;
-    }
-
-    return parentRes.data.user_id;
-  }
-
-  async function sendReplyNotification(sb, parentId, newCommentId, currentUserId) {
-    if (!sb || !parentId || !newCommentId || !currentUserId || !currentPostId) return;
-
-    var parentAuthorId = await resolveParentCommentAuthor(sb, parentId);
-    if (!parentAuthorId || parentAuthorId === currentUserId) return;
-
-    await deliverNotification(sb, {
-      userId: parentAuthorId,
-      type: 'reply',
-      message: '내 댓글에 답글이 달렸습니다.',
-      linkUrl: buildCommentNotificationLink(currentPostId, newCommentId),
-    });
-  }
+  // 답글/댓글 알림은 서버 트리거(trg_fn_comments_notify_post_owner)가 전담 처리합니다.
+  // (예전엔 여기서 클라이언트가 직접 notifications에 쓰려고 시도했으나,
+  //  97번 마이그레이션에서 관련 권한이 전부 회수되어 항상 실패만 하던 죽은 코드였습니다.)
 
   function setReplySubmitButtonsDisabled(disabled, activeBtn) {
     document.querySelectorAll('.comment-inline-reply-submit').forEach(function (btn) {
@@ -1017,9 +931,7 @@ function renderCommentItemHtml(comment, options) {
         console.error('[Score Engine Error]', 'reply increment_star_score', scoreErr);
       }
 
-      if (replyParentId && newReplyId) {
-        await sendReplyNotification(sb, replyParentId, newReplyId, user.id);
-      }
+      // 답글 알림은 서버 트리거가 자동으로 처리합니다 (위 주석 참고).
 
       if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
         window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment').catch(function (err) {
