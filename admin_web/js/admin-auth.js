@@ -71,7 +71,7 @@
   /** 역할별 접근 가능 메뉴 */
   var MENU_ACCESS = {
     super: ['dashboard', 'users', 'categories', 'posts', 'ads', 'events', 'reports', 'ai_filter', 'statistics', 'cs', 'settings', 'sponsor'],
-    marketer: ['dashboard', 'categories', 'posts', 'events', 'statistics'],
+    marketer: ['dashboard', 'categories', 'posts', 'events', 'statistics', 'sponsor'],
     cs: ['dashboard', 'users', 'categories', 'posts', 'reports', 'ai_filter', 'cs'],
     account: ['dashboard', 'ads', 'statistics'],
     sponsor: ['sponsor', 'statistics'],

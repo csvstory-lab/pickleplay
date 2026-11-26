@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>P!CKLE - 스폰서(광고주) 전용 관리</title>
+<title>P!CKLE - 스폰서 불판 관리</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 <style>
     :root {
         --bg-color: #09090b; --sidebar-bg: #121214; --card-bg: #18181b;
-        --neon-green: #39ff14; --theme-gold: #ffcc00; --neon-blue: #00f0ff;
-        --text-main: #ffffff; --text-sub: #a1a1aa; --border-color: #27272a;
+        --neon-green: #39ff14; --neon-pink: #ff007f; --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00; --text-main: #ffffff; --text-sub: #a1a1aa; --border-color: #27272a;
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
@@ -22,16 +22,95 @@
     .nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
     .nav-item.active { background: rgba(255,204,0,0.06); color: var(--theme-gold); border-left-color: var(--theme-gold); }
     .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-    .top-header { padding: 20px 40px; border-bottom: 1px solid var(--border-color); }
-    .page-title { font-size: 1.4rem; font-weight: 900; margin: 0; }
-    .content { padding: 30px 40px; max-width: 1200px; }
-    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px; }
-    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; }
-    .kpi-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; margin-bottom: 8px; }
-    .kpi-value { font-size: 1.8rem; font-weight: 900; color: var(--theme-gold); }
-    .panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; }
-    .panel h3 { margin: 0 0 12px; font-size: 1.05rem; }
-    .panel p { margin: 0; color: var(--text-sub); line-height: 1.6; font-size: 0.9rem; }
+    .top-header { padding: 20px 40px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(9,9,11,0.95); z-index: 5; }
+    .page-title { font-size: 1.4rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .back-btn { cursor: pointer; color: var(--text-sub); }
+    .back-btn:hover { color: #fff; }
+    .btn-new { background: linear-gradient(135deg, var(--neon-pink), #ff5e99); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 0.9rem; }
+    .btn-new:hover { transform: translateY(-1px); }
+    .content { padding: 30px 40px; max-width: 1400px; }
+
+    .view-page { display: none; }
+    .view-page.active { display: block; }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 26px; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+    .kpi-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 700; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.6rem; font-weight: 900; color: var(--theme-gold); }
+
+    .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #121214; padding: 13px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; }
+    td { padding: 13px 16px; border-bottom: 1px solid #222; font-size: 0.88rem; font-weight: 600; vertical-align: middle; }
+    tbody tr:hover { background: rgba(255,0,127,0.03); }
+    .brand-name { font-weight: 900; color: #fff; display: block; margin-bottom: 3px; }
+    .post-title { color: var(--text-sub); font-size: 0.82rem; }
+    .status-badge { padding: 3px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; }
+    .status-active { background: rgba(57,255,20,0.15); color: var(--neon-green); border: 1px solid rgba(57,255,20,0.3); }
+    .status-ended { background: rgba(161,161,170,0.15); color: var(--text-sub); border: 1px solid rgba(161,161,170,0.3); }
+    .status-scheduled { background: rgba(0,240,255,0.12); color: var(--neon-blue); border: 1px solid rgba(0,240,255,0.3); }
+    .btn-action { padding: 7px 11px; border-radius: 6px; font-size: 0.78rem; font-weight: 800; cursor: pointer; border: none; margin-right: 6px; }
+    .btn-report { background: var(--theme-gold); color: #000; }
+    .btn-edit { background: #3f3f46; color: #fff; }
+    .empty-row td { text-align: center; color: var(--text-sub); padding: 40px; }
+
+    .form-wrapper { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 30px; align-items: start; }
+    .form-col { display: flex; flex-direction: column; gap: 22px; }
+    .form-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; }
+    .section-title { font-size: 1.02rem; font-weight: 900; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #3f3f46; }
+    .input-row { display: flex; gap: 16px; margin-bottom: 13px; flex-wrap: wrap; }
+    .input-group { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 6px; }
+    .input-label { font-size: 0.82rem; font-weight: 700; color: var(--text-sub); }
+    .input-label .req { color: var(--neon-pink); margin-left: 2px; }
+    .input-field, textarea.input-field, select.input-field { padding: 11px 13px; border: 1px solid #3f3f46; border-radius: 8px; font-size: 0.9rem; color: #fff; background: #09090b; font-family: 'Pretendard', sans-serif; width: 100%; }
+    .input-field:focus { outline: none; border-color: var(--theme-gold); }
+    .hint { font-size: 0.75rem; color: #71717a; margin-top: 2px; }
+    .date-wrap { display: flex; align-items: center; gap: 8px; }
+
+    .tag-container { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; padding: 12px; background: #09090b; border: 1px dashed #52525b; border-radius: 8px; align-items: center; }
+    .partner-tag { background: rgba(255,204,0,0.15); border: 1px solid rgba(255,204,0,0.4); color: var(--theme-gold); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; gap: 7px; }
+    .tag-close { cursor: pointer; background: rgba(0,0,0,0.5); color: #fff; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; }
+
+    .pin-count-badge { display: inline-block; background: rgba(57,255,20,0.12); color: var(--neon-green); border: 1px solid rgba(57,255,20,0.3); padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; margin-top: 8px; }
+
+    .preview-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; position: sticky; top: 90px; }
+    .preview-label { font-size: 0.82rem; color: var(--text-sub); font-weight: 700; margin-bottom: 12px; text-align: center; }
+    .phone-mockup { width: 300px; margin: 0 auto; background: #000; border-radius: 34px; padding: 10px; border: 4px solid #333; }
+    .phone-screen { background: #09090b; border-radius: 26px; min-height: 480px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .mock-sponsor-chip { font-size: 0.72rem; font-weight: 900; color: var(--theme-gold); }
+    .mock-q { font-size: 1.05rem; font-weight: 900; line-height: 1.4; word-break: keep-all; }
+    .mock-vote-card { background: #18181b; border: 2px solid #27272a; border-radius: 12px; padding: 14px; font-weight: 800; text-align: center; font-size: 0.92rem; }
+    .mock-banner { background: linear-gradient(135deg, #2a0845, var(--neon-pink)); border-radius: 14px; padding: 16px; text-align: center; }
+    .mock-banner .sub { font-size: 0.68rem; color: var(--theme-gold); font-weight: 800; margin-bottom: 4px; }
+    .mock-banner .main { font-size: 0.92rem; font-weight: 900; margin-bottom: 10px; }
+    .mock-banner button { width: 100%; padding: 10px; border: none; border-radius: 10px; background: #fff; color: #000; font-weight: 900; }
+
+    .bottom-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 4px; }
+    .btn-cancel { padding: 13px 30px; font-weight: 900; border-radius: 8px; border: 1px solid #52525b; background: transparent; color: #fff; cursor: pointer; }
+    .btn-submit { padding: 13px 30px; font-weight: 900; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--neon-pink), #ff5e99); color: #fff; cursor: pointer; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(6px); }
+    .modal-container { width: 920px; max-width: 94vw; max-height: 88vh; background: var(--bg-color); border: 1px solid var(--theme-gold); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { padding: 20px 26px; border-bottom: 1px solid var(--border-color); background: #121214; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 1.15rem; font-weight: 900; }
+    .modal-sub { font-size: 0.82rem; color: var(--text-sub); margin-top: 4px; }
+    .btn-close { background: none; border: none; color: var(--text-sub); font-size: 1.6rem; cursor: pointer; }
+    .modal-body { padding: 26px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
+    .report-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+    .rkpi-card { background: var(--card-bg); border: 1px solid #3f3f46; border-radius: 12px; padding: 16px; text-align: center; }
+    .rkpi-title { font-size: 0.78rem; color: var(--text-sub); font-weight: 700; margin-bottom: 6px; }
+    .rkpi-val { font-size: 1.4rem; font-weight: 900; }
+    .report-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+    .report-section h4 { margin: 0 0 14px; font-size: 0.95rem; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-label { width: 70px; font-size: 0.8rem; font-weight: 800; color: var(--text-sub); flex-shrink: 0; }
+    .bar-track { flex: 1; height: 16px; background: #27272a; border-radius: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; display: flex; align-items: center; padding-left: 8px; font-size: 0.72rem; font-weight: 900; color: #fff; }
+    .daily-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.82rem; }
+    .daily-table th { background: #09090b; padding: 8px; color: var(--text-sub); border-bottom: 1px solid #3f3f46; }
+    .daily-table td { padding: 8px; border-bottom: 1px solid #222; font-family: monospace; }
+    .note-line { font-size: 0.78rem; color: #71717a; margin-top: 4px; }
 </style>
   <link rel="stylesheet" href="css/admin-header.css">
 </head>
@@ -40,45 +119,223 @@
 <aside class="sidebar">
     <div class="logo-area">
         <h1 class="logo" onclick="location.href='admin_sponsor.html'">P!CKLE</h1>
-        <div class="logo-sub">SPONSOR PORTAL</div>
+        <div class="logo-sub">SPONSOR CAMPAIGN</div>
     </div>
     <ul class="nav-menu">
-        <li class="nav-item active" onclick="location.href='admin_sponsor.html'"><span>💼</span> 캠페인 관리</li>
-        <li class="nav-item" onclick="location.href='admin_statistics.html'"><span>📈</span> 통계 및 분석 (대시보드)</li>
+        <li class="nav-item active" onclick="location.href='admin_sponsor.html'"><span>💼</span> 스폰서 불판 관리</li>
+        <li class="nav-item" onclick="location.href='admin_statistics.html'"><span>📈</span> 통계 및 분석</li>
     </ul>
 </aside>
 
 <main class="main-content">
     <header class="top-header">
-        <h2 class="page-title">💼 스폰서(광고주) 전용 관리</h2>
-    
-        <div class="admin-profile admin-header-user" id="adminHeaderUser">
-            <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
-                <span id="header-user-info"></span>
-                <span class="admin-header-caret">▾</span>
-            </button>
-            <div class="admin-avatar" id="header-user-avatar">A</div>
-            <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
-                <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
-                <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+        <h2 class="page-title" id="pageTitle">💼 스폰서 불판 관리</h2>
+        <div style="display:flex; align-items:center; gap:14px;">
+            <button class="btn-new" id="btnOpenCreate" style="display:none;" onclick="PickleSponsor.openForm('new')">➕ 신규 스폰서 불판 등록</button>
+            <div class="admin-profile admin-header-user" id="adminHeaderUser">
+                <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
+                    <span id="header-user-info"></span>
+                    <span class="admin-header-caret">▾</span>
+                </button>
+                <div class="admin-avatar" id="header-user-avatar">A</div>
+                <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
+                    <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
+                    <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+                </div>
             </div>
         </div>
     </header>
+
     <div class="content">
-        <div class="kpi-row">
-            <div class="kpi-card"><div class="kpi-label">진행 중 스폰 이벤트</div><div class="kpi-value" id="kpiEvents">-</div></div>
-            <div class="kpi-card"><div class="kpi-label">총 참여자 수</div><div class="kpi-value" id="kpiParticipants">-</div></div>
-            <div class="kpi-card"><div class="kpi-label">스폰 불판 노출</div><div class="kpi-value" id="kpiImpressions">-</div></div>
+
+        <!-- ============ 리스트 뷰 ============ -->
+        <div id="listView" class="view-page active">
+            <div class="kpi-row" id="kpiRow">
+                <div class="kpi-card"><div class="kpi-label">누적 캠페인</div><div class="kpi-value" id="kpiTotal">-</div></div>
+                <div class="kpi-card"><div class="kpi-label">진행 중</div><div class="kpi-value" id="kpiActive">-</div></div>
+                <div class="kpi-card" id="kpiMappedWrap"><div class="kpi-label">매핑된 외부 열람 계정</div><div class="kpi-value" id="kpiMapped">-</div></div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:30%;">브랜드 / 캠페인(불판) 주제</th>
+                            <th>진행 기간</th>
+                            <th>투표(A/B)</th>
+                            <th>쿠폰 소진</th>
+                            <th>상태</th>
+                            <th>액션</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaignTableBody">
+                        <tr class="empty-row"><td colspan="6">불러오는 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:20px;" id="sponsorNoticePanel" hidden>
+                <p style="margin:0; color:var(--text-sub); font-size:0.85rem; line-height:1.6;">
+                    회원 개인정보 및 타 광고주 데이터는 조회할 수 없으며, 위 목록에는 귀사(브랜드)에 매핑된 캠페인만 표시됩니다. 캠페인 신규 등록·수정은 픽클 운영팀에서 진행합니다.
+                </p>
+            </div>
         </div>
-        <div class="panel">
-            <h3>📊 스폰서 리포트 안내</h3>
-            <p>자사 스폰·이벤트 성과는 <strong>통계 및 분석</strong> 메뉴에서 확인할 수 있습니다. 회원 개인정보 및 타 광고주 데이터는 조회할 수 없습니다.</p>
+
+        <!-- ============ 등록/수정 폼 뷰 (내부 관리자 전용) ============ -->
+        <div id="formView" class="view-page">
+            <div class="form-wrapper">
+                <div class="form-col">
+
+                    <section class="form-section">
+                        <div class="section-title">🏢 1. 스폰서(광고주) 기본 정보</div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">기업명 <span class="req">*</span></span><input type="text" id="f_company" class="input-field" placeholder="예: (주)핫시즈너"></div>
+                            <div class="input-group"><span class="input-label">브랜드명 <span class="req">*</span></span><input type="text" id="f_brand" class="input-field" placeholder="예: 엽기떡볶이"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">담당자명 <span class="req">*</span></span><input type="text" id="f_manager_name" class="input-field" placeholder="예: 김픽클 대리"></div>
+                            <div class="input-group"><span class="input-label">캠페인 예산 (참고용)</span><input type="text" id="f_budget" class="input-field" placeholder="예: 3000000"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">담당자 휴대폰 <span class="req">*</span></span><input type="text" id="f_manager_mobile" class="input-field" placeholder="010-1234-5678"></div>
+                            <div class="input-group"><span class="input-label">회사 전화번호</span><input type="text" id="f_manager_phone" class="input-field" placeholder="02-123-4567"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">담당자 이메일 <span class="req">*</span></span><input type="email" id="f_manager_email" class="input-field" placeholder="email@brand.com"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">캠페인 노출 기간 <span class="req">*</span></span>
+                                <div class="date-wrap">
+                                    <input type="datetime-local" id="f_start" class="input-field">
+                                    <span>~</span>
+                                    <input type="datetime-local" id="f_end" class="input-field">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <div class="section-title">🔥 2. 불판 콘텐츠</div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">불판 메인 질문 <span class="req">*</span></span><input type="text" id="f_title" class="input-field" placeholder="예: 스트레스 폭발하는 날! 마라엽떡 vs 오리지널" oninput="PickleSponsor.updateMockup()"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label" style="color:var(--neon-blue);">A픽 텍스트 <span class="req">*</span></span><input type="text" id="f_opt_a" class="input-field" oninput="PickleSponsor.updateMockup()"></div>
+                            <div class="input-group"><span class="input-label" style="color:var(--neon-pink);">B픽 텍스트 <span class="req">*</span></span><input type="text" id="f_opt_b" class="input-field" oninput="PickleSponsor.updateMockup()"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <span class="input-label">미디어 구성</span>
+                                <select id="f_media_type" class="input-field">
+                                    <option value="none">미디어 없음</option>
+                                    <option value="single">단일 이미지</option>
+                                    <option value="dual">대결(A/B) 이미지</option>
+                                    <option value="video">영상(유튜브/임베드) 단일</option>
+                                    <option value="video_dual">대결(A/B) 영상</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-label">당첨 확률 (%) <span class="req">*</span></span>
+                                <input type="number" id="f_win_rate" class="input-field" min="0" max="100" step="0.01" placeholder="예: 5 (투표자의 5%가 쿠폰 당첨)">
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">미디어 URL (A / 단일)</span><input type="text" id="f_media_1" class="input-field" placeholder="이미지 또는 유튜브 URL"></div>
+                            <div class="input-group"><span class="input-label">미디어 URL (B, 대결 구성 시)</span><input type="text" id="f_media_2" class="input-field" placeholder="dual/video_dual 일 때만"></div>
+                        </div>
+                        <div class="hint">※ 이미지는 Storage 또는 외부 CDN에 업로드 후 URL을 붙여넣어 주세요. 파일 업로드 UI는 추후 지원 예정입니다.</div>
+                    </section>
+
+                    <section class="form-section" style="border:1px solid rgba(255,0,127,0.4);">
+                        <div class="section-title" style="color:var(--neon-pink); border-bottom-color:rgba(255,0,127,0.2);">🎁 3. 쿠폰(리워드) 재고</div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">쿠폰명 (유저에게 보여질 이름)</span><input type="text" id="f_coupon_title" class="input-field" placeholder="예: 마라엽떡 50% 할인 쿠폰"></div>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-label">쿠폰 PIN 코드 (한 줄에 1개씩 붙여넣기 — 신규 등록분만 추가됩니다)</span>
+                            <textarea id="f_pin_bulk" class="input-field" rows="4" placeholder="ABCD-1234&#10;ABCD-1235&#10;..."></textarea>
+                        </div>
+                        <div class="pin-count-badge" id="pinPoolStatus">등록된 쿠폰 0개 / 지급됨 0개</div>
+                    </section>
+
+                    <section class="form-section" style="border:1px solid rgba(0,240,255,0.4);">
+                        <div class="section-title" style="color:var(--neon-blue); border-bottom-color:rgba(0,240,255,0.2);">📢 4. 하단 CTA 배너</div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">서브 타이틀</span><input type="text" id="f_banner_sub" class="input-field" oninput="PickleSponsor.updateMockup()"></div>
+                            <div class="input-group"><span class="input-label">메인 타이틀</span><input type="text" id="f_banner_main" class="input-field" oninput="PickleSponsor.updateMockup()"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">버튼 텍스트</span><input type="text" id="f_banner_btn" class="input-field" oninput="PickleSponsor.updateMockup()"></div>
+                            <div class="input-group"><span class="input-label">연결 링크(URL)</span><input type="text" id="f_banner_link" class="input-field" placeholder="https://"></div>
+                        </div>
+                    </section>
+
+                    <section class="form-section" style="border:1px solid rgba(255,204,0,0.3);">
+                        <div class="section-title" style="color:var(--theme-gold); border-bottom-color:rgba(255,204,0,0.2);">💬 5. 카카오톡 공유 문구</div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">말풍선 메시지</span><textarea id="f_kakao_msg" class="input-field" rows="2"></textarea></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><span class="input-label">공유링크 타이틀</span><input type="text" id="f_kakao_title" class="input-field"></div>
+                            <div class="input-group"><span class="input-label">버튼 텍스트</span><input type="text" id="f_kakao_btn" class="input-field"></div>
+                        </div>
+                    </section>
+
+                    <section class="form-section" style="border-color:var(--theme-gold);">
+                        <div class="section-title" style="color:var(--theme-gold);">🤝 6. 파트너 통계 열람 권한 매핑</div>
+                        <div class="hint" style="margin-bottom:10px;">여기에 추가한 이메일 계정은 반드시 관리자 계정 설정에서 "외부 스폰서" 역할로 먼저 발급되어 있어야 로그인 후 이 캠페인을 열람할 수 있습니다.</div>
+                        <div class="input-row">
+                            <div class="input-group"><input type="email" id="viewerEmailInput" class="input-field" placeholder="부여할 계정 이메일"></div>
+                            <div class="input-group"><input type="text" id="viewerLabelInput" class="input-field" placeholder="메모 (예: [대행] 제일기획 마케터)"></div>
+                            <button class="btn-new" style="flex:none;" onclick="PickleSponsor.addViewerTag()">추가</button>
+                        </div>
+                        <div class="tag-container" id="viewerTagContainer"></div>
+                    </section>
+
+                    <div class="bottom-actions">
+                        <button class="btn-cancel" onclick="PickleSponsor.switchView('list')">취소</button>
+                        <button class="btn-submit" id="formSubmitBtn" onclick="PickleSponsor.submitForm()">저장</button>
+                    </div>
+                </div>
+
+                <div class="preview-box">
+                    <div class="preview-label">📱 앱 화면 미리보기 (대략적인 형태)</div>
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="mock-sponsor-chip">💎 스폰서 최애불판</div>
+                            <div class="mock-q" id="mockQ">불판 질문을 입력하세요</div>
+                            <div class="mock-vote-card">A. <span id="mockA" style="color:var(--neon-blue);">A픽 텍스트</span></div>
+                            <div class="mock-vote-card">B. <span id="mockB" style="color:var(--neon-pink);">B픽 텍스트</span></div>
+                            <div class="mock-banner">
+                                <div class="sub" id="mockSub">서브 타이틀</div>
+                                <div class="main" id="mockMain">메인 타이틀</div>
+                                <button type="button">버튼 텍스트</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </main>
 
+<!-- ============ 리포트 모달 ============ -->
+<div class="modal-overlay" id="reportModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="rptTitle">캠페인 성과 리포트</div>
+                <div class="modal-sub" id="rptSub"></div>
+            </div>
+            <button class="btn-close" onclick="PickleSponsor.closeReportModal()">✕</button>
+        </div>
+        <div class="modal-body" id="rptBody">
+            <div style="color:var(--text-sub);">불러오는 중...</div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>
+<script src="js/admin-sponsor.js"></script>
 </body>
 </html>
