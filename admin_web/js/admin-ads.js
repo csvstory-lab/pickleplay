@@ -259,69 +259,71 @@
     renderAgencyTable(filtered);
   }
 
+  // 네이티브 prompt() 팝업 대신, 화면에 보이는 입력칸(이메일/이름/비밀번호)으로 직접 받는다.
+  var agProvisioningIdx = null; // 🔑 눌러서 발급 중인 태그의 인덱스 (inline 폼 펼침 상태)
+
   function renderAgencyViewerTags() {
     var container = $('agViewerTagContainer');
     container.innerHTML = currentAgencyViewerTags.map(function (t, idx) {
       var label = t.label ? escapeHtml(t.label) + ' · ' : '';
+      var statusBadge = t._provisioned
+        ? ' <span style="color:var(--neon-green); font-weight:800;">· 로그인 가능</span>'
+        : '';
       var provisionBtn = t.id
-        ? ' <span class="tag-close" onclick="PickleAds.provisionAgencyViewerAccount(' + idx + ')" title="로그인 계정 발급" style="background:rgba(57,255,20,0.15); color:var(--neon-green);">🔑</span>'
+        ? ' <span class="tag-close" onclick="PickleAds.toggleAgencyProvisionBox(' + idx + ')" title="로그인 계정 발급/비밀번호 재설정" style="background:rgba(57,255,20,0.15); color:var(--neon-green);">🔑</span>'
         : '';
       return (
-        '<div class="partner-tag">' + label + escapeHtml(t.email) + provisionBtn +
+        '<div class="partner-tag">' + label + escapeHtml(t.email) + statusBadge + provisionBtn +
         ' <span class="tag-close" onclick="PickleAds.removeAgencyViewerTag(' + idx + ')">✕</span></div>'
       );
     }).join('');
+    renderAgencyProvisionBox();
   }
 
-  function addAgencyViewerTag() {
-    var emailEl = $('agViewerEmailInput');
-    var labelEl = $('agViewerLabelInput');
-    var email = (emailEl.value || '').trim().toLowerCase();
-    var label = (labelEl.value || '').trim();
-    if (!email || email.indexOf('@') === -1) {
-      alert('유효한 이메일을 입력해 주세요.');
-      return;
-    }
-    if (currentAgencyViewerTags.some(function (t) { return t.email === email; })) {
-      alert('이미 추가된 이메일입니다.');
-      return;
-    }
-    currentAgencyViewerTags.push({ email: email, label: label, _new: true });
-    emailEl.value = '';
-    labelEl.value = '';
-    renderAgencyViewerTags();
+  function toggleAgencyProvisionBox(idx) {
+    agProvisioningIdx = (agProvisioningIdx === idx) ? null : idx;
+    renderAgencyProvisionBox();
   }
 
-  async function removeAgencyViewerTag(idx) {
-    var tag = currentAgencyViewerTags[idx];
+  function closeAgencyProvisionBox() {
+    agProvisioningIdx = null;
+    renderAgencyProvisionBox();
+  }
+
+  function renderAgencyProvisionBox() {
+    var box = $('agViewerProvisionBox');
+    if (!box) return;
+    var tag = agProvisioningIdx != null ? currentAgencyViewerTags[agProvisioningIdx] : null;
+    if (!tag) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    box.style.display = 'flex';
+    box.innerHTML =
+      '<div style="font-weight:800; color:var(--theme-gold);">🔑 "' + escapeHtml(tag.email) + '" 로그인 계정 발급 / 비밀번호 재설정</div>' +
+      '<div class="input-row">' +
+        '<div class="input-group"><span class="input-label">담당자 이름</span><input type="text" id="agProvisionNameInput" class="input-field" value="' + escapeHtml(tag.label || '') + '" placeholder="예: 김픽클 AE"></div>' +
+        '<div class="input-group"><span class="input-label">비밀번호</span><input type="password" id="agProvisionPasswordInput" class="input-field" placeholder="8자 이상"></div>' +
+      '</div>' +
+      '<div style="display:flex; gap:8px; justify-content:flex-end;">' +
+        '<button type="button" class="btn-cancel" style="padding:8px 16px;" onclick="PickleAds.closeAgencyProvisionBox()">취소</button>' +
+        '<button type="button" class="btn-submit" style="padding:8px 16px;" onclick="PickleAds.confirmAgencyProvision()">발급</button>' +
+      '</div>';
+  }
+
+  async function confirmAgencyProvision() {
+    var tag = agProvisioningIdx != null ? currentAgencyViewerTags[agProvisioningIdx] : null;
     if (!tag) return;
-    if (tag.id) {
-      var delRes = await sb.from('sponsor_agency_viewers').delete().eq('id', tag.id);
-      if (delRes.error) {
-        alert('삭제 실패: ' + delRes.error.message);
-        return;
-      }
-    }
-    currentAgencyViewerTags.splice(idx, 1);
-    renderAgencyViewerTags();
-  }
-
-  async function provisionAgencyViewerAccount(idx) {
-    var tag = currentAgencyViewerTags[idx];
-    if (!tag || !tag.id) return;
 
     if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.provisionStaffAccount) {
       alert('계정 발급 모듈을 불러오지 못했습니다.');
       return;
     }
 
-    var displayName = prompt('담당자 이름을 입력해 주세요', tag.label || '');
-    if (displayName === null) return;
-    displayName = displayName.trim();
-    if (!displayName) { alert('담당자 이름은 필수입니다.'); return; }
-
-    var password = prompt('초기 비밀번호를 입력해 주세요 (8자 이상). 발급 후 담당자에게 직접 전달해 주세요.', '');
-    if (password === null) return;
+    var displayName = ($('agProvisionNameInput').value || '').trim();
+    var password = $('agProvisionPasswordInput').value || '';
+    if (!displayName) { alert('담당자 이름을 입력해 주세요.'); return; }
     if (!password || password.length < 8) { alert('비밀번호는 8자 이상이어야 합니다.'); return; }
 
     var department = $('ag_name').value.trim() || '대행사';
@@ -342,13 +344,91 @@
       return;
     }
 
+    tag.label = displayName;
+    tag._provisioned = true;
+    agProvisioningIdx = null;
+
     var msg = '"' + tag.email + '" 계정이 발급되었습니다.';
     if (result.via === 'rpc_only' && result.warning) {
       msg += '\n\n⚠️ ' + result.warning;
     } else {
-      msg += '\n\n✅ 로그인 가능한 계정이 생성되었습니다. 이 대행사 소속 광고주의 모든 캠페인을 조회할 수 있습니다.';
+      msg += '\n\n✅ 로그인 가능한 계정이 생성되었습니다. 이메일/비밀번호를 담당자에게 직접 전달해 주세요. 이 대행사 소속 광고주의 모든 캠페인을 조회할 수 있습니다.';
     }
     alert(msg);
+    renderAgencyViewerTags();
+  }
+
+  // "추가" — 이메일만 넣으면 열람 권한만, 이름+비밀번호까지 채우면 로그인 계정까지 한 번에 생성
+  async function addAgencyViewerTag() {
+    var emailEl = $('agViewerEmailInput');
+    var nameEl = $('agViewerNameInput');
+    var pwEl = $('agViewerPasswordInput');
+    var email = (emailEl.value || '').trim().toLowerCase();
+    var name = (nameEl.value || '').trim();
+    var password = pwEl.value || '';
+
+    if (!email || email.indexOf('@') === -1) {
+      alert('유효한 이메일을 입력해 주세요.');
+      return;
+    }
+    if (currentAgencyViewerTags.some(function (t) { return t.email === email; })) {
+      alert('이미 추가된 이메일입니다.');
+      return;
+    }
+    if (password && password.length < 8) {
+      alert('비밀번호는 8자 이상이어야 합니다. (로그인 계정을 새로 만들지 않고 열람 권한만 추가하려면 비밀번호 칸은 비워두세요)');
+      return;
+    }
+
+    var provisioned = false;
+    if (password) {
+      if (!name) { alert('로그인 계정을 함께 만들려면 담당자 이름도 입력해 주세요.'); return; }
+      if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.provisionStaffAccount) {
+        alert('계정 발급 모듈을 불러오지 못했습니다.');
+        return;
+      }
+      var department = $('ag_name').value.trim() || '대행사';
+      var result = await window.PickleAdminWorkspace.provisionStaffAccount({
+        email: email,
+        password: password,
+        display_name: name,
+        department: department,
+        role: 'sponsor',
+        status: 'active',
+        mode: 'create',
+      });
+      if (!result.ok) {
+        alert('계정 발급 실패: ' + (result.message || result.reason || 'unknown') +
+          (result.reason === 'forbidden' ? '\n\n(계정 발급은 최고관리자만 할 수 있습니다)' : ''));
+        return;
+      }
+      provisioned = true;
+    }
+
+    currentAgencyViewerTags.push({ email: email, label: name, _new: true, _provisioned: provisioned });
+    emailEl.value = '';
+    nameEl.value = '';
+    pwEl.value = '';
+    renderAgencyViewerTags();
+
+    if (provisioned) {
+      alert('"' + email + '" 로그인 계정이 생성되고 열람 권한도 함께 추가되었습니다.\n이메일/비밀번호를 담당자에게 직접 전달해 주세요.\n\n(저장 버튼을 눌러야 이 대행사에 대한 열람 권한이 최종 반영됩니다.)');
+    }
+  }
+
+  async function removeAgencyViewerTag(idx) {
+    var tag = currentAgencyViewerTags[idx];
+    if (!tag) return;
+    if (tag.id) {
+      var delRes = await sb.from('sponsor_agency_viewers').delete().eq('id', tag.id);
+      if (delRes.error) {
+        alert('삭제 실패: ' + delRes.error.message);
+        return;
+      }
+    }
+    if (agProvisioningIdx === idx) agProvisioningIdx = null;
+    currentAgencyViewerTags.splice(idx, 1);
+    renderAgencyViewerTags();
   }
 
   function openAgencyForm(mode, id) {
@@ -357,6 +437,7 @@
       $(id2).value = '';
     });
     currentAgencyViewerTags = [];
+    agProvisioningIdx = null;
 
     if (mode === 'edit' && id) {
       var row = agencyRows.filter(function (r) { return r.id === id; })[0];
@@ -388,6 +469,7 @@
     currentAgencyViewerTags = (res.data || []).map(function (v) {
       return { id: v.id, email: v.viewer_email, label: v.viewer_label || '' };
     });
+    agProvisioningIdx = null;
     renderAgencyViewerTags();
   }
 
@@ -614,7 +696,9 @@
     deleteAgency: deleteAgency,
     addAgencyViewerTag: addAgencyViewerTag,
     removeAgencyViewerTag: removeAgencyViewerTag,
-    provisionAgencyViewerAccount: provisionAgencyViewerAccount,
+    toggleAgencyProvisionBox: toggleAgencyProvisionBox,
+    closeAgencyProvisionBox: closeAgencyProvisionBox,
+    confirmAgencyProvision: confirmAgencyProvision,
     filterSettlements: filterSettlements,
     resetSettlementFilter: resetSettlementFilter,
     openSettlementForm: openSettlementForm,

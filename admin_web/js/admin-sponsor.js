@@ -162,6 +162,7 @@
     });
     $('f_media_type').value = 'none';
     currentViewerTags = [];
+    provisioningIdx = null;
     renderViewerTags();
     $('pinPoolStatus').textContent = '등록된 쿠폰 0개 / 지급됨 0개';
     clearAdvertiserSelection();
@@ -320,6 +321,7 @@
     currentViewerTags = (viewersRes.data || []).map(function (v) {
       return { id: v.id, email: v.viewer_email, label: v.viewer_label || '' };
     });
+    provisioningIdx = null;
     renderViewerTags();
 
     updateMockup();
@@ -440,37 +442,72 @@
   }
 
   // ───────────────────────── 파트너 열람 권한 태그 ─────────────────────────
+  // 네이티브 prompt() 팝업 대신, 화면에 보이는 입력칸(이메일/이름/비밀번호)으로 직접 받는다.
+  var provisioningIdx = null; // 🔑 눌러서 발급 중인 태그의 인덱스 (inline 폼 펼침 상태)
+
   function renderViewerTags() {
     var container = $('viewerTagContainer');
     container.innerHTML = currentViewerTags.map(function (t, idx) {
       var label = t.label ? escapeHtml(t.label) + ' · ' : '';
+      var statusBadge = t._provisioned
+        ? ' <span style="color:var(--neon-green); font-weight:800;">· 로그인 가능</span>'
+        : '';
       var provisionBtn = t.id
-        ? ' <span class="tag-close" onclick="PickleSponsor.provisionViewerAccount(' + idx + ')" title="로그인 계정 발급" style="background:rgba(57,255,20,0.15); color:var(--neon-green);">🔑</span>'
+        ? ' <span class="tag-close" onclick="PickleSponsor.toggleProvisionBox(' + idx + ')" title="로그인 계정 발급/비밀번호 재설정" style="background:rgba(57,255,20,0.15); color:var(--neon-green);">🔑</span>'
         : '';
       return (
-        '<div class="partner-tag">' + label + escapeHtml(t.email) + provisionBtn +
+        '<div class="partner-tag">' + label + escapeHtml(t.email) + statusBadge + provisionBtn +
         ' <span class="tag-close" onclick="PickleSponsor.removeViewerTag(' + idx + ')">✕</span></div>'
       );
     }).join('');
+    renderProvisionBox();
   }
 
-  // 매핑된 이메일로 실제 로그인 가능한 'sponsor' 계정 발급 (super 역할만 가능 — admin-auth.js 정책)
-  async function provisionViewerAccount(idx) {
-    var tag = currentViewerTags[idx];
-    if (!tag || !tag.id) return;
+  // 🔑 클릭 — 이미 저장된 태그를 로그인 계정으로 만들고 싶을 때, 그 자리에서 이름/비밀번호 입력칸을 펼침
+  function toggleProvisionBox(idx) {
+    provisioningIdx = (provisioningIdx === idx) ? null : idx;
+    renderProvisionBox();
+  }
+
+  function closeProvisionBox() {
+    provisioningIdx = null;
+    renderProvisionBox();
+  }
+
+  function renderProvisionBox() {
+    var box = $('viewerProvisionBox');
+    if (!box) return;
+    var tag = provisioningIdx != null ? currentViewerTags[provisioningIdx] : null;
+    if (!tag) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    box.style.display = 'flex';
+    box.innerHTML =
+      '<div style="font-weight:800; color:var(--theme-gold);">🔑 "' + escapeHtml(tag.email) + '" 로그인 계정 발급 / 비밀번호 재설정</div>' +
+      '<div class="input-row">' +
+        '<div class="input-group"><span class="input-label">담당자 이름</span><input type="text" id="provisionNameInput" class="input-field" value="' + escapeHtml(tag.label || '') + '" placeholder="예: 김픽클 대리"></div>' +
+        '<div class="input-group"><span class="input-label">비밀번호</span><input type="password" id="provisionPasswordInput" class="input-field" placeholder="8자 이상"></div>' +
+      '</div>' +
+      '<div style="display:flex; gap:8px; justify-content:flex-end;">' +
+        '<button type="button" class="btn-cancel" style="padding:8px 16px;" onclick="PickleSponsor.closeProvisionBox()">취소</button>' +
+        '<button type="button" class="btn-submit" style="padding:8px 16px;" onclick="PickleSponsor.confirmProvision()">발급</button>' +
+      '</div>';
+  }
+
+  async function confirmProvision() {
+    var tag = provisioningIdx != null ? currentViewerTags[provisioningIdx] : null;
+    if (!tag) return;
 
     if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.provisionStaffAccount) {
       alert('계정 발급 모듈을 불러오지 못했습니다.');
       return;
     }
 
-    var displayName = prompt('담당자 이름을 입력해 주세요 (예: 김픽클 대리)', tag.label || '');
-    if (displayName === null) return;
-    displayName = displayName.trim();
-    if (!displayName) { alert('담당자 이름은 필수입니다.'); return; }
-
-    var password = prompt('초기 비밀번호를 입력해 주세요 (8자 이상). 발급 후 담당자에게 직접 전달해 주세요.', '');
-    if (password === null) return;
+    var displayName = ($('provisionNameInput').value || '').trim();
+    var password = $('provisionPasswordInput').value || '';
+    if (!displayName) { alert('담당자 이름을 입력해 주세요.'); return; }
     if (!password || password.length < 8) { alert('비밀번호는 8자 이상이어야 합니다.'); return; }
 
     var department = $('f_brand').value.trim() || $('f_company').value.trim() || '스폰서';
@@ -491,20 +528,29 @@
       return;
     }
 
+    tag.label = displayName;
+    tag._provisioned = true;
+    provisioningIdx = null;
+
     var msg = '"' + tag.email + '" 계정이 발급되었습니다.';
     if (result.via === 'rpc_only' && result.warning) {
       msg += '\n\n⚠️ ' + result.warning;
     } else {
-      msg += '\n\n✅ 로그인 가능한 계정이 생성되었습니다. 초기 비밀번호를 담당자에게 전달해 주세요.\nadmin_login.html 에서 로그인하면 스폰서 전용 화면(이 캠페인 포함)으로 자동 이동합니다.';
+      msg += '\n\n✅ 로그인 가능한 계정이 생성되었습니다. 이메일/비밀번호를 담당자에게 직접 전달해 주세요.\nadmin_login.html 에서 로그인하면 스폰서 전용 화면(이 캠페인 포함)으로 자동 이동합니다.';
     }
     alert(msg);
+    renderViewerTags();
   }
 
-  function addViewerTag() {
+  // "추가" — 이메일만 넣으면 열람 권한만, 이름+비밀번호까지 채우면 로그인 계정까지 한 번에 생성
+  async function addViewerTag() {
     var emailEl = $('viewerEmailInput');
-    var labelEl = $('viewerLabelInput');
+    var nameEl = $('viewerNameInput');
+    var pwEl = $('viewerPasswordInput');
     var email = (emailEl.value || '').trim().toLowerCase();
-    var label = (labelEl.value || '').trim();
+    var name = (nameEl.value || '').trim();
+    var password = pwEl.value || '';
+
     if (!email || email.indexOf('@') === -1) {
       alert('유효한 이메일을 입력해 주세요.');
       return;
@@ -513,10 +559,45 @@
       alert('이미 추가된 이메일입니다.');
       return;
     }
-    currentViewerTags.push({ email: email, label: label, _new: true });
+    if (password && password.length < 8) {
+      alert('비밀번호는 8자 이상이어야 합니다. (로그인 계정을 새로 만들지 않고 열람 권한만 추가하려면 비밀번호 칸은 비워두세요)');
+      return;
+    }
+
+    var provisioned = false;
+    if (password) {
+      if (!name) { alert('로그인 계정을 함께 만들려면 담당자 이름도 입력해 주세요.'); return; }
+      if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.provisionStaffAccount) {
+        alert('계정 발급 모듈을 불러오지 못했습니다.');
+        return;
+      }
+      var department = $('f_brand').value.trim() || $('f_company').value.trim() || '스폰서';
+      var result = await window.PickleAdminWorkspace.provisionStaffAccount({
+        email: email,
+        password: password,
+        display_name: name,
+        department: department,
+        role: 'sponsor',
+        status: 'active',
+        mode: 'create',
+      });
+      if (!result.ok) {
+        alert('계정 발급 실패: ' + (result.message || result.reason || 'unknown') +
+          (result.reason === 'forbidden' ? '\n\n(계정 발급은 최고관리자만 할 수 있습니다)' : ''));
+        return;
+      }
+      provisioned = true;
+    }
+
+    currentViewerTags.push({ email: email, label: name, _new: true, _provisioned: provisioned });
     emailEl.value = '';
-    labelEl.value = '';
+    nameEl.value = '';
+    pwEl.value = '';
     renderViewerTags();
+
+    if (provisioned) {
+      alert('"' + email + '" 로그인 계정이 생성되고 열람 권한도 함께 추가되었습니다.\n이메일/비밀번호를 담당자에게 직접 전달해 주세요.\n\n(저장 버튼을 눌러야 이 캠페인에 대한 열람 권한이 최종 반영됩니다.)');
+    }
   }
 
   async function removeViewerTag(idx) {
@@ -530,6 +611,7 @@
         return;
       }
     }
+    if (provisioningIdx === idx) provisioningIdx = null;
     currentViewerTags.splice(idx, 1);
     renderViewerTags();
   }
@@ -916,7 +998,9 @@
     submitForm: submitForm,
     addViewerTag: addViewerTag,
     removeViewerTag: removeViewerTag,
-    provisionViewerAccount: provisionViewerAccount,
+    toggleProvisionBox: toggleProvisionBox,
+    closeProvisionBox: closeProvisionBox,
+    confirmProvision: confirmProvision,
     uploadMediaFile: uploadMediaFile,
     duplicateCampaign: duplicateCampaign,
     togglePause: togglePause,

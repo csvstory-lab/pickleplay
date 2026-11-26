@@ -319,13 +319,17 @@
 
             <div class="input-group" id="agViewerSection" style="display:none;">
                 <span class="input-label">대행사 로그인 계정 (이 대행사 소속 광고주의 모든 캠페인 열람)</span>
+                <div class="hint" style="margin-bottom:8px;">이메일만 입력하면 "열람 권한"만 추가됩니다 (계정이 이미 있는 경우). 이름 + 비밀번호까지 함께 입력하면 로그인 계정과 열람 권한이 한 번에 만들어져요 — 만든 뒤 이메일/비밀번호를 담당자에게 직접 전달해 주세요.</div>
                 <div class="tag-container" id="agViewerTagContainer" style="display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:12px; background:#09090b; border:1px dashed #52525b; border-radius:8px; align-items:center;"></div>
                 <div class="input-row" style="margin-top:8px;">
-                    <div class="input-group"><input type="text" id="agViewerEmailInput" class="input-field" placeholder="이메일"></div>
-                    <div class="input-group"><input type="text" id="agViewerLabelInput" class="input-field" placeholder="메모 (예: 제일기획 담당 AE)"></div>
-                    <button type="button" class="btn-action btn-edit" onclick="PickleAds.addAgencyViewerTag()">+ 추가</button>
+                    <div class="input-group"><span class="input-label">이메일</span><input type="email" id="agViewerEmailInput" class="input-field" placeholder="이메일"></div>
+                    <div class="input-group"><span class="input-label">담당자 이름</span><input type="text" id="agViewerNameInput" class="input-field" placeholder="예: 김픽클 AE"></div>
                 </div>
-                <div class="hint">🔑 아이콘을 누르면 해당 이메일로 로그인 계정을 바로 발급할 수 있습니다 (최고관리자만 가능).</div>
+                <div class="input-row" style="margin-top:8px;">
+                    <div class="input-group"><span class="input-label">비밀번호 <span class="hint" style="display:inline; margin:0;">(로그인 계정을 새로 만들 때만 입력 · 8자 이상)</span></span><input type="password" id="agViewerPasswordInput" class="input-field" placeholder="비워두면 열람 권한만 추가됩니다"></div>
+                    <button type="button" class="btn-action btn-edit" style="align-self:flex-end;" onclick="PickleAds.addAgencyViewerTag()">+ 추가</button>
+                </div>
+                <div id="agViewerProvisionBox" style="display:none; flex-direction:column; gap:10px; margin-top:10px; padding:14px; background:#09090b; border:1px solid var(--theme-gold); border-radius:8px;"></div>
             </div>
             <div class="hint" id="agViewerHintNew">※ 대행사를 먼저 저장한 뒤 다시 열면 로그인 계정을 매핑할 수 있습니다.</div>
         </div>

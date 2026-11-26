@@ -728,7 +728,7 @@
                           <option value="marketer" selected>📈 마케터 (기획/이벤트)</option>
                           <option value="cs">🎧 CS 매니저 (회원/운영)</option>
                           <option value="account">💳 재무/정산 담당</option>
-                          <option value="sponsor">💼 외부 스폰서(광고주)</option>
+                          <option value="sponsor" id="admRoleSponsorOption">💼 외부 스폰서(광고주) — 신규 발급은 캠페인/대행사 화면 이용</option>
                       </select>
                   </div>
                   <div class="sc-item col">
@@ -1029,6 +1029,8 @@
 
         editingAdminEmail = null;
 
+        var sponsorOption = document.getElementById('admRoleSponsorOption');
+
         if (mode === 'new') {
             title.innerHTML = '➕ 신규 관리자(파트너) 등록';
             document.getElementById('admName').value = '';
@@ -1041,6 +1043,11 @@
             document.getElementById('admNewPassword').value = '';
             pwCreate.style.display = 'flex';
             pwReset.style.display = 'none';
+
+            // 외부 스폰서(광고주) 계정은 여기서 새로 만들면 "열람 권한(파트너 열람 권한)" 매핑 없이
+            // 로그인만 되는 빈 계정이 생겨서 혼란을 줄 수 있음 — 신규 발급은 막고,
+            // 캠페인/대행사 수정 화면의 "파트너 열람 권한"에서 만들도록 유도한다.
+            if (sponsorOption) sponsorOption.disabled = true;
         } else {
             const row = typeof rowOrName === 'object' && rowOrName
                 ? rowOrName
@@ -1052,6 +1059,9 @@
             document.getElementById('admDept').value = row.department || '';
             emailInput.value = row.email || '';
             emailInput.readOnly = true;
+
+            // 이미 외부 스폰서로 만들어진 기존 계정은 그대로 조회/상태변경이 가능해야 하므로 옵션을 잠그지 않는다.
+            if (sponsorOption) sponsorOption.disabled = false;
             document.getElementById('admRole').value = row.role || 'marketer';
             document.getElementById('admStatus').value = row.status || 'active';
 
