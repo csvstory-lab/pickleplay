@@ -69,6 +69,7 @@
     'admin_ai_filter.html',
     'admin_cs.html',
     'admin_dashboard.html',
+    'admin_statistics.html',
   ];
 
   /** 역할별 접근 가능 메뉴 */
@@ -77,7 +78,7 @@
     marketer: ['dashboard', 'categories', 'posts', 'events', 'statistics', 'sponsor'],
     cs: ['dashboard', 'users', 'categories', 'posts', 'reports', 'ai_filter', 'cs'],
     account: ['dashboard', 'ads', 'statistics'],
-    sponsor: ['sponsor', 'statistics'],
+    sponsor: ['sponsor'],
   };
 
   var ROLE_LABELS = {
