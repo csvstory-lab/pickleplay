@@ -566,11 +566,18 @@
             const { count: pendingRep } = await dbClient.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending');
             document.getElementById('kpiTodayReports').innerText = (totalRep || 0) + " 건";
             document.getElementById('kpiPendingReports').innerText = (pendingRep || 0) + " 건";
-        } catch(e) {}
+        } catch(e) {
+            console.error('[admin_reports] 신고 KPI 조회 실패', e);
+            document.getElementById('kpiTodayReports').innerText = "오류";
+            document.getElementById('kpiPendingReports').innerText = "오류";
+        }
         try {
             const { count } = await dbClient.from('users').select('*', { count: 'exact', head: true }).gte('penalty_points', 30);
             document.getElementById('kpiBannedUsers').innerText = (count || 0) + " 명";
-        } catch(e) {}
+        } catch(e) {
+            console.error('[admin_reports] 제재 회원 수 조회 실패', e);
+            document.getElementById('kpiBannedUsers').innerText = "오류";
+        }
         try {
             const { count } = await dbClient.from('comments').select('*', { count: 'exact', head: true }).gte('report_count', 10);
             document.getElementById('kpiAutoBlindedReports').innerText = (count || 0) + " 건";
@@ -582,7 +589,13 @@
             document.getElementById('kpiLegalIncomplete').innerText = legalArr.filter(r => r.status === 'incomplete').length + " 건";
             document.getElementById('kpiLegalTemporary').innerText = legalArr.filter(r => r.status === 'temporary').length + " 건";
             document.getElementById('kpiLegalResolved').innerText = legalArr.filter(r => r.status === 'resolved').length + " 건";
-        } catch(err) {}
+        } catch(err) {
+            console.error('[admin_reports] 권리침해 KPI 조회 실패', err);
+            document.getElementById('kpiLegalToday').innerText = "오류";
+            document.getElementById('kpiLegalIncomplete').innerText = "오류";
+            document.getElementById('kpiLegalTemporary').innerText = "오류";
+            document.getElementById('kpiLegalResolved').innerText = "오류";
+        }
     }
 
     window.loadReports = async function() {
@@ -668,7 +681,14 @@
             if (error) throw error;
             legalCache = data || [];
             window.renderLegalPage(1);
-        } catch(e) {}
+        } catch(e) {
+            console.error('[admin_reports] 권리침해 목록 로드 실패', e);
+            legalCache = [];
+            const tbody = document.getElementById('legalTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--alert-red, #ff3333);">목록을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.</td></tr>';
+            }
+        }
     };
 
     window.renderLegalPage = function(page) {
