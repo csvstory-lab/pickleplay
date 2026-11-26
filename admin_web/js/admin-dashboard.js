@@ -284,6 +284,28 @@
     renderCsList([]);
   }
 
+  // 관리자/스폰서/대행사 등 user_roles 에 등록된 내부·파트너 계정은 "회원"이 아니므로
+  // 대시보드의 총 회원수/오늘 가입 수에서 제외한다. RPC(admin_user_counts)가 아직
+  // 배포되지 않은 환경(SQL 미적용)에서는 예전 방식(내부 계정 포함한 단순 count)으로
+  // 자동 대체되어 대시보드 자체가 깨지지는 않는다.
+  async function loadUserCounts(sb, todayStart) {
+    var rpcResult = await sb.rpc('admin_user_counts', { p_today_start: todayStart });
+    if (!rpcResult.error && Array.isArray(rpcResult.data) && rpcResult.data[0]) {
+      return {
+        total: rpcResult.data[0].total_count ?? 0,
+        today: rpcResult.data[0].today_count ?? 0,
+      };
+    }
+    console.warn('[Admin Dashboard] admin_user_counts RPC 미적용, 단순 count 로 대체(내부 계정 포함될 수 있음)', rpcResult.error);
+    var fallback = await Promise.all([
+      sb.from('users').select('*', { count: 'exact', head: true }),
+      sb.from('users').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
+    ]);
+    if (fallback[0].error) throw fallback[0].error;
+    if (fallback[1].error) throw fallback[1].error;
+    return { total: fallback[0].count ?? 0, today: fallback[1].count ?? 0 };
+  }
+
   async function loadDashboardKPIs() {
     try {
       var sb = getClient();
@@ -291,16 +313,12 @@
       var todayStart = getTodayStartIso();
 
       var results = await Promise.all([
-        sb.from('users').select('*', { count: 'exact', head: true }),
+        loadUserCounts(sb, todayStart),
         sb
           .from('posts')
           .select('*', { count: 'exact', head: true })
           .eq('visibility_status', 'visible')
           .or('expires_at.is.null,expires_at.gt.' + JSON.stringify(nowIso)),
-        sb
-          .from('users')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', todayStart),
         sb
           .from('reports')
           .select('*', { count: 'exact', head: true })
@@ -312,17 +330,15 @@
           .limit(5),
       ]);
 
-      if (results[0].error) throw results[0].error;
       if (results[1].error) throw results[1].error;
       if (results[2].error) throw results[2].error;
       if (results[3].error) throw results[3].error;
-      if (results[4].error) throw results[4].error;
 
-      setKpiText('dashboard-total-users', results[0].count ?? 0);
+      setKpiText('dashboard-total-users', results[0].total);
       setKpiText('dashboard-active-posts', results[1].count ?? 0);
-      setKpiText('dashboard-today-users', results[2].count ?? 0);
-      setKpiText('dashboard-today-reports', results[3].count ?? 0);
-      renderTopPosts(results[4].data || []);
+      setKpiText('dashboard-today-users', results[0].today);
+      setKpiText('dashboard-today-reports', results[2].count ?? 0);
+      renderTopPosts(results[3].data || []);
 
       await Promise.all([loadTotalVotes(sb), loadPendingInquiries(sb), loadSponsorRevenue(sb)]);
     } catch (err) {
