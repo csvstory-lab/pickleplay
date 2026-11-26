@@ -195,7 +195,7 @@
    * @param {string} actionType
    * @param {string} [logLabel] e.g. 'Vote', 'Comment'
    */
-  function tryAwardPoints(userId, actionType, logLabel) {
+  function tryAwardPoints(userId, actionType, logLabel, sourceId) {
     var label = logLabel || actionType;
     console.log('✅ [' + label + '] 완료 -> awardPoints 호출 시도');
     if (!userId) {
@@ -206,7 +206,7 @@
       console.warn('[P!CKLE Points] 알 수 없는 액션 — 지급 생략', actionType);
       return Promise.resolve({ awarded: false, reason: 'unknown_action' });
     }
-    return awardPoints(userId, actionType);
+    return awardPoints(userId, actionType, { sourceId: sourceId });
   }
 
   async function awardPoints(userId, actionType, options) {
@@ -244,6 +244,7 @@
     var rpcRes = await sb.rpc('award_points', {
       p_user_id: userId,
       p_action: actionType,
+      p_source_id: (options && options.sourceId) || null,
     });
 
     if (rpcRes.error) {

@@ -934,12 +934,12 @@ function renderCommentItemHtml(comment, options) {
       // 답글 알림은 서버 트리거가 자동으로 처리합니다 (위 주석 참고).
 
       if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
-        window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment').catch(function (err) {
+        window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment', newReplyId).catch(function (err) {
           console.warn('[P!CKLE Detail] reply points skipped', err);
         });
       } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
         console.log('✅ [Comment] 완료 -> awardPoints 호출 시도');
-        window.PicklePoints.awardPoints(user.id, 'comment').catch(function (err) {
+        window.PicklePoints.awardPoints(user.id, 'comment', { sourceId: newReplyId }).catch(function (err) {
           console.warn('[P!CKLE Detail] reply points skipped', err);
         });
       }
@@ -1286,12 +1286,12 @@ function renderCommentsList(comments, sortType) {
       }
 
       if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
-        window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment').catch(function (err) {
+        window.PicklePoints.tryAwardPoints(user.id, 'comment', 'Comment', newComment.id).catch(function (err) {
           console.warn('[P!CKLE Detail] comment points skipped', err);
         });
       } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
         console.log('✅ [Comment] 완료 -> awardPoints 호출 시도');
-        window.PicklePoints.awardPoints(user.id, 'comment').catch(function (err) {
+        window.PicklePoints.awardPoints(user.id, 'comment', { sourceId: newComment.id }).catch(function (err) {
           console.warn('[P!CKLE Detail] comment points skipped', err);
         });
       }
@@ -1929,12 +1929,12 @@ function renderCommentsList(comments, sortType) {
     }
 
     if (window.PicklePoints && window.PicklePoints.tryAwardPoints) {
-      window.PicklePoints.tryAwardPoints(user.id, 'vote', 'Vote').catch(function (err) {
+      window.PicklePoints.tryAwardPoints(user.id, 'vote', 'Vote', postId).catch(function (err) {
         console.warn('[P!CKLE Detail] vote points skipped', err);
       });
     } else if (window.PicklePoints && window.PicklePoints.awardPoints) {
       console.log('✅ [Vote] 완료 -> awardPoints 호출 시도');
-      window.PicklePoints.awardPoints(user.id, 'vote').catch(function (err) {
+      window.PicklePoints.awardPoints(user.id, 'vote', { sourceId: postId }).catch(function (err) {
         console.warn('[P!CKLE Detail] vote points skipped', err);
       });
     }

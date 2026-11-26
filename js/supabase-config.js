@@ -1,6 +1,11 @@
 /**
- * P!CKLE Supabase 연결 정보 (로컬 전용 — Git 업로드 금지)
+ * P!CKLE Supabase 연결 정보
  * + 전역 Singleton 클라이언트 (window.supabaseClient)
+ *
+ * 주의: 아래 anonKey는 "공개용 anon 키"로, 브라우저에 노출되고 Git에 올라가도
+ * 안전하도록 설계된 값입니다 (실제 접근 제어는 Supabase의 RLS 정책이 담당합니다).
+ * 반드시 anon 키만 넣어야 하며, service_role 키(관리자 전용, 모든 권한 우회)는
+ * 절대 이 파일이나 어떤 프론트엔드 파일에도 넣으면 안 됩니다.
  *
  * HTML script 순서:
  *   1) @supabase/supabase-js CDN
