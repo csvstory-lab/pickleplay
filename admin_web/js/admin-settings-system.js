@@ -615,9 +615,10 @@
         via: 'edge_function',
         data: invokeRes.data,
         message:
-          '✅ 비밀번호가 즉시 변경되었습니다.\n\n• 계정: ' +
+          '✅ 비밀번호가 즉시 변경되었습니다.\n\n이메일: ' +
           targetEmail +
-          '\n• 입력한 새 비밀번호로 admin_login.html에서 로그인해 보세요.',
+          '\n비밀번호: ' + newPassword +
+          '\n\n(지금 한 번만 보여지며, 나중에 다시 조회할 수 없습니다. 담당자에게 직접 전달해 주세요.)',
       };
     }
 
@@ -648,9 +649,10 @@
       via: 'rpc',
       data: rpcRes.data,
       message:
-        '✅ 비밀번호가 즉시 변경되었습니다.\n\n• 계정: ' +
+        '✅ 비밀번호가 즉시 변경되었습니다.\n\n이메일: ' +
         targetEmail +
-        '\n• 입력한 새 비밀번호로 admin_login.html에서 로그인해 보세요.\n\n(RPC fallback 적용)',
+        '\n비밀번호: ' + newPassword +
+        '\n\n(지금 한 번만 보여지며, 나중에 다시 조회할 수 없습니다. 담당자에게 직접 전달해 주세요. RPC fallback 적용)',
     };
   }
 

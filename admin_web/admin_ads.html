@@ -326,7 +326,12 @@
                     <div class="input-group"><span class="input-label">담당자 이름</span><input type="text" id="agViewerNameInput" class="input-field" placeholder="예: 김픽클 AE"></div>
                 </div>
                 <div class="input-row" style="margin-top:8px;">
-                    <div class="input-group"><span class="input-label">비밀번호 <span class="hint" style="display:inline; margin:0;">(로그인 계정을 새로 만들 때만 입력 · 8자 이상)</span></span><input type="password" id="agViewerPasswordInput" class="input-field" placeholder="비워두면 열람 권한만 추가됩니다"></div>
+                    <div class="input-group"><span class="input-label">비밀번호 <span class="hint" style="display:inline; margin:0;">(로그인 계정을 새로 만들 때만 입력 · 8자 이상)</span></span>
+                        <div style="position:relative;">
+                            <input type="password" id="agViewerPasswordInput" class="input-field" style="padding-right:38px;" placeholder="비워두면 열람 권한만 추가됩니다">
+                            <button type="button" onclick="togglePwVisibility(this)" title="입력한 비밀번호 보기" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; padding:4px; color:var(--text-sub);">👁</button>
+                        </div>
+                    </div>
                     <button type="button" class="btn-action btn-edit" style="align-self:flex-end;" onclick="PickleAds.addAgencyViewerTag()">+ 추가</button>
                 </div>
                 <div id="agViewerProvisionBox" style="display:none; flex-direction:column; gap:10px; margin-top:10px; padding:14px; background:#09090b; border:1px solid var(--theme-gold); border-radius:8px;"></div>

@@ -13,6 +13,16 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // 비밀번호 입력칸 옆 👁 — 우리 쪽에서 직접 정한 비밀번호를 그 자리에서 눈으로 확인할 수 있게.
+  // (주의: 이미 만들어진 계정의 "현재" 비밀번호를 나중에 다시 보여주는 기능이 아님 — Supabase Auth는
+  // 비밀번호를 암호화해서 저장하므로 저장 시점에 직접 입력한 값만 이렇게 확인 가능하다.)
+  window.togglePwVisibility = function (btn) {
+    var inp = btn && btn.previousElementSibling;
+    if (!inp) return;
+    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+    else { inp.type = 'password'; btn.textContent = '👁'; }
+  };
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -304,7 +314,12 @@
       '<div style="font-weight:800; color:var(--theme-gold);">🔑 "' + escapeHtml(tag.email) + '" 로그인 계정 발급 / 비밀번호 재설정</div>' +
       '<div class="input-row">' +
         '<div class="input-group"><span class="input-label">담당자 이름</span><input type="text" id="agProvisionNameInput" class="input-field" value="' + escapeHtml(tag.label || '') + '" placeholder="예: 김픽클 AE"></div>' +
-        '<div class="input-group"><span class="input-label">비밀번호</span><input type="password" id="agProvisionPasswordInput" class="input-field" placeholder="8자 이상"></div>' +
+        '<div class="input-group"><span class="input-label">비밀번호</span>' +
+          '<div style="position:relative;">' +
+            '<input type="password" id="agProvisionPasswordInput" class="input-field" style="padding-right:38px;" placeholder="8자 이상">' +
+            '<button type="button" onclick="togglePwVisibility(this)" title="입력한 비밀번호 보기" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; padding:4px; color:var(--text-sub);">👁</button>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
       '<div style="display:flex; gap:8px; justify-content:flex-end;">' +
         '<button type="button" class="btn-cancel" style="padding:8px 16px;" onclick="PickleAds.closeAgencyProvisionBox()">취소</button>' +
@@ -348,11 +363,12 @@
     tag._provisioned = true;
     agProvisioningIdx = null;
 
-    var msg = '"' + tag.email + '" 계정이 발급되었습니다.';
+    var msg = '계정이 발급되었습니다.';
     if (result.via === 'rpc_only' && result.warning) {
       msg += '\n\n⚠️ ' + result.warning;
     } else {
-      msg += '\n\n✅ 로그인 가능한 계정이 생성되었습니다. 이메일/비밀번호를 담당자에게 직접 전달해 주세요. 이 대행사 소속 광고주의 모든 캠페인을 조회할 수 있습니다.';
+      msg += '\n\n✅ 아래 정보를 담당자에게 직접 전달해 주세요 (지금 한 번만 보여지며, 나중에 다시 조회할 수 없습니다):\n이메일: ' + tag.email + '\n비밀번호: ' + password +
+        '\n\n이 대행사 소속 광고주의 모든 캠페인을 조회할 수 있습니다.';
     }
     alert(msg);
     renderAgencyViewerTags();
@@ -412,7 +428,8 @@
     renderAgencyViewerTags();
 
     if (provisioned) {
-      alert('"' + email + '" 로그인 계정이 생성되고 열람 권한도 함께 추가되었습니다.\n이메일/비밀번호를 담당자에게 직접 전달해 주세요.\n\n(저장 버튼을 눌러야 이 대행사에 대한 열람 권한이 최종 반영됩니다.)');
+      alert('로그인 계정이 생성되고 열람 권한도 함께 추가되었습니다.\n\n아래 정보를 담당자에게 직접 전달해 주세요 (지금 한 번만 보여지며, 나중에 다시 조회할 수 없습니다):\n이메일: ' + email + '\n비밀번호: ' + password +
+        '\n\n(저장 버튼을 눌러야 이 대행사에 대한 열람 권한이 최종 반영됩니다.)');
     }
   }
 

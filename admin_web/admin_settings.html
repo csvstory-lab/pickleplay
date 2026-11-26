@@ -742,13 +742,19 @@
 
               <div class="sc-item col" id="pwCreateSection" style="margin-bottom: 20px;">
                   <div class="sc-label"><strong>초기 임시 비밀번호 설정 <span style="color:var(--neon-pink);">*</span></strong></div>
-                  <input type="password" class="form-input" id="admPassword" placeholder="8자리 이상 영문/숫자/특수문자 조합" autocomplete="new-password">
+                  <div style="position:relative;">
+                      <input type="password" class="form-input" id="admPassword" style="padding-right:38px;" placeholder="8자리 이상 영문/숫자/특수문자 조합" autocomplete="new-password">
+                      <button type="button" onclick="togglePwVisibility(this)" title="입력한 비밀번호 보기" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; padding:4px; color:var(--text-sub);">👁</button>
+                  </div>
                   <span style="font-size:0.75rem; color:var(--text-sub);">※ 등록 후 해당 담당자에게 임시 비밀번호를 전달해 주세요. Supabase Auth 계정이 함께 생성됩니다.</span>
               </div>
-              
+
               <div class="sc-item col" id="pwResetSection" style="display: none; margin-bottom: 20px;">
                   <div class="sc-label"><strong>비밀번호 직접 설정</strong></div>
-                  <input type="password" class="form-input" id="admNewPassword" placeholder="새 비밀번호 직접 입력 (8자 이상)" autocomplete="new-password" style="margin-bottom:10px;">
+                  <div style="position:relative; margin-bottom:10px;">
+                      <input type="password" class="form-input" id="admNewPassword" style="padding-right:38px;" placeholder="새 비밀번호 직접 입력 (8자 이상)" autocomplete="new-password">
+                      <button type="button" onclick="togglePwVisibility(this)" title="입력한 비밀번호 보기" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; padding:4px; color:var(--text-sub);">👁</button>
+                  </div>
                   <span style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px; display:block;">※ 이메일 발송 없이 즉시 적용됩니다. OAuth(구글) 계정도 email+password 로그인이 가능해집니다.</span>
                   <button type="button" id="btnAdminPasswordChange" style="width:100%; padding:12px; background:rgba(57,255,20,0.08); border:1px solid var(--neon-green); color:var(--neon-green); border-radius:8px; font-weight:800; cursor:pointer;">비밀번호 즉시 변경</button>
               </div>
@@ -901,6 +907,16 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    // 비밀번호 입력칸 옆 👁 — 우리 쪽에서 직접 정한 비밀번호를 그 자리에서 눈으로 확인할 수 있게.
+    // (주의: 이미 만들어진 계정의 "현재" 비밀번호를 나중에 다시 보여주는 기능이 아님 — Supabase Auth는
+    // 비밀번호를 암호화해서 저장하므로 저장 시점에 직접 입력한 값만 이렇게 확인 가능하다.)
+    function togglePwVisibility(btn) {
+        var inp = btn && btn.previousElementSibling;
+        if (!inp) return;
+        if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+        else { inp.type = 'password'; btn.textContent = '👁'; }
     }
 
     function formatAdminStatus(status) {
@@ -1244,8 +1260,8 @@
             var msg = '관리자/파트너 계정 정보가 저장되었습니다.';
             if (result.via === 'rpc_only' && result.warning) {
                 msg += '\n\n⚠️ ' + result.warning;
-            } else if (result.data && result.data.auth && result.data.auth.created) {
-                msg += '\n\n✅ Supabase Auth 로그인 계정이 생성되었습니다.';
+            } else if (password && (result.data?.auth?.created || result.data?.auth?.updated)) {
+                msg += '\n\n✅ 아래 정보를 담당자에게 직접 전달해 주세요 (지금 한 번만 보여지며, 나중에 다시 조회할 수 없습니다):\n이메일: ' + email + '\n비밀번호: ' + password;
             }
 
             alert(msg);
