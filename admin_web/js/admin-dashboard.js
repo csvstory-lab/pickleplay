@@ -94,6 +94,20 @@
     return total;
   }
 
+  async function loadSponsorRevenue(sb) {
+    try {
+      var res = await sb.from('sponsor_settlements').select('paid_amount_krw');
+      if (res.error) throw res.error;
+      var total = (res.data || []).reduce(function (sum, row) {
+        return sum + (Number(row.paid_amount_krw) || 0);
+      }, 0);
+      setRevenueText('₩ ' + Math.round(total).toLocaleString('ko-KR'));
+    } catch (err) {
+      console.warn('[Admin Dashboard] sponsor revenue', err);
+      setRevenueText('₩ 0');
+    }
+  }
+
   async function loadTotalVotes(sb) {
     try {
       var agg = await sb.from('posts').select('vote_count.sum()');
@@ -310,8 +324,7 @@
       setKpiText('dashboard-today-reports', results[3].count ?? 0);
       renderTopPosts(results[4].data || []);
 
-      setRevenueText('₩ 0');
-      await Promise.all([loadTotalVotes(sb), loadPendingInquiries(sb)]);
+      await Promise.all([loadTotalVotes(sb), loadPendingInquiries(sb), loadSponsorRevenue(sb)]);
     } catch (err) {
       console.error('[Admin Dashboard] loadDashboardKPIs', err);
       resetDashboardFallbacks();

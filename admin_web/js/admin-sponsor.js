@@ -13,6 +13,9 @@
   var currentViewerTags = []; // { id(옵션), email, label, _new }
   var tagSeq = 0;
   var listRows = [];
+  var selectedAdvertiserId = null;
+  var advSearchTimer = null;
+  var advSearchResultsCache = [];
 
   function $(id) { return document.getElementById(id); }
 
@@ -150,7 +153,86 @@
     currentViewerTags = [];
     renderViewerTags();
     $('pinPoolStatus').textContent = '등록된 쿠폰 0개 / 지급됨 0개';
+    clearAdvertiserSelection();
+    $('f_adv_search').value = '';
+    $('advSearchResults').style.display = 'none';
+    $('saveAsAdvertiserRow').style.display = '';
+    $('f_save_as_advertiser').checked = true;
     updateMockup();
+  }
+
+  // ───────────────────────── 광고주 검색/선택 ─────────────────────────
+  function onAdvertiserSearchInput() {
+    var q = $('f_adv_search').value.trim();
+    clearAdvertiserSelection();
+
+    if (advSearchTimer) clearTimeout(advSearchTimer);
+    if (!q) {
+      $('advSearchResults').style.display = 'none';
+      return;
+    }
+    advSearchTimer = setTimeout(async function () {
+      var res = await sb.rpc('sponsor_advertiser_search', { p_query: q });
+      if (res.error) {
+        console.warn('[AdminSponsor] 광고주 검색 실패', res.error);
+        return;
+      }
+      advSearchResultsCache = res.data || [];
+      renderAdvertiserResults(advSearchResultsCache);
+    }, 300);
+  }
+
+  function renderAdvertiserResults(rows) {
+    var box = $('advSearchResults');
+    if (!rows.length) {
+      box.innerHTML = '<div style="padding:12px; color:var(--text-sub); font-size:0.85rem;">일치하는 광고주가 없습니다. 직접 입력해 주세요.</div>';
+      box.style.display = 'block';
+      return;
+    }
+    box.innerHTML = rows.map(function (r, idx) {
+      return (
+        '<div onclick="PickleSponsor.selectAdvertiserResult(' + idx + ')" ' +
+        'style="padding:10px 14px; cursor:pointer; border-bottom:1px solid #27272a;" ' +
+        'onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'">' +
+        '<div style="font-weight:800; color:#fff;">' + escapeHtml(r.company_name) +
+        (r.brand_name ? ' <span style="color:var(--theme-gold); font-weight:700;">· ' + escapeHtml(r.brand_name) + '</span>' : '') + '</div>' +
+        '<div style="font-size:0.78rem; color:var(--text-sub); margin-top:2px;">' + escapeHtml(r.manager_name || '-') + ' · ' + escapeHtml(r.manager_mobile || '-') + '</div>' +
+        '</div>'
+      );
+    }).join('');
+    box.style.display = 'block';
+  }
+
+  function selectAdvertiserResult(idx) {
+    var r = advSearchResultsCache[idx];
+    if (!r) return;
+
+    selectedAdvertiserId = r.id;
+    $('f_company').value = r.company_name || '';
+    $('f_brand').value = r.brand_name || '';
+    $('f_manager_name').value = r.manager_name || '';
+    $('f_manager_mobile').value = r.manager_mobile || '';
+    $('f_manager_phone').value = r.manager_phone || '';
+    $('f_manager_email').value = r.manager_email || '';
+
+    $('f_adv_search').value = r.company_name + (r.brand_name ? ' · ' + r.brand_name : '');
+    $('advSearchResults').style.display = 'none';
+    $('advSelectedHint').innerHTML = '✅ 기존 광고주 "' + escapeHtml(r.company_name) + '" 정보를 불러왔습니다. ' +
+      '<a href="#" onclick="PickleSponsor.resetAdvertiserSearchBox(); return false;" style="color:var(--neon-blue);">다른 광고주 선택</a>';
+    $('saveAsAdvertiserRow').style.display = 'none';
+  }
+
+  function clearAdvertiserSelection() {
+    selectedAdvertiserId = null;
+    $('advSelectedHint').innerHTML = '';
+    $('saveAsAdvertiserRow').style.display = '';
+  }
+
+  function resetAdvertiserSearchBox() {
+    clearAdvertiserSelection();
+    $('f_adv_search').value = '';
+    $('advSearchResults').style.display = 'none';
+    $('f_adv_search').focus();
   }
 
   async function openForm(mode, campaignId) {
@@ -179,6 +261,17 @@
     var post = c.posts || {};
     currentEditingCampaignId = c.id;
     currentEditingPostId = post.id;
+
+    $('f_adv_search').value = '';
+    $('advSearchResults').style.display = 'none';
+    if (c.advertiser_id) {
+      selectedAdvertiserId = c.advertiser_id;
+      $('advSelectedHint').innerHTML = '✅ 광고주 마스터 "' + escapeHtml(c.company_name || '') + '" 와 연결되어 있습니다. ' +
+        '<a href="#" onclick="PickleSponsor.resetAdvertiserSearchBox(); return false;" style="color:var(--neon-blue);">다른 광고주로 변경</a>';
+      $('saveAsAdvertiserRow').style.display = 'none';
+    } else {
+      clearAdvertiserSelection();
+    }
 
     $('f_company').value = c.company_name || '';
     $('f_brand').value = c.brand_name || '';
@@ -342,6 +435,7 @@
       };
 
       var campaignPayload = {
+        advertiser_id: selectedAdvertiserId || null,
         company_name: company,
         brand_name: brand,
         manager_name: managerName,
@@ -384,6 +478,29 @@
         if (postUpd.error) throw postUpd.error;
         var campUpd = await sb.from('sponsor_campaigns').update(campaignPayload).eq('id', campaignId);
         if (campUpd.error) throw campUpd.error;
+      }
+
+      // 기존 광고주를 선택하지 않았고 "마스터에도 저장" 체크박스가 켜져 있으면 신규 광고주로 등록
+      // (실패해도 캠페인 저장 자체는 이미 끝난 뒤이므로 경고만 남기고 넘어감)
+      if (!selectedAdvertiserId && $('f_save_as_advertiser') && $('f_save_as_advertiser').checked) {
+        try {
+          var advIns = await sb.rpc('sponsor_advertiser_quick_create', {
+            p_company_name: company,
+            p_brand_name: brand || null,
+            p_manager_name: managerName || null,
+            p_manager_mobile: managerMobile || null,
+            p_manager_phone: $('f_manager_phone').value.trim() || null,
+            p_manager_email: managerEmail || null,
+          });
+          if (!advIns.error && advIns.data) {
+            selectedAdvertiserId = advIns.data;
+            await sb.from('sponsor_campaigns').update({ advertiser_id: selectedAdvertiserId }).eq('id', campaignId);
+          } else if (advIns.error) {
+            console.warn('[AdminSponsor] 광고주 마스터 자동 등록 실패(캠페인 저장은 정상 완료됨)', advIns.error);
+          }
+        } catch (advErr) {
+          console.warn('[AdminSponsor] 광고주 마스터 자동 등록 중 오류(캠페인 저장은 정상 완료됨)', advErr);
+        }
       }
 
       // 신규 입력된 쿠폰 PIN 추가 (신규/수정 공통 — 기존 재고에 "추가"만 됨)
@@ -499,5 +616,8 @@
     updateMockup: updateMockup,
     openReportModal: openReportModal,
     closeReportModal: closeReportModal,
+    onAdvertiserSearchInput: onAdvertiserSearchInput,
+    selectAdvertiserResult: selectAdvertiserResult,
+    resetAdvertiserSearchBox: resetAdvertiserSearchBox,
   };
 })();

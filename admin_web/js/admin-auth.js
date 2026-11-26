@@ -23,6 +23,7 @@
   var PAGE_TO_MENU = {
     'admin_dashboard.html': 'dashboard',
     'admin_sponsor.html': 'sponsor',
+    'admin_ads.html': 'ads',
     'admin_users.html': 'users',
     'admin_categories.html': 'categories',
     'admin_post_list.html': 'posts',
@@ -40,6 +41,7 @@
   var HREF_TO_MENU = {
     'admin_dashboard.html': 'dashboard',
     'admin_sponsor.html': 'sponsor',
+    'admin_ads.html': 'ads',
     'admin_users.html': 'users',
     'admin_categories.html': 'categories',
     'admin_post_list.html': 'posts',
@@ -57,6 +59,7 @@
   var SPONSOR_FORBIDDEN_PAGES = [
     'admin_users.html',
     'admin_settings.html',
+    'admin_ads.html',
     'admin_categories.html',
     'admin_post_list.html',
     'admin_post_detail.html',

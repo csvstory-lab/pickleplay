@@ -135,8 +135,8 @@
         <li class="nav-item" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
         <li class="nav-sub-item" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
         <li class="nav-sub-item active" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
-        <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
-        <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
+        <li class="nav-item" onclick="location.href='admin_ads.html'"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item" onclick="location.href='admin_ads.html'">· 광고주 및 정산 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
         <li class="nav-item" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
         <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
@@ -206,13 +206,21 @@
 
                     <section class="form-section">
                         <div class="section-title">🏢 1. 스폰서(광고주) 기본 정보</div>
+                        <div class="input-row" style="position:relative;">
+                            <div class="input-group">
+                                <span class="input-label">광고주 검색 (기업명/브랜드명)</span>
+                                <input type="text" id="f_adv_search" class="input-field" placeholder="기존에 등록된 광고주를 검색해서 선택하면 아래 정보가 자동으로 채워집니다" autocomplete="off" oninput="PickleSponsor.onAdvertiserSearchInput()">
+                                <div id="advSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:20; background:#18181b; border:1px solid #3f3f46; border-radius:8px; margin-top:4px; max-height:220px; overflow-y:auto;"></div>
+                            </div>
+                        </div>
+                        <div class="hint" id="advSelectedHint" style="margin:-6px 0 10px;"></div>
                         <div class="input-row">
                             <div class="input-group"><span class="input-label">기업명 <span class="req">*</span></span><input type="text" id="f_company" class="input-field" placeholder="예: (주)핫시즈너"></div>
                             <div class="input-group"><span class="input-label">브랜드명 <span class="req">*</span></span><input type="text" id="f_brand" class="input-field" placeholder="예: 엽기떡볶이"></div>
                         </div>
                         <div class="input-row">
                             <div class="input-group"><span class="input-label">담당자명 <span class="req">*</span></span><input type="text" id="f_manager_name" class="input-field" placeholder="예: 김픽클 대리"></div>
-                            <div class="input-group"><span class="input-label">캠페인 예산 (참고용)</span><input type="text" id="f_budget" class="input-field" placeholder="예: 3000000"></div>
+                            <div class="input-group"><span class="input-label">캠페인 예산 (정산 금액 기준)</span><input type="text" id="f_budget" class="input-field" placeholder="예: 3000000"></div>
                         </div>
                         <div class="input-row">
                             <div class="input-group"><span class="input-label">담당자 휴대폰 <span class="req">*</span></span><input type="text" id="f_manager_mobile" class="input-field" placeholder="010-1234-5678"></div>
@@ -220,6 +228,12 @@
                         </div>
                         <div class="input-row">
                             <div class="input-group"><span class="input-label">담당자 이메일 <span class="req">*</span></span><input type="email" id="f_manager_email" class="input-field" placeholder="email@brand.com"></div>
+                        </div>
+                        <div class="input-row" id="saveAsAdvertiserRow">
+                            <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-sub); font-weight:700; cursor:pointer;">
+                                <input type="checkbox" id="f_save_as_advertiser" checked style="width:16px;height:16px;">
+                                이 정보를 광고주 마스터에도 저장 (다음 캠페인부터 검색해서 바로 선택 가능)
+                            </label>
                         </div>
                         <div class="input-row">
                             <div class="input-group"><span class="input-label">캠페인 노출 기간 <span class="req">*</span></span>
