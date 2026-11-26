@@ -220,7 +220,7 @@
         <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
         <li class="nav-item" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
         <li class="nav-sub-item" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
-        <li class="nav-sub-item" onclick="return false;">· 스폰(최애) 불판 설정</li>
+        <li class="nav-sub-item" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
         <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
         <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
@@ -414,7 +414,7 @@
                     <div class="setting-card" style="grid-column: span 2; border-color: var(--neon-pink);">
                         <div class="sc-title" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);">🎁 이벤트 참여 및 바이럴 보상 (Events & Viral)</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div class="sc-item"><div class="sc-label"><strong>이벤트 기본 응모/참여 시 지급</strong><span>투표, 출석 등 단순 이벤트 액션 완료 시</span></div><div class="input-with-suffix"><input type="number" id="point_eventParticipate" value="10" class="p-input" disabled><span>P</span></div></div>
+                            <div class="sc-item"><div class="sc-label"><strong>투표 참여 시 지급</strong><span>불판에 A/B 투표할 때마다 지급 (현재 이 항목이 실제로 투표 포인트를 제어합니다)</span></div><div class="input-with-suffix"><input type="number" id="point_eventParticipate" value="10" class="p-input" disabled><span>P</span></div></div>
                             <div class="sc-item"><div class="sc-label"><strong>이벤트 외부 공유(소문내기) 시 지급</strong><span>카카오톡/링크 등 공유 버튼 클릭(발송) 시</span></div><div class="input-with-suffix"><input type="number" id="point_eventShare" value="50" class="p-input" disabled><span>P</span></div></div>
                         </div>
                     </div>

@@ -770,6 +770,16 @@
         if (postId && window.PickleRankingEvents && typeof window.PickleRankingEvents.recordPostShare === 'function') {
             window.PickleRankingEvents.recordPostShare(postId, channel);
         }
+
+        // 💎 스폰서 불판의 카카오 공유라면 "Track 3" 클릭수 집계
+        if (channel === 'kakao' && window.PickleDetail && typeof window.PickleDetail.getSponsorInfo === 'function') {
+            var sponsor = window.PickleDetail.getSponsorInfo();
+            if (sponsor && sponsor.campaign_id && window.PickleSupabase && window.PickleSupabase.getClient) {
+                window.PickleSupabase.getClient()
+                    .rpc('sponsor_track_click', { p_campaign_id: sponsor.campaign_id, p_kind: 'kakao' })
+                    .catch(function (err) { console.warn('[Detail] sponsor kakao click track skipped', err); });
+            }
+        }
     }
 
     function sendKakaoMessage() {
