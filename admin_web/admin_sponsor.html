@@ -13,14 +13,21 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg-color); color: var(--text-main); font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-    .sidebar { width: 260px; flex-shrink: 0; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
-    .logo-area { padding: 0 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
-    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--theme-gold), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer; }
-    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; margin-top: 4px; }
+    .sidebar { width: 260px; flex-shrink: 0; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; cursor: pointer; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
     .nav-menu { list-style: none; padding: 0; margin: 0; }
-    .nav-item { padding: 12px 25px; display: flex; align-items: center; gap: 12px; color: var(--text-sub); font-weight: 700; cursor: pointer; border-left: 4px solid transparent; }
-    .nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
-    .nav-item.active { background: rgba(255,204,0,0.06); color: var(--theme-gold); border-left-color: var(--theme-gold); }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    .nav-item.active { background-color: rgba(57, 255, 20, 0.05); color: var(--neon-green); border-left-color: var(--neon-green); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #d4d4d8; }
+    .nav-sub-item.active { color: #fff; font-weight: 700; }
+    .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
     .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
     .top-header { padding: 20px 40px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(9,9,11,0.95); z-index: 5; }
     .page-title { font-size: 1.4rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 10px; }
@@ -118,12 +125,25 @@
 
 <aside class="sidebar">
     <div class="logo-area">
-        <h1 class="logo" onclick="location.href='admin_sponsor.html'">P!CKLE</h1>
-        <div class="logo-sub">SPONSOR CAMPAIGN</div>
+        <h1 class="logo" onclick="location.href='admin_dashboard.html'">P!CKLE</h1>
+        <div class="logo-sub">ADMINISTRATOR 2.6</div>
     </div>
     <ul class="nav-menu">
-        <li class="nav-item active" onclick="location.href='admin_sponsor.html'"><span>💼</span> 스폰서 불판 관리</li>
-        <li class="nav-item" onclick="location.href='admin_statistics.html'"><span>📈</span> 통계 및 분석</li>
+        <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
+        <li class="nav-item" onclick="location.href='admin_users.html'"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
+        <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
+        <li class="nav-item" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
+        <li class="nav-sub-item active" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
+        <li class="nav-item" onclick="return false;"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item" onclick="return false;">· 광고주 및 정산 관리</li>
+        <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
+        <li class="nav-item" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
+        <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
+        <li class="nav-item" onclick="location.href='admin_statistics.html'"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
+        <li class="nav-item" onclick="location.href='admin_cs.html'"><div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div></li>
+        <li class="nav-item" onclick="location.href='admin_settings.html'"><div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div></li>
     </ul>
 </aside>
 
