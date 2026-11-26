@@ -137,7 +137,7 @@
         <li class="nav-sub-item active" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
         <li class="nav-item" onclick="location.href='admin_ads.html'"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="location.href='admin_ads.html'">· 광고주 및 정산 관리</li>
-        <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
+        <li class="nav-sub-item" onclick="location.href='admin_ads.html#agencies'">· 파트너(대행사) 관리</li>
         <li class="nav-item" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
         <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
         <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
@@ -272,10 +272,26 @@
                             </div>
                         </div>
                         <div class="input-row">
-                            <div class="input-group"><span class="input-label">미디어 URL (A / 단일)</span><input type="text" id="f_media_1" class="input-field" placeholder="이미지 또는 유튜브 URL"></div>
-                            <div class="input-group"><span class="input-label">미디어 URL (B, 대결 구성 시)</span><input type="text" id="f_media_2" class="input-field" placeholder="dual/video_dual 일 때만"></div>
+                            <div class="input-group">
+                                <span class="input-label">미디어 URL (A / 단일)</span>
+                                <input type="text" id="f_media_1" class="input-field" placeholder="이미지 URL 또는 유튜브 링크">
+                                <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                                    <input type="file" id="f_media_1_file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="PickleSponsor.uploadMediaFile(1, this)">
+                                    <button type="button" class="btn-action btn-edit" onclick="document.getElementById('f_media_1_file').click()">🖼️ 이미지 업로드</button>
+                                    <span class="hint" id="f_media_1_upload_status"></span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-label">미디어 URL (B, 대결 구성 시)</span>
+                                <input type="text" id="f_media_2" class="input-field" placeholder="dual/video_dual 일 때만">
+                                <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                                    <input type="file" id="f_media_2_file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="PickleSponsor.uploadMediaFile(2, this)">
+                                    <button type="button" class="btn-action btn-edit" onclick="document.getElementById('f_media_2_file').click()">🖼️ 이미지 업로드</button>
+                                    <span class="hint" id="f_media_2_upload_status"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="hint">※ 이미지는 Storage 또는 외부 CDN에 업로드 후 URL을 붙여넣어 주세요. 파일 업로드 UI는 추후 지원 예정입니다.</div>
+                        <div class="hint">※ 이미지는 업로드 버튼으로 바로 올리거나, 유튜브/영상은 URL을 직접 붙여넣어 주세요. (이미지 업로드는 JPG/PNG/WEBP/GIF, 10MB 이하)</div>
                     </section>
 
                     <section class="form-section" style="border:1px solid rgba(255,0,127,0.4);">
@@ -359,7 +375,10 @@
                 <div class="modal-title" id="rptTitle">캠페인 성과 리포트</div>
                 <div class="modal-sub" id="rptSub"></div>
             </div>
-            <button class="btn-close" onclick="PickleSponsor.closeReportModal()">✕</button>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <button class="btn-action btn-report" onclick="PickleSponsor.downloadReportCsv()">⬇️ CSV 다운로드</button>
+                <button class="btn-close" onclick="PickleSponsor.closeReportModal()">✕</button>
+            </div>
         </div>
         <div class="modal-body" id="rptBody">
             <div style="color:var(--text-sub);">불러오는 중...</div>

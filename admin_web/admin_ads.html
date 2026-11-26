@@ -102,7 +102,7 @@
         <li class="nav-sub-item" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
         <li class="nav-item active" onclick="location.href='admin_ads.html'"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item active" onclick="location.href='admin_ads.html'">· 광고주 및 정산 관리</li>
-        <li class="nav-sub-item" onclick="return false;">· 파트너(대행사) 관리</li>
+        <li class="nav-sub-item" onclick="location.href='admin_ads.html#agencies'">· 파트너(대행사) 관리</li>
         <li class="nav-item" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
         <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
         <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
@@ -162,7 +162,38 @@
             </div>
         </div>
 
-        <!-- ============ 2. 정산 내역 ============ -->
+        <!-- ============ 2. 대행사 마스터 ============ -->
+        <div class="section-block" id="agencies">
+            <div class="section-head">
+                <h3>🏬 대행사(파트너) 마스터</h3>
+                <button class="btn-new" onclick="PickleAds.openAgencyForm('new')">➕ 신규 대행사 등록</button>
+            </div>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <span class="filter-label">대행사명 검색</span>
+                    <input type="text" id="agSearchInput" class="filter-input" placeholder="예: 제일기획" oninput="PickleAds.filterAgencies()">
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:22%;">대행사명</th>
+                            <th>담당자</th>
+                            <th>연락처</th>
+                            <th>기본 수수료율</th>
+                            <th>소속 광고주</th>
+                            <th>액션</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agencyTableBody">
+                        <tr class="empty-row"><td colspan="6">불러오는 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============ 3. 정산 내역 ============ -->
         <div class="section-block">
             <div class="section-head">
                 <h3>💳 정산 내역</h3>
@@ -192,16 +223,17 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width:22%;">광고주 / 캠페인</th>
+                            <th style="width:20%;">광고주 / 캠페인</th>
                             <th>진행 기간</th>
                             <th>정산 금액</th>
+                            <th>대행사 / 수수료</th>
                             <th>상태</th>
                             <th>입금일</th>
                             <th>액션</th>
                         </tr>
                     </thead>
                     <tbody id="settlementTableBody">
-                        <tr class="empty-row"><td colspan="6">불러오는 중...</td></tr>
+                        <tr class="empty-row"><td colspan="7">불러오는 중...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -211,6 +243,7 @@
                         <tr class="total-row">
                             <td colspan="2">필터된 캠페인 합계 (<span id="setTotalCount">0</span>건)</td>
                             <td id="setTotalAmount">₩ 0</td>
+                            <td>수수료 합계: ₩ <span id="setCommissionAmount">0</span></td>
                             <td colspan="3">입금완료: ₩ <span id="setPaidAmount">0</span></td>
                         </tr>
                     </tbody>
@@ -234,6 +267,12 @@
                 <div class="input-group"><span class="input-label">기업명 <span style="color:var(--neon-pink);">*</span></span><input type="text" id="adv_company" class="input-field" placeholder="예: (주)핫시즈너"></div>
                 <div class="input-group"><span class="input-label">브랜드명</span><input type="text" id="adv_brand" class="input-field" placeholder="예: 엽기떡볶이"></div>
             </div>
+            <div class="input-group">
+                <span class="input-label">소속 대행사</span>
+                <select id="adv_agency_id" class="input-field">
+                    <option value="">없음 (직접 계약)</option>
+                </select>
+            </div>
             <div class="input-row">
                 <div class="input-group"><span class="input-label">담당자명</span><input type="text" id="adv_manager_name" class="input-field"></div>
                 <div class="input-group"><span class="input-label">사업자등록번호</span><input type="text" id="adv_biz_reg" class="input-field" placeholder="선택 입력"></div>
@@ -254,6 +293,46 @@
         <div class="modal-footer">
             <button class="btn-cancel" onclick="PickleAds.closeAdvertiserForm()">취소</button>
             <button class="btn-submit" onclick="PickleAds.submitAdvertiserForm()">저장</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ 대행사 등록/수정 모달 ============ -->
+<div class="modal-overlay" id="agModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title" id="agModalTitle">신규 대행사 등록</div>
+            <button class="btn-close" onclick="PickleAds.closeAgencyForm()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="ag_id">
+            <div class="input-group"><span class="input-label">대행사명 <span style="color:var(--neon-pink);">*</span></span><input type="text" id="ag_name" class="input-field" placeholder="예: 제일기획"></div>
+            <div class="input-row">
+                <div class="input-group"><span class="input-label">담당자명</span><input type="text" id="ag_manager_name" class="input-field"></div>
+                <div class="input-group"><span class="input-label">기본 수수료율 (%)</span><input type="text" id="ag_commission_rate" class="input-field" placeholder="예: 15"></div>
+            </div>
+            <div class="input-row">
+                <div class="input-group"><span class="input-label">담당자 휴대폰</span><input type="text" id="ag_mobile" class="input-field"></div>
+                <div class="input-group"><span class="input-label">회사 전화번호</span><input type="text" id="ag_phone" class="input-field"></div>
+            </div>
+            <div class="input-group"><span class="input-label">담당자 이메일</span><input type="text" id="ag_email" class="input-field"></div>
+            <div class="input-group"><span class="input-label">메모</span><textarea id="ag_memo" class="input-field" rows="2"></textarea></div>
+
+            <div class="input-group" id="agViewerSection" style="display:none;">
+                <span class="input-label">대행사 로그인 계정 (이 대행사 소속 광고주의 모든 캠페인 열람)</span>
+                <div class="tag-container" id="agViewerTagContainer" style="display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:12px; background:#09090b; border:1px dashed #52525b; border-radius:8px; align-items:center;"></div>
+                <div class="input-row" style="margin-top:8px;">
+                    <div class="input-group"><input type="text" id="agViewerEmailInput" class="input-field" placeholder="이메일"></div>
+                    <div class="input-group"><input type="text" id="agViewerLabelInput" class="input-field" placeholder="메모 (예: 제일기획 담당 AE)"></div>
+                    <button type="button" class="btn-action btn-edit" onclick="PickleAds.addAgencyViewerTag()">+ 추가</button>
+                </div>
+                <div class="hint">🔑 아이콘을 누르면 해당 이메일로 로그인 계정을 바로 발급할 수 있습니다 (최고관리자만 가능).</div>
+            </div>
+            <div class="hint" id="agViewerHintNew">※ 대행사를 먼저 저장한 뒤 다시 열면 로그인 계정을 매핑할 수 있습니다.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="PickleAds.closeAgencyForm()">취소</button>
+            <button class="btn-submit" onclick="PickleAds.submitAgencyForm()">저장</button>
         </div>
     </div>
 </div>
@@ -280,6 +359,11 @@
             <div class="input-row">
                 <div class="input-group"><span class="input-label">입금 금액</span><input type="text" id="set_paid_amount" class="input-field" placeholder="예: 3000000"></div>
                 <div class="input-group"><span class="input-label">입금일</span><input type="date" id="set_paid_at" class="input-field"></div>
+            </div>
+            <div class="input-group">
+                <span class="input-label">대행사 수수료율 (%)</span>
+                <input type="text" id="set_commission_rate" class="input-field" placeholder="대행사가 없으면 비워두세요">
+                <div class="hint" id="set_commission_hint"></div>
             </div>
             <div class="input-group"><span class="input-label">메모</span><textarea id="set_memo" class="input-field" rows="2" placeholder="예: 11/26 국민은행 입금 확인"></textarea></div>
         </div>

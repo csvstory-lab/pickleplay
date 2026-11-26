@@ -16,6 +16,7 @@
   var selectedAdvertiserId = null;
   var advSearchTimer = null;
   var advSearchResultsCache = [];
+  var currentReportData = null;
 
   function $(id) { return document.getElementById(id); }
 
@@ -115,17 +116,27 @@
     tbody.innerHTML = listRows.map(function (r) {
       var status = campaignStatus(r);
       var couponPct = r.coupon_total > 0 ? Math.round((r.coupon_used / r.coupon_total) * 100) : 0;
-      var editBtn = isInternal
-        ? '<button class="btn-action btn-edit" onclick="PickleSponsor.openForm(\'edit\',\'' + r.campaign_id + '\')">수정</button>'
+      var lowStockWarning = (r.coupon_total > 0 && couponPct >= 90)
+        ? ' <span class="status-badge status-ended" style="color:var(--neon-pink); border-color:rgba(255,0,127,0.4);">⚠️ 소진임박</span>'
+        : '';
+      var isEnded = new Date(r.campaign_end_at) <= new Date();
+      var isHidden = r.visibility_status !== 'visible';
+      var internalBtns = isInternal
+        ? (
+          '<button class="btn-action btn-edit" onclick="PickleSponsor.openForm(\'edit\',\'' + r.campaign_id + '\')">수정</button>' +
+          '<button class="btn-action btn-edit" onclick="PickleSponsor.duplicateCampaign(\'' + r.campaign_id + '\')">복제</button>' +
+          '<button class="btn-action btn-edit" onclick="PickleSponsor.togglePause(\'' + r.campaign_id + '\',' + (isHidden ? 'true' : 'false') + ')">' + (isHidden ? '게시 재개' : '일시중지') + '</button>' +
+          (isEnded ? '' : '<button class="btn-action btn-edit" onclick="PickleSponsor.endCampaignNow(\'' + r.campaign_id + '\')">조기종료</button>')
+        )
         : '';
       return (
         '<tr>' +
           '<td><span class="brand-name">🏷️ ' + escapeHtml(r.brand_name) + '</span><span class="post-title">' + escapeHtml(r.title || '(제목 없음)') + '</span></td>' +
           '<td>' + fmtDate(r.campaign_start_at) + ' ~ ' + fmtDate(r.campaign_end_at) + '</td>' +
           '<td>' + (r.vote_a || 0) + ' / ' + (r.vote_b || 0) + '</td>' +
-          '<td>' + r.coupon_used + ' / ' + r.coupon_total + (r.coupon_total ? ' (' + couponPct + '%)' : '') + '</td>' +
+          '<td>' + r.coupon_used + ' / ' + r.coupon_total + (r.coupon_total ? ' (' + couponPct + '%)' : '') + lowStockWarning + '</td>' +
           '<td><span class="status-badge ' + status.cls + '">' + status.label + '</span></td>' +
-          '<td>' + editBtn + '<button class="btn-action btn-report" onclick="PickleSponsor.openReportModal(\'' + r.campaign_id + '\')">📊 리포트</button></td>' +
+          '<td>' + internalBtns + '<button class="btn-action btn-report" onclick="PickleSponsor.openReportModal(\'' + r.campaign_id + '\')">📊 리포트</button></td>' +
         '</tr>'
       );
     }).join('');
@@ -315,6 +326,99 @@
     switchView('form');
   }
 
+  // 기존 캠페인 내용을 새 캠페인 폼에 복사 (날짜/쿠폰재고/열람권한은 제외 — 새로 지정 필요)
+  async function duplicateCampaign(campaignId) {
+    if (!isInternal) return;
+
+    var res = await sb.from('sponsor_campaigns')
+      .select('*, posts(id,title,option_a_name,option_b_name,media_type,media_url_1,media_url_2,reward_win_rate)')
+      .eq('id', campaignId)
+      .single();
+
+    if (res.error || !res.data) {
+      alert('캠페인 정보를 불러오지 못했습니다: ' + (res.error ? res.error.message : ''));
+      return;
+    }
+
+    var c = res.data;
+    var post = c.posts || {};
+
+    currentEditingCampaignId = null;
+    currentEditingPostId = null;
+    resetForm();
+
+    if (c.advertiser_id) {
+      selectedAdvertiserId = c.advertiser_id;
+      $('advSelectedHint').innerHTML = '✅ 광고주 마스터 "' + escapeHtml(c.company_name || '') + '" 정보를 복사했습니다. ' +
+        '<a href="#" onclick="PickleSponsor.resetAdvertiserSearchBox(); return false;" style="color:var(--neon-blue);">다른 광고주로 변경</a>';
+      $('saveAsAdvertiserRow').style.display = 'none';
+    }
+
+    $('f_company').value = c.company_name || '';
+    $('f_brand').value = c.brand_name || '';
+    $('f_manager_name').value = c.manager_name || '';
+    $('f_budget').value = c.budget_krw != null ? c.budget_krw : '';
+    $('f_manager_mobile').value = c.manager_mobile || '';
+    $('f_manager_phone').value = c.manager_phone || '';
+    $('f_manager_email').value = c.manager_email || '';
+    // 캠페인 기간은 일부러 비워둠 — 새 기간을 직접 지정해야 함
+
+    $('f_title').value = post.title ? post.title + ' (복제)' : '';
+    $('f_opt_a').value = post.option_a_name || '';
+    $('f_opt_b').value = post.option_b_name || '';
+    $('f_win_rate').value = post.reward_win_rate != null ? post.reward_win_rate : '';
+    $('f_media_type').value = post.media_type || 'none';
+    $('f_media_1').value = post.media_url_1 || '';
+    $('f_media_2').value = post.media_url_2 || '';
+
+    $('f_coupon_title').value = c.coupon_title || '';
+    // 쿠폰 PIN 재고·파트너 열람 권한은 복제하지 않음 — 새 캠페인에 맞게 새로 등록해야 함
+    $('f_banner_sub').value = c.banner_sub_title || '';
+    $('f_banner_main').value = c.banner_main_title || '';
+    $('f_banner_btn').value = c.banner_btn_text || '';
+    $('f_banner_link').value = c.banner_link_url || '';
+    $('f_kakao_msg').value = c.kakao_message || '';
+    $('f_kakao_title').value = c.kakao_link_title || '';
+    $('f_kakao_btn').value = c.kakao_btn_text || '';
+
+    updateMockup();
+    switchView('form');
+    alert('기존 캠페인 내용을 복사했습니다.\n캠페인 노출 기간을 새로 입력하고, 쿠폰 PIN과 파트너 열람 권한은 새로 등록해 주세요.');
+  }
+
+  // 게시 일시중지/재개 — posts.visibility_status 토글 (날짜·쿠폰 등은 그대로 유지)
+  async function togglePause(campaignId, isCurrentlyHidden) {
+    if (!isInternal) return;
+    var row = listRows.filter(function (r) { return r.campaign_id === campaignId; })[0];
+    if (!row) return;
+
+    var nextStatus = isCurrentlyHidden ? 'visible' : 'hidden';
+    var confirmMsg = isCurrentlyHidden
+      ? '이 캠페인을 다시 게시하시겠습니까?'
+      : '이 캠페인을 일시중지(숨김) 하시겠습니까? 언제든 다시 게시할 수 있습니다.';
+    if (!confirm(confirmMsg)) return;
+
+    var res = await sb.from('posts').update({ visibility_status: nextStatus }).eq('id', row.post_id);
+    if (res.error) {
+      alert('처리에 실패했습니다: ' + res.error.message);
+      return;
+    }
+    await loadList();
+  }
+
+  // 조기 종료 — campaign_end_at 을 지금 시각으로 당겨서 즉시 '종료됨' 처리 (되돌릴 수 없음)
+  async function endCampaignNow(campaignId) {
+    if (!isInternal) return;
+    if (!confirm('이 캠페인을 지금 바로 종료하시겠습니까? 종료 후에는 날짜를 되돌릴 수 없습니다 (수정 화면에서 기간은 다시 바꿀 수 있습니다).')) return;
+
+    var res = await sb.from('sponsor_campaigns').update({ campaign_end_at: new Date().toISOString() }).eq('id', campaignId);
+    if (res.error) {
+      alert('처리에 실패했습니다: ' + res.error.message);
+      return;
+    }
+    await loadList();
+  }
+
   function updateMockup() {
     $('mockQ').textContent = $('f_title').value || '불판 질문을 입력하세요';
     $('mockA').textContent = $('f_opt_a').value || 'A픽 텍스트';
@@ -328,11 +432,60 @@
     var container = $('viewerTagContainer');
     container.innerHTML = currentViewerTags.map(function (t, idx) {
       var label = t.label ? escapeHtml(t.label) + ' · ' : '';
+      var provisionBtn = t.id
+        ? ' <span class="tag-close" onclick="PickleSponsor.provisionViewerAccount(' + idx + ')" title="로그인 계정 발급" style="background:rgba(57,255,20,0.15); color:var(--neon-green);">🔑</span>'
+        : '';
       return (
-        '<div class="partner-tag">' + label + escapeHtml(t.email) +
+        '<div class="partner-tag">' + label + escapeHtml(t.email) + provisionBtn +
         ' <span class="tag-close" onclick="PickleSponsor.removeViewerTag(' + idx + ')">✕</span></div>'
       );
     }).join('');
+  }
+
+  // 매핑된 이메일로 실제 로그인 가능한 'sponsor' 계정 발급 (super 역할만 가능 — admin-auth.js 정책)
+  async function provisionViewerAccount(idx) {
+    var tag = currentViewerTags[idx];
+    if (!tag || !tag.id) return;
+
+    if (!window.PickleAdminWorkspace || !window.PickleAdminWorkspace.provisionStaffAccount) {
+      alert('계정 발급 모듈을 불러오지 못했습니다.');
+      return;
+    }
+
+    var displayName = prompt('담당자 이름을 입력해 주세요 (예: 김픽클 대리)', tag.label || '');
+    if (displayName === null) return;
+    displayName = displayName.trim();
+    if (!displayName) { alert('담당자 이름은 필수입니다.'); return; }
+
+    var password = prompt('초기 비밀번호를 입력해 주세요 (8자 이상). 발급 후 담당자에게 직접 전달해 주세요.', '');
+    if (password === null) return;
+    if (!password || password.length < 8) { alert('비밀번호는 8자 이상이어야 합니다.'); return; }
+
+    var department = $('f_brand').value.trim() || $('f_company').value.trim() || '스폰서';
+
+    var result = await window.PickleAdminWorkspace.provisionStaffAccount({
+      email: tag.email,
+      password: password,
+      display_name: displayName,
+      department: department,
+      role: 'sponsor',
+      status: 'active',
+      mode: 'create',
+    });
+
+    if (!result.ok) {
+      alert('계정 발급 실패: ' + (result.message || result.reason || 'unknown') +
+        (result.reason === 'forbidden' ? '\n\n(계정 발급은 최고관리자만 할 수 있습니다)' : ''));
+      return;
+    }
+
+    var msg = '"' + tag.email + '" 계정이 발급되었습니다.';
+    if (result.via === 'rpc_only' && result.warning) {
+      msg += '\n\n⚠️ ' + result.warning;
+    } else {
+      msg += '\n\n✅ 로그인 가능한 계정이 생성되었습니다. 초기 비밀번호를 담당자에게 전달해 주세요.\nadmin_login.html 에서 로그인하면 스폰서 전용 화면(이 캠페인 포함)으로 자동 이동합니다.';
+    }
+    alert(msg);
   }
 
   function addViewerTag() {
@@ -367,6 +520,63 @@
     }
     currentViewerTags.splice(idx, 1);
     renderViewerTags();
+  }
+
+  // ───────────────────────── 미디어 이미지 업로드 (sponsor_media 버킷) ─────────────────────────
+  var SPONSOR_MEDIA_BUCKET = 'sponsor_media';
+
+  function sanitizeImageExt(filename) {
+    var m = String(filename || '').match(/\.([a-zA-Z0-9]+)$/);
+    var ext = (m && m[1] ? m[1] : 'jpg').toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'webp', 'gif'].indexOf(ext) !== -1 ? ext : 'jpg';
+  }
+
+  function validateSponsorImageFile(file) {
+    if (!file) throw new Error('이미지 파일이 없습니다.');
+    var allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (file.type && allowed.indexOf(file.type) === -1) {
+      throw new Error('JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다.');
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('이미지는 10MB 이하만 업로드할 수 있습니다.');
+    }
+  }
+
+  async function uploadMediaFile(slot, inputEl) {
+    var file = inputEl.files && inputEl.files[0];
+    var statusEl = $('f_media_' + slot + '_upload_status');
+    if (!file) return;
+
+    try {
+      validateSponsorImageFile(file);
+      if (statusEl) statusEl.textContent = '업로드 중...';
+
+      var ext = sanitizeImageExt(file.name);
+      var path = 'campaign/' + Date.now() + '_' + Math.random().toString(36).slice(2, 10) + '.' + ext;
+
+      var uploadRes = await sb.storage.from(SPONSOR_MEDIA_BUCKET).upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'image/jpeg',
+      });
+      if (uploadRes.error) {
+        if (/bucket/i.test(uploadRes.error.message || '')) {
+          throw new Error('sponsor_media 버킷이 없습니다. Supabase에서 PUBLIC 버킷 생성 후 안내된 SQL을 실행해 주세요.');
+        }
+        throw uploadRes.error;
+      }
+
+      var urlRes = sb.storage.from(SPONSOR_MEDIA_BUCKET).getPublicUrl(path);
+      $('f_media_' + slot).value = urlRes.data.publicUrl;
+      if (statusEl) statusEl.textContent = '✅ 업로드 완료';
+      updateMockup();
+    } catch (err) {
+      console.error('[AdminSponsor] 이미지 업로드 실패', err);
+      if (statusEl) statusEl.textContent = '';
+      alert('이미지 업로드에 실패했습니다: ' + (err && err.message ? err.message : String(err)));
+    } finally {
+      inputEl.value = '';
+    }
   }
 
   // ───────────────────────── 저장 ─────────────────────────
@@ -567,6 +777,7 @@
     }
 
     var d = res.data;
+    currentReportData = d;
     $('rptTitle').textContent = '📊 ' + (d.post.title || '캠페인') + ' 성과 리포트';
     $('rptSub').textContent = d.campaign.brand_name + ' (' + d.campaign.company_name + ') · ' +
       fmtDate(d.campaign.campaign_start_at) + ' ~ ' + fmtDate(d.campaign.campaign_end_at);
@@ -601,6 +812,56 @@
 
   function closeReportModal() {
     $('reportModal').style.display = 'none';
+    currentReportData = null;
+  }
+
+  function downloadReportCsv() {
+    var d = currentReportData;
+    if (!d) { alert('리포트를 먼저 불러와 주세요.'); return; }
+
+    var lines = [];
+    lines.push(['캠페인', (d.campaign.brand_name || '') + ' (' + (d.campaign.company_name || '') + ')']);
+    lines.push(['불판 제목', d.post.title || '']);
+    lines.push(['기간', fmtDate(d.campaign.campaign_start_at) + ' ~ ' + fmtDate(d.campaign.campaign_end_at)]);
+    lines.push(['총 투표수', d.votes.total || 0]);
+    lines.push([(d.post.option_a_name || 'A') + ' 투표수', d.votes.a || 0]);
+    lines.push([(d.post.option_b_name || 'B') + ' 투표수', d.votes.b || 0]);
+    lines.push(['쿠폰 소진', (d.coupon_pool.used || 0) + ' / ' + (d.coupon_pool.total || 0)]);
+    lines.push(['배너 클릭수', d.campaign.banner_click_count || 0]);
+    lines.push(['카톡 공유수', d.campaign.kakao_share_count || 0]);
+    lines.push([]);
+    lines.push(['성별 분포']);
+    Object.keys(d.demographics.gender || {}).forEach(function (k) {
+      lines.push([k, d.demographics.gender[k]]);
+    });
+    lines.push([]);
+    lines.push(['연령대 분포']);
+    Object.keys(d.demographics.age_group || {}).forEach(function (k) {
+      lines.push([k, d.demographics.age_group[k]]);
+    });
+    lines.push([]);
+    lines.push(['일자', '투표수']);
+    (d.daily_votes || []).forEach(function (row) {
+      lines.push([row.date, row.votes]);
+    });
+
+    var csv = lines.map(function (row) {
+      return row.map(function (cell) {
+        var s = String(cell == null ? '' : cell);
+        if (/[",\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }).join(',');
+    }).join('\r\n');
+
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (d.campaign.brand_name || 'campaign').replace(/[\\/:*?"<>|]/g, '_') + '_report_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -613,9 +874,15 @@
     submitForm: submitForm,
     addViewerTag: addViewerTag,
     removeViewerTag: removeViewerTag,
+    provisionViewerAccount: provisionViewerAccount,
+    uploadMediaFile: uploadMediaFile,
+    duplicateCampaign: duplicateCampaign,
+    togglePause: togglePause,
+    endCampaignNow: endCampaignNow,
     updateMockup: updateMockup,
     openReportModal: openReportModal,
     closeReportModal: closeReportModal,
+    downloadReportCsv: downloadReportCsv,
     onAdvertiserSearchInput: onAdvertiserSearchInput,
     selectAdvertiserResult: selectAdvertiserResult,
     resetAdvertiserSearchBox: resetAdvertiserSearchBox,
