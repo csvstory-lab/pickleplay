@@ -1,7 +1,8 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20260617_ranking1
- * hot_grill_ranking · top_pickler_ranking VIEW → 동적 DOM 렌더링
+ * @build 20261126_rankingperiod1
+ * 일간: hot_grill_ranking · top_pickler_ranking (실시간 VIEW)
+ * 주간/월간/연간: ranking_period_results (pg_cron 스냅샷, 가장 최근 집계분)
  */
 (function () {
   'use strict';
@@ -12,6 +13,7 @@
   var picklerRows = [];
   var postMetaMap = new Map();
   var userAvatarMap = new Map();
+  var currentPeriod = 'daily';
 
   var ICON = {
     fire: '<i class="ph-fill ph-fire score-icon" aria-hidden="true"></i>',
@@ -319,6 +321,113 @@
     return rows;
   }
 
+  function periodTypeFromLabel(label) {
+    var t = String(label || '').trim();
+    if (t === '주간') return 'weekly';
+    if (t === '월간') return 'monthly';
+    if (t === '연간') return 'yearly';
+    return 'daily';
+  }
+
+  async function fetchFollowerCountMap(userIds) {
+    var map = new Map();
+    if (!userIds.length) return map;
+
+    var sb = getClient();
+    var result = await sb
+      .from('top_pickler_ranking')
+      .select('user_id, follower_count')
+      .in('user_id', userIds);
+
+    if (!result.error) {
+      (result.data || []).forEach(function (row) {
+        if (row && row.user_id) {
+          map.set(String(row.user_id), Number(row.follower_count) || 0);
+        }
+      });
+    }
+
+    return map;
+  }
+
+  // 주간/월간/연간 탭: ranking_period_results 스냅샷 테이블에서 가장 최근 집계분을 조회
+  async function fetchPeriodGrillRanking(periodType) {
+    var sb = getClient();
+    var latestRes = await sb
+      .from('ranking_period_results')
+      .select('period_start')
+      .eq('period_type', periodType)
+      .eq('category', 'grill')
+      .order('period_start', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestRes.error || !latestRes.data) return [];
+
+    var rowsRes = await sb
+      .from('ranking_period_results')
+      .select('rank, target_id, score_value')
+      .eq('period_type', periodType)
+      .eq('category', 'grill')
+      .eq('period_start', latestRes.data.period_start)
+      .order('rank', { ascending: true })
+      .limit(LIMIT);
+
+    if (rowsRes.error) throw rowsRes.error;
+
+    var rows = (rowsRes.data || []).map(function (r) {
+      return { post_id: r.target_id, hot_grill_score: r.score_value };
+    });
+
+    var postIds = rows.map(function (r) {
+      return r.post_id;
+    });
+    await fetchPostMetaMap(postIds);
+    return rows;
+  }
+
+  async function fetchPeriodPicklerRanking(periodType) {
+    var sb = getClient();
+    var latestRes = await sb
+      .from('ranking_period_results')
+      .select('period_start')
+      .eq('period_type', periodType)
+      .eq('category', 'pickler')
+      .order('period_start', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestRes.error || !latestRes.data) return [];
+
+    var rowsRes = await sb
+      .from('ranking_period_results')
+      .select('rank, target_id, score_value')
+      .eq('period_type', periodType)
+      .eq('category', 'pickler')
+      .eq('period_start', latestRes.data.period_start)
+      .order('rank', { ascending: true })
+      .limit(LIMIT);
+
+    if (rowsRes.error) throw rowsRes.error;
+
+    var rawRows = rowsRes.data || [];
+    var userIds = rawRows.map(function (r) {
+      return r.target_id;
+    });
+    await fetchUserAvatarMap(userIds);
+    var followerMap = await fetchFollowerCountMap(userIds);
+
+    return rawRows.map(function (r) {
+      var meta = userAvatarMap.get(String(r.target_id)) || {};
+      return {
+        user_id: r.target_id,
+        nickname: meta.nickname,
+        star_score_total: r.score_value,
+        follower_count: followerMap.get(String(r.target_id)) || 0,
+      };
+    });
+  }
+
   function setListMessage(listEl, message) {
     if (!listEl) return;
     listEl.innerHTML =
@@ -624,7 +733,15 @@
         await window.PickleCategories.load();
       }
 
-      var results = await Promise.all([fetchGrillRanking(), fetchPicklerRanking()]);
+      var results;
+      if (currentPeriod === 'daily') {
+        results = await Promise.all([fetchGrillRanking(), fetchPicklerRanking()]);
+      } else {
+        results = await Promise.all([
+          fetchPeriodGrillRanking(currentPeriod),
+          fetchPeriodPicklerRanking(currentPeriod),
+        ]);
+      }
       grillRows = results[0];
       picklerRows = results[1];
 
@@ -658,8 +775,14 @@
 
     window.switchSubTab = function (element) {
       orig(element);
-      renderGrillArea();
-      renderPicklerArea();
+      var nextPeriod = periodTypeFromLabel(element && element.textContent);
+      if (nextPeriod === currentPeriod) {
+        renderGrillArea();
+        renderPicklerArea();
+        return;
+      }
+      currentPeriod = nextPeriod;
+      loadAll();
     };
   }
 
