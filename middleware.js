@@ -58,23 +58,25 @@ async function fetchPostShareMeta(postId) {
         signal: AbortSignal.timeout(2500),
       }
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { error: 'db-http-' + res.status };
     const rows = await res.json();
     const post = Array.isArray(rows) ? rows[0] : null;
-    if (!post || !post.title) return null;
+    if (!post || !post.title) return { error: 'post-not-found' };
 
     const title = 'P!CKLE - ' + String(post.title).trim();
     const a = String(post.option_a || '').trim();
     const b = String(post.option_b || '').trim();
     const description = a || b ? a + ' vs ' + b + '. 지금 투표하세요!' : '지금 투표하세요!';
     return {
-      meta_title: title,
-      meta_description: description,
-      og_image_url:
-        SUPABASE_URL + '/functions/v1/generate-og?postId=' + encodeURIComponent(postId),
+      meta: {
+        meta_title: title,
+        meta_description: description,
+        og_image_url:
+          SUPABASE_URL + '/functions/v1/generate-og?postId=' + encodeURIComponent(postId),
+      },
     };
   } catch (e) {
-    return null;
+    return { error: 'db-exception-' + String((e && e.name) || 'unknown') };
   }
 }
 
@@ -118,18 +120,31 @@ export default async function middleware(request) {
 
   // 불판 상세 페이지: 해당 불판의 제목·선택지·이미지로 미리보기 메타를 덮어쓴다.
   let postMeta = null;
+  let trace = 'site-meta';
   let canonicalUrl = url.origin + (url.pathname === '/' ? '/' : url.pathname);
   if (url.pathname === '/user_app/detail.html') {
     const postId = (url.searchParams.get('id') || '').trim();
     if (UUID_RE.test(postId)) {
-      postMeta = await fetchPostShareMeta(postId);
-      if (postMeta) canonicalUrl += '?id=' + postId;
+      const r = await fetchPostShareMeta(postId);
+      if (r.meta) {
+        postMeta = r.meta;
+        canonicalUrl += '?id=' + postId;
+        trace = 'post-ok';
+      } else {
+        trace = 'post-fail:' + r.error;
+      }
+    } else {
+      trace = 'no-valid-id';
     }
   }
 
   if (!siteMeta && !postMeta) return;
   const meta = Object.assign({}, siteMeta || {}, postMeta || {});
-  const patched = injectSiteMetaIntoHtml(html, meta, canonicalUrl);
+  // 진단용 표시: 페이지 소스 맨 위에서 이 줄이 보이면 미들웨어가 실행된 것이다.
+  const patched = injectSiteMetaIntoHtml(html, meta, canonicalUrl).replace(
+    '<head>',
+    '<head>\n<!-- pickle-mw:' + trace + (siteMeta ? '' : ':no-site-meta') + ' -->'
+  );
 
   return new Response(patched, {
     status: 200,
