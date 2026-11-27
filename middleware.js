@@ -6,6 +6,7 @@ import {
   injectSiteMetaIntoHtml,
   fetchPublishedSiteMeta,
   buildWebManifest,
+  SUPABASE_PROJECT_REF,
 } from './scripts/site-meta-lib.mjs';
 
 const META_CACHE_MS = 60 * 1000;
@@ -29,6 +30,52 @@ function resolveHtmlPath(pathname) {
   if (pathname.endsWith('/')) return pathname + 'index.html';
   if (pathname.endsWith('.html')) return pathname;
   return null;
+}
+
+const SUPABASE_URL = 'https://' + SUPABASE_PROJECT_REF + '.supabase.co';
+// 공개용 anon 키 (js/supabase-config.js 와 동일, 브라우저에 이미 공개된 값)
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impzemd6bmFucHR1dHd4Y3NucmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDc1MjIsImV4cCI6MjA5NjA4MzUyMn0.Czo-Cmw7JQktWMV77KSt2Yk3Pnkx89ZE1Ey0C0dk1G4';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * 불판 상세 링크(/user_app/detail.html?id=...)를 카톡·SNS에 붙여넣으면
+ * 봇(JS 미실행)이 읽는 미리보기(제목·설명·이미지)를 "그 불판" 내용으로 만들어 준다.
+ * 조회 실패/비공개/없는 불판이면 null → 기존 사이트 공통 메타를 그대로 사용.
+ */
+async function fetchPostShareMeta(postId) {
+  try {
+    const res = await fetch(
+      SUPABASE_URL +
+        '/rest/v1/posts?select=title,option_a,option_b&id=eq.' +
+        encodeURIComponent(postId) +
+        '&limit=1',
+      {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+        },
+        signal: AbortSignal.timeout(2500),
+      }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const post = Array.isArray(rows) ? rows[0] : null;
+    if (!post || !post.title) return null;
+
+    const title = 'P!CKLE - ' + String(post.title).trim();
+    const a = String(post.option_a || '').trim();
+    const b = String(post.option_b || '').trim();
+    const description = a || b ? a + ' vs ' + b + '. 지금 투표하세요!' : '지금 투표하세요!';
+    return {
+      meta_title: title,
+      meta_description: description,
+      og_image_url:
+        SUPABASE_URL + '/functions/v1/generate-og?postId=' + encodeURIComponent(postId),
+    };
+  } catch (e) {
+    return null;
+  }
 }
 
 export default async function middleware(request) {
@@ -67,10 +114,21 @@ export default async function middleware(request) {
   const html = await htmlRes.text();
   if (html.indexOf('P!CKLE-SITE-META:START') === -1) return;
 
-  const meta = await getSiteMeta();
-  if (!meta) return;
+  const siteMeta = await getSiteMeta();
 
-  const canonicalUrl = url.origin + (url.pathname === '/' ? '/' : url.pathname);
+  // 불판 상세 페이지: 해당 불판의 제목·선택지·이미지로 미리보기 메타를 덮어쓴다.
+  let postMeta = null;
+  let canonicalUrl = url.origin + (url.pathname === '/' ? '/' : url.pathname);
+  if (url.pathname === '/user_app/detail.html') {
+    const postId = (url.searchParams.get('id') || '').trim();
+    if (UUID_RE.test(postId)) {
+      postMeta = await fetchPostShareMeta(postId);
+      if (postMeta) canonicalUrl += '?id=' + postId;
+    }
+  }
+
+  if (!siteMeta && !postMeta) return;
+  const meta = Object.assign({}, siteMeta || {}, postMeta || {});
   const patched = injectSiteMetaIntoHtml(html, meta, canonicalUrl);
 
   return new Response(patched, {
