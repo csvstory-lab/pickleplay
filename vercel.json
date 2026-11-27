@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/user_app/detail.html",
+      "has": [
+        { "type": "query", "key": "id", "value": "(?<postId>[0-9a-fA-F-]{36})" },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(kakaotalk|kakao|facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|linkedinbot|whatsapp|line-poker|yeti|naver|googlebot|bingbot|applebot|iframely|skypeuripreview).*"
+        }
+      ],
+      "destination": "/api/post-share?id=:postId"
+    }
+  ]
+}
