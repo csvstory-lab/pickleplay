@@ -314,8 +314,8 @@
     }
     console.warn('[Admin Dashboard] admin_user_counts RPC 미적용, 단순 count 로 대체(내부 계정 포함될 수 있음)', rpcResult.error);
     var fallback = await Promise.all([
-      sb.from('users').select('*', { count: 'exact', head: true }),
-      sb.from('users').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
+      sb.from('users').select('id', { count: 'exact', head: true }),
+      sb.from('users').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
     ]);
     if (fallback[0].error) throw fallback[0].error;
     if (fallback[1].error) throw fallback[1].error;

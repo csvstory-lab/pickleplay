@@ -622,7 +622,7 @@
             document.getElementById('kpiPendingReports').innerText = "오류";
         }
         try {
-            const { count } = await dbClient.from('users').select('*', { count: 'exact', head: true }).gte('penalty_points', 30);
+            const { count } = await dbClient.from('users').select('id', { count: 'exact', head: true }).gte('penalty_points', 30);
             document.getElementById('kpiBannedUsers').innerText = (count || 0) + " 명";
         } catch(e) {
             console.error('[admin_reports] 제재 회원 수 조회 실패', e);
