@@ -583,6 +583,8 @@
     return (rawCategories || []).filter(function (cat) {
       if (!cat || !cat.slug) return false;
       if (cat.slug === 'c_hall') return false;
+      /* 브랜드 픽(스폰서)은 관리자 스폰서 등록 화면에서만 사용 — 일반 회원 불판 작성 카테고리에서는 숨김 */
+      if (cat.slug === 'brand') return false;
       if (cat.slug === 'c_official') return isSuperAdmin === true;
       return true;
     });
