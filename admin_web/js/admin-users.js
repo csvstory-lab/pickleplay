@@ -547,7 +547,10 @@
           '\')">상세</button>';
 
         if (isBanned) {
-          actions += '<span class="text-banned">조치불가 (차단됨)</span>';
+          actions +=
+            '<button type="button" class="btn-sm btn-unban" data-user-id="' +
+            escapeHtml(user.id) +
+            '" onclick="PickleAdminUsers.unbanUser(this.getAttribute(\'data-user-id\'))">🔓 차단 해제</button>';
         } else {
           actions +=
             '<button type="button" class="btn-sm btn-penalty" data-user-id="' +
@@ -1538,7 +1541,7 @@
       });
       if (res.error) throw res.error;
       if (res.data && res.data.ok === false) {
-        throw new Error(res.data.reason || '차단 처리 실패');
+        throw new Error(res.data.reason === 'staff_account_protected' ? '관리자/스폰서 계정은 차단할 수 없습니다.' : (res.data.reason || '차단 처리 실패'));
       }
       alert('🚫 영구 차단 처리되었습니다.');
       await loadUsers();
@@ -1552,9 +1555,50 @@
     }
   }
 
+  // 🔓 차단/정지 해제 — RPC(admin_unban_user): 계정 활성화 + (선택) 벌점 초기화 + 작업 기록
+  async function unbanUser(userId) {
+    var user = findUserInCache(userId);
+    if (!user) return alert('회원 정보를 찾을 수 없습니다. 목록을 새로고침해 주세요.');
+    var name = user.nickname || '회원';
+    var pts = Number(user.penalty_points) || 0;
+    if (!window.confirm('[' + name + '] 회원의 차단/정지를 해제하고 다시 이용할 수 있게 합니다.\n진행할까요?')) return;
+
+    var resetPoints = false;
+    if (pts >= 100) {
+      window.alert('누적 벌점이 ' + pts + '점이라, 해제 시 벌점을 0점으로 함께 초기화합니다.\n(초기화하지 않으면 계속 차단 상태로 표시됩니다)');
+      resetPoints = true;
+    } else if (pts > 0) {
+      resetPoints = window.confirm('누적 벌점 ' + pts + '점도 0점으로 초기화할까요?\n[확인] 초기화 / [취소] 벌점은 그대로 유지');
+    }
+    var reason = window.prompt('해제 사유를 입력하세요. (작업 기록에 남습니다)', '오해/소명 확인으로 해제');
+    if (reason === null) return;
+
+    try {
+      var res = await getSupabaseClient().rpc('admin_unban_user', {
+        p_user_id: userId,
+        p_reset_points: resetPoints,
+        p_reason: reason,
+      });
+      if (res.error) throw res.error;
+      if (res.data && res.data.ok === false) {
+        throw new Error(res.data.reason || '해제 처리 실패');
+      }
+      alert('🔓 차단이 해제되었습니다.');
+      await loadUsers();
+    } catch (err) {
+      console.error('[Admin Users] 차단 해제 실패', err);
+      var msg = err.message || String(err);
+      if (/admin_unban_user/.test(msg) && /function|schema cache/i.test(msg)) {
+        msg += '\n\n(Supabase 에서 117번 SQL 을 먼저 실행해 주세요.)';
+      }
+      alert('차단 해제에 실패했습니다.\n' + msg);
+    }
+  }
+
   window.PickleAdminUsers = {
     givePenalty: givePenalty,
     banUser: banUser,
+    unbanUser: unbanUser,
     loadUsers: loadUsers,
     applyFilters: applyFilters,
     openUserModal: openUserModal,

@@ -129,6 +129,64 @@
     }
   }
 
+  // 관리자 [고객센터 > 공지사항 관리] 에서 게시한 공지 표시
+  var NOTICE_CAT = {
+    notice: { label: '📢 공지', color: '' },
+    update: { label: '✨ 업데이트', color: '' },
+    event: { label: '🎁 이벤트', color: 'var(--neon-blue)' },
+    maintenance: { label: '🛠 점검', color: 'var(--neon-pink, #ff2d95)' },
+  };
+
+  function fmtNoticeDate(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '. ' + p(d.getMonth() + 1) + '. ' + p(d.getDate());
+  }
+
+  async function loadNotices() {
+    var area = document.getElementById('noticeArea');
+    if (!area) return;
+    try {
+      var res = await getClient()
+        .from('notices')
+        .select('id, category, title, body, is_pinned, published_at')
+        .eq('is_published', true)
+        .lte('published_at', new Date().toISOString())
+        .order('is_pinned', { ascending: false })
+        .order('published_at', { ascending: false })
+        .limit(50);
+      if (res.error) throw res.error;
+      var rows = res.data || [];
+      if (!rows.length) {
+        area.innerHTML = '<div class="notice-empty" style="padding:48px 20px;text-align:center;color:#71717a;font-size:0.9rem;">등록된 공지사항이 없습니다.</div>';
+        return;
+      }
+      area.innerHTML = rows
+        .map(function (n) {
+          var c = NOTICE_CAT[n.category] || NOTICE_CAT.notice;
+          var badgeStyle = c.color
+            ? ' style="color:' + c.color + ';border-color:' + c.color + ';background:transparent;"'
+            : '';
+          return (
+            '<div class="notice-item" onclick="toggleNotice(this)">' +
+            '<div class="notice-header-bar"><div class="notice-info">' +
+            '<span class="notice-badge"' + badgeStyle + '>' + (n.is_pinned ? '📌 ' : '') + escapeHtml(c.label) + '</span>' +
+            '<div class="notice-item-title">' + escapeHtml(n.title) + '</div>' +
+            '<div class="notice-date">' + escapeHtml(fmtNoticeDate(n.published_at)) + '</div>' +
+            '</div><span class="chevron-icon">▼</span></div>' +
+            '<div class="notice-body"><div class="notice-body-inner" style="white-space:pre-wrap;">' +
+            escapeHtml(n.body) +
+            '</div></div></div>'
+          );
+        })
+        .join('');
+    } catch (err) {
+      console.warn('[PickleSupport] 공지 로드 실패', err);
+      area.innerHTML = '<div class="notice-empty" style="padding:48px 20px;text-align:center;color:#71717a;font-size:0.9rem;">공지사항을 불러오지 못했습니다.</div>';
+    }
+  }
+
   // 관리자 [고객센터 > 카카오톡 연동 설정] 값으로 "카카오톡 상담" 버튼 노출
   async function loadKakaoButton() {
     var host = document.getElementById('faqArea');
@@ -160,15 +218,17 @@
     }
   }
 
-  window.PickleSupport = { submitInquiry: submitInquiry, loadFaqs: loadFaqs, loadKakaoButton: loadKakaoButton };
+  window.PickleSupport = { submitInquiry: submitInquiry, loadFaqs: loadFaqs, loadNotices: loadNotices, loadKakaoButton: loadKakaoButton };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       loadFaqs();
+      loadNotices();
       loadKakaoButton();
     });
   } else {
     loadFaqs();
+    loadNotices();
     loadKakaoButton();
   }
 })();

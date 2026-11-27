@@ -261,6 +261,7 @@
             <button class="tab-btn" onclick="switchTab('admin', this)">🛡️ 관리자 권한</button>
             <button class="tab-btn" onclick="switchTab('penalty', this)">⚖️ 제재/벌점(AI) 알고리즘</button>
             <button class="tab-btn" onclick="switchTab('policy', this)" style="color:var(--neon-green);">📜 약관/정책 에디터</button>
+            <button class="tab-btn" onclick="switchTab('audit', this)">📝 작업 기록</button>
         </div>
 
         <div id="tab-general" class="tab-content active">
@@ -613,6 +614,42 @@
             </div>
         </div>
 
+        <div id="tab-audit" class="tab-content">
+            <div class="setting-card" style="margin-bottom: 20px;">
+                <div class="sc-title">📝 관리자 작업 기록 <span id="auditCount" style="font-size:0.8rem;color:var(--text-sub);font-weight:400;margin-left:8px;"></span></div>
+                <div style="font-size:0.85rem;color:var(--text-sub);line-height:1.6;margin-bottom:15px;">
+                    누가 · 언제 · 무엇을 바꿨는지 자동으로 남는 기록입니다. 최고관리자만 볼 수 있고, 수정/삭제할 수 없습니다.<br>
+                    (회원 제재, 설정 변경, 관리자 권한, 공지·이벤트·팝업·FAQ·금칙어·카테고리 변경 등)
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <select id="auditGroup" class="sc-select" style="min-width:180px;" onchange="PickleAdminAudit.render()">
+                        <option value="">전체 작업</option>
+                        <option value="sanction">회원 제재 / 신고·콘텐츠 처리</option>
+                        <option value="settings">설정 · 관리자 권한</option>
+                        <option value="content">공지 · 이벤트 · 팝업 · 기타 콘텐츠</option>
+                    </select>
+                    <input type="text" id="auditSearch" style="flex:1;min-width:200px;background:#09090b;border:1px solid #3f3f46;color:#fff;font-size:0.9rem;padding:10px 15px;border-radius:8px;outline:none;" placeholder="작업자 이메일 · 대상 · 내용 검색" oninput="PickleAdminAudit.render()">
+                    <button class="btn-save-all" style="background:#3f3f46;color:#fff;font-size:0.85rem;padding:8px 15px;" onclick="PickleAdminAudit.load()">🔄 새로고침</button>
+                </div>
+            </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 25px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:14%;">일시</th>
+                            <th style="width:20%;">작업자</th>
+                            <th style="width:15%;">작업</th>
+                            <th style="width:17%;">대상</th>
+                            <th>내용</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogBody">
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px;">탭을 열면 불러옵니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="tab-policy" class="tab-content">
             <div class="editor-layout">
                 
@@ -720,6 +757,7 @@
   <script src="../js/pickle-policies.js"></script>
   <script src="../js/pickle-points.js"></script>
   <script src="js/admin-settings-system.js"></script>
+  <script src="js/admin-audit-log.js"></script>
   <script src="js/admin-settings-policies.js"></script>
   <script>
     function syncManualPushTargetField() {
@@ -945,6 +983,9 @@
 
         if (tabId === 'admin') {
             loadAdmins();
+        }
+        if (tabId === 'audit' && window.PickleAdminAudit) {
+            window.PickleAdminAudit.load();
         }
     }
 

@@ -184,6 +184,7 @@
       <div class="page-title">🎧 고객센터 (CS) 통합 관리</div>
       <div class="cs-tabs">
           <button class="cs-tab active" onclick="switchTab('inquiry', this)">💬 1:1 문의 관리</button>
+          <button class="cs-tab" onclick="switchTab('notice', this)">📢 공지사항 관리</button>
           <button class="cs-tab" onclick="switchTab('faq', this)">📖 FAQ 리스트 관리</button>
           <button class="cs-tab" onclick="switchTab('kakao', this)">🟡 카카오톡 연동 설정</button>
       </div>
@@ -244,6 +245,33 @@
                     </thead>
                     <tbody id="inquiryTableBody">
                         <tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:40px;">데이터를 불러오는 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="noticeTab" class="tab-view">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">📢 앱 공지사항 관리</h2>
+                    <button class="btn-add" onclick="openNoticeModal('new')">➕ 새 공지 작성</button>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 20px; line-height: 1.5;">
+                    ※ <b>게시</b>를 켜야 유저 앱(설정 · 마이페이지 &gt; 공지사항)에 보입니다. 꺼두면 임시저장 상태입니다.<br>
+                    ※ <b>상단 고정</b>한 공지는 목록 맨 위에 노출됩니다. 게시 일시를 미래로 지정하면 그 시각부터 노출됩니다(예약 게시).
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 11%;">분류</th>
+                            <th style="width: 40%;">제목</th>
+                            <th style="width: 15%;">게시 일시</th>
+                            <th style="width: 12%; text-align:center;">앱 노출</th>
+                            <th style="width: 22%; text-align:center;">관리 액션</th>
+                        </tr>
+                    </thead>
+                    <tbody id="noticeTableBody">
+                        <tr><td colspan="5" style="text-align:center; color:var(--text-sub); padding:40px;">데이터를 불러오는 중...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -377,6 +405,52 @@
       </div>
   </div>
 
+  <div class="modal-overlay" id="noticeModal">
+      <div class="modal-container">
+          <div class="modal-header">
+              <h3 class="modal-title" id="noticeModalTitle">➕ 새 공지 작성</h3>
+              <button class="btn-close" onclick="closeNoticeModal()">✕</button>
+          </div>
+          <div class="modal-body">
+              <div style="display:flex; flex-direction:column; gap:15px;">
+                  <div>
+                      <label style="font-size:0.85rem; font-weight:600; color:var(--text-sub); display:block; margin-bottom:8px;">분류</label>
+                      <select id="noticeCategoryInput" class="filter-select" style="width:100%; padding:12px;">
+                          <option value="notice">📢 공지</option>
+                          <option value="update">✨ 업데이트</option>
+                          <option value="event">🎁 이벤트</option>
+                          <option value="maintenance">🛠 점검</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label style="font-size:0.85rem; font-weight:600; color:var(--text-sub); display:block; margin-bottom:8px;">제목</label>
+                      <input type="text" id="noticeTitleInput" class="search-input" maxlength="100" style="width:100%; padding:12px;" placeholder="예: 서비스 점검 안내 (11/30 02:00~04:00)">
+                  </div>
+                  <div>
+                      <label style="font-size:0.85rem; font-weight:600; color:var(--text-sub); display:block; margin-bottom:8px;">내용 (줄바꿈 그대로 표시됩니다)</label>
+                      <textarea id="noticeBodyInput" class="form-textarea" style="height:180px;" placeholder="공지 내용을 입력하세요."></textarea>
+                  </div>
+                  <div>
+                      <label style="font-size:0.85rem; font-weight:600; color:var(--text-sub); display:block; margin-bottom:8px;">게시 일시 (비워두면 지금)</label>
+                      <input type="datetime-local" id="noticePublishedAtInput" class="search-input" style="width:100%; padding:12px;">
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #27272a; padding-top:15px;">
+                      <span style="font-size:0.95rem; font-weight:600; color:#fff;">상단 고정</span>
+                      <label class="switch"><input type="checkbox" id="noticePinnedInput"><span class="slider"></span></label>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="font-size:0.95rem; font-weight:600; color:#fff;">앱에 게시 (끄면 임시저장)</span>
+                      <label class="switch"><input type="checkbox" id="noticePublishedInput" checked><span class="slider"></span></label>
+                  </div>
+              </div>
+              <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                  <button class="btn-action" style="padding:10px 20px;" onclick="closeNoticeModal()">취소</button>
+                  <button class="btn-action" style="background:var(--neon-blue); color:#000; border:none; padding:10px 20px;" onclick="saveNotice()">저장하기</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
   <div class="modal-overlay" id="faqModal">
       <div class="modal-container">
           <div class="modal-header">
@@ -417,6 +491,7 @@
   </div>
 
   <script src="js/admin-cs.js"></script>
+  <script src="js/admin-notices.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>
