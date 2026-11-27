@@ -133,8 +133,8 @@
         <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
         <li class="nav-item" onclick="location.href='admin_users.html'"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
         <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
-        <li class="nav-item active" onclick="location.href='admin_board_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
-        <li class="nav-sub-item active" onclick="location.href='admin_board_list.html'">· 일반 불판 관리</li>
+        <li class="nav-item active" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item active" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
         <li class="nav-sub-item" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
         <li class="nav-item" onclick="location.href='admin_ads.html'"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
         <li class="nav-sub-item" onclick="location.href='admin_ads.html'">· 광고주/대행사 정산 관리</li>
@@ -150,7 +150,7 @@
 <main class="main-content">
     <header class="top-header">
       <div class="page-title">
-        <a href="admin_board_list.html" class="back-btn">❮</a> 
+        <a href="admin_post_list.html" class="back-btn">❮</a> 
         상세 모니터링 및 댓글 관리
       </div>
       <div class="admin-profile admin-header-user" id="adminHeaderUser">
@@ -218,17 +218,17 @@
             <div class="section-header">
                 <h3 class="section-title">💬 참견(댓글) 실시간 모니터링</h3>
                 <div class="filter-group">
-                    <select class="admin-select" id="filterStance" onchange="loadComments()">
+                    <select class="admin-select" id="filterStance" onchange="renderComments()">
                         <option value="all">진영 전체 보기</option>
                         <option value="A">A 진영 댓글만</option>
                         <option value="B">B 진영 댓글만</option>
                     </select>
-                    <select class="admin-select" id="filterStatus" style="border-color: var(--neon-pink); color: var(--neon-pink);" onchange="loadComments()">
+                    <select class="admin-select" id="filterStatus" style="border-color: var(--neon-pink); color: var(--neon-pink);" onchange="renderComments()">
                         <option value="all">상태: 전체</option>
                         <option value="blind">👁️ 블라인드 처리됨</option>
                     </select>
                     <input type="text" class="admin-input" id="searchKeyword" placeholder="닉네임 또는 댓글 내용 검색..." style="width: 250px;">
-                    <button class="btn-sm btn-blind" style="background:#27272a; color:#fff; border:1px solid #3f3f46;" onclick="loadComments()">검색</button>
+                    <button class="btn-sm btn-blind" style="background:#27272a; color:#fff; border:1px solid #3f3f46;" onclick="renderComments()">검색</button>
                 </div>
             </div>
 
@@ -263,188 +263,217 @@
     const postId = urlParams.get('id');
 
     let currentPost = null;
+    let allComments = [];
+
+    function esc(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     window.addEventListener('DOMContentLoaded', async function () {
         if (!postId) {
             alert('정확한 불판 고유 ID가 전달되지 않았습니다. 리스트로 돌아갑니다.');
-            location.href = 'admin_board_list.html';
+            location.href = 'admin_post_list.html';
             return;
         }
         await loadPostDetail();
         await loadComments();
     });
 
-    // 1. 불판 요약 정보 동적 바인딩
+    function isHidden(post) {
+        return post && (post.visibility_status === 'blinded' || post.visibility_status === 'hidden');
+    }
+
+    // 1. 불판 요약 정보 (RPC: admin_get_post — 실제 컬럼 기준)
     async function loadPostDetail() {
         try {
-            const { data, error } = await supabase.from('posts').select('*').eq('id', postId).single();
-            if (error || !data) throw error;
-            
+            const res = await supabase.rpc('admin_get_post', { p_post_id: postId });
+            if (res.error || !res.data) throw res.error || new Error('불판을 찾을 수 없습니다.');
+            const data = res.data;
             currentPost = data;
-            
-            document.getElementById('postCategory').innerText = data.category || '일반';
-            document.getElementById('postStatus').innerText = data.is_active ? '진행 중 (Active)' : '강제 종료(Hidden)';
+
+            document.getElementById('postCategory').innerText =
+                ((data.category_icon || '') + ' ' + (data.category_name || data.category || '일반')).trim();
+            document.getElementById('postStatus').innerText =
+                data.visibility_status === 'visible' ? '진행 중 (Active)'
+                : data.visibility_status === 'draft' ? '임시저장(Draft)'
+                : '블라인드(Hidden)';
             document.getElementById('postIdView').innerText = `ID: #${data.id}`;
-            document.getElementById('postTitle').innerText = data.title;
-            document.getElementById('postAuthor').innerHTML = `👤 작성자: <strong>${data.author_name || '익명'}</strong> (UID: ${data.user_id || '---'})`;
+            document.getElementById('postTitle').innerText = data.title || `${data.option_a_name} vs ${data.option_b_name}`;
+            document.getElementById('postAuthor').innerHTML =
+                `👤 작성자: <strong>${esc(data.author_nickname || '익명')}</strong> (UID: ${esc(String(data.author_id || '---').substring(0, 8))})`;
             document.getElementById('postDate').innerText = `🕒 등록일: ${new Date(data.created_at).toLocaleString('ko-KR')}`;
-            
-            document.getElementById('labelOptionA').innerText = `A. ${data.option_a || '허용'}`;
-            document.getElementById('labelOptionB').innerText = `B. ${data.option_b || '불가'}`;
-            
-            // 투표수 비율 계산 계산기
-            const totalVotes = (data.votes_a || 0) + (data.votes_b || 0);
-            const percentA = totalVotes > 0 ? Math.round((data.votes_a / totalVotes) * 100) : 50;
-            const percentB = totalVotes > 0 ? 100 - percentA : 50;
-            
+
+            document.getElementById('labelOptionA').innerText = `A. ${data.option_a_name || '-'}`;
+            document.getElementById('labelOptionB').innerText = `B. ${data.option_b_name || '-'}`;
+
+            // A/B 득표 비율 (RPC: admin_post_vote_split) — 미적용 시 총 투표수만 표시
+            let votesA = null, votesB = null;
+            try {
+                const split = await supabase.rpc('admin_post_vote_split', { p_post_id: postId });
+                if (!split.error && Array.isArray(split.data) && split.data[0]) {
+                    votesA = Number(split.data[0].votes_a) || 0;
+                    votesB = Number(split.data[0].votes_b) || 0;
+                }
+            } catch (e) { /* 아래 fallback */ }
+
             const barA = document.getElementById('barOptionA');
             const barB = document.getElementById('barOptionB');
-            barA.style.width = `${percentA}%`; barA.innerText = `${percentA}%`;
-            barB.style.width = `${percentB}%`; barB.innerText = `${percentB}%`;
-            
+            let totalVotes = Number(data.vote_count) || 0;
+            if (votesA !== null) {
+                totalVotes = votesA + votesB;
+                const percentA = totalVotes > 0 ? Math.round((votesA / totalVotes) * 100) : 50;
+                const percentB = totalVotes > 0 ? 100 - percentA : 50;
+                barA.style.width = `${percentA}%`; barA.innerText = `${percentA}% (${votesA.toLocaleString()})`;
+                barB.style.width = `${percentB}%`; barB.innerText = `${percentB}% (${votesB.toLocaleString()})`;
+            } else {
+                barA.style.width = '50%'; barA.innerText = 'A -';
+                barB.style.width = '50%'; barB.innerText = 'B -';
+            }
+
             document.getElementById('cntVotes').innerText = totalVotes.toLocaleString();
-            document.getElementById('cntShares').innerText = (data.shares_count || 0).toLocaleString();
-            document.getElementById('cntReports').innerText = (data.reports_count || 0).toLocaleString();
-            
+            document.getElementById('cntShares').innerText = (Number(data.share_count) || 0).toLocaleString();
+            document.getElementById('cntReports').innerText = (Number(data.report_count) || 0).toLocaleString();
+            document.getElementById('cntComments').innerText = (Number(data.comment_count) || 0).toLocaleString();
+
             const btnToggle = document.getElementById('btnTogglePost');
-            if(!data.is_active) {
+            if (isHidden(data)) {
                 btnToggle.innerText = "👁️ 이 불판 블라인드 해제(복구)";
                 btnToggle.style.background = "rgba(57, 255, 20, 0.1)";
                 btnToggle.style.color = "var(--neon-green)";
                 btnToggle.style.borderColor = "var(--neon-green)";
+            } else {
+                btnToggle.innerText = "👁️ 이 불판 강제 블라인드(숨김)";
+                btnToggle.style.background = "";
+                btnToggle.style.color = "";
+                btnToggle.style.borderColor = "";
             }
-            
-            // 총 댓글수 표기용 서브 쿼리
-            const { count } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', postId);
-            document.getElementById('cntComments').innerText = count || 0;
-            
         } catch (err) {
             console.error("불판 디테일 데이터 로드 실패:", err);
             document.getElementById('postTitle').innerText = "불판 데이터를 불러오는데 오류가 발생했습니다.";
         }
     }
 
-    // 2. 댓글 실시간 필터 및 로드 처리
+    // 2. 댓글 목록 (RPC: admin_list_post_comments) — 필터는 화면에서 처리
     async function loadComments() {
         const tbody = document.getElementById('commentTableBody');
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--text-sub);">참견 데이터를 불러오는 중입니다...</td></tr>`;
-        
         try {
-            let query = supabase.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: false });
-            
-            // 진영 필터링 조건 추가
-            const stance = document.getElementById('filterStance').value;
-            if (stance !== 'all') query = query.eq('stance', stance);
-            
-            // 블라인드 필터링 조건 추가
-            const status = document.getElementById('filterStatus').value;
-            if (status === 'blind') query = query.eq('is_blind', true);
-            
-            const { data: comments, error } = await query;
-            if (error) throw error;
-            
-            if (!comments || comments.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--text-sub);">등록된 참견(댓글)이 없습니다.</td></tr>`;
-                return;
-            }
-            
-            // 키워드 검색 필터링 (클라이언트 단 지원)
-            const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
-            const filteredComments = comments.filter(c => {
-                if(!keyword) return true;
-                return (c.nickname && c.nickname.toLowerCase().includes(keyword)) || 
-                       (c.content && c.content.toLowerCase().includes(keyword));
-            });
-
-            tbody.innerHTML = "";
-            filteredComments.forEach(c => {
-                const tr = document.createElement('tr');
-                if (c.is_blind) {
-                    tr.style.opacity = "0.6";
-                    tr.style.backgroundColor = "rgba(255, 0, 127, 0.03)";
-                }
-                
-                const badgeClass = c.stance === 'A' ? 'pick-a' : 'pick-b';
-                const actionBtn = c.is_blind 
-                    ? `<button class="btn-sm btn-restore" onclick="restoreComment('${c.id}')">제재 무효 및 복구</button>`
-                    : `<button class="btn-sm btn-blind" onclick="blindComment('${c.id}', '${c.nickname}', '${c.user_id}')">🚨 즉시 숨김(제재)</button>`;
-
-                tr.innerHTML = `
-                    <td>
-                        <div class="user-info">
-                            <div class="avatar">${c.stance === 'A' ? '🤔' : '🤬'}</div>
-                            <div>
-                                <div class="nickname">${c.nickname || '익명'} <span class="pick-badge ${badgeClass}">${c.stance || 'X'} 픽</span></div>
-                                <div class="uid">UID: ${c.user_id ? c.user_id.substring(0,8) : '---'}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        ${c.is_blind ? `<span class="auto-blind-badge">🚨 관리자 혹은 시스템에 의해 규제 완화 블라인드됨</span>` : ''}
-                        <div class="comment-text" style="${c.is_blind ? 'text-decoration: line-through; color: var(--text-sub);' : ''}">${c.content}</div>
-                        <span class="comment-date">${new Date(c.created_at).toLocaleString('ko-KR')}</span>
-                    </td>
-                    <td style="text-align:center;"><span class="${c.report_count > 0 ? 'report-count' : ''}">${c.report_count || 0} 건</span></td>
-                    <td style="text-align:right;">
-                        <div class="action-btns" style="justify-content: flex-end;">
-                            ${actionBtn}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            
+            const res = await supabase.rpc('admin_list_post_comments', { p_post_id: postId });
+            if (res.error) throw res.error;
+            allComments = Array.isArray(res.data) ? res.data : [];
+            renderComments();
         } catch (err) {
             console.error("댓글 로드 실패:", err);
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--neon-pink);">참견 목록을 동기화하지 못했습니다.</td></tr>`;
         }
     }
 
-    // 💡 대표님이 기틀을 세우신 핵심 [2단계 벌점 연쇄 제재 로직] 결합
-    async function blindComment(commentId, username, userId) {
-        if(!confirm(`[${username}] 유저의 댓글을 즉시 숨김(블라인드) 처리하시겠습니까?\n\n※ 확인 시 해당 댓글은 숨김 처리되며, 유저에게 벌점 10점이 가산됩니다.`)) return;
-        
-        try {
-            // 1. 댓글 블라인드 업데이트
-            const { error: commentErr } = await supabase.from('comments').update({ is_blind: true }).eq('id', commentId);
-            if (commentErr) throw commentErr;
-            
-            if (userId && userId !== '---') {
-                // 2. 해당 유저의 현재 penalty_points 단일 조회
-                const { data: userObj, error: userGetErr } = await supabase.from('users').select('penalty_points').eq('id', userId).single();
-                if (!userGetErr && userObj) {
-                    const nextPoints = (userObj.penalty_points || 0) + 10;
-                    let updateData = { penalty_points: nextPoints };
-                    
-                    // 30점 돌파 시 3일 징계 타임스탬프 계산 연동
-                    if (nextPoints >= 30) {
-                        let restrictedDate = new Date();
-                        restrictedDate.setDate(restrictedDate.getDate() + 3);
-                        updateData.restricted_until = restrictedDate.toISOString();
-                    }
-                    
-                    // 3. 유저 테이블 벌점 및 제재 반영 업데이트
-                    await supabase.from('users').update(updateData).eq('id', userId);
-                }
+    function renderComments() {
+        const tbody = document.getElementById('commentTableBody');
+        const stance = document.getElementById('filterStance').value;
+        const status = document.getElementById('filterStatus').value;
+        const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+
+        const rows = allComments.filter(c => {
+            const blind = c.is_blind || c.visibility_status === 'blinded';
+            if (stance !== 'all' && c.vote_choice !== stance) return false;
+            if (status === 'blind' && !blind) return false;
+            if (!keyword) return true;
+            return String(c.author_nickname || '').toLowerCase().includes(keyword) ||
+                   String(c.content || '').toLowerCase().includes(keyword);
+        });
+
+        if (!rows.length) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: var(--text-sub);">조건에 맞는 참견(댓글)이 없습니다.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = "";
+        rows.forEach(c => {
+            const blind = c.is_blind || c.visibility_status === 'blinded';
+            const tr = document.createElement('tr');
+            if (blind) {
+                tr.style.opacity = "0.6";
+                tr.style.backgroundColor = "rgba(255, 0, 127, 0.03)";
             }
-            
-            alert("✅ 댓글 블라인드 및 제재 벌점 10점이 원격 적용되었습니다.");
-            await loadComments(); // 목록 실시간 동기화 리로드
-            
+            const choice = c.vote_choice;
+            const badgeClass = choice === 'A' ? 'pick-a' : 'pick-b';
+            const pickBadge = choice
+                ? `<span class="pick-badge ${badgeClass}">${choice} 픽</span>`
+                : `<span class="pick-badge" style="color:#71717a;border:1px solid #3f3f46;">미투표</span>`;
+            const actionBtn = blind
+                ? `<button class="btn-sm btn-restore" data-act="restore" data-id="${esc(c.id)}">제재 무효 및 복구</button>`
+                : `<button class="btn-sm btn-blind" data-act="blind" data-id="${esc(c.id)}">🚨 즉시 숨김(제재)</button>`;
+
+            tr.innerHTML = `
+                <td>
+                    <div class="user-info">
+                        <div class="avatar">${choice === 'A' ? '🤔' : choice === 'B' ? '🤬' : '💬'}</div>
+                        <div>
+                            <div class="nickname">${esc(c.author_nickname || '익명')} ${pickBadge}</div>
+                            <div class="uid">UID: ${esc(c.user_id ? String(c.user_id).substring(0, 8) : '---')}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    ${blind ? `<span class="auto-blind-badge">🚨 관리자 혹은 시스템에 의해 블라인드됨</span>` : ''}
+                    <div class="comment-text" style="${blind ? 'text-decoration: line-through; color: var(--text-sub);' : ''}">${esc(c.filtered_content || c.content)}</div>
+                    <span class="comment-date">${new Date(c.created_at).toLocaleString('ko-KR')}</span>
+                </td>
+                <td style="text-align:center;"><span class="${c.report_count > 0 ? 'report-count' : ''}">${c.report_count || 0} 건</span></td>
+                <td style="text-align:right;">
+                    <div class="action-btns" style="justify-content: flex-end;">${actionBtn}</div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 버튼 클릭 (이벤트 위임 — 닉네임에 따옴표가 있어도 안전)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('#commentTableBody [data-act]');
+        if (!btn) return;
+        const c = allComments.find(x => String(x.id) === btn.getAttribute('data-id'));
+        if (!c) return;
+        if (btn.getAttribute('data-act') === 'blind') blindComment(c);
+        else restoreComment(c);
+    });
+
+    // 댓글 숨김 + 벌점 10점 (실제 제재 RPC apply_manual_penalty 사용 → 벌점 로그/알림/자동 정지까지 정상 처리)
+    async function blindComment(c) {
+        if (!confirm(`[${c.author_nickname || '익명'}] 유저의 댓글을 즉시 숨김(블라인드) 처리하시겠습니까?\n\n※ 확인 시 해당 댓글은 숨김 처리되며, 유저에게 벌점 10점이 부과됩니다.`)) return;
+        try {
+            const vis = await supabase.rpc('admin_set_comment_visibility', { p_comment_id: c.id, p_status: 'blinded' });
+            if (vis.error || vis.data !== true) throw vis.error || new Error('댓글 숨김 실패');
+            await supabase.from('comments').update({ is_blind: true }).eq('id', c.id);
+
+            let penaltyMsg = '';
+            if (c.user_id) {
+                const pen = await supabase.rpc('apply_manual_penalty', {
+                    p_user_id: c.user_id,
+                    p_reason: '욕설/비방/어그로 (관리자 직권 댓글 숨김)',
+                    p_points: 10,
+                    p_report_id: null,
+                });
+                const ok = !pen.error && pen.data && pen.data.ok !== false;
+                penaltyMsg = ok ? ' 벌점 10점도 부과되었습니다.' : ' (단, 벌점 부과는 실패했습니다. 신고 및 제재 관리에서 별도 처리해 주세요.)';
+            }
+            alert('✅ 댓글이 숨김 처리되었습니다.' + penaltyMsg);
+            await loadComments();
         } catch (err) {
             console.error("제재 실패:", err);
             alert("제재 처리 중 데이터베이스 에러가 발생했습니다.");
         }
     }
 
-    // 댓글 숨김 해제 및 벌점 차감 복구 로직
-    async function restoreComment(commentId) {
-        if(!confirm('이 댓글의 숨김 조치를 해제하시겠습니까?')) return;
-        
+    // 댓글 숨김 해제 (이미 부과된 벌점은 자동으로 되돌리지 않습니다)
+    async function restoreComment(c) {
+        if (!confirm('이 댓글의 숨김 조치를 해제하시겠습니까?\n(이미 부과된 벌점은 회원 상세에서 별도로 조정해야 합니다)')) return;
         try {
-            const { error } = await supabase.from('comments').update({ is_blind: false }).eq('id', commentId);
-            if (error) throw error;
-            
+            const vis = await supabase.rpc('admin_set_comment_visibility', { p_comment_id: c.id, p_status: 'visible' });
+            if (vis.error || vis.data !== true) throw vis.error || new Error('복구 실패');
+            await supabase.from('comments').update({ is_blind: false }).eq('id', c.id);
             alert("조치가 정상적으로 해제되었습니다.");
             await loadComments();
         } catch (err) {
@@ -452,27 +481,30 @@
         }
     }
 
-    // 불판 자체를 강제 블라인드/해제 토글 처리
+    // 불판 자체 강제 블라인드/해제 (visibility_status 사용)
     async function togglePostStatus() {
-        if(!currentPost) return;
-        const nextStatus = !currentPost.is_active;
-        const msg = nextStatus ? "이 불판을 다시 정상 공개 상태로 복구하시겠습니까?" : "이 불판을 강제 블라인드 처리하여 리스트에서 숨기시겠습니까?";
-        if(!confirm(msg)) return;
-        
+        if (!currentPost) return;
+        const hidden = isHidden(currentPost);
+        const next = hidden ? 'visible' : 'blinded';
+        const msg = hidden ? "이 불판을 다시 정상 공개 상태로 복구하시겠습니까?" : "이 불판을 강제 블라인드 처리하여 리스트에서 숨기시겠습니까?";
+        if (!confirm(msg)) return;
         try {
-            const { error } = await supabase.from('posts').update({ is_active: nextStatus }).eq('id', postId);
-            if(error) throw error;
+            const rpc = await supabase.rpc('admin_set_post_visibility', { p_post_id: postId, p_status: next });
+            if (rpc.error || rpc.data !== true) {
+                const fb = await supabase.from('posts').update({ visibility_status: next }).eq('id', postId).select('id');
+                if (fb.error || !fb.data || !fb.data.length) throw (fb.error || rpc.error || new Error('변경 실패'));
+            }
             alert("불판 상태가 변경되었습니다.");
             await loadPostDetail();
-        } catch(err) {
+        } catch (err) {
+            console.error(err);
             alert("불판 상태 업데이트 실패.");
         }
     }
 
     window.loadPostDetail = loadPostDetail;
     window.loadComments = loadComments;
-    window.blindComment = blindComment;
-    window.restoreComment = restoreComment;
+    window.renderComments = renderComments;
     window.togglePostStatus = togglePostStatus;
 })();
 </script>

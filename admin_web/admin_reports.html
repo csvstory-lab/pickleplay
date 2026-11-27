@@ -896,7 +896,8 @@
         document.getElementById('calcMetaText').innerText = `기존 벌점(${ctxCurrentUserPoints}점) + 부과 벌점(${added}점) = 누적 벌점`;
         document.getElementById('totalScore').innerText = total + " 점";
         const punishBox = document.getElementById('autoPunish');
-        if (total >= 50) { punishBox.innerText = "🛑 영구 차단 (레드카드)"; punishBox.style.background = "var(--alert-red)"; punishBox.style.color = "#fff"; }
+        if (total >= 100) { punishBox.innerText = "🛑 영구 차단 (레드카드)"; punishBox.style.background = "var(--alert-red)"; punishBox.style.color = "#fff"; }
+        else if (total >= 50) { punishBox.innerText = "⚠️ 7일 이용 정지 (옐로카드)"; punishBox.style.background = "rgba(255,204,0,0.2)"; punishBox.style.color = "var(--theme-gold)"; }
         else if (total >= 30) { punishBox.innerText = "⚠️ 3일 이용 정지 (옐로카드)"; punishBox.style.background = "rgba(255,204,0,0.2)"; punishBox.style.color = "var(--theme-gold)"; }
         else if (total >= 10) { punishBox.innerText = "🚨 누적 경고 (벌점 부과)"; punishBox.style.background = "rgba(255,255,255,0.05)"; punishBox.style.color = "var(--text-main)"; }
         else { punishBox.innerText = "제재 없음"; punishBox.style.background = "transparent"; punishBox.style.color = "#a1a1aa"; }

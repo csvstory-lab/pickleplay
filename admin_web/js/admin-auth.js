@@ -572,6 +572,31 @@
     });
   }
 
+  // 사이드바 "신고 및 제재 관리" 옆 배지 = 심사 대기 중인 신고 실제 건수 (0건이면 숨김)
+  async function refreshSidebarReportBadge(role) {
+    try {
+      var badges = document.querySelectorAll('.sidebar .badge-danger');
+      if (!badges.length) return;
+      if (isSponsorRole(role)) {
+        badges.forEach(function (b) { b.style.display = 'none'; });
+        return;
+      }
+      var res = await getClient()
+        .from('reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      if (res.error) throw res.error;
+      var n = res.count || 0;
+      badges.forEach(function (b) {
+        b.textContent = String(n);
+        b.style.display = n > 0 ? '' : 'none';
+      });
+    } catch (err) {
+      console.warn('[AdminAuth] 신고 배지 갱신 실패', err);
+      document.querySelectorAll('.sidebar .badge-danger').forEach(function (b) { b.style.display = 'none'; });
+    }
+  }
+
   async function guardAdminPage() {
     if (isLoginPage()) return { ok: true, skipped: true };
 
@@ -599,6 +624,7 @@
     var menuKey = PAGE_TO_MENU[page];
 
     applySidebarRBAC(role);
+    refreshSidebarReportBadge(role);
     setupAdminHeaderUI(roleInfo, session.user);
 
     if (isSponsorRole(role) && page === DASHBOARD_PAGE) {

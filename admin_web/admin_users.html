@@ -547,8 +547,6 @@
     .modal-container .modal-pagination .page-nav-label:hover:not(:disabled) { color: #e4e4e7; }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
   <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body>
@@ -834,25 +832,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-users.js?v=20260617_profile_grid"></script>
-<script>
-    async function banUser(nickname) {
-        if(!confirm(`[${nickname}] 회원을 즉시 영구 차단하시겠습니까?\n사유: 사안이 중대하여 관리자 직권으로 차단함 (복구 불가)`)) return;
-        const FB = window.PickleAdminFirebase;
-        if (!FB || !FB.persistNew) {
-            alert('벌점/차단 기능은 준비 중입니다.');
-            return;
-        }
-        await FB.persistNew('user_sanctions', {
-            nickname,
-            action: 'permanent_ban',
-            reason: '관리자 직권 영구 차단',
-        }, {
-            page: 'admin_users',
-            action: 'ban',
-            successMessage: `🚨 ${nickname} 회원의 영구 차단이 Firebase에 기록되었습니다.`,
-        });
-    }
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>

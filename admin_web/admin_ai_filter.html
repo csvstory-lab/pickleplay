@@ -108,11 +108,9 @@
     .kw-close:hover { background: var(--alert-red); }
 
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
   <link rel="stylesheet" href="css/admin-header.css">
 </head>
-<body data-firebase-page="ai_filter" data-firebase-doc="settings">
+<body>
 
   <aside class="sidebar">
     <div class="logo-area">
@@ -140,7 +138,6 @@
   <main class="main-content">
     <header class="top-header">
       <div class="page-title">🤖 AI 필터링 및 데이터 보안 통제판</div>
-      <button class="btn-save" onclick="saveSettings()">💾 변경사항 서버에 반영</button>
     
         <div class="admin-profile admin-header-user" id="adminHeaderUser">
             <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
@@ -203,43 +200,10 @@
 
       <div class="setting-card">
         <div class="sc-title">
-          <div>🛡️ AI 스팸 및 어뷰징 방어망</div>
-          <span>외부 트래픽 유출 방지 및 비정상 봇(Bot)의 트래픽을 필터링합니다.</span>
+          <div>🛡️ 금칙어 필터</div>
+          <span>등록한 단어는 댓글·불판에서 즉시 필터링됩니다. (추가/삭제는 바로 서비스에 반영됩니다)</span>
         </div>
         
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="s-title">일반 유저의 외부 URL (쇼핑몰 등) 삽입 전면 차단</div>
-            <div class="s-desc">일반 불판 본문 및 댓글에 외부 링크가 포함되면 업로드를 원천 차단합니다.</div>
-          </div>
-          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="s-title">매크로 의심 패턴 (비정상 투표 급증) 감지 강도</div>
-            <div class="s-desc">동일 기기에서 짧은 시간 내 투표가 폭증할 경우 무효(Ghost) 처리하는 AI 민감도입니다.</div>
-          </div>
-          <select class="ai-select">
-              <option>보통 (권장)</option>
-              <option selected>강함 (1분 내 50건 이상 차단)</option>
-              <option>매우 강함 (보수적 방어)</option>
-          </select>
-          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="s-title" style="color: var(--neon-pink);">비정상 소셜(Pick) 봇(Bot) 계정 차단</div>
-            <div class="s-desc">단기간에 팔로워를 대량 생성하는 봇 의심 계정을 섀도우밴 처리합니다.</div>
-          </div>
-          <select class="ai-select">
-              <option>보통</option>
-              <option selected>강함 (권장)</option>
-          </select>
-          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-
         <div class="setting-row" style="flex-direction: column; align-items: flex-start; border: none; padding-bottom: 0;">
           <div class="setting-info" style="width: 100%;">
             <div class="s-title">수동 블라인드 금칙어 필터 <span id="keywordCountLabel">(현재 0개)</span></div>
@@ -260,24 +224,6 @@
     </div>
   </main>
 
-  <script>
-      async function saveSettings() {
-          const FB = window.PickleAdminFirebase;
-          const form = FB.collectForm(document.querySelector('.content-container'));
-          const data = {
-              checkboxes: form.checkboxes,
-              selects: {},
-          };
-          document.querySelectorAll('.ai-select').forEach((sel, i) => {
-              data.selects['ai_select_' + i] = sel.value;
-          });
-          const res = await FB.persist('ai_filter', 'settings', data, {
-              page: 'admin_ai_filter',
-              successMessage: '🛡️ AI 스팸 필터 강도 설정이 Firebase에 반영되었습니다. (금칙어는 Supabase에 즉시 저장됩니다)',
-          });
-          return res;
-      }
-  </script>
   <script src="js/admin-nav.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>

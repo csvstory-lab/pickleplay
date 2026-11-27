@@ -1989,7 +1989,7 @@
 
             <div style="margin-bottom:15px;">
                 <div style="font-size:0.85rem; font-weight:800; color:var(--text-sub); margin-bottom:8px;">답변받을 이메일 <span style="color:var(--neon-pink);">*</span></div>
-                <input type="email" value="pickle_love@kakao.com" style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; font-family: 'Pretendard', sans-serif;">
+                <input type="email" value="" style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; font-family: 'Pretendard', sans-serif;">
             </div>
 
             <div style="margin-bottom:15px;">
@@ -1997,7 +1997,7 @@
                 <textarea rows="5" placeholder="내용을 입력해주세요.&#13;&#10;카테고리 제안일 경우, 원하시는 카테고리 이름과 이유를 자유롭게 적어주세요!" style="width:100%; background:var(--card-bg); border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; box-sizing:border-box; outline:none; resize:none; font-family: 'Pretendard', sans-serif; line-height: 1.5;"></textarea>
             </div>
 
-            <button style="width:100%; padding:15px; background:var(--neon-green); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; font-family: 'Pretendard', sans-serif; font-size: 1rem; transition: 0.2s;" onclick="alert('문의가 성공적으로 접수되었습니다.\n담당자 확인 후 이메일로 답변을 보내드립니다!'); closePanel('supportPanel');">접수하기</button>
+            <button style="width:100%; padding:15px; background:var(--neon-green); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; font-family: 'Pretendard', sans-serif; font-size: 1rem; transition: 0.2s;" onclick="PickleSupport.submitInquiry(this)">접수하기</button>
         </div>
     </div>
 </div>
@@ -2318,6 +2318,7 @@
 <script src="../js/supabase-config.js" onload="window.__PICKLE_CONFIG_SCRIPT_OK=true" onerror="window.__PICKLE_CONFIG_SCRIPT_OK=false"></script>
 <script src="../js/supabase-bootstrap.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/pickle-support.js"></script>
 <script src="../js/pickle-og-defaults.js"></script>
 <script src="../js/pickle-pwa-defaults.js"></script>
 <script src="../js/pickle-system-settings.js?v=20260617_sys2"></script>

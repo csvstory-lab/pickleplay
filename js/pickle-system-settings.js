@@ -34,10 +34,10 @@
     app_store_url: '',
     play_store_url: '',
     company_name: '(주)픽클컴퍼니',
-    ceo_name: '홍길동',
-    business_number: '123-45-67890',
-    mail_order_number: '제 2026-서울성동-1234호',
-    company_address: '서울특별시 성동구 뚝섬로 123, 픽클타워 7층',
+    ceo_name: '',
+    business_number: '',
+    mail_order_number: '',
+    company_address: '',
   };
 
   var SNS_CHANNELS = [

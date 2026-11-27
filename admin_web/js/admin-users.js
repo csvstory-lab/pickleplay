@@ -550,10 +550,12 @@
           actions += '<span class="text-banned">조치불가 (차단됨)</span>';
         } else {
           actions +=
-            '<button type="button" class="btn-sm btn-penalty" onclick="alert(\'벌점 부과 기능 준비 중입니다.\')">🔨 벌점</button>' +
-            '<button type="button" class="btn-sm btn-ban" onclick="banUser(\'' +
-            escapeHtml(user.nickname || '') +
-            '\')">영구 차단</button>';
+            '<button type="button" class="btn-sm btn-penalty" data-user-id="' +
+            escapeHtml(user.id) +
+            '" onclick="PickleAdminUsers.givePenalty(this.getAttribute(\'data-user-id\'))">🔨 벌점</button>' +
+            '<button type="button" class="btn-sm btn-ban" data-user-id="' +
+            escapeHtml(user.id) +
+            '" onclick="PickleAdminUsers.banUser(this.getAttribute(\'data-user-id\'))">영구 차단</button>';
         }
         actions += '</div>';
 
@@ -1482,7 +1484,77 @@
     });
   }
 
+  function findUserInCache(userId) {
+    return (usersCache || []).find(function (u) { return String(u.id) === String(userId); });
+  }
+
+  // 🔨 벌점 부과 — 실제 제재 RPC(apply_manual_penalty): 벌점 누적 · 제재 이력 · 자동 정지까지 처리
+  async function givePenalty(userId) {
+    var user = findUserInCache(userId);
+    if (!user) return alert('회원 정보를 찾을 수 없습니다. 목록을 새로고침해 주세요.');
+    var input = window.prompt(
+      '[' + (user.nickname || '회원') + '] 님에게 부과할 벌점을 숫자로 입력하세요.\n' +
+        '10 = 욕설/비방/어그로\n30 = 광고/도배\n50 = 음란/불법/혐오물\n\n(현재 누적 벌점: ' +
+        (Number(user.penalty_points) || 0) + '점)',
+      '10'
+    );
+    if (input === null) return;
+    var points = parseInt(input, 10);
+    if (!(points > 0 && points <= 100)) return alert('1~100 사이 숫자를 입력해 주세요.');
+    var reasonMap = {
+      10: '욕설/비방/어그로 (관리자 수동 집행)',
+      30: '광고/도배 (관리자 수동 집행)',
+      50: '음란/불법/혐오물 (관리자 수동 집행)',
+    };
+    if (!window.confirm('[' + (user.nickname || '회원') + '] 님에게 벌점 ' + points + '점을 부과합니다. 진행할까요?')) return;
+    try {
+      var res = await getSupabaseClient().rpc('apply_manual_penalty', {
+        p_user_id: userId,
+        p_reason: reasonMap[points] || '가이드라인 위반 조치 (관리자 수동 집행)',
+        p_points: points,
+        p_report_id: null,
+      });
+      if (res.error) throw res.error;
+      if (res.data && res.data.ok === false) {
+        throw new Error(res.data.reason || '제재 처리 실패');
+      }
+      alert('🔨 벌점 ' + points + '점이 부과되었습니다.');
+      await loadUsers();
+    } catch (err) {
+      console.error('[Admin Users] 벌점 부과 실패', err);
+      alert('벌점 부과에 실패했습니다.\n' + (err.message || String(err)));
+    }
+  }
+
+  // 🚫 영구 차단 — RPC(admin_ban_user): 계정 정지 + 제재 이력 기록
+  async function banUser(userId) {
+    var user = findUserInCache(userId);
+    if (!user) return alert('회원 정보를 찾을 수 없습니다. 목록을 새로고침해 주세요.');
+    if (!window.confirm('[' + (user.nickname || '회원') + '] 회원을 즉시 영구 차단하시겠습니까?\n사유: 사안이 중대하여 관리자 직권으로 차단함')) return;
+    try {
+      var res = await getSupabaseClient().rpc('admin_ban_user', {
+        p_user_id: userId,
+        p_reason: '관리자 직권 영구 차단',
+      });
+      if (res.error) throw res.error;
+      if (res.data && res.data.ok === false) {
+        throw new Error(res.data.reason || '차단 처리 실패');
+      }
+      alert('🚫 영구 차단 처리되었습니다.');
+      await loadUsers();
+    } catch (err) {
+      console.error('[Admin Users] 영구 차단 실패', err);
+      var msg = err.message || String(err);
+      if (/admin_ban_user/.test(msg) && /function|schema cache/i.test(msg)) {
+        msg += '\n\n(Supabase 에서 114번 SQL 을 먼저 실행해 주세요.)';
+      }
+      alert('영구 차단에 실패했습니다.\n' + msg);
+    }
+  }
+
   window.PickleAdminUsers = {
+    givePenalty: givePenalty,
+    banUser: banUser,
     loadUsers: loadUsers,
     applyFilters: applyFilters,
     openUserModal: openUserModal,

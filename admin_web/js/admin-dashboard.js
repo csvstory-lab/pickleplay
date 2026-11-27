@@ -202,13 +202,29 @@
     if (el) el.textContent = text;
   }
 
-  /** GA / daily_statistics 연동 전 초기값 */
   function resetAnalyticsPlaceholders() {
-    setStatText('dashboard-dau', '0');
-    setStatText('dashboard-pv', '0');
-    setStatText('dashboard-vital-viral', '0%');
-    setStatText('dashboard-vital-dopamine', '0%');
-    setStatText('dashboard-vital-ignition', '집계 대기중');
+    setKpiText('dashboard-today-votes', 0);
+    setKpiText('dashboard-today-posts', 0);
+    setKpiText('valIssue', 0);
+    setKpiText('valBurn', 0);
+    setKpiText('valDebt', 0);
+  }
+
+  // 오늘 투표/새 불판 + 포인트 경제 지표 (RPC: admin_dashboard_extra)
+  async function loadDashboardExtra(sb, todayStart) {
+    try {
+      var res = await sb.rpc('admin_dashboard_extra', { p_today_start: todayStart });
+      if (res.error || !Array.isArray(res.data) || !res.data[0]) throw res.error || new Error('no data');
+      var d = res.data[0];
+      setKpiText('dashboard-today-votes', d.today_votes);
+      setKpiText('dashboard-today-posts', d.today_posts);
+      setKpiText('valIssue', d.points_issued);
+      setKpiText('valBurn', d.points_burned);
+      setKpiText('valDebt', d.points_outstanding);
+    } catch (err) {
+      console.warn('[Admin Dashboard] admin_dashboard_extra 미적용 또는 실패', err);
+      resetAnalyticsPlaceholders();
+    }
   }
 
   function escapeHtml(str) {
@@ -340,7 +356,7 @@
       setKpiText('dashboard-today-reports', results[2].count ?? 0);
       renderTopPosts(results[3].data || []);
 
-      await Promise.all([loadTotalVotes(sb), loadPendingInquiries(sb), loadSponsorRevenue(sb)]);
+      await Promise.all([loadTotalVotes(sb), loadPendingInquiries(sb), loadSponsorRevenue(sb), loadDashboardExtra(sb, todayStart)]);
     } catch (err) {
       console.error('[Admin Dashboard] loadDashboardKPIs', err);
       resetDashboardFallbacks();
