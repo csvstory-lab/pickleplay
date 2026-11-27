@@ -497,13 +497,17 @@ async function goDetail(id) {
       );
     }
 
-    var fallbackCat = post && post.categoryLabel
-      ? escapeHtml(post.categoryLabel)
-      : '🔥 불판';
+    /* 썸네일이 없는 불판은 컬러 박스 안에 "불판 제목"을 보여준다 (제목이 없을 때만 카테고리명) */
+    var fallbackTitle = post && post.title ? String(post.title).trim() : '';
+    var fallbackText = fallbackTitle
+      ? escapeHtml(fallbackTitle)
+      : post && post.categoryLabel
+        ? escapeHtml(post.categoryLabel)
+        : '🔥 불판';
     return (
       '<div class="card-thumb-top card-thumb-top--fallback">' +
-      '<span class="card-thumb-fallback-label">' +
-      fallbackCat +
+      '<span class="card-thumb-fallback-label" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;max-width:100%;box-sizing:border-box;">' +
+      fallbackText +
       '</span>' +
       sponsorAdHtml(post, true) +
       '</div>'
