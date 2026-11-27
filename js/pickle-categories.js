@@ -32,23 +32,25 @@
    * 정상일 때는 항상 DB 값(관리자 설정)이 우선한다.
    */
   var FALLBACK_CATEGORY_ROWS = [
-    { slug: 'worldcup', name: '북중미 월드컵', icon: '⚽', sort_order: 10 },
-    { slug: 'food', name: '먹잘알/푸파', icon: '🍕', sort_order: 20 },
-    { slug: 'love', name: '연애/과몰입', icon: '💖', sort_order: 30 },
-    { slug: 'balance', name: '뇌정지 밸런스', icon: '⚖️', sort_order: 40 },
-    { slug: 'fashion', name: 'OOTD/스타일', icon: '👗', sort_order: 50 },
-    { slug: 'drama', name: '빌런/썰', icon: '🤬', sort_order: 60 },
-    { slug: 'fandom', name: '덕질/서브컬처', icon: '🍿', sort_order: 70 },
-    { slug: 'games', name: '겜심/이스포츠', icon: '🎮', sort_order: 80 },
-    { slug: 'pets', name: '힐링/동물', icon: '🐾', sort_order: 90 },
-    { slug: 'sports', name: '스포츠/매치업', icon: '🏟️', sort_order: 100 },
-    { slug: 'spending', name: '텅장/소비', icon: '💸', sort_order: 110 },
-    { slug: 'mind', name: 'MBTI/심리', icon: '🧠', sort_order: 120 },
-    { slug: 'kpop', name: '돌판/K-POP', icon: '🎤', sort_order: 130 },
-    { slug: 'mystery', name: '미스터리', icon: '👻', sort_order: 140 },
-    { slug: 'driving', name: '블박/과실', icon: '🚗', sort_order: 150 },
-    { slug: 'brand', name: '브랜드 픽', icon: '🤝', sort_order: 160 },
-    { slug: 'work', name: '직장/알바', icon: '💼', sort_order: 170 },
+    { slug: 'official', name: '픽클 오피셜', icon: '📢', sort_order: 5 },
+    { slug: 'brand', name: '브랜드 픽', icon: '🤝', sort_order: 6 },
+    { slug: 'kpop', name: '돌판 / K-POP', icon: '🎤', sort_order: 10 },
+    { slug: 'work', name: '학교 / 직장생활', icon: '💼', sort_order: 20 },
+    { slug: 'balance', name: '뇌정지 밸런스', icon: '🤯', sort_order: 30 },
+    { slug: 'love', name: '연애 / 썸 / 이별', icon: '💔', sort_order: 40 },
+    { slug: 'villain', name: '빌런 / 썰', icon: '🤬', sort_order: 50 },
+    { slug: 'food', name: '먹방 / 맛집', icon: '🍕', sort_order: 60 },
+    { slug: 'fashion', name: 'OOTD / 참견', icon: '👗', sort_order: 70 },
+    { slug: 'money', name: '텅장 / 소비', icon: '💸', sort_order: 80 },
+    { slug: 'mbti', name: 'MBTI / 심리', icon: '🧠', sort_order: 90 },
+    { slug: 'sports', name: '스포츠 / 국가대표', icon: '⚽', sort_order: 100 },
+    { slug: 'pet', name: '반려동물 / 댕냥이', icon: '🐾', sort_order: 110 },
+    { slug: 'issue', name: '사회 / 이슈', icon: '🔥', sort_order: 120 },
+    { slug: 'game', name: '게임 / E-스포츠', icon: '🎮', sort_order: 130 },
+    { slug: 'politics', name: '정치 / 의원S', icon: '🌟', sort_order: 140 },
+    { slug: 'holiday', name: '명절 / 잔소리', icon: '🧓', sort_order: 150 },
+    { slug: 'invest', name: '주식 / 재테크', icon: '📈', sort_order: 160 },
+    { slug: 'car', name: '블박 / 과실비율', icon: '🚗', sort_order: 170 },
   ];
 
   function buildFallbackCategoryList() {
@@ -585,7 +587,7 @@
       if (cat.slug === 'c_hall') return false;
       /* 브랜드 픽(스폰서)은 관리자 스폰서 등록 화면에서만 사용 — 일반 회원 불판 작성 카테고리에서는 숨김 */
       if (cat.slug === 'brand') return false;
-      if (cat.slug === 'c_official') return isSuperAdmin === true;
+      if (cat.slug === 'c_official' || cat.slug === 'official') return isSuperAdmin === true;
       return true;
     });
   }
