@@ -137,6 +137,10 @@
     .btn-file-action {background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer;}
     .btn-file-action.btn-download-core {border-color: var(--neon-green); color: var(--neon-green);}
     .hidden {display: none !important;}
+    .kpi-clickable { cursor: pointer; transition: transform .12s, border-color .12s; }
+    .kpi-clickable:hover { transform: translateY(-2px); border-color: var(--theme-gold, #FFCC00); }
+    .today-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 20px; background: rgba(255,204,0,0.12); color: var(--theme-gold, #FFCC00); font-size: 0.82rem; font-weight: 800; }
+    .today-chip a { color: #fff; text-decoration: underline; cursor: pointer; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -197,21 +201,22 @@
 
     <div class="content-container" id="sectorReportView">
         <div class="kpi-row">
-            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">금일 신규 접수</span><span class="kpi-val val-alert" id="kpiTodayReports">- 건</span></div><div class="kpi-icon">📥</div></div>
-            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">심사/처리 대기</span><span class="kpi-val" style="color:var(--theme-gold);" id="kpiPendingReports">- 건</span></div><div class="kpi-icon">⏳</div></div>
+            <div class="kpi-card kpi-clickable" title="클릭하면 오늘 접수된 신고만 목록에 표시됩니다" onclick="window.showTodayReports()"><div class="kpi-info"><span class="kpi-title">금일 신규 접수</span><span class="kpi-val val-alert" id="kpiTodayReports">- 건</span></div><div class="kpi-icon">📥</div></div>
+            <div class="kpi-card kpi-clickable" title="클릭하면 심사 대기 중인 신고만 목록에 표시됩니다" onclick="window.showPendingReports()"><div class="kpi-info"><span class="kpi-title">심사/처리 대기</span><span class="kpi-val" style="color:var(--theme-gold);" id="kpiPendingReports">- 건</span></div><div class="kpi-icon">⏳</div></div>
             <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">자동 블라인드 (유저 10회+)</span><span class="kpi-val" style="color:var(--neon-blue);" id="kpiAutoBlindedReports">- 건</span></div><div class="kpi-icon">🤖</div></div>
             <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">이용 정지/영구 차단 유저</span><span class="kpi-val" style="color:var(--neon-pink);" id="kpiBannedUsers">- 명</span></div><div class="kpi-icon">🚫</div></div>
         </div>
 
         <div class="filter-bar">
-            <select class="filter-select" id="searchStatus" onchange="window.loadReports()">
+            <select class="filter-select" id="searchStatus" onchange="window.loadReportsManual()">
                 <option value="all">전체</option>
                 <option value="pending" selected>심사 대기</option>
                 <option value="processed">심사 완료</option>
             </select>
-            <select class="filter-select" id="searchType" onchange="window.loadReports()"><option value="all">구분 전체</option><option value="post">불판(게시물)</option><option value="comment">댓글</option></select>
+            <select class="filter-select" id="searchType" onchange="window.loadReportsManual()"><option value="all">구분 전체</option><option value="post">불판(게시물)</option><option value="comment">댓글</option></select>
             <input type="text" class="filter-input" id="searchKeyword" placeholder="피신고자, 본문 검색...">
-            <button class="btn-search" onclick="window.loadReports()">검색 조건 조회</button>
+            <button class="btn-search" onclick="window.loadReportsManual()">검색 조건 조회</button>
+            <span id="reportTodayChip" class="today-chip" style="display:none;">📅 오늘 접수분만 보는 중 <a href="javascript:void(0)" onclick="window.loadReportsManual()">해제</a></span>
         </div>
 
         <div class="table-container">
@@ -236,16 +241,17 @@
 
     <div class="content-container hidden" id="sectorLegalView">
         <div class="kpi-row">
-            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">법무 금일 접수</span><span class="kpi-val" style="color:var(--neon-blue);" id="kpiLegalToday">- 건</span></div><div class="kpi-icon">📥</div></div>
-            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">서류 미비 대기</span><span class="kpi-val" style="color:var(--theme-gold);" id="kpiLegalIncomplete">- 건</span></div><div class="kpi-icon">📁</div></div>
-            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">임시조치(30일) 집행 중</span><span class="kpi-val" style="color:var(--neon-pink);" id="kpiLegalTemporary">- 건</span></div><div class="kpi-icon">⏳</div></div>
-            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">법무 처분 종결 내역</span><span class="kpi-val" style="color:var(--text-sub);" id="kpiLegalResolved">- 건</span></div><div class="kpi-icon">✅</div></div>
+            <div class="kpi-card kpi-clickable" title="클릭하면 오늘 접수된 요청서만 표시됩니다" onclick="window.showLegalByKpi('today')"><div class="kpi-info"><span class="kpi-title">법무 금일 접수</span><span class="kpi-val" style="color:var(--neon-blue);" id="kpiLegalToday">- 건</span></div><div class="kpi-icon">📥</div></div>
+            <div class="kpi-card kpi-clickable" onclick="window.showLegalByKpi('incomplete')"><div class="kpi-info"><span class="kpi-title">서류 미비 대기</span><span class="kpi-val" style="color:var(--theme-gold);" id="kpiLegalIncomplete">- 건</span></div><div class="kpi-icon">📁</div></div>
+            <div class="kpi-card kpi-clickable" onclick="window.showLegalByKpi('temporary')"><div class="kpi-info"><span class="kpi-title">임시조치(30일) 집행 중</span><span class="kpi-val" style="color:var(--neon-pink);" id="kpiLegalTemporary">- 건</span></div><div class="kpi-icon">⏳</div></div>
+            <div class="kpi-card kpi-clickable" onclick="window.showLegalByKpi('resolved')"><div class="kpi-info"><span class="kpi-title">법무 처분 종결 내역</span><span class="kpi-val" style="color:var(--text-sub);" id="kpiLegalResolved">- 건</span></div><div class="kpi-icon">✅</div></div>
         </div>
 
         <div class="filter-bar">
-            <select class="filter-select" id="legalStatus" onchange="window.loadLegalReports()"><option value="all">상태 전체</option><option value="pending" selected>심사 대기</option><option value="incomplete">서류 미비</option><option value="temporary">임시조치 중</option><option value="resolved">종결 완료</option></select>
+            <select class="filter-select" id="legalStatus" onchange="window.loadLegalManual()"><option value="all">상태 전체</option><option value="pending" selected>심사 대기</option><option value="incomplete">서류 미비</option><option value="temporary">임시조치 중</option><option value="resolved">종결 완료</option></select>
             <input type="text" class="filter-input" id="legalKeyword" placeholder="소명 내용, 침해 URL 검색...">
-            <button class="btn-search" onclick="window.loadLegalReports()">검색 조건 조회</button>
+            <button class="btn-search" onclick="window.loadLegalManual()">검색 조건 조회</button>
+            <span id="legalTodayChip" class="today-chip" style="display:none;">📅 오늘 접수분만 보는 중 <a href="javascript:void(0)" onclick="window.loadLegalManual()">해제</a></span>
         </div>
 
         <div class="table-container">
@@ -427,6 +433,7 @@
     }
 
     function getReportEmptyMessage(filterStatus) {
+        if (reportTodayOnly) return '오늘 접수된 신고가 없습니다.';
         if (filterStatus === 'pending') return '심사 대기 중인 신고가 없습니다.';
         if (filterStatus === 'processed') return '심사 완료된 신고 이력이 없습니다.';
         return '조건에 맞는 신고 기록이 없습니다.';
@@ -448,6 +455,8 @@
     // =====================================================================
 
     let dbClient = null;
+    let reportTodayOnly = false;
+    let legalTodayOnly = false;
     let reportCache = [];
     let legalCache = [];
     const pageSize = 10;
@@ -466,6 +475,48 @@
             document.getElementById('legalTableBody').innerHTML = errHtml;
         }
     });
+
+    // 관리자 PC 기준(한국 시간) 오늘 0시 → ISO
+    function getLocalTodayStartIso() {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString();
+    }
+
+    window.loadReportsManual = function () {
+        reportTodayOnly = false;
+        return window.loadReports();
+    };
+    window.loadLegalManual = function () {
+        legalTodayOnly = false;
+        return window.loadLegalReports();
+    };
+    window.showTodayReports = function () {
+        reportTodayOnly = true;
+        document.getElementById('searchStatus').value = 'all';
+        document.getElementById('searchType').value = 'all';
+        document.getElementById('searchKeyword').value = '';
+        return window.loadReports();
+    };
+    window.showPendingReports = function () {
+        reportTodayOnly = false;
+        document.getElementById('searchStatus').value = 'pending';
+        document.getElementById('searchType').value = 'all';
+        document.getElementById('searchKeyword').value = '';
+        return window.loadReports();
+    };
+    window.showLegalByKpi = function (kind) {
+        const sel = document.getElementById('legalStatus');
+        if (kind === 'today') {
+            legalTodayOnly = true;
+            sel.value = 'all';
+        } else {
+            legalTodayOnly = false;
+            sel.value = kind;
+        }
+        document.getElementById('legalKeyword').value = '';
+        return window.loadLegalReports();
+    };
 
     async function startApp() {
         bindReportTableEvents();
@@ -559,11 +610,11 @@
 
     async function refreshAllKPIs() {
         if (!dbClient) return;
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStartIso = getLocalTodayStartIso();
         try {
-            const { count: totalRep } = await dbClient.from('reports').select('*', { count: 'exact', head: true });
+            const { count: todayRep } = await dbClient.from('reports').select('*', { count: 'exact', head: true }).gte('created_at', todayStartIso);
             const { count: pendingRep } = await dbClient.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-            document.getElementById('kpiTodayReports').innerText = (totalRep || 0) + " 건";
+            document.getElementById('kpiTodayReports').innerText = (todayRep || 0) + " 건";
             document.getElementById('kpiPendingReports').innerText = (pendingRep || 0) + " 건";
         } catch(e) {
             console.error('[admin_reports] 신고 KPI 조회 실패', e);
@@ -584,7 +635,7 @@
         try {
             const { data: legalList } = await dbClient.from('right_infringements').select('status, created_at');
             const legalArr = legalList || [];
-            document.getElementById('kpiLegalToday').innerText = legalArr.filter(r => r.created_at && r.created_at.startsWith(todayStr)).length + " 건";
+            document.getElementById('kpiLegalToday').innerText = legalArr.filter(r => r.created_at && new Date(r.created_at).getTime() >= new Date(todayStartIso).getTime()).length + " 건";
             document.getElementById('kpiLegalIncomplete').innerText = legalArr.filter(r => r.status === 'incomplete').length + " 건";
             document.getElementById('kpiLegalTemporary').innerText = legalArr.filter(r => r.status === 'temporary').length + " 건";
             document.getElementById('kpiLegalResolved').innerText = legalArr.filter(r => r.status === 'resolved').length + " 건";
@@ -614,6 +665,12 @@
             if (typeFilter !== 'all') {
                 query = query.eq('target_type', typeFilter);
             }
+
+            if (reportTodayOnly) {
+                query = query.gte('created_at', getLocalTodayStartIso());
+            }
+            const chip = document.getElementById('reportTodayChip');
+            if (chip) chip.style.display = reportTodayOnly ? 'inline-flex' : 'none';
 
             const { data, error } = await query;
             if (error) throw error;
@@ -676,9 +733,18 @@
             const status = document.getElementById('legalStatus').value;
             let query = dbClient.from('right_infringements').select('*').order('created_at', { ascending: false });
             if (status !== 'all') query = query.eq('status', status);
+            if (legalTodayOnly) query = query.gte('created_at', getLocalTodayStartIso());
+            const lchip = document.getElementById('legalTodayChip');
+            if (lchip) lchip.style.display = legalTodayOnly ? 'inline-flex' : 'none';
             const { data, error } = await query;
             if (error) throw error;
             legalCache = data || [];
+            const lkw = ((document.getElementById('legalKeyword') || {}).value || '').trim().toLowerCase();
+            if (lkw) {
+                legalCache = legalCache.filter(function (r) {
+                    return [r.detail, r.target_url, r.reporter_name, r.reporter_email].join(' ').toLowerCase().indexOf(lkw) !== -1;
+                });
+            }
             window.renderLegalPage(1);
         } catch(e) {
             console.error('[admin_reports] 권리침해 목록 로드 실패', e);
@@ -897,7 +963,7 @@
             if (shouldBlind && addPoint > 0 && ctxTargetId) {
                 const blindRes = ctxType === 'comment'
                     ? await dbClient.from('comments').update({ is_blind: true }).eq('id', ctxTargetId)
-                    : await dbClient.from('posts').update({ is_active: false }).eq('id', ctxTargetId);
+                    : await dbClient.from('posts').update({ visibility_status: 'blinded' }).eq('id', ctxTargetId);
                 if (blindRes.error) {
                     console.error('[admin_reports] 블라인드 처리 실패:', {
                         message: blindRes.error.message,
@@ -950,7 +1016,7 @@
             if (actionType === 'temporary' || actionType === 'resolved') {
                 if (curLegalTargetId && curLegalTargetId !== 0) {
                     if (curLegalTargetType === 'comment') await dbClient.from('comments').update({ is_blind: true }).eq('id', curLegalTargetId);
-                    else await dbClient.from('posts').update({ is_active: false }).eq('id', curLegalTargetId);
+                    else await dbClient.from('posts').update({ visibility_status: 'blinded' }).eq('id', curLegalTargetId);
                 }
             }
             if (curLegalUserId && curLegalUserId !== '') {
