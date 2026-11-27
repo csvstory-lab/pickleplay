@@ -32,6 +32,7 @@
     business_number: '',
     mail_order_number: '',
     company_address: '',
+    company_disclaimer: '',
   };
 
   var DEFAULT_POINT = {
@@ -322,6 +323,7 @@
     setInput('gen_businessNumber', c.business_number);
     setInput('gen_mailOrderNumber', c.mail_order_number);
     setInput('gen_companyAddress', c.company_address);
+    setInput('gen_companyDisclaimer', c.company_disclaimer);
   }
 
   function collectGeneralConfig() {
@@ -352,6 +354,7 @@
       business_number: getInput('gen_businessNumber'),
       mail_order_number: getInput('gen_mailOrderNumber'),
       company_address: getInput('gen_companyAddress'),
+      company_disclaimer: getInput('gen_companyDisclaimer'),
     };
   }
 

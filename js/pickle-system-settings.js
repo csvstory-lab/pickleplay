@@ -38,6 +38,7 @@
     business_number: '',
     mail_order_number: '',
     company_address: '',
+    company_disclaimer: '',
   };
 
   var SNS_CHANNELS = [
@@ -324,6 +325,16 @@
         lines.push('통신판매업신고번호: ' + cfg.mail_order_number);
       }
       bodyEl.innerHTML = lines.map(escapeHtml).join('<br>');
+    }
+
+    /* 사업자 정보 아래 면책 안내 문구 — 관리자 설정값이 있으면 교체, 비어 있으면 화면 기본 문구 유지 */
+    var disclaimerText = cfg.company_disclaimer ? String(cfg.company_disclaimer).trim() : '';
+    if (disclaimerText) {
+      var disclaimerEls = document.querySelectorAll('.company-disclaimer');
+      for (var di = 0; di < disclaimerEls.length; di++) {
+        disclaimerEls[di].textContent = disclaimerText;
+        disclaimerEls[di].style.whiteSpace = 'pre-line';
+      }
     }
   }
 
