@@ -47,7 +47,7 @@ async function fetchPostShareMeta(postId) {
   try {
     const res = await fetch(
       SUPABASE_URL +
-        '/rest/v1/posts?select=title,option_a,option_b&id=eq.' +
+        '/rest/v1/posts?select=title,option_a_name,option_b_name&id=eq.' +
         encodeURIComponent(postId) +
         '&limit=1',
       {
@@ -64,8 +64,8 @@ async function fetchPostShareMeta(postId) {
     if (!post || !post.title) return { error: 'post-not-found' };
 
     const title = 'P!CKLE - ' + String(post.title).trim();
-    const a = String(post.option_a || '').trim();
-    const b = String(post.option_b || '').trim();
+    const a = String(post.option_a_name || '').trim();
+    const b = String(post.option_b_name || '').trim();
     const description = a || b ? a + ' vs ' + b + '. 지금 투표하세요!' : '지금 투표하세요!';
     return {
       meta: {
