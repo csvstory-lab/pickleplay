@@ -1420,7 +1420,7 @@ function renderCommentsList(comments, sortType) {
     return null;
   }
 
-  /** 스폰서(광고) 불판이면 제목 위에 "AD 광고" 표시와 안내 문구를 노출한다 (광고 표시 의무) */
+  /** 스폰서(광고) 불판이면 제목 위에 "광고" 표시와 안내 문구를 노출한다 (광고 표시 의무) */
   function renderSponsorAdLabel(post) {
     var old = document.getElementById('detailAdLabel');
     if (old && old.parentNode) old.parentNode.removeChild(old);
@@ -1432,15 +1432,15 @@ function renderCommentsList(comments, sortType) {
     var badge =
       window.PickleSponsor && window.PickleSponsor.badgeHtml
         ? window.PickleSponsor.badgeHtml(post)
-        : '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;padding:3px 8px;' +
-          'border-radius:6px;font-size:0.68rem;font-weight:800;color:#1a1a1a;background:#fcd34d;"><b>AD</b> 광고</span>';
+        : '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;padding:1px 5px;' +
+          'border-radius:4px;font-size:0.6rem;font-weight:600;color:#a1a1aa;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);">광고</span>';
 
     var box = document.createElement('div');
     box.id = 'detailAdLabel';
     box.className = 'pk-ad-block';
     box.innerHTML =
       badge +
-      '<p class="pk-ad-notice" style="margin:8px 0 10px;font-size:0.72rem;line-height:1.5;color:#a1a1aa;">' +
+      '<p class="pk-ad-notice" style="margin:6px 0 8px;font-size:0.68rem;line-height:1.5;color:#71717a;">' +
       '이 불판은 광고주(스폰서)가 제공한 광고입니다.</p>';
     titleEl.parentNode.insertBefore(box, titleEl);
   }
@@ -2245,7 +2245,7 @@ function renderCommentsList(comments, sortType) {
     );
     banner.innerHTML =
       '<div style="font-size:0.72rem;font-weight:800;color:#ffcc00;margin-bottom:4px;">' +
-        '<span style="display:inline-block;margin-right:6px;padding:1px 6px;border-radius:5px;background:#ffcc00;color:#1a1a1a;font-weight:900;">AD 광고</span>' +
+        '<span style="display:inline-block;margin-right:6px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,0.14);color:#e4e4e7;font-weight:600;font-size:0.6rem;">광고</span>' +
         escapeHtml(sponsorInfo.banner_sub_title || ('💎 ' + (sponsorInfo.brand_name || '스폰서') + ' 특별 제공')) +
       '</div>' +
       '<div style="font-size:0.95rem;font-weight:900;color:#fff;margin-bottom:12px;line-height:1.4;">' +

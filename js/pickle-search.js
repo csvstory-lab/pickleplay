@@ -437,8 +437,8 @@
     }
     return (
       '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;margin-right:6px;' +
-      'padding:3px 8px;border-radius:6px;font-size:0.68rem;font-weight:800;color:#1a1a1a;background:#fcd34d;">' +
-      '<b>AD</b> 광고</span> '
+      'padding:1px 5px;border-radius:4px;font-size:0.6rem;font-weight:600;color:#a1a1aa;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);">' +
+      '광고</span> '
     );
   }
 

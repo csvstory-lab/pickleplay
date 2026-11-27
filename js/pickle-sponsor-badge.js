@@ -2,7 +2,7 @@
  * P!CKLE — 스폰서(광고) 불판 표시 공통 모듈
  *
  * 광고주/대행사가 집행한 스폰서 불판(posts.is_sponsor = true)은
- * 모든 노출 화면에서 "AD 광고" 표시를 붙여 이용자가 광고임을 알 수 있게 한다.
+ * 모든 노출 화면에서 "광고" 표시를 붙여 이용자가 광고임을 알 수 있게 한다.
  * (표시·광고 관련 법령상 광고 표시 의무 대응)
  *
  * 사용:
@@ -13,24 +13,21 @@
 (function () {
   'use strict';
 
-  var LABEL_SHORT = 'AD';
   var LABEL_KO = '광고';
   var ARIA = '광고(스폰서) 게시물';
 
   var CSS =
-    '.pk-ad-badge{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;' +
-    'padding:3px 8px;border-radius:6px;font-size:0.68rem;font-weight:800;line-height:1.2;' +
+    '.pk-ad-badge{display:inline-flex;align-items:center;flex-shrink:0;' +
+    'padding:1px 5px;border-radius:4px;font-size:0.6rem;font-weight:600;line-height:1.35;' +
     'letter-spacing:0;white-space:nowrap;vertical-align:middle;' +
-    'color:#fcd34d;background:rgba(252,211,77,0.14);border:1px solid rgba(252,211,77,0.55);' +
-    'font-family:inherit;}' +
-    '.pk-ad-badge b{font-weight:900;letter-spacing:0.5px;}' +
+    'color:#a1a1aa;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);' +
+    'font-family:inherit;box-shadow:none;text-shadow:none;}' +
     '.feed-card-meta .pk-ad-badge{order:0 !important;margin-right:6px;}' +
     '.card-thumb-top{position:relative;}' +
-    '.pk-ad-overlay{position:absolute;top:10px;left:10px;z-index:3;' +
-    'padding:4px 9px;font-size:0.72rem;color:#1a1a1a;background:#fcd34d;' +
-    'border:none;box-shadow:0 2px 8px rgba(0,0,0,0.35);}' +
-    '.pk-ad-block{margin:0 0 8px;}' +
-    '.pk-ad-notice{margin:8px 0 0;font-size:0.72rem;line-height:1.5;color:#a1a1aa;word-break:keep-all;}';
+    '.pk-ad-overlay{position:absolute;top:8px;left:8px;z-index:3;' +
+    'color:#e4e4e7;background:rgba(0,0,0,0.5);border:none;}' +
+    '.pk-ad-block{margin:0 0 6px;}' +
+    '.pk-ad-notice{margin:6px 0 0;font-size:0.68rem;line-height:1.5;color:#71717a;word-break:keep-all;}';
 
   function injectStyle() {
     try {
@@ -47,7 +44,7 @@
   }
 
   function inner() {
-    return '<b>' + LABEL_SHORT + '</b>' + LABEL_KO;
+    return LABEL_KO;
   }
 
   function badgeHtml(post, extraClass) {
@@ -70,7 +67,6 @@
   injectStyle();
 
   window.PickleSponsor = {
-    LABEL_SHORT: LABEL_SHORT,
     LABEL_KO: LABEL_KO,
     isSponsor: isSponsor,
     badgeHtml: badgeHtml,
