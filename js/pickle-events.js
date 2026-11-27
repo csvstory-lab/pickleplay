@@ -455,11 +455,7 @@
     }
 
     if (joinType === 'profile_complete') {
-      var userRes = await sb
-        .from('users')
-        .select('gender, age_group, region')
-        .eq('id', uid)
-        .maybeSingle();
+      var userRes = await sb.rpc('pickle_get_my_demographics');
       if (userRes.error) throw userRes.error;
       var profile = userRes.data;
       if (

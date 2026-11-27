@@ -194,20 +194,35 @@
     return '';
   }
 
+  // 내 성별/연령/지역/동의 정보는 users 테이블 직접 조회가 막혀 있어(개인정보 보호) 전용 함수로 읽는다.
+  async function fetchOwnDemographics(sb) {
+    try {
+      const { data, error } = await sb.rpc('pickle_get_my_demographics');
+      if (error) {
+        console.warn('[P!CKLE Auth] demographics fetch failed', error);
+        return {};
+      }
+      return data && typeof data === 'object' ? data : {};
+    } catch (err) {
+      console.warn('[P!CKLE Auth] demographics fetch error', err);
+      return {};
+    }
+  }
+
   async function fetchUserProfile(sb, userId) {
     if (!sb || !userId) return null;
     const { data, error } = await sb
       .from('users')
-      .select(
-        'id, nickname, avatar_html, avatar_url, bio, signup_platform, points, gender, age_group, region, marketing_agreed, marketing_consent, is_over_14, is_info_collected'
-      )
+      .select('id, nickname, avatar_html, avatar_url, bio, signup_platform, points, is_info_collected')
       .eq('id', userId)
       .maybeSingle();
     if (error) {
       console.warn('[P!CKLE Auth] public.users profile fetch failed', error);
       return null;
     }
-    return data || null;
+    if (!data) return null;
+    const demo = await fetchOwnDemographics(sb);
+    return Object.assign({}, data, demo);
   }
 
   function mergeUserWithProfile(user, profile) {
@@ -492,14 +507,11 @@
       return profile;
     }
 
-    const { data, error } = await sb
+    const { error } = await sb
       .from('users')
       .update({ nickname: derivedNick })
-      .eq('id', user.id)
-      .select(
-        'id, nickname, avatar_html, avatar_url, bio, signup_platform, points, gender, age_group, region, marketing_agreed, marketing_consent, is_over_14, is_info_collected'
-      )
-      .maybeSingle();
+      .eq('id', user.id);
+    const data = error ? null : await fetchUserProfile(sb, user.id);
 
     if (error) {
       console.warn('[P!CKLE Auth] public.users nickname sync failed', error);

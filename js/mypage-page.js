@@ -324,17 +324,14 @@
     }
     try {
       var sb = getSupabaseClient();
-      var res = await sb
-        .from('users')
-        .select('gender, age_group, region, is_over_14, marketing_agreed, marketing_consent')
-        .eq('id', userId)
-        .maybeSingle();
+      // users 테이블의 개인정보 칸은 직접 조회가 막혀 있어 본인 전용 함수로 읽는다.
+      var res = await sb.rpc('pickle_get_my_demographics');
       if (res.error) {
         console.warn('[P!CKLE Mypage] profile demographics fetch failed', res.error);
         profileDbRow = null;
         return null;
       }
-      profileDbRow = res.data || null;
+      profileDbRow = res.data && typeof res.data === 'object' && Object.keys(res.data).length ? res.data : null;
       return profileDbRow;
     } catch (err) {
       console.warn('[P!CKLE Mypage] profile demographics fetch error', err);

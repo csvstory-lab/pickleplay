@@ -807,12 +807,9 @@
                 if (res.error) throw res.error;
                 userIds = (res.data || []).map(function (row) { return row.id; }).filter(Boolean);
             } else if (target === 'marketing') {
-                const res = await sb
-                    .from('users')
-                    .select('id')
-                    .or('marketing_agreed.eq.true,marketing_consent.eq.true');
+                const res = await sb.rpc('admin_list_marketing_user_ids');
                 if (res.error) throw res.error;
-                userIds = (res.data || []).map(function (row) { return row.id; }).filter(Boolean);
+                userIds = (res.data || []).map(function (row) { return (row && typeof row === 'object') ? row.admin_list_marketing_user_ids : row; }).filter(Boolean);
             } else if (target === 'specific_email') {
                 const email = document.getElementById('manualPushTargetEmail').value.trim().toLowerCase();
                 const res = await sb.rpc('admin_find_user_by_email', { p_email: email });
