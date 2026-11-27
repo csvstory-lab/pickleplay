@@ -5,6 +5,7 @@
   'use strict';
 
   var currentPost = null;
+  var sponsorInfo = null; // 스폰서 불판일 때만 채워짐: { campaign_id, banner_*, kakao_*, coupon_title }
   var timerInterval = null;
   var currentPostId = null;
   var likedCommentIdSet = Object.create(null);
@@ -274,6 +275,8 @@
         option_a: row.option_a_name || '',
         option_b: row.option_b_name || '',
         description: row.description || null,
+        is_sponsor: row.is_sponsor === true,
+        reward_win_rate: row.reward_win_rate,
         media_url_1: row.media_url_1 || row.option_a_image_url,
         media_url_2: row.media_url_2 || row.option_b_image_url,
         thumbnail_url: row.thumbnail_url || null,
@@ -1417,6 +1420,31 @@ function renderCommentsList(comments, sortType) {
     return null;
   }
 
+  /** 스폰서(광고) 불판이면 제목 위에 "AD 광고" 표시와 안내 문구를 노출한다 (광고 표시 의무) */
+  function renderSponsorAdLabel(post) {
+    var old = document.getElementById('detailAdLabel');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    if (!post || post.is_sponsor !== true) return;
+
+    var titleEl = $('detailTitle');
+    if (!titleEl || !titleEl.parentNode) return;
+
+    var badge =
+      window.PickleSponsor && window.PickleSponsor.badgeHtml
+        ? window.PickleSponsor.badgeHtml(post)
+        : '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;padding:3px 8px;' +
+          'border-radius:6px;font-size:0.68rem;font-weight:800;color:#1a1a1a;background:#fcd34d;"><b>AD</b> 광고</span>';
+
+    var box = document.createElement('div');
+    box.id = 'detailAdLabel';
+    box.className = 'pk-ad-block';
+    box.innerHTML =
+      badge +
+      '<p class="pk-ad-notice" style="margin:8px 0 10px;font-size:0.72rem;line-height:1.5;color:#a1a1aa;">' +
+      '이 불판은 광고주(스폰서)가 제공한 광고입니다.</p>';
+    titleEl.parentNode.insertBefore(box, titleEl);
+  }
+
   function renderMeta(post) {
     var catLabel = categoryDisplay(post.category);
     var catEl = $('detailCategoryText');
@@ -1938,6 +1966,11 @@ function renderCommentsList(comments, sortType) {
         console.warn('[P!CKLE Detail] vote points skipped', err);
       });
     }
+
+    // 💎 스폰서 불판이면 투표 직후 쿠폰 당첨 여부를 확인 (실패해도 투표 자체는 이미 완료된 상태)
+    tryClaimSponsorCoupon(postId).catch(function (err) {
+      console.warn('[P!CKLE Detail] sponsor coupon claim skipped', err);
+    });
   }
 
   function playVotePickEffects(choice, event, element) {
@@ -2115,6 +2148,7 @@ function renderCommentsList(comments, sortType) {
 
     var titleEl = $('detailTitle');
     if (titleEl) titleEl.textContent = post.title || '';
+    renderSponsorAdLabel(post);
 
     var optA = $('optBtnA');
     var optB = $('optBtnB');
@@ -2172,6 +2206,112 @@ function renderCommentsList(comments, sortType) {
 
     ensureCommentsEnabledWhenExpired(post);
     syncDetailViewerState(post);
+    renderSponsorBanner();
+  }
+
+  // =========================================================================
+  // 💎 스폰서 불판 전용: 하단 CTA 배너 / 쿠폰 당첨 팝업 / 클릭 트래킹
+  // =========================================================================
+
+  function trackSponsorClick(kind) {
+    if (!sponsorInfo || !sponsorInfo.campaign_id) return;
+    try {
+      var sb = window.PickleSupabase.getClient();
+      sb.rpc('sponsor_track_click', { p_campaign_id: sponsorInfo.campaign_id, p_kind: kind }).catch(function (err) {
+        console.warn('[P!CKLE Detail] sponsor click track skipped', err);
+      });
+    } catch (err) {
+      console.warn('[P!CKLE Detail] sponsor click track skipped', err);
+    }
+  }
+
+  function renderSponsorBanner() {
+    var existing = document.getElementById('sponsorCtaBanner');
+    if (existing) existing.remove();
+
+    if (!sponsorInfo || (!sponsorInfo.banner_main_title && !sponsorInfo.banner_btn_text)) {
+      return;
+    }
+
+    var anchor = $('optionsBox') || $('detailDescription') || document.querySelector('main');
+    if (!anchor || !anchor.parentNode) return;
+
+    var banner = document.createElement('div');
+    banner.id = 'sponsorCtaBanner';
+    banner.setAttribute(
+      'style',
+      'margin:16px 0; border-radius:16px; padding:18px 20px; text-align:center;' +
+      'background:linear-gradient(135deg,#2a0845,#ff007f); box-shadow:0 5px 20px rgba(255,0,127,0.25); cursor:pointer;'
+    );
+    banner.innerHTML =
+      '<div style="font-size:0.72rem;font-weight:800;color:#ffcc00;margin-bottom:4px;">' +
+        '<span style="display:inline-block;margin-right:6px;padding:1px 6px;border-radius:5px;background:#ffcc00;color:#1a1a1a;font-weight:900;">AD 광고</span>' +
+        escapeHtml(sponsorInfo.banner_sub_title || ('💎 ' + (sponsorInfo.brand_name || '스폰서') + ' 특별 제공')) +
+      '</div>' +
+      '<div style="font-size:0.95rem;font-weight:900;color:#fff;margin-bottom:12px;line-height:1.4;">' +
+        escapeHtml(sponsorInfo.banner_main_title || '') +
+      '</div>' +
+      (sponsorInfo.banner_btn_text
+        ? '<button type="button" style="width:100%;padding:11px;border:none;border-radius:12px;background:#fff;color:#000;font-weight:900;">' +
+          escapeHtml(sponsorInfo.banner_btn_text) + '</button>'
+        : '');
+
+    banner.addEventListener('click', function () {
+      trackSponsorClick('banner');
+      if (sponsorInfo.banner_link_url) {
+        window.open(sponsorInfo.banner_link_url, '_blank', 'noopener');
+      }
+    });
+
+    anchor.parentNode.insertBefore(banner, anchor.nextSibling);
+  }
+
+  function showSponsorCouponPopup(coupon) {
+    var old = document.getElementById('sponsorCouponPopup');
+    if (old) old.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'sponsorCouponPopup';
+    overlay.setAttribute(
+      'style',
+      'position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:999;display:flex;' +
+      'align-items:center;justify-content:center;padding:24px;'
+    );
+    overlay.innerHTML =
+      '<div style="background:#18181b;border:1px solid #ffcc00;border-radius:18px;padding:28px 24px;max-width:320px;width:100%;text-align:center;">' +
+        '<div style="font-size:2.4rem;margin-bottom:10px;">🎉</div>' +
+        '<div style="font-size:1.05rem;font-weight:900;color:#fff;margin-bottom:8px;">쿠폰 당첨을 축하합니다!</div>' +
+        '<div style="font-size:0.9rem;color:#d4d4d8;margin-bottom:16px;">' + escapeHtml(coupon.title || '스폰서 쿠폰') + '</div>' +
+        '<div style="background:#09090b;border:1px dashed #ffcc00;border-radius:10px;padding:12px;font-family:monospace;' +
+          'font-weight:800;color:#ffcc00;letter-spacing:1px;margin-bottom:18px;">' + escapeHtml(coupon.pin_number || '') + '</div>' +
+        '<div style="font-size:0.75rem;color:#71717a;margin-bottom:16px;">마이페이지 &gt; 보관함에서도 다시 확인할 수 있어요.</div>' +
+        '<button type="button" id="sponsorCouponPopupClose" style="width:100%;padding:13px;border:none;border-radius:12px;' +
+          'background:#ffcc00;color:#000;font-weight:900;">확인</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    var closeBtn = document.getElementById('sponsorCouponPopupClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        overlay.remove();
+      });
+    }
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  async function tryClaimSponsorCoupon(postId) {
+    if (!currentPost || !currentPost.is_sponsor) return;
+    try {
+      var sb = window.PickleSupabase.getClient();
+      var res = await sb.rpc('sponsor_claim_coupon', { p_post_id: postId });
+      if (!res.error && res.data && res.data.ok && res.data.won && res.data.coupon) {
+        showSponsorCouponPopup(res.data.coupon);
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Detail] sponsor coupon claim skipped', err);
+    }
   }
 
   function showError(message) {
@@ -2217,6 +2357,19 @@ function renderCommentsList(comments, sortType) {
       var commentCount = await fetchCommentCount(sb, postId);
 
       post = await ensurePostAuthorRankingPoints(post);
+
+      sponsorInfo = null;
+      if (post.is_sponsor) {
+        try {
+          var sponsorRes = await sb.rpc('sponsor_campaign_public_info', { p_post_id: postId });
+          if (!sponsorRes.error && sponsorRes.data) {
+            sponsorInfo = sponsorRes.data;
+          }
+        } catch (sponsorErr) {
+          console.warn('[P!CKLE Detail] sponsor info load skipped', sponsorErr);
+        }
+      }
+
       renderDetail(post, voteStats, commentCount);
     } catch (err) {
       console.error('[P!CKLE Detail]', err);
@@ -2225,14 +2378,26 @@ function renderCommentsList(comments, sortType) {
   }
 
   function getSharePayload() {
+    var payload;
     if (window.PickleShare && window.PickleShare.buildPostSharePayload) {
-      return window.PickleShare.buildPostSharePayload(currentPost);
+      payload = window.PickleShare.buildPostSharePayload(currentPost);
+    } else {
+      payload = {
+        title: currentPost && currentPost.title ? 'P!CKLE - ' + currentPost.title : 'P!CKLE - 불판',
+        text: '지금 투표하세요!',
+        imageUrl: '',
+      };
     }
-    return {
-      title: currentPost && currentPost.title ? 'P!CKLE - ' + currentPost.title : 'P!CKLE - 불판',
-      text: '지금 투표하세요!',
-      imageUrl: '',
-    };
+
+    // 💎 스폰서 불판이면 관리자가 입력한 카카오 공유 문구로 교체
+    if (sponsorInfo && (sponsorInfo.kakao_link_title || sponsorInfo.kakao_message)) {
+      payload = Object.assign({}, payload, {
+        title: sponsorInfo.kakao_link_title || payload.title,
+        text: sponsorInfo.kakao_message || payload.text,
+      });
+    }
+
+    return payload;
   }
 
   window.PickleDetail = {
@@ -2244,6 +2409,9 @@ function renderCommentsList(comments, sortType) {
       return currentPostId;
     },
     getSharePayload: getSharePayload,
+    getSponsorInfo: function () {
+      return sponsorInfo;
+    },
     isPostExpired: isPostExpired,
     castVote: castVote,
     submitComment: submitComment,

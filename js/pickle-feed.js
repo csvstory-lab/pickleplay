@@ -417,6 +417,22 @@ async function goDetail(id) {
     };
   }
 
+  /** 스폰서(광고) 불판 표시 — js/pickle-sponsor-badge.js 공통 모듈, 미로드 시에도 최소 표시 유지 */
+  function sponsorAdHtml(post, overlay) {
+    if (!post || post.is_sponsor !== true) return '';
+    if (window.PickleSponsor && window.PickleSponsor.badgeHtml) {
+      return overlay
+        ? window.PickleSponsor.overlayHtml(post)
+        : window.PickleSponsor.badgeHtml(post);
+    }
+    return (
+      '<span role="note" aria-label="광고(스폰서) 게시물" style="' +
+      (overlay ? 'position:absolute;top:10px;left:10px;z-index:3;' : 'margin-right:6px;') +
+      'display:inline-block;padding:3px 8px;border-radius:6px;font-size:0.68rem;font-weight:800;' +
+      'color:#1a1a1a;background:#fcd34d;"><b>AD</b> 광고</span>'
+    );
+  }
+
   function renderFeedCategoryBadge(post) {
     var categoryText = post && post.categoryLabel;
     if (!categoryText) return '';
@@ -462,7 +478,9 @@ async function goDetail(id) {
       return (
         '<div class="card-thumb-top" style="background:' +
         escapeCssBackground(thumbValue) +
-        '"></div>'
+        '">' +
+        sponsorAdHtml(post, true) +
+        '</div>'
       );
     }
 
@@ -474,6 +492,7 @@ async function goDetail(id) {
         '" alt="' +
         escapeHtml(safeStr(post && post.title, '불판 썸네일')) +
         '" loading="lazy" decoding="async">' +
+        sponsorAdHtml(post, true) +
         '</div>'
       );
     }
@@ -485,7 +504,9 @@ async function goDetail(id) {
       '<div class="card-thumb-top card-thumb-top--fallback">' +
       '<span class="card-thumb-fallback-label">' +
       fallbackCat +
-      '</span></div>'
+      '</span>' +
+      sponsorAdHtml(post, true) +
+      '</div>'
     );
   }
 

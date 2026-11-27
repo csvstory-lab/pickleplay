@@ -1,7 +1,7 @@
 /**
  * P!CKLE — 반응형 레이아웃 · 미디어 · 텍스트 넘침 방지
  */
-@import url('pickle-app-shell.css');
+@import url('pickle-app-shell.css?v=20261127_dvh');
 
 /* 인라인 body { max-width:480px } 무력화 — 셸은 #app-container가 담당 */
 body {

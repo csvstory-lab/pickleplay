@@ -245,7 +245,9 @@
 
     var sb = getClient();
     var fieldSets = [
+      'id, title, option_a_name, option_b_name, author_nickname, expires_at, thumbnail_url, author_avatar_html, is_sponsor',
       'id, title, option_a_name, option_b_name, author_nickname, expires_at, thumbnail_url, author_avatar_html',
+      'id, title, option_a_name, option_b_name, author_nickname, expires_at, thumbnail_url, is_sponsor',
       'id, title, option_a_name, option_b_name, author_nickname, expires_at, thumbnail_url',
       'id, option_a_name, option_b_name, author_nickname, expires_at',
     ];
@@ -442,6 +444,19 @@
       '<div style="text-align:center;padding:40px 20px;color:#a1a1aa;font-weight:700;font-size:0.95rem;">불러오는 중…</div>';
   }
 
+  /** 스폰서(광고) 불판 표시 — js/pickle-sponsor-badge.js 공통 모듈, 미로드 시에도 최소 표시 유지 */
+  function sponsorAdBadgeHtml(meta) {
+    if (!meta || meta.is_sponsor !== true) return '';
+    if (window.PickleSponsor && window.PickleSponsor.badgeHtml) {
+      return window.PickleSponsor.badgeHtml(meta) + ' ';
+    }
+    return (
+      '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;margin-right:4px;' +
+      'padding:2px 6px;border-radius:6px;font-size:0.65rem;font-weight:800;color:#1a1a1a;background:#fcd34d;">' +
+      '<b>AD</b> 광고</span> '
+    );
+  }
+
   function bindPodiumGrill(slotEl, row, rank) {
     if (!slotEl) return;
     if (!row) {
@@ -463,7 +478,11 @@
       avatarEl.style.borderRadius = '10px';
       avatarEl.innerHTML = renderMediaInner(meta, 'fire');
     }
-    if (nameEl) nameEl.textContent = title;
+    if (nameEl) {
+      nameEl.textContent = title;
+      var podiumAd = sponsorAdBadgeHtml(meta);
+      if (podiumAd) nameEl.insertAdjacentHTML('afterbegin', podiumAd);
+    }
     if (scoreEl) scoreEl.innerHTML = scoreWithIcon(row.hot_grill_score, ICON.fire);
     if (rankEl) rankEl.textContent = String(rank);
 
@@ -493,6 +512,7 @@
       '</div>' +
       '<div class="rank-info">' +
       '<div class="rank-title">' +
+      sponsorAdBadgeHtml(meta) +
       escapeHtml(title) +
       '</div>' +
       '<div class="rank-sub"><span>' +

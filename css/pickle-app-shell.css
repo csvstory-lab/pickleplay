@@ -126,6 +126,8 @@ body > header .top-row {
   width: 100%;
   max-width: var(--pickle-shell-max);
   height: 100vh;
+  /* 모바일 브라우저 주소창/하단바에 가려 맨 아래가 잘리는 문제 방지 — 실제 보이는 높이 기준 */
+  height: 100dvh;
   z-index: 9999;
   box-sizing: border-box;
   display: none !important;

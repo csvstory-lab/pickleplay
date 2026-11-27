@@ -558,6 +558,8 @@
     }
     .slide-panel.open { transform: translateX(0); }
 
+    /* 모바일 주소창 때문에 패널 하단(사업자 정보·면책 문구)이 잘리지 않도록 실제 보이는 높이 사용 */
+    .slide-panel { height: 100vh !important; height: 100dvh !important; }
     #settingsPanel { z-index: 9100; }
     .depth-2-panel { z-index: 9200; background-color: var(--bg-base); min-width: 0; overflow-x: hidden; }
 
@@ -583,7 +585,7 @@
     }
     
     /* 설정 메뉴 리스트 스타일 */
-    .settings-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 20px 40px 20px; min-width: 0; max-width: 100%; }
+    .settings-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 20px calc(72px + env(safe-area-inset-bottom, 0px)) 20px; min-width: 0; max-width: 100%; -webkit-overflow-scrolling: touch; }
     .settings-group { margin-top: 30px; }
     .settings-group-title { font-size: 0.82rem; font-weight: 800; color: var(--point-green); margin-bottom: 10px; padding-left: 5px; }
     .settings-item {
@@ -1426,7 +1428,7 @@
     }
 </style>
 <link rel="stylesheet" href="../css/common-layout.css">
-<link rel="stylesheet" href="../css/responsive-layout.css?v=20260617_shell6">
+<link rel="stylesheet" href="../css/responsive-layout.css?v=20261127_shell7">
 <link rel="stylesheet" href="../css/mobile-shell.css">
 <script src="../js/mobile-touch-guard.js"></script>
 </head>
@@ -2307,7 +2309,8 @@
 <script src="../js/pickle-messages.js?v=20260617_messages3"></script>
 <script src="../js/pickle-policies.js"></script>
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
-<script src="../js/mypage-page.js?v=20260617_postedit5"></script>
+<script src="../js/pickle-sponsor-badge.js?v=20261127_ad1"></script>
+<script src="../js/mypage-page.js?v=20261127_ad1"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 

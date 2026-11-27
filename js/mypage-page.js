@@ -946,6 +946,19 @@
     return { pctA: pctA, pctB: 100 - pctA, total: total };
   }
 
+  /** 스폰서(광고) 불판 표시 — js/pickle-sponsor-badge.js 공통 모듈, 미로드 시에도 최소 표시 유지 */
+  function sponsorAdBadgeHtml(post) {
+    if (!post || post.is_sponsor !== true) return '';
+    if (window.PickleSponsor && window.PickleSponsor.badgeHtml) {
+      return window.PickleSponsor.badgeHtml(post) + ' ';
+    }
+    return (
+      '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;margin-right:4px;' +
+      'padding:2px 6px;border-radius:6px;font-size:0.65rem;font-weight:800;color:#1a1a1a;background:#fcd34d;">' +
+      '<b>AD</b> 광고</span> '
+    );
+  }
+
   function normalizeVotePost(row) {
     if (!row) return null;
     var post = row.posts;
@@ -1491,6 +1504,7 @@
       escapeHtml(title) +
       '">' +
       '<div class="card-row-meta">' +
+      sponsorAdBadgeHtml(post) +
       '<span class="card-cat">' +
       escapeHtml(categoryLabel(post.category)) +
       '</span>' +
@@ -1535,6 +1549,7 @@
       escapeHtml(title) +
       '">' +
       '<div class="card-row-meta">' +
+      sponsorAdBadgeHtml(post) +
       '<span class="card-cat">' +
       escapeHtml(categoryLabel(post.category)) +
       '</span>' +
@@ -1619,6 +1634,7 @@
       '</div>' +
       '<div class="card-footer-stats">' +
       '<span>' +
+      sponsorAdBadgeHtml(post) +
       escapeHtml(categoryLabel(post.category)) +
       '</span>' +
       '<span>불판 보러가기 →</span>' +
@@ -2169,7 +2185,7 @@
       var result = await sb
         .from('posts')
         .select(
-          'id, title, category, option_a_name, option_b_name, author_id, visibility_status, created_at, expires_at, vote_count, comment_count'
+          'id, title, category, option_a_name, option_b_name, author_id, visibility_status, created_at, expires_at, vote_count, comment_count, is_sponsor'
         )
         .eq('author_id', viewerUserId || userId)
         .order('created_at', { ascending: false });
@@ -2212,7 +2228,7 @@
       var result = await sb
         .from('votes')
         .select(
-          'id, choice, created_at, post_id, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status, vote_count, comment_count )'
+          'id, choice, created_at, post_id, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status, vote_count, comment_count, is_sponsor )'
         )
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -2260,7 +2276,7 @@
       var result = await sb
         .from('comments')
         .select(
-          'id, content, filtered_content, created_at, post_id, visibility_status, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status )'
+          'id, content, filtered_content, created_at, post_id, visibility_status, posts:post_id ( id, title, category, option_a_name, option_b_name, expires_at, created_at, visibility_status, is_sponsor )'
         )
         .eq('user_id', userId)
         .eq('visibility_status', 'visible')

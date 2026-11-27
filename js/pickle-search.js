@@ -24,6 +24,20 @@
       'option_b_name',
       'tags',
       'expires_at',
+      'is_sponsor',
+      'visibility_status',
+      'created_at',
+      'author_id',
+      'author_nickname',
+    ].join(', '),
+    [
+      'id',
+      'title',
+      'category',
+      'option_a_name',
+      'option_b_name',
+      'tags',
+      'expires_at',
       'visibility_status',
       'created_at',
       'author_id',
@@ -63,6 +77,7 @@
       'comment_count',
       'thumbnail_url',
       'expires_at',
+      'is_sponsor',
       'visibility_status',
       'created_at',
       'author_id',
@@ -414,6 +429,19 @@
     return html;
   }
 
+  /** 스폰서(광고) 불판 표시 — js/pickle-sponsor-badge.js 공통 모듈, 미로드 시에도 최소 표시 유지 */
+  function sponsorAdBadgeHtml(post) {
+    if (!post || post.is_sponsor !== true) return '';
+    if (window.PickleSponsor && window.PickleSponsor.badgeHtml) {
+      return window.PickleSponsor.badgeHtml(post, 'pk-ad-inline') + ' ';
+    }
+    return (
+      '<span role="note" aria-label="광고(스폰서) 게시물" style="display:inline-block;margin-right:6px;' +
+      'padding:3px 8px;border-radius:6px;font-size:0.68rem;font-weight:800;color:#1a1a1a;background:#fcd34d;">' +
+      '<b>AD</b> 광고</span> '
+    );
+  }
+
   function renderPollCardHtml(post) {
     var votes = formatVoteCount(post.vote_count);
     var timeLabel = formatPollTime(post.expires_at);
@@ -432,6 +460,7 @@
       '</span>' +
       '</div>' +
       '<div class="poll-title">' +
+      sponsorAdBadgeHtml(post) +
       escapeHtml(post.title || '제목 없음') +
       '</div>' +
       '<div class="vs-preview">' +
