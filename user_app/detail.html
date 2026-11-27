@@ -949,6 +949,29 @@
             }
             await window.PickleShare.downloadImageDirect(share.imageUrl, downloadFilename);
             recordDetailShare('download');
+
+            // 이미지 안의 글자는 눌러지는 링크가 아니므로, 불판 주소를 함께 복사해 두고 사용법을 안내한다.
+            var savedPostId = new URLSearchParams(window.location.search).get('id');
+            var savedUrl = (window.PickleShare && window.PickleShare.buildCanonicalPostUrl)
+                ? window.PickleShare.buildCanonicalPostUrl(savedPostId)
+                : (savedPostId ? 'https://pickleplay.kr/user_app/detail.html?id=' + savedPostId : window.location.href);
+            var linkCopied = false;
+            try {
+                await navigator.clipboard.writeText(savedUrl);
+                linkCopied = true;
+            } catch (copyErr) {
+                console.warn('링크 자동 복사 실패:', copyErr);
+            }
+            hideShareLoading();
+            alert(
+                '🖼️ 이미지가 저장되었습니다!\n\n' +
+                (linkCopied
+                    ? '🔗 불판 주소도 복사해 두었어요.\n'
+                    : '🔗 주소는 [링크 복사]로 따로 복사해 주세요.\n') +
+                '이미지 속 글자는 누르는 링크가 아니에요.\n' +
+                '• 인스타 스토리: 이미지를 올린 뒤 [링크 스티커]에 주소를 붙여넣기\n' +
+                '• 카톡·커뮤니티·SNS: 이미지와 함께 주소를 붙여넣기'
+            );
         } catch (err) {
             console.error('이미지 저장 실패:', err);
             alert('이미지 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
