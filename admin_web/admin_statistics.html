@@ -150,10 +150,10 @@
     .grid-line.base { border-top: 1px solid #52525b; }
     
     .chart-plot-area { flex: 1; position: relative; z-index: 2; margin-bottom: 25px; display: flex; justify-content: space-between; }
-    .plot-col { position: relative; width: 10%; display: flex; justify-content: center; height: 100%; cursor: pointer; }
+    .plot-col { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; height: 100%; cursor: pointer; }
     
     .plot-bar {
-        width: 24px;
+        width: min(24px, 70%);
         position: absolute;
         bottom: 0;
         left: 50%;
@@ -208,7 +208,12 @@
     }
     
     .x-axis { position: absolute; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-between; color: var(--text-sub); font-size: 0.75rem; font-weight: 600; }
-    .x-label { width: 10%; text-align: center; }
+    .x-label { flex: 1; min-width: 0; text-align: center; white-space: nowrap; overflow: visible; font-size: 0.7rem; }
+    .chart-plot-area.compact .plot-value { display: none; }
+    .chart-plot-area.compact .plot-col:hover .plot-value { display: block; background: #09090b; padding: 2px 6px; border-radius: 4px; }
+    .chart-empty { width: 100%; align-self: center; text-align: center; color: var(--text-sub); font-weight: 700; }
+    .chart-data-table th { white-space: nowrap; min-width: 58px; }
+    .chart-data-table .chart-td-total { color: var(--theme-gold); }
 
     /* 차트 하단 데이터 테이블 */
     .chart-table-wrap {
@@ -486,9 +491,47 @@
         max-width: 420px;
     }
 
+    /* ── 통계 화면 보강 스타일 ── */
+    .sec-title { margin-top: 30px; margin-bottom: 15px; border-bottom: none; border-left: 4px solid; padding-left: 10px; font-size: 1.05rem; font-weight: 900; }
+    .core-left { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .core-ico { font-size: 1.5rem; flex-shrink: 0; margin-left: 10px; }
+    .core-sub { font-size: 0.72rem; font-weight: 700; color: #71717a; line-height: 1.4; }
+    .core-card .core-title { line-height: 1.3; }
+    .range-chips { display: inline-flex; gap: 6px; margin-left: 6px; }
+    .chip { background: #09090b; border: 1px solid #3f3f46; color: var(--text-sub); padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; cursor: pointer; font-family: 'Pentabreed', sans-serif; transition: 0.2s; }
+    .chip:hover { color: #fff; border-color: var(--neon-blue); }
+    .chk-staff { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font-size: 0.82rem; font-weight: 800; color: var(--text-sub); cursor: pointer; }
+    .chk-staff input { accent-color: var(--neon-blue); width: 16px; height: 16px; }
+    .stat-banner { padding: 12px 18px; border-radius: 10px; font-size: 0.88rem; font-weight: 800; line-height: 1.5; border: 1px solid; margin-bottom: 8px; }
+    .stat-banner.error { color: var(--neon-pink); background: rgba(255, 0, 127, 0.08); border-color: rgba(255, 0, 127, 0.35); }
+    .stat-banner.warn { color: var(--theme-gold); background: rgba(255, 204, 0, 0.08); border-color: rgba(255, 204, 0, 0.35); }
+    .stat-banner.ok { color: var(--neon-green); background: rgba(57, 255, 20, 0.06); border-color: rgba(57, 255, 20, 0.3); }
+    .stat-banner.info { color: var(--neon-blue); background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.3); }
+    .stat-banner[hidden] { display: none; }
+    .stat-note { font-size: 0.75rem; color: #71717a; line-height: 1.5; font-weight: 700; }
+    .d-empty { font-size: 0.72rem; color: #71717a; font-weight: 700; padding: 4px 0; }
+    .d-unknown { font-size: 0.62rem; color: #71717a; font-weight: 700; margin-top: 2px; }
+    .demo-trend { color: #71717a; }
+    .demo-trend.trend-up { color: var(--neon-pink); }
+    .demo-trend.trend-down { color: var(--neon-blue); }
+    .stat-def { background: rgba(0, 240, 255, 0.05); border: 1px dashed rgba(0, 240, 255, 0.35); border-radius: 10px; padding: 14px 16px; font-size: 0.86rem; line-height: 1.6; color: #d4d4d8; margin-bottom: 16px; font-weight: 600; }
+    .stat-def b { color: var(--neon-blue); }
+    .stat-kv { display: flex; flex-direction: column; border: 1px solid #27272a; border-radius: 10px; overflow: hidden; }
+    .stat-kv-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; background: #09090b; border-bottom: 1px solid #27272a; font-size: 0.88rem; font-weight: 700; color: var(--text-sub); }
+    .stat-kv-row:last-child { border-bottom: none; }
+    .stat-kv-row strong { color: #fff; font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; }
+    .stat-mini-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .stat-mini-table th, .stat-mini-table td { padding: 9px 12px; border: 1px solid #27272a; text-align: center; font-weight: 700; }
+    .stat-mini-table th { background: #09090b; color: var(--text-sub); font-size: 0.76rem; }
+    .stat-mini-table td:first-child { text-align: left; color: #d4d4d8; }
+    .stat-sponsor-item.dim { opacity: 0.6; }
+    .stat-sponsor-title { font-size: 0.78rem; color: var(--text-sub); font-weight: 700; }
+    .stat-state { font-size: 0.72rem; font-weight: 900; padding: 3px 10px; border-radius: 20px; border: 1px solid #3f3f46; color: var(--text-sub); }
+    .stat-state.st-active { color: var(--neon-green); border-color: rgba(57, 255, 20, 0.4); background: rgba(57, 255, 20, 0.08); }
+    .stat-state.st-upcoming { color: var(--theme-gold); border-color: rgba(255, 204, 0, 0.4); }
+    @media (max-width: 1200px) { .core-kpi-grid, .demo-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+
 </style>
-<!-- Firebase (App + Analytics + Firestore) -->
-<script type="module" src="js/firebase-init.js"></script>
   <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body>
@@ -541,215 +584,168 @@
         </div>
 
         <div id="viewInternal" class="view-panel active">
-            
+
             <div class="filter-bar">
-                <div class="date-inputs">
-                    <span style="font-weight:800; color:var(--text-sub); margin-right:10px;">조회 기간</span>
-                    <input type="date" class="admin-input" id="statStartDate" value="2026-06-01">
+                <div class="date-inputs" style="flex-wrap:wrap;">
+                    <span style="font-weight:800; color:var(--text-sub); margin-right:6px;">조회 기간</span>
+                    <input type="date" class="admin-input" id="statStartDate">
                     <span style="color:var(--text-sub);">~</span>
-                    <input type="date" class="admin-input" id="statEndDate" value="2026-06-08">
+                    <input type="date" class="admin-input" id="statEndDate">
                     <button type="button" class="btn-search" id="statSearchBtn" onclick="handleStatDateSearch()">데이터 조회</button>
+                    <span class="range-chips">
+                        <button type="button" class="chip" onclick="setQuickRange(7)">최근 7일</button>
+                        <button type="button" class="chip" onclick="setQuickRange(14)">최근 14일</button>
+                        <button type="button" class="chip" onclick="setQuickRange(30)">최근 30일</button>
+                    </span>
+                    <label class="chk-staff"><input type="checkbox" id="statExcludeStaff" onchange="handleStatDateSearch()"> 관리자·테스트 계정 제외</label>
                 </div>
-                <div style="font-size:0.85rem; color:var(--text-sub);" id="statLastUpdated">
+                <div style="font-size:0.85rem; color:var(--text-sub); text-align:right;" id="statLastUpdated">
                     데이터 로드 중…
                 </div>
             </div>
 
+            <div class="stat-banner" id="statBanner" hidden></div>
+
+            <div class="sc-title sec-title" style="color:var(--neon-blue); border-left-color:var(--neon-blue);">
+              👥 활동 요약 (선택한 기간)
+            </div>
             <div class="core-kpi-grid">
-                <div class="core-card" onclick="openStatModal('인당 평균 투표 수 (도파민 지수)')">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🔥 인당 평균 투표 수 (도파민 지수)</span><span class="core-val" id="statDopamineIndex">—</span></div>
-                    <div style="font-size:1.5rem;">👆</div>
+                <div class="core-card" onclick="openStatModal('active')">
+                    <div class="core-left"><span class="core-title">🙋 활동 회원 수</span><span class="core-val" id="statActiveUsers">—</span><span class="core-sub" id="statActiveSub">&nbsp;</span></div>
+                    <div class="core-ico">👥</div>
                 </div>
-                <div class="core-card" onclick="openStatModal('누적 포인트 소진율 (경제 지표)')">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">💰 누적 포인트 소진율 (경제 지표)</span><span class="core-val" style="color:var(--theme-gold);">88.4%</span></div>
-                    <div style="font-size:1.5rem;">🪙</div>
+                <div class="core-card" onclick="openStatModal('views')">
+                    <div class="core-left"><span class="core-title">👀 불판 조회수</span><span class="core-val" id="statViews">—</span><span class="core-sub" id="statViewsSub">&nbsp;</span></div>
+                    <div class="core-ico">📄</div>
                 </div>
-                <div class="core-card" onclick="openStatModal('AI 블라인드율 (클린 커뮤니티)')">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🛡️ AI 블라인드율 (클린 커뮤니티)</span><span class="core-val" style="color:var(--neon-green);">0.3%</span></div>
-                    <div style="font-size:1.5rem;">✨</div>
+                <div class="core-card" onclick="openStatModal('voters')">
+                    <div class="core-left"><span class="core-title">🗳️ 투표 참여 회원</span><span class="core-val" id="statVoters">—</span><span class="core-sub" id="statVotersSub">&nbsp;</span></div>
+                    <div class="core-ico">✅</div>
                 </div>
-                <div class="core-card" onclick="openStatModal('현재 진행 스폰서(광고) 불판')">
-                    <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">💼 현재 진행 스폰서(광고) 불판</span><span class="core-val" style="color:var(--neon-blue);">8 개</span></div>
-                    <div style="font-size:1.5rem;">🤝</div>
+                <div class="core-card" onclick="openStatModal('viral')">
+                    <div class="core-left"><span class="core-title">🔗 공유 횟수</span><span class="core-val" id="statShares">—</span><span class="core-sub" id="statSharesSub">&nbsp;</span></div>
+                    <div class="core-ico">📤</div>
                 </div>
             </div>
 
-            <div class="sc-title" style="margin-top: 30px; border-bottom: none; margin-bottom: 15px; color:var(--neon-pink); border-left: 4px solid var(--neon-pink); padding-left: 10px;">
-              🚀 커뮤니티 폭발력 및 활성도 딥다이브 (Growth & Engagement)
-          </div>
-          <!-- 기존 repeat(3, 1fr)에서 repeat(4, 1fr)로 변경 -->
-          <div class="core-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
-              <div class="core-card" style="border-color: rgba(255,0,127,0.5);">
-                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🚀 불판 바이럴 지수 (외부 공유 전환율)</span><span class="core-val" style="color:var(--neon-pink);" id="kpiViral">18.5%</span></div>
-                  <div style="font-size:1.5rem;">🔗</div>
+            <div class="sc-title sec-title" style="color:var(--theme-gold); border-left-color:var(--theme-gold);">
+              🏆 비즈니스 핵심 지표
+            </div>
+            <div class="core-kpi-grid">
+                <div class="core-card" onclick="openStatModal('dopamine')">
+                    <div class="core-left"><span class="core-title">🔥 인당 평균 투표 수 (도파민 지수)</span><span class="core-val" id="statDopamineIndex">—</span><span class="core-sub" id="statDopamineSub">&nbsp;</span></div>
+                    <div class="core-ico">👆</div>
+                </div>
+                <div class="core-card" onclick="openStatModal('economy')">
+                    <div class="core-left"><span class="core-title">💰 포인트 소진율 (경제 지표)</span><span class="core-val" id="statEconRate" style="color:var(--theme-gold);">—</span><span class="core-sub" id="statEconSub">&nbsp;</span></div>
+                    <div class="core-ico">🪙</div>
+                </div>
+                <div class="core-card" onclick="openStatModal('clean')">
+                    <div class="core-left"><span class="core-title">🛡️ AI 필터 적발률 (클린 커뮤니티)</span><span class="core-val" id="statCleanRate" style="color:var(--neon-green);">—</span><span class="core-sub" id="statCleanSub">&nbsp;</span></div>
+                    <div class="core-ico">✨</div>
+                </div>
+                <div class="core-card" onclick="openStatModal('sponsor')">
+                    <div class="core-left"><span class="core-title">💼 현재 진행 스폰서(광고) 불판</span><span class="core-val" id="statSponsorCount" style="color:var(--neon-blue);">—</span><span class="core-sub" id="statSponsorSub">&nbsp;</span></div>
+                    <div class="core-ico">🤝</div>
+                </div>
+            </div>
+
+            <div class="sc-title sec-title" style="color:var(--neon-pink); border-left-color:var(--neon-pink);">
+              🚀 커뮤니티 폭발력 및 활성도 딥다이브 (Growth &amp; Engagement)
+            </div>
+            <div class="core-kpi-grid">
+                <div class="core-card" style="border-color: rgba(255,0,127,0.5);" onclick="openStatModal('viral')">
+                    <div class="core-left"><span class="core-title">🚀 불판 바이럴 지수 (조회 대비 공유율)</span><span class="core-val" style="color:var(--neon-pink);" id="kpiViral">—</span><span class="core-sub" id="kpiViralSub">&nbsp;</span></div>
+                    <div class="core-ico">🔗</div>
+                </div>
+                <div class="core-card" style="border-color: rgba(0,240,255,0.5);" onclick="openStatModal('conversion')">
+                    <div class="core-left"><span class="core-title">🔥 투표 전환율 (본 불판 중 투표한 비율)</span><span class="core-val" style="color:var(--neon-blue);" id="kpiConversion">—</span><span class="core-sub" id="kpiConversionSub">&nbsp;</span></div>
+                    <div class="core-ico">👆</div>
+                </div>
+                <div class="core-card" style="border-color: rgba(255,204,0,0.5);" onclick="openStatModal('ignition')">
+                    <div class="core-left"><span class="core-title">⏱️ 불판 초기 점화 속도 (10번째 투표까지)</span><span class="core-val" style="color:var(--theme-gold);" id="kpiIgnition">—</span><span class="core-sub" id="kpiIgnitionSub">&nbsp;</span></div>
+                    <div class="core-ico">⚡</div>
+                </div>
+                <div class="core-card" style="border-color: rgba(57,255,20,0.5);" onclick="openStatModal('retention')">
+                    <div class="core-left"><span class="core-title">🧲 D+7 재방문률 (유저 리텐션)</span><span class="core-val" style="color:var(--neon-green);" id="kpiRetention">—</span><span class="core-sub" id="kpiRetentionSub">&nbsp;</span></div>
+                    <div class="core-ico">🔄</div>
+                </div>
+            </div>
+
+            <div class="sc-title sec-title" style="color:#fff; border-left-color:#fff;">
+              📊 성장 지표 · 성별/연령 (직전 같은 기간 대비)
+            </div>
+            <div class="demo-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="demo-card c2" onclick="openStatModal('signups')">
+                    <div class="demo-top">
+                        <div class="demo-title"><span>✨ 신규 가입자</span><span class="demo-trend" id="trendUsers"></span></div>
+                        <div class="demo-val" id="statCountUsers">—</div>
+                    </div>
+                    <div class="demo-stats" id="demoUsers"></div>
+                </div>
+                <div class="demo-card c3" onclick="openStatModal('votes')">
+                    <div class="demo-top">
+                        <div class="demo-title"><span>🗳️ 총 투표수 (Votes)</span><span class="demo-trend" id="trendVotes"></span></div>
+                        <div class="demo-val" style="color:var(--neon-pink);" id="statCountVotes">—</div>
+                    </div>
+                    <div class="demo-stats" id="demoVotes"></div>
+                </div>
+                <div class="demo-card c4" onclick="openStatModal('posts')">
+                    <div class="demo-top">
+                        <div class="demo-title"><span>🔥 신규 생성 불판</span><span class="demo-trend" id="trendPosts"></span></div>
+                        <div class="demo-val" id="statCountPosts">—</div>
+                    </div>
+                    <div class="demo-stats" id="demoPosts"></div>
+                </div>
+                <div class="demo-card c5" onclick="openStatModal('comments')">
+                    <div class="demo-top">
+                        <div class="demo-title"><span>💬 신규 작성 댓글</span><span class="demo-trend" id="trendComments"></span></div>
+                        <div class="demo-val" id="statCountComments">—</div>
+                    </div>
+                    <div class="demo-stats" id="demoComments"></div>
+                </div>
+            </div>
+            <div class="stat-note" style="margin-top:-12px; margin-bottom:10px;">
+                * 성별·연령은 회원이 가입 시 입력한 값 기준이며, 미입력 회원은 별도로 표시합니다. 불판 카드는 작성자 기준입니다. 화살표는 바로 앞 같은 길이의 기간과 비교한 증감입니다.
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-title">📈 기간 내 핵심 지표 일별 추이 (그래프)</div>
+              <div style="margin-bottom: 20px;">
+                <select id="chartMetricSelect" class="admin-input" style="width: 280px;" onchange="updateTrendChart()">
+                  <option value="votes" selected>총 투표수 (Votes)</option>
+                  <option value="dopamine">도파민 지수 (인당 평균 투표 수)</option>
+                  <option value="signups">신규 가입자 수</option>
+                  <option value="posts">일일 신규 생성 불판 수</option>
+                  <option value="comments">일일 신규 댓글 수</option>
+                  <option value="active">일일 활동 회원 수</option>
+                  <option value="views">일일 불판 조회수</option>
+                  <option value="shares">일일 공유 횟수</option>
+                </select>
               </div>
-              <div class="core-card" style="border-color: rgba(0,240,255,0.5);">
-                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🔥 투표/도파민 전환율 (조회 대비 투표)</span><span class="core-val" style="color:var(--neon-blue);" id="kpiConversion">42.8%</span></div>
-                  <div style="font-size:1.5rem;">👆</div>
+
+              <div class="chart-wrapper">
+                <div class="y-axis" id="chartYAxis">
+                    <span>—</span><span>—</span><span>—</span><span>0</span>
+                </div>
+                <div class="chart-content">
+                    <div class="chart-grid-bg">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line base"></div>
+                    </div>
+                    <div class="chart-plot-area" id="chartPlotArea"></div>
+                    <div class="x-axis" id="chartXAxis"></div>
+                </div>
               </div>
-              <div class="core-card" style="border-color: rgba(255,204,0,0.5);">
-                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">⏱️ 불판 초기 점화 속도 (최초 10명 도달)</span><span class="core-val" style="color:var(--theme-gold);" id="kpiIgnition">12분 30초</span></div>
-                  <div style="font-size:1.5rem;">⚡</div>
+
+              <div class="chart-table-wrap">
+                <table class="chart-data-table" id="chartDataTable">
+                    <thead><tr id="chartTableHeadRow"><th class="chart-th-metric">지표</th></tr></thead>
+                    <tbody><tr id="chartTableBodyRow"><td class="chart-td-metric" id="chartTableMetricLabel">—</td></tr></tbody>
+                </table>
               </div>
-              <!-- ✨ 신규 추가: 재방문률 카드 -->
-              <div class="core-card" style="border-color: rgba(57,255,20,0.5);">
-                  <div style="display:flex; flex-direction:column; gap:4px;"><span class="core-title">🧲 D+7 재방문률 (유저 리텐션)</span><span class="core-val" style="color:var(--neon-green);" id="kpiRetention">68.2%</span></div>
-                  <div style="font-size:1.5rem;">🔄</div>
-              </div>
-          </div>
-
-          <div class="demo-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
-                
-            <div class="demo-card c2" onclick="openStatModal('신규 가입자')">
-                <div class="demo-top">
-                    <div class="demo-title"><span>✨ 신규 가입자</span><span class="demo-trend trend-up">▲ 5.2%</span></div>
-                    <div class="demo-val" id="statCountUsers">—</div>
-                </div>
-                <div class="demo-stats">
-                    <div class="d-row">
-                        <div class="d-label"><span>👩 85%</span><span>👨 15%</span></div>
-                        <div class="gender-bar"><div class="gb-f" style="width: 85%;"></div><div class="gb-m" style="width: 15%;"></div></div>
-                    </div>
-                    <div class="d-row">
-                        <div class="age-bars">
-                            <div class="ab top" style="height: 100%;"></div>
-                            <div class="ab second" style="height: 60%;"></div>
-                            <div class="ab" style="height: 20%;"></div>
-                            <div class="ab" style="height: 10%;"></div>
-                            <div class="ab" style="height: 5%;"></div>
-                        </div>
-                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="demo-card c3" onclick="openStatModal('총 투표수 (Votes)')">
-                <div class="demo-top">
-                    <div class="demo-title"><span>🗳️ 총 투표수 (Votes)</span><span class="demo-trend trend-up">▲ 24.1%</span></div>
-                    <div class="demo-val" style="color:var(--neon-pink);" id="statCountVotes">—</div>
-                </div>
-                <div class="demo-stats">
-                    <div class="d-row">
-                        <div class="d-label"><span>👩 72%</span><span>👨 28%</span></div>
-                        <div class="gender-bar"><div class="gb-f" style="width: 72%;"></div><div class="gb-m" style="width: 28%;"></div></div>
-                    </div>
-                    <div class="d-row">
-                        <div class="age-bars">
-                            <div class="ab second" style="height: 70%;"></div>
-                            <div class="ab top" style="height: 100%;"></div>
-                            <div class="ab" style="height: 50%;"></div>
-                            <div class="ab" style="height: 20%;"></div>
-                            <div class="ab" style="height: 10%;"></div>
-                        </div>
-                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="demo-card c4" onclick="openStatModal('신규 생성 불판')">
-                <div class="demo-top">
-                    <div class="demo-title"><span>🔥 신규 생성 불판</span><span class="demo-trend trend-down">▼ 2.1%</span></div>
-                    <div class="demo-val" id="statCountPosts">—</div>
-                </div>
-                <div class="demo-stats">
-                    <div class="d-row">
-                        <div class="d-label"><span>👩 65%</span><span>👨 35%</span></div>
-                        <div class="gender-bar"><div class="gb-f" style="width: 65%;"></div><div class="gb-m" style="width: 35%;"></div></div>
-                    </div>
-                    <div class="d-row">
-                        <div class="age-bars">
-                            <div class="ab" style="height: 50%;"></div>
-                            <div class="ab top" style="height: 100%;"></div>
-                            <div class="ab second" style="height: 80%;"></div>
-                            <div class="ab" style="height: 30%;"></div>
-                            <div class="ab" style="height: 10%;"></div>
-                        </div>
-                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="demo-card c5" onclick="openStatModal('신규 작성 댓글')">
-                <div class="demo-top">
-                    <div class="demo-title"><span>💬 신규 작성 댓글</span><span class="demo-trend trend-up">▲ 8.5%</span></div>
-                    <div class="demo-val" id="statCountComments">—</div>
-                </div>
-                <div class="demo-stats">
-                    <div class="d-row">
-                        <div class="d-label"><span>👩 80%</span><span>👨 20%</span></div>
-                        <div class="gender-bar"><div class="gb-f" style="width: 80%;"></div><div class="gb-m" style="width: 20%;"></div></div>
-                    </div>
-                    <div class="d-row">
-                        <div class="age-bars">
-                            <div class="ab top" style="height: 100%;"></div>
-                            <div class="ab second" style="height: 60%;"></div>
-                            <div class="ab" style="height: 20%;"></div>
-                            <div class="ab" style="height: 10%;"></div>
-                            <div class="ab" style="height: 5%;"></div>
-                        </div>
-                        <div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="chart-card">
-          <div class="chart-title">📈 기간 내 핵심 지표 일별 추이 (그래프)</div>
-          <div style="margin-bottom: 20px;">
-            <select id="chartMetricSelect" class="admin-input" style="width: 250px;" onchange="updateTrendChart()">
-              <option value="votes" selected>총 투표수 (Votes)</option>
-              <option value="dopamine">도파민 지수 (인당 평균 투표 수)</option>
-              <option value="signups">신규 가입자 수</option>
-              <option value="posts">일일 신규 생성 불판 수</option>
-              <option value="retention">D+7 재방문률 (유저 리텐션)</option>
-          </select>
-          </div>
-          
-          <div class="chart-wrapper">
-                    <div class="y-axis" id="chartYAxis">
-                        <span>150k</span>
-                        <span>100k</span>
-                        <span>50k</span>
-                        <span>0</span>
-                    </div>
-                    
-                    <div class="chart-content">
-                        <div class="chart-grid-bg">
-                            <div class="grid-line"></div>
-                            <div class="grid-line"></div>
-                            <div class="grid-line"></div>
-                            <div class="grid-line base"></div>
-                        </div>
-                        
-                        <div class="chart-plot-area" id="chartPlotArea"></div>
-                        
-                        <div class="x-axis" id="chartXAxis">
-                            <div class="x-label">06/01</div>
-                            <div class="x-label">06/02</div>
-                            <div class="x-label">06/03</div>
-                            <div class="x-label">06/04</div>
-                            <div class="x-label">06/05</div>
-                            <div class="x-label">06/06</div>
-                            <div class="x-label">06/07</div>
-                            <div class="x-label">06/08</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-table-wrap">
-                    <table class="chart-data-table" id="chartDataTable">
-                        <thead>
-                            <tr id="chartTableHeadRow">
-                                <th class="chart-th-metric">지표</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr id="chartTableBodyRow">
-                                <td class="chart-td-metric" id="chartTableMetricLabel">—</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
 
         </div>
@@ -766,9 +762,10 @@
                       <option value="7days" selected>최근 7일</option>
                       <option value="30days">최근 30일</option>
                   </select>
-                  <button type="button" class="btn-search" style="background:#fff; color:#000;" onclick="loadGa4Data()">🔄 실시간 동기화</button>
+                  <button type="button" class="btn-search" id="gaSyncBtn" style="background:#fff; color:#000;" onclick="loadGa4Data()">🔄 새로 불러오기</button>
               </div>
           </div>
+          <div class="stat-banner info" id="gaStatus" style="margin-top:12px;" hidden></div>
 
           <!-- 핵심 4대 지표 -->
           <div class="core-kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:15px;">
@@ -805,500 +802,570 @@
               <div style="display:flex; flex-direction:column; gap:15px;">
                   <div class="chart-card" style="margin-top:0;">
                       <div class="chart-title" style="margin-bottom:15px; font-size:1rem;">👥 구글 빅데이터 기준 성별 (Gender)</div>
-                      <div class="stat-breakdown-section" id="gaGenderContainer" style="gap:10px;">데이터 대기 중...</div>
-                      <div style="font-size:0.75rem; color:#a1a1aa; margin-top:10px; text-align:right;">* 트래픽이 적을 경우 구글 보안 정책상 블라인드 처리될 수 있습니다.</div>
+                      <div class="stat-breakdown-section" id="gaGenderContainer" style="gap:10px;">불러오는 중...</div>
+                      <div style="font-size:0.75rem; color:#a1a1aa; margin-top:10px; text-align:right;">* 트래픽이 적을 경우 구글 보안 정책상 표시되지 않을 수 있습니다. 앱 가입 시 입력한 성별은 왼쪽 「내부 DB」 탭에서 정확히 볼 수 있습니다.</div>
                   </div>
                   <div class="chart-card" style="margin-top:0;">
                       <div class="chart-title" style="margin-bottom:15px; font-size:1rem;">📍 지리적 트래픽 분포 (Geography)</div>
-                      <div class="stat-breakdown-section" id="gaRegionContainer" style="gap:10px;">데이터 대기 중...</div>
+                      <div class="stat-breakdown-section" id="gaRegionContainer" style="gap:10px;">불러오는 중...</div>
                   </div>
               </div>
+          </div>
+          <div class="stat-note" style="margin-top:14px;">
+              * GA 는 사용자 앱 화면(홈·카테고리·상세·결과·랭킹·검색·마이페이지 등)에 설치된 측정 코드로 집계됩니다. 로그인 여부와 상관없이 방문자 기준이라 회원 수와는 다른 숫자입니다.<br>
+              * 광고 차단·쿠키 거부 사용자는 집계되지 않고, 반영까지 최대 24~48시간 지연될 수 있습니다. 정확한 회원 활동 수치는 「내부 DB」 탭을 기준으로 보세요.
           </div>
       </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
+  <script src="js/admin-auth.js"></script>
   <script>
-    var CHART_DATES = ['06/01', '06/02', '06/03', '06/04', '06/05', '06/06', '06/07', '06/08'];
+    // ─────────────────────────────────────────────────────────────
+    // 통계 및 분석 — 내부 DB 지표 (모든 숫자는 admin_stats_overview RPC 의 실제 계산값)
+    // ─────────────────────────────────────────────────────────────
+    var STAT = { data: null, loadSeq: 0, modalSeq: 0, ga4Loaded: false };
 
-var CHART_METRICS = {
-  dopamine: {
-    name: '도파민 지수 (인당 평균 투표 수)',
-    yLabels: ['5.0회', '3.3회', '1.7회', '0'],
-    values: [3.6, 3.9, 4.0, 4.2, 4.5, 4.3, 4.6, 4.4],
-    max: 5,
-    format: function (v) { return v.toFixed(1) + '회'; }
-  },
-  signups: {
-    name: '신규 가입자 수',
-    yLabels: ['500', '333', '167', '0'],
-    values: [280, 310, 295, 350, 420, 380, 450, 410],
-    max: 500,
-    format: function (v) { return v.toLocaleString('ko-KR') + '명'; }
-  },
-  votes: {
-    name: '총 투표수 (Votes)',
-    yLabels: ['150k', '100k', '50k', '0'],
-    values: [95000, 102000, 98000, 118000, 135000, 124000, 142000, 128000],
-    max: 150000,
-    format: function (v) { return Math.round(v / 1000) + 'k'; }
-  },
-  posts: {
-    name: '일일 신규 생성 불판 수',
-    yLabels: ['400', '267', '133', '0'],
-    values: [210, 245, 230, 280, 320, 290, 340, 310],
-    max: 400,
-    format: function (v) { return v.toLocaleString('ko-KR') + '개'; }
-  },
-  retention: {
-    name: 'D+7 재방문률 (유저 리텐션)',
-    yLabels: ['100%', '66%', '33%', '0%'],
-    values: [62.5, 64.0, 65.2, 63.8, 67.5, 68.2, 70.1, 68.2],
-    max: 100,
-    format: function (v) { return v.toFixed(1) + '%'; }
-  }
-};
-
-    function calcBarHeightPercent(value, max) {
-      if (!max || max <= 0) return 0;
-      return Math.max(4, Math.min(100, Math.round((value / max) * 100)));
+    function getStatSupabaseClient() {
+      if (typeof window.getPickleSupabaseClient === 'function') return window.getPickleSupabaseClient();
+      if (window.supabaseClient) return window.supabaseClient;
+      throw new Error('Supabase 클라이언트를 초기화할 수 없습니다. supabase-config.js 를 확인해 주세요.');
     }
 
-    function renderTrendChart(metricKey) {
-      var metric = CHART_METRICS[metricKey];
-      if (!metric) return;
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function nf(v) { return Number(v || 0).toLocaleString('ko-KR'); }
+    function setText(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+    function setHtml(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
 
-      var plotArea = document.getElementById('chartPlotArea');
-      var yAxis = document.getElementById('chartYAxis');
-      var headRow = document.getElementById('chartTableHeadRow');
-      var bodyRow = document.getElementById('chartTableBodyRow');
-
-      if (!plotArea || !yAxis || !headRow || !bodyRow) return;
-
-      yAxis.innerHTML = metric.yLabels.map(function (label) {
-        return '<span>' + label + '</span>';
-      }).join('');
-
-      plotArea.innerHTML = metric.values.map(function (value) {
-        var pct = calcBarHeightPercent(value, metric.max);
-        var display = metric.format(value);
-        return (
-          '<div class="plot-col">' +
-            '<div class="plot-bar" style="height:' + pct + '%;"></div>' +
-            '<div class="plot-dot" style="bottom:' + pct + '%;"></div>' +
-            '<div class="plot-value" style="bottom:' + pct + '%;">' + display + '</div>' +
-          '</div>'
-        );
-      }).join('');
-
-      headRow.innerHTML = '<th class="chart-th-metric">지표</th>' + CHART_DATES.map(function (date) {
-        return '<th>' + date + '</th>';
-      }).join('');
-
-      bodyRow.innerHTML = '<td class="chart-td-metric">' + metric.name + '</td>' + metric.values.map(function (value) {
-        return '<td>' + metric.format(value) + '</td>';
-      }).join('');
+    function pct(a, b, digits) {
+      a = Number(a || 0); b = Number(b || 0);
+      if (b <= 0) return null;
+      return (a / b * 100).toFixed(digits == null ? 1 : digits) + '%';
     }
 
-    function updateTrendChart() {
-      var select = document.getElementById('chartMetricSelect');
-      if (!select) return;
-      renderTrendChart(select.value);
+    function fmtDuration(sec) {
+      if (sec == null || isNaN(sec)) return '—';
+      sec = Math.round(Number(sec));
+      if (sec < 60) return sec + '초';
+      var m = Math.floor(sec / 60), s = sec % 60;
+      if (m < 60) return m + '분' + (s ? ' ' + s + '초' : '');
+      var h = Math.floor(m / 60); m = m % 60;
+      if (h < 24) return h + '시간' + (m ? ' ' + m + '분' : '');
+      var d = Math.floor(h / 24); h = h % 24;
+      return d + '일' + (h ? ' ' + h + '시간' : '');
     }
 
-    // 탭 전환 로직
-    function switchTab(tabType) {
-        document.querySelectorAll('.btn-switch-tab').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-
-        if(tabType === 'internal') {
-            document.getElementById('tabInternalBtn').classList.add('active');
-            document.getElementById('viewInternal').classList.add('active');
-        } else {
-            document.getElementById('tabGa4Btn').classList.add('active');
-            document.getElementById('viewGa4').classList.add('active');
-        }
+    // 한국시간(KST) 기준 오늘 날짜 'YYYY-MM-DD'
+    function kstDateStr(offsetDays) {
+      var t = Date.now() + 9 * 3600 * 1000 + (offsetDays || 0) * 86400000;
+      return new Date(t).toISOString().slice(0, 10);
+    }
+    function daysBetween(a, b) {
+      return Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000) + 1;
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      updateTrendChart();
-      var range = getStatDateRange({ silent: true });
-      if (range) {
-        loadRealStatistics(range.startDate, range.endDate);
-      }
-    });
+    // ── 배너(오류/안내) ──
+    function showBanner(msg, kind) {
+      var el = document.getElementById('statBanner');
+      if (!el) return;
+      if (!msg) { el.hidden = true; el.textContent = ''; return; }
+      el.className = 'stat-banner ' + (kind || 'warn');
+      el.textContent = msg;
+      el.hidden = false;
+    }
 
+    function explainRpcError(err) {
+      var m = String((err && (err.message || err.details)) || err || '');
+      if (/forbidden|staff only|42501|permission denied/i.test(m)) return '통계를 볼 수 있는 관리자 권한이 없습니다. (최고관리자·마케터·재무 계정으로 로그인해 주세요)';
+      if (/admin_stats_overview|PGRST202|42883|Could not find the function/i.test(m)) return '통계 함수가 아직 설치되지 않았습니다. Supabase 에서 SQL 122 파일을 먼저 실행해 주세요.';
+      if (/range too long/i.test(m)) return '조회 기간은 최대 92일까지 가능합니다.';
+      if (/invalid date range/i.test(m)) return '시작일은 종료일보다 이전이어야 합니다.';
+      return '데이터를 불러오지 못했습니다: ' + m;
+    }
+
+    // ── 기간 ──
     function getStatDateRange(options) {
       options = options || {};
-      var startEl = document.getElementById('statStartDate');
-      var endEl = document.getElementById('statEndDate');
-      var startDate = startEl ? String(startEl.value || '').trim() : '';
-      var endDate = endEl ? String(endEl.value || '').trim() : '';
-
-      if (!startDate || !endDate) {
-        if (!options.silent) alert('조회 기간을 선택해 주세요.');
-        return null;
-      }
-      if (startDate > endDate) {
-        if (!options.silent) alert('시작일은 종료일보다 이전이어야 합니다.');
-        return null;
-      }
+      var startDate = String((document.getElementById('statStartDate') || {}).value || '').trim();
+      var endDate = String((document.getElementById('statEndDate') || {}).value || '').trim();
+      if (!startDate || !endDate) { if (!options.silent) showBanner('조회 기간을 선택해 주세요.'); return null; }
+      if (startDate > endDate) { showBanner('시작일은 종료일보다 이전이어야 합니다.'); return null; }
+      if (daysBetween(startDate, endDate) > 92) { showBanner('조회 기간은 최대 92일까지 가능합니다.'); return null; }
       return { startDate: startDate, endDate: endDate };
+    }
+
+    function setQuickRange(days) {
+      document.getElementById('statEndDate').value = kstDateStr(0);
+      document.getElementById('statStartDate').value = kstDateStr(-(days - 1));
+      handleStatDateSearch();
     }
 
     async function handleStatDateSearch() {
       var range = getStatDateRange();
       if (!range) return;
-
       var btn = document.getElementById('statSearchBtn');
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = '조회 중…';
-      }
-
-      playChartRandomAnimation();
-
-      try {
-        await loadRealStatistics(range.startDate, range.endDate);
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = '데이터 조회';
-        }
-      }
+      if (btn) { btn.disabled = true; btn.textContent = '조회 중…'; }
+      try { await loadRealStatistics(range.startDate, range.endDate); }
+      finally { if (btn) { btn.disabled = false; btn.textContent = '데이터 조회'; } }
     }
 
-    var chartRandomAnimTimer = null;
-
-    function playChartRandomAnimation() {
-      var plotArea = document.getElementById('chartPlotArea');
-      if (!plotArea) return;
-
-      var cols = plotArea.querySelectorAll('.plot-col');
-      if (!cols.length) return;
-
-      var select = document.getElementById('chartMetricSelect');
-      var metricKey = select ? select.value : 'uv';
-      var metric = CHART_METRICS[metricKey] || CHART_METRICS.uv;
-      var max = metric.max || 100;
-      var format = metric.format || function (v) { return String(v); };
-
-      if (chartRandomAnimTimer) {
-        clearInterval(chartRandomAnimTimer);
-        chartRandomAnimTimer = null;
-      }
-
-      var tick = 0;
-      var maxTicks = 18;
-
-      chartRandomAnimTimer = setInterval(function () {
-        cols.forEach(function (col) {
-          var pct = Math.max(8, Math.min(98, Math.round(12 + Math.random() * 86)));
-          var rawValue = Math.round(max * (pct / 100));
-          var bar = col.querySelector('.plot-bar');
-          var dot = col.querySelector('.plot-dot');
-          var valueEl = col.querySelector('.plot-value');
-
-          if (bar) bar.style.height = pct + '%';
-          if (dot) dot.style.bottom = pct + '%';
-          if (valueEl) {
-            valueEl.style.bottom = pct + '%';
-            valueEl.textContent = format(rawValue);
-          }
-        });
-
-        tick += 1;
-        if (tick >= maxTicks) {
-          clearInterval(chartRandomAnimTimer);
-          chartRandomAnimTimer = null;
-        }
-      }, 70);
+    // ── 증감 표시 ──
+    function trendHtml(cur, prev) {
+      cur = Number(cur || 0); prev = Number(prev || 0);
+      if (prev === 0 && cur === 0) return { text: '– 0%', cls: '' };
+      if (prev === 0) return { text: '● 신규', cls: 'trend-up' };
+      var d = (cur - prev) / prev * 100;
+      if (Math.abs(d) < 0.05) return { text: '– 0%', cls: '' };
+      return d > 0 ? { text: '▲ ' + d.toFixed(1) + '%', cls: 'trend-up' } : { text: '▼ ' + Math.abs(d).toFixed(1) + '%', cls: 'trend-down' };
+    }
+    function setTrend(id, cur, prev) {
+      var el = document.getElementById(id); if (!el) return;
+      var t = trendHtml(cur, prev);
+      el.className = 'demo-trend ' + t.cls;
+      el.textContent = t.text;
+      el.title = '직전 같은 기간: ' + nf(prev);
     }
 
-    var statSupabaseClient = null;
-
-    function getStatSupabaseClient() {
-      if (typeof window.getPickleSupabaseClient === 'function') {
-        return window.getPickleSupabaseClient();
+    // ── 성별/연령 미니 차트 ──
+    function demoBlockHtml(d) {
+      if (!d || !d.total) return '<div class="d-empty">해당 기간 데이터 없음</div>';
+      var known = (d.female || 0) + (d.male || 0);
+      var genderHtml;
+      if (known > 0) {
+        var fp = Math.round(d.female / known * 100), mp = 100 - fp;
+        genderHtml =
+          '<div class="d-label"><span>👩 ' + fp + '%</span><span>👨 ' + mp + '%</span></div>' +
+          '<div class="gender-bar"><div class="gb-f" style="width:' + fp + '%;"></div><div class="gb-m" style="width:' + mp + '%;"></div></div>';
+      } else {
+        genderHtml = '<div class="d-empty">성별 정보 없음</div>';
       }
-      if (window.supabaseClient) {
-        return window.supabaseClient;
-      }
-      throw new Error('Supabase 클라이언트를 초기화할 수 없습니다. supabase-config.js 를 확인해 주세요.');
+      var ages = [d.a10 || 0, d.a20 || 0, d.a30 || 0, d.a40 || 0, d.a50 || 0];
+      var max = Math.max.apply(null, ages);
+      var order = ages.map(function (v, i) { return { v: v, i: i }; }).sort(function (a, b) { return b.v - a.v; });
+      var topIdx = max > 0 ? order[0].i : -1;
+      var secondIdx = (max > 0 && order[1].v > 0) ? order[1].i : -1;
+      var labels = ['10대', '20대', '30대', '40대', '50대+'];
+      var bars = ages.map(function (v, i) {
+        var h = max > 0 ? Math.max(v > 0 ? 8 : 3, Math.round(v / max * 100)) : 3;
+        var cls = i === topIdx ? ' top' : (i === secondIdx ? ' second' : '');
+        return '<div class="ab' + cls + '" style="height:' + h + '%;" title="' + labels[i] + ' ' + nf(v) + '건"></div>';
+      }).join('');
+      var ageKnown = ages.reduce(function (a, b) { return a + b; }, 0);
+      var ageHtml = ageKnown > 0
+        ? '<div class="age-bars">' + bars + '</div><div class="age-labels"><span>10</span><span>20</span><span>30</span><span>40</span><span>50+</span></div>'
+        : '<div class="d-empty">연령 정보 없음</div>';
+      var unk = '<div class="d-unknown">미입력 · 성별 ' + Math.round((d.g_unknown || 0) / d.total * 100) + '% / 연령 ' + Math.round((d.a_unknown || 0) / d.total * 100) + '%</div>';
+      return '<div class="d-row">' + genderHtml + '</div><div class="d-row">' + ageHtml + '</div>' + unk;
     }
 
-    function formatStatNumber(value) {
-      return Number(value || 0).toLocaleString('ko-KR');
+    // ── 메인 렌더 ──
+    function renderStatistics(d) {
+      var t = d.totals || {}, p = d.prev || {}, e = d.engagement || {}, eco = d.economy || {}, cl = d.clean || {}, sp = d.sponsor || {};
+      var days = d.range ? d.range.days : 0;
+
+      // 활동 요약
+      setText('statActiveUsers', nf(t.active_users) + ' 명');
+      setText('statActiveSub', '투표·댓글·불판작성·조회 중 1가지 이상');
+      setText('statViews', nf(t.views) + ' 회');
+      setText('statViewsSub', '순 조회자 ' + nf(t.viewers) + '명 (비로그인 기기 포함)');
+      setText('statVoters', nf(t.voters) + ' 명');
+      var votersRate = pct(t.voters, t.active_users, 0);
+      setText('statVotersSub', votersRate ? '활동 회원 중 ' + votersRate + '가 투표' : '활동 회원 없음');
+      setText('statShares', nf(t.shares) + ' 회');
+      setText('statSharesSub', days ? '하루 평균 ' + (t.shares / days).toFixed(1) + '회' : ' ');
+
+      // 도파민 지수 = 총 투표 ÷ 투표한 회원
+      var dop = t.voters > 0 ? (t.votes / t.voters) : null;
+      setText('statDopamineIndex', dop == null ? '—' : dop.toFixed(1) + '회');
+      setText('statDopamineSub', '투표 ' + nf(t.votes) + '건 ÷ 투표 회원 ' + nf(t.voters) + '명');
+
+      // 포인트 소진율
+      var rate = pct(eco.burned, eco.issued, 1);
+      setText('statEconRate', rate || '—');
+      setText('statEconSub', rate ? '지급 ' + nf(eco.issued) + 'P · 사용 ' + nf(eco.burned) + 'P' : '이 기간 포인트 지급 내역 없음');
+
+      // AI 필터 적발률
+      var caught = Number(cl.masked || 0) + Number(cl.blocked || 0);
+      var cleanRate = pct(caught, cl.comments, 1);
+      setText('statCleanRate', cleanRate || '—');
+      setText('statCleanSub', cl.comments > 0 ? '댓글 ' + nf(cl.comments) + '개 중 AI 적발 ' + nf(caught) + '개' : '이 기간 댓글 없음');
+
+      // 스폰서
+      setText('statSponsorCount', nf(sp.active) + ' 개');
+      setText('statSponsorSub', '전체 등록 캠페인 ' + nf(sp.total) + '개');
+
+      // 바이럴 / 전환 / 점화 / 리텐션
+      var viral = pct(t.shares, t.views, 2);
+      setText('kpiViral', viral || '—');
+      setText('kpiViralSub', '공유 ' + nf(t.shares) + '회 ÷ 조회 ' + nf(t.views) + '회');
+      var conv = pct(e.voted_pairs, e.view_pairs, 1);
+      setText('kpiConversion', conv || '—');
+      setText('kpiConversionSub', e.view_pairs > 0 ? '로그인 회원이 본 불판 ' + nf(e.view_pairs) + '건 중 ' + nf(e.voted_pairs) + '건 투표' : '로그인 회원 조회 기록 없음');
+      setText('kpiIgnition', e.ignition_median_sec == null ? '—' : fmtDuration(e.ignition_median_sec));
+      setText('kpiIgnitionSub', e.ignition_sample > 0
+        ? '중앙값 · 10표 달성 불판 ' + nf(e.ignition_sample) + '개 / 신규 ' + nf(e.ignition_posts) + '개'
+        : (e.ignition_posts > 0 ? '아직 10표를 넘긴 새 불판이 없음' : '이 기간 신규 불판 없음'));
+      var ret = pct(e.retention_returned, e.retention_cohort, 1);
+      setText('kpiRetention', ret || '—');
+      setText('kpiRetentionSub', e.retention_cohort > 0
+        ? '가입 7일 경과 ' + nf(e.retention_cohort) + '명 중 ' + nf(e.retention_returned) + '명이 7일째 활동'
+        : '아직 가입 7일이 지난 회원이 없음');
+
+      // 성장 카드
+      setText('statCountUsers', nf(t.signups));
+      setText('statCountVotes', nf(t.votes));
+      setText('statCountPosts', nf(t.posts));
+      setText('statCountComments', nf(t.comments));
+      setTrend('trendUsers', t.signups, p.signups);
+      setTrend('trendVotes', t.votes, p.votes);
+      setTrend('trendPosts', t.posts, p.posts);
+      setTrend('trendComments', t.comments, p.comments);
+      var demo = d.demo || {};
+      setHtml('demoUsers', demoBlockHtml(demo.signups));
+      setHtml('demoVotes', demoBlockHtml(demo.votes));
+      setHtml('demoPosts', demoBlockHtml(demo.posts));
+      setHtml('demoComments', demoBlockHtml(demo.comments));
+
+      updateTrendChart();
     }
 
-    function animateCountUp(el, target, durationMs) {
-      if (!el) return;
-      var safeTarget = Math.max(0, Number(target) || 0);
-      var duration = durationMs || 900;
-      var startTime = null;
-
-      function tick(now) {
-        if (!startTime) startTime = now;
-        var progress = Math.min((now - startTime) / duration, 1);
-        var eased = 1 - Math.pow(1 - progress, 3);
-        var current = Math.round(safeTarget * eased);
-        el.textContent = formatStatNumber(current);
-        if (progress < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          el.textContent = formatStatNumber(safeTarget);
-        }
-      }
-
-      requestAnimationFrame(tick);
-    }
-
-    function animateDopamineIndex(el, target) {
-      if (!el) return;
-      var safeTarget = Math.max(0, Number(target) || 0);
-      var duration = 900;
-      var startTime = null;
-
-      function tick(now) {
-        if (!startTime) startTime = now;
-        var progress = Math.min((now - startTime) / duration, 1);
-        var eased = 1 - Math.pow(1 - progress, 3);
-        var current = safeTarget * eased;
-        el.textContent = current.toFixed(1) + '회';
-        if (progress < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          el.textContent = safeTarget.toFixed(1) + '회';
-        }
-      }
-
-      requestAnimationFrame(tick);
-    }
-
-    async function fetchTableCount(sb, tableName, startDate, endDate) {
-      var query = sb.from(tableName).select('*', { count: 'exact', head: true });
-
-      if (startDate && endDate) {
-        query = query
-          .gte('created_at', startDate + 'T00:00:00')
-          .lte('created_at', endDate + 'T23:59:59');
-      }
-
-      var result = await query;
-
-      if (result.error) {
-        throw new Error(tableName + ': ' + (result.error.message || String(result.error)));
-      }
-
-      return result.count || 0;
-    }
-
-    function setStatLastUpdatedLabel(startDate, endDate) {
-      var el = document.getElementById('statLastUpdated');
-      if (!el) return;
-      var now = new Date();
-      var hours = now.getHours();
-      var minutes = String(now.getMinutes()).padStart(2, '0');
-      var ampm = hours >= 12 ? 'PM' : 'AM';
-      var hour12 = hours % 12 || 12;
-      var periodText = startDate && endDate ? ' · ' + startDate + ' ~ ' + endDate : '';
-      el.style.color = '';
-      el.textContent =
-        '최근 업데이트: 오늘 ' + hour12 + ':' + minutes + ' ' + ampm + ' (Supabase)' + periodText;
+    function clearStatistics() {
+      ['statActiveUsers', 'statViews', 'statVoters', 'statShares', 'statDopamineIndex', 'statEconRate', 'statCleanRate',
+       'statSponsorCount', 'kpiViral', 'kpiConversion', 'kpiIgnition', 'kpiRetention',
+       'statCountUsers', 'statCountVotes', 'statCountPosts', 'statCountComments'].forEach(function (id) { setText(id, '—'); });
+      ['statActiveSub', 'statViewsSub', 'statVotersSub', 'statSharesSub', 'statDopamineSub', 'statEconSub', 'statCleanSub',
+       'statSponsorSub', 'kpiViralSub', 'kpiConversionSub', 'kpiIgnitionSub', 'kpiRetentionSub'].forEach(function (id) { setText(id, '\u00a0'); });
+      ['demoUsers', 'demoVotes', 'demoPosts', 'demoComments'].forEach(function (id) { setHtml(id, ''); });
+      ['trendUsers', 'trendVotes', 'trendPosts', 'trendComments'].forEach(function (id) { setText(id, ''); });
     }
 
     async function loadRealStatistics(startDate, endDate) {
-      var usersEl = document.getElementById('statCountUsers');
-      var postsEl = document.getElementById('statCountPosts');
-      var votesEl = document.getElementById('statCountVotes');
-      var commentsEl = document.getElementById('statCountComments');
-      var dopamineEl = document.getElementById('statDopamineIndex');
-
+      var seq = ++STAT.loadSeq;
+      var updatedEl = document.getElementById('statLastUpdated');
+      showBanner('');
+      if (updatedEl) { updatedEl.style.color = ''; updatedEl.textContent = '불러오는 중…'; }
       try {
         var sb = getStatSupabaseClient();
-
-        var results = await Promise.all([
-          fetchTableCount(sb, 'users', startDate, endDate),
-          fetchTableCount(sb, 'posts', startDate, endDate),
-          fetchTableCount(sb, 'votes', startDate, endDate),
-          fetchTableCount(sb, 'comments', startDate, endDate),
-        ]);
-
-        var usersCount = results[0];
-        var postsCount = results[1];
-        var votesCount = results[2];
-        var commentsCount = results[3];
-        var dopamineIndex = usersCount > 0 ? votesCount / usersCount : 0;
-
-        animateCountUp(usersEl, usersCount);
-        animateCountUp(postsEl, postsCount);
-        animateCountUp(votesEl, votesCount);
-        animateCountUp(commentsEl, commentsCount);
-        animateDopamineIndex(dopamineEl, dopamineIndex);
-
-        setStatLastUpdatedLabel(startDate, endDate);
-      } catch (err) {
-        console.error('[Admin Statistics] loadRealStatistics 실패:', err);
-        var fallback = '—';
-        if (usersEl) usersEl.textContent = fallback;
-        if (postsEl) postsEl.textContent = fallback;
-        if (votesEl) votesEl.textContent = fallback;
-        if (commentsEl) commentsEl.textContent = fallback;
-        if (dopamineEl) dopamineEl.textContent = fallback;
-
-        var updatedEl = document.getElementById('statLastUpdated');
+        var exclude = !!(document.getElementById('statExcludeStaff') || {}).checked;
+        var res = await sb.rpc('admin_stats_overview', { p_start: startDate, p_end: endDate, p_exclude_staff: exclude });
+        if (seq !== STAT.loadSeq) return; // 더 최근 조회가 있으면 이전 응답은 버림
+        if (res.error) throw res.error;
+        STAT.data = res.data;
+        renderStatistics(res.data);
+        var now = new Date();
         if (updatedEl) {
-          updatedEl.textContent = '데이터 로드 실패 — Supabase 연결을 확인해 주세요.';
-          updatedEl.style.color = 'var(--neon-pink)';
+          updatedEl.textContent = '최근 업데이트: ' + now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) +
+            ' · ' + startDate + ' ~ ' + endDate + ' (' + res.data.range.days + '일, 한국시간 기준)';
         }
+      } catch (err) {
+        if (seq !== STAT.loadSeq) return;
+        console.error('[Admin Statistics] loadRealStatistics 실패:', err);
+        STAT.data = null;
+        clearStatistics();
+        setHtml('chartPlotArea', '');
+        showBanner(explainRpcError(err), 'error');
+        if (updatedEl) { updatedEl.textContent = '데이터 로드 실패'; updatedEl.style.color = 'var(--neon-pink)'; }
       }
     }
 
-    function renderStatModalBody(title) {
-      switch (title) {
-        case '현재 진행 스폰서(광고) 불판':
-          return (
-            '<div class="stat-sponsor-list">' +
-              '<div class="stat-sponsor-item">' +
-                '<div class="stat-sponsor-top">' +
-                  '<span class="stat-sponsor-brand">🏪 올리브영</span>' +
-                  '<span class="stat-sponsor-budget-label">광고 예산 소진</span>' +
-                '</div>' +
-                '<div class="stat-progress-wrap">' +
-                  '<div class="stat-progress-meta"><span>남은 예산 소진율</span><span>72%</span></div>' +
-                  '<div class="stat-progress-track"><div class="stat-progress-fill" style="width:72%;"></div></div>' +
-                '</div>' +
-                '<div class="stat-sponsor-pick">현재 1위 픽: <strong>A옵션 (65%)</strong> · B옵션 35%</div>' +
-              '</div>' +
-              '<div class="stat-sponsor-item">' +
-                '<div class="stat-sponsor-top">' +
-                  '<span class="stat-sponsor-brand">🛒 다이소</span>' +
-                  '<span class="stat-sponsor-budget-label">광고 예산 소진</span>' +
-                '</div>' +
-                '<div class="stat-progress-wrap">' +
-                  '<div class="stat-progress-meta"><span>남은 예산 소진율</span><span>48%</span></div>' +
-                  '<div class="stat-progress-track"><div class="stat-progress-fill warn" style="width:48%;"></div></div>' +
-                '</div>' +
-                '<div class="stat-sponsor-pick">현재 1위 픽: <strong>B옵션 (58%)</strong> · A옵션 42%</div>' +
-              '</div>' +
-              '<div class="stat-sponsor-item">' +
-                '<div class="stat-sponsor-top">' +
-                  '<span class="stat-sponsor-brand">🍗 BBQ치킨</span>' +
-                  '<span class="stat-sponsor-budget-label">광고 예산 소진</span>' +
-                '</div>' +
-                '<div class="stat-progress-wrap">' +
-                  '<div class="stat-progress-meta"><span>남은 예산 소진율</span><span>91%</span></div>' +
-                  '<div class="stat-progress-track"><div class="stat-progress-fill hot" style="width:91%;"></div></div>' +
-                '</div>' +
-                '<div class="stat-sponsor-pick">현재 1위 픽: <strong>A옵션 (71%)</strong> · B옵션 29%</div>' +
-              '</div>' +
-            '</div>'
-          );
+    // ─────────────────────────────────────────────────────────────
+    // 일별 추이 그래프
+    // ─────────────────────────────────────────────────────────────
+    var CHART_METRICS = {
+      votes:    { name: '총 투표수 (Votes)', pick: function (r) { return r.votes; }, total: function (t) { return t.votes; }, fmt: function (v) { return nf(v) + '건'; }, int: true },
+      dopamine: { name: '도파민 지수 (인당 평균 투표 수)', pick: function (r) { return r.voters > 0 ? r.votes / r.voters : 0; }, total: function (t) { return t.voters > 0 ? t.votes / t.voters : 0; }, fmt: function (v) { return v.toFixed(1) + '회'; }, int: false },
+      signups:  { name: '신규 가입자 수', pick: function (r) { return r.signups; }, total: function (t) { return t.signups; }, fmt: function (v) { return nf(v) + '명'; }, int: true },
+      posts:    { name: '일일 신규 생성 불판 수', pick: function (r) { return r.posts; }, total: function (t) { return t.posts; }, fmt: function (v) { return nf(v) + '개'; }, int: true },
+      comments: { name: '일일 신규 댓글 수', pick: function (r) { return r.comments; }, total: function (t) { return t.comments; }, fmt: function (v) { return nf(v) + '개'; }, int: true },
+      active:   { name: '일일 활동 회원 수', pick: function (r) { return r.active; }, total: function (t) { return t.active_users; }, fmt: function (v) { return nf(v) + '명'; }, int: true },
+      views:    { name: '일일 불판 조회수', pick: function (r) { return r.views; }, total: function (t) { return t.views; }, fmt: function (v) { return nf(v) + '회'; }, int: true },
+      shares:   { name: '일일 공유 횟수', pick: function (r) { return r.shares; }, total: function (t) { return t.shares; }, fmt: function (v) { return nf(v) + '회'; }, int: true }
+    };
 
-        case 'AI 블라인드율 (클린 커뮤니티)':
-          return (
-            '<div class="stat-log-list">' +
-              '<div class="stat-log-card">' +
-                '<div class="stat-log-card-header">' +
-                  '<span class="stat-log-tag">적발 단어: [토토]</span>' +
-                  '<span class="stat-log-time">2026-06-08 11:24:03</span>' +
-                '</div>' +
-                '<div class="stat-log-meta">작성자 UID: <code>a3f9-82c1-7e44-b201</code></div>' +
-                '<div class="stat-log-text">오늘 <span class="masked">[토토]</span> 사이트 가입했는데 꿀잼 ㅋㅋ 링크 DM 주세요</div>' +
-                '<div class="stat-log-action">조치: 영구 블라인드 및 벌점 10점</div>' +
-              '</div>' +
-              '<div class="stat-log-card">' +
-                '<div class="stat-log-card-header">' +
-                  '<span class="stat-log-tag">적발 단어: [카지노]</span>' +
-                  '<span class="stat-log-time">2026-06-08 10:51:17</span>' +
-                '</div>' +
-                '<div class="stat-log-meta">작성자 UID: <code>c7b2-19d4-6a08-f903</code></div>' +
-                '<div class="stat-log-text">B픽 가자 ㅋㅋ <span class="masked">[카지노]</span> 배너 봤음? 100% 보장</div>' +
-                '<div class="stat-log-action">조치: 영구 블라인드 및 벌점 10점</div>' +
-              '</div>' +
-              '<div class="stat-log-card">' +
-                '<div class="stat-log-card-header">' +
-                  '<span class="stat-log-tag">적발 단어: [대출]</span>' +
-                  '<span class="stat-log-time">2026-06-08 09:38:42</span>' +
-                '</div>' +
-                '<div class="stat-log-meta">작성자 UID: <code>f1e8-55a0-3c22-9011</code></div>' +
-                '<div class="stat-log-text">급전 필요하면 <span class="masked">[대출]</span> 상담 카톡 ID: ****</div>' +
-                '<div class="stat-log-action">조치: 영구 블라인드 및 벌점 10점</div>' +
-              '</div>' +
-              '<div class="stat-log-card">' +
-                '<div class="stat-log-card-header">' +
-                  '<span class="stat-log-tag">적발 단어: [야동]</span>' +
-                  '<span class="stat-log-time">2026-06-08 08:12:55</span>' +
-                '</div>' +
-                '<div class="stat-log-meta">작성자 UID: <code>9d04-77bc-2e19-aa44</code></div>' +
-                '<div class="stat-log-text">댓글: 이거 <span class="masked">[야동]</span> 링크 아님? 신고함</div>' +
-                '<div class="stat-log-action">조치: 영구 블라인드 및 벌점 10점</div>' +
-              '</div>' +
-            '</div>'
-          );
+    // 눈금 간격을 1·2·2.5·5·10 × 10^n 중에서 고름 (최댓값 = 간격 × 3)
+    function niceStep(raw) {
+      if (!(raw > 0)) return 1;
+      var exp = Math.pow(10, Math.floor(Math.log10(raw)));
+      var f = raw / exp;
+      var pick = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+      return pick * exp;
+    }
+    function axisLabel(v, isInt) {
+      if (isInt) {
+        if (v >= 10000) return (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
+        return String(Math.round(v * 10) / 10);
+      }
+      return (Math.round(v * 100) / 100).toString();
+    }
+    function mmdd(s) { return s.slice(5).replace('-', '/'); }
 
-        case '순 방문자 (UV)':
-          return (
-            '<div class="stat-breakdown-wrap">' +
-              '<div class="stat-breakdown-section">' +
-                '<div class="stat-breakdown-title">📍 지역별 유입 비율</div>' +
-                '<div class="stat-hbar-row">' +
-                  '<div class="stat-hbar-label-row"><span class="stat-hbar-label">서울</span><span class="stat-hbar-pct">60%</span></div>' +
-                  '<div class="stat-hbar-track"><div class="stat-hbar-fill" style="width:60%;"></div></div>' +
-                '</div>' +
-                '<div class="stat-hbar-row">' +
-                  '<div class="stat-hbar-label-row"><span class="stat-hbar-label">경기</span><span class="stat-hbar-pct">15%</span></div>' +
-                  '<div class="stat-hbar-track"><div class="stat-hbar-fill green" style="width:15%;"></div></div>' +
-                '</div>' +
-                '<div class="stat-hbar-row">' +
-                  '<div class="stat-hbar-label-row"><span class="stat-hbar-label">기타 · 해외</span><span class="stat-hbar-pct">25%</span></div>' +
-                  '<div class="stat-hbar-track"><div class="stat-hbar-fill pink" style="width:25%;"></div></div>' +
-                '</div>' +
-              '</div>' +
-              '<div class="stat-breakdown-section">' +
-                '<div class="stat-breakdown-title">📱 기기별 유입 비율</div>' +
-                '<div class="stat-hbar-row">' +
-                  '<div class="stat-hbar-label-row"><span class="stat-hbar-label">아이폰 (iOS)</span><span class="stat-hbar-pct">70%</span></div>' +
-                  '<div class="stat-hbar-track"><div class="stat-hbar-fill" style="width:70%;"></div></div>' +
-                '</div>' +
-                '<div class="stat-hbar-row">' +
-                  '<div class="stat-hbar-label-row"><span class="stat-hbar-label">안드로이드</span><span class="stat-hbar-pct">30%</span></div>' +
-                  '<div class="stat-hbar-track"><div class="stat-hbar-fill pink" style="width:30%;"></div></div>' +
-                '</div>' +
-              '</div>' +
-            '</div>'
-          );
+    function renderTrendChart(metricKey) {
+      var metric = CHART_METRICS[metricKey];
+      var plotArea = document.getElementById('chartPlotArea');
+      var yAxis = document.getElementById('chartYAxis');
+      var xAxis = document.getElementById('chartXAxis');
+      var headRow = document.getElementById('chartTableHeadRow');
+      var bodyRow = document.getElementById('chartTableBodyRow');
+      if (!metric || !plotArea || !yAxis || !xAxis || !headRow || !bodyRow) return;
 
+      var daily = (STAT.data && STAT.data.daily) || [];
+      if (!daily.length) {
+        plotArea.innerHTML = '<div class="chart-empty">표시할 데이터가 없습니다.</div>';
+        xAxis.innerHTML = '';
+        headRow.innerHTML = '<th class="chart-th-metric">지표</th>';
+        bodyRow.innerHTML = '<td class="chart-td-metric">' + esc(metric.name) + '</td>';
+        return;
+      }
+
+      var values = daily.map(metric.pick);
+      var maxVal = Math.max.apply(null, values);
+      var step = niceStep(maxVal / 3);
+      if (metric.int) step = Math.max(1, Math.ceil(step));
+      var axisMax = step * 3;
+
+      yAxis.innerHTML = [3, 2, 1, 0].map(function (i) { return '<span>' + axisLabel(step * i, metric.int) + '</span>'; }).join('');
+      plotArea.className = 'chart-plot-area' + (daily.length > 16 ? ' compact' : '');
+      plotArea.innerHTML = values.map(function (v, i) {
+        var h = v <= 0 ? 0 : Math.max(3, Math.min(100, Math.round(v / axisMax * 100)));
+        return '<div class="plot-col" title="' + esc(mmdd(daily[i].day) + ' · ' + metric.fmt(v)) + '">' +
+          '<div class="plot-bar" style="height:' + h + '%;"></div>' +
+          '<div class="plot-dot" style="bottom:' + h + '%;"></div>' +
+          '<div class="plot-value" style="bottom:' + h + '%;">' + esc(metric.fmt(v)) + '</div>' +
+        '</div>';
+      }).join('');
+
+      // X축: 날짜가 많으면 일부만 표시
+      var every = daily.length <= 10 ? 1 : daily.length <= 21 ? 2 : daily.length <= 45 ? 5 : 7;
+      xAxis.innerHTML = daily.map(function (r, i) {
+        return '<div class="x-label">' + (i % every === 0 ? mmdd(r.day) : '') + '</div>';
+      }).join('');
+
+      headRow.innerHTML = '<th class="chart-th-metric">지표</th>' + daily.map(function (r) { return '<th>' + mmdd(r.day) + '</th>'; }).join('') + '<th>기간 전체</th>';
+      bodyRow.innerHTML = '<td class="chart-td-metric">' + esc(metric.name) + '</td>' +
+        values.map(function (v) { return '<td>' + esc(metric.fmt(v)) + '</td>'; }).join('') +
+        '<td class="chart-td-total">' + esc(metric.fmt(metric.total(STAT.data.totals || {}))) + '</td>';
+    }
+
+    function updateTrendChart() {
+      var select = document.getElementById('chartMetricSelect');
+      renderTrendChart(select ? select.value : 'votes');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 상세 모달
+    // ─────────────────────────────────────────────────────────────
+    function kv(rows) {
+      return '<div class="stat-kv">' + rows.map(function (r) {
+        return '<div class="stat-kv-row"><span>' + esc(r[0]) + '</span><strong>' + esc(r[1]) + '</strong></div>';
+      }).join('') + '</div>';
+    }
+    function defBox(text) { return '<div class="stat-def">' + text + '</div>'; }
+
+    function demoTableHtml(title, d) {
+      if (!d || !d.total) return '';
+      function row(label, n) { return '<tr><td>' + esc(label) + '</td><td>' + nf(n) + '</td><td>' + (pct(n, d.total, 1) || '0%') + '</td></tr>'; }
+      return '<div class="stat-breakdown-title" style="margin-top:22px;">' + esc(title) + ' (총 ' + nf(d.total) + '건)</div>' +
+        '<table class="stat-mini-table"><thead><tr><th>구분</th><th>건수</th><th>비율</th></tr></thead><tbody>' +
+        row('👩 여성', d.female) + row('👨 남성', d.male) + row('성별 미입력', d.g_unknown) +
+        row('10대', d.a10) + row('20대', d.a20) + row('30대', d.a30) + row('40대', d.a40) + row('50대 이상', d.a50) + row('연령 미입력', d.a_unknown) +
+        '</tbody></table>';
+    }
+
+    function modalContent(key, d) {
+      var t = d.totals || {}, p = d.prev || {}, e = d.engagement || {}, eco = d.economy || {}, cl = d.clean || {}, demo = d.demo || {};
+      var days = d.range.days;
+      var noData = '<div class="stat-pipeline-msg"><div class="pipeline-icon">📭</div><p class="pipeline-text">이 기간에는 계산할 데이터가 없습니다.</p></div>';
+      switch (key) {
+        case 'active':
+          return defBox('선택한 기간에 <b>투표 · 댓글 · 불판 작성 · 불판 조회</b> 중 하나라도 한 로그인 회원의 수입니다(중복 제외).') +
+            kv([['활동 회원', nf(t.active_users) + '명'], ['투표 참여 회원', nf(t.voters) + '명'], ['기간', days + '일']]);
+        case 'views':
+          return defBox('불판 상세 화면을 열어 본 횟수(<b>post_views</b>)입니다. 순 조회자는 로그인 회원 또는 비로그인 기기 기준으로 중복을 제거한 수입니다.') +
+            kv([['총 조회수', nf(t.views) + '회'], ['순 조회자', nf(t.viewers) + '명'], ['하루 평균 조회', (t.views / days).toFixed(1) + '회']]);
+        case 'voters':
+          return defBox('선택한 기간에 한 번이라도 투표한 로그인 회원 수입니다.') +
+            kv([['투표 참여 회원', nf(t.voters) + '명'], ['총 투표수', nf(t.votes) + '건'], ['활동 회원 대비', pct(t.voters, t.active_users, 1) || '—']]);
+        case 'dopamine':
+          return defBox('<b>총 투표수 ÷ 투표한 회원 수</b>. 투표하러 온 사람이 평균 몇 번 투표하는지 보여주는, 몰입도(도파민) 지표입니다. 가입만 하고 투표하지 않은 회원은 계산에서 빠지므로 값이 부풀려지지 않습니다.') +
+            kv([['도파민 지수', t.voters > 0 ? (t.votes / t.voters).toFixed(2) + '회' : '—'], ['총 투표수', nf(t.votes) + '건'], ['투표 참여 회원', nf(t.voters) + '명']]);
+        case 'economy':
+          return defBox('포인트 로그(<b>point_logs</b>)에서 계산합니다. <b>소진율 = 기간 내 사용(차감) ÷ 기간 내 지급</b>. 100% 근처면 지급한 만큼 쓰이는 건강한 순환, 낮으면 포인트가 쌓이고 있다는 뜻입니다.') +
+            kv([['기간 지급', nf(eco.issued) + ' P'], ['기간 사용', nf(eco.burned) + ' P'], ['기간 소진율', pct(eco.burned, eco.issued, 1) || '—'],
+                ['누적 지급(전체)', nf(eco.issued_all) + ' P'], ['누적 사용(전체)', nf(eco.burned_all) + ' P'], ['누적 소진율', pct(eco.burned_all, eco.issued_all, 1) || '—'],
+                ['현재 회원 보유 포인트 합계', nf(eco.outstanding) + ' P']]);
+        case 'viral':
+          return defBox('<b>공유 횟수 ÷ 불판 조회수</b>. 불판을 본 사람 중 얼마나 외부로 공유했는지의 비율입니다(공유 버튼 클릭 기록 <b>post_shares</b> 기준).') +
+            kv([['공유 횟수', nf(t.shares) + '회'], ['조회수', nf(t.views) + '회'], ['공유율', pct(t.shares, t.views, 2) || '—']]);
+        case 'conversion':
+          return defBox('<b>로그인 회원이 본 불판 중, 실제로 그 불판에 투표한 비율</b>입니다(회원 × 불판 단위로 중복 제거). 비로그인 조회는 투표할 수 없으므로 제외합니다.') +
+            kv([['본 불판(회원×불판)', nf(e.view_pairs) + '건'], ['그중 투표', nf(e.voted_pairs) + '건'], ['투표 전환율', pct(e.voted_pairs, e.view_pairs, 1) || '—']]);
+        case 'ignition':
+          return defBox('이 기간에 새로 만들어진 불판이 <b>10번째 투표를 받을 때까지 걸린 시간의 중앙값</b>입니다. 짧을수록 불판이 빨리 불붙는다는 뜻입니다. 아직 10표가 안 된 불판은 계산에서 빠집니다.') +
+            kv([['점화 속도(중앙값)', e.ignition_median_sec == null ? '—' : fmtDuration(e.ignition_median_sec)], ['10표 달성 불판', nf(e.ignition_sample) + '개'], ['신규 불판', nf(e.ignition_posts) + '개']]);
+        case 'retention':
+          return defBox('이 기간에 가입한 회원 중, <b>가입한 날로부터 정확히 7일째</b>(한국시간)에 투표·댓글·불판작성·조회 중 하나라도 한 비율입니다. 아직 7일이 지나지 않은 회원은 분모에서 제외합니다.') +
+            kv([['대상 회원(가입 7일 경과)', nf(e.retention_cohort) + '명'], ['7일째 활동', nf(e.retention_returned) + '명'], ['D+7 재방문률', pct(e.retention_returned, e.retention_cohort, 1) || '—']]);
+        case 'signups':
+          return defBox('이 기간에 가입한 회원 수입니다.') +
+            kv([['이번 기간', nf(t.signups) + '명'], ['직전 같은 기간', nf(p.signups) + '명'], ['증감', trendHtml(t.signups, p.signups).text]]) +
+            demoTableHtml('신규 가입자 성별·연령', demo.signups);
+        case 'votes':
+          return defBox('이 기간에 이루어진 투표 건수입니다. 성별·연령은 투표한 회원 기준(1건 = 1회)입니다.') +
+            kv([['이번 기간', nf(t.votes) + '건'], ['직전 같은 기간', nf(p.votes) + '건'], ['증감', trendHtml(t.votes, p.votes).text]]) +
+            demoTableHtml('투표자 성별·연령', demo.votes);
+        case 'posts':
+          return defBox('이 기간에 새로 만들어진 불판 수입니다. 성별·연령은 불판을 만든 회원 기준입니다(관리자가 만든 불판 포함).') +
+            kv([['이번 기간', nf(t.posts) + '개'], ['직전 같은 기간', nf(p.posts) + '개'], ['증감', trendHtml(t.posts, p.posts).text]]) +
+            demoTableHtml('불판 작성자 성별·연령', demo.posts);
+        case 'comments':
+          return defBox('이 기간에 작성된 댓글 수입니다(AI가 차단·가려낸 댓글 포함).') +
+            kv([['이번 기간', nf(t.comments) + '개'], ['직전 같은 기간', nf(p.comments) + '개'], ['증감', trendHtml(t.comments, p.comments).text]]) +
+            demoTableHtml('댓글 작성자 성별·연령', demo.comments);
         default:
-          return (
-            '<div class="stat-pipeline-msg">' +
-              '<div class="pipeline-icon">🚧</div>' +
-              '<p class="pipeline-text">현재 해당 지표의 로우 데이터(Raw Data) 파이프라인을 구축 중입니다...</p>' +
-            '</div>'
-          );
+          return noData;
       }
     }
 
-    function openStatModal(title) {
+    function openModalShell(title) {
       var modal = document.getElementById('statDetailModal');
-      var titleEl = document.getElementById('statModalTitle');
-      var bodyEl = document.getElementById('statModalBody');
-      if (!modal || !titleEl || !bodyEl) return;
-
-      titleEl.textContent = '📊 ' + title + ' — 상세 내역';
-      bodyEl.innerHTML = renderStatModalBody(title);
-
+      document.getElementById('statModalTitle').textContent = '📊 ' + title + ' — 상세 내역';
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+    }
+    function setModalBody(html) { document.getElementById('statModalBody').innerHTML = html; }
+    function loadingHtml(msg) { return '<div class="stat-pipeline-msg"><div class="pipeline-icon">⏳</div><p class="pipeline-text">' + esc(msg) + '</p></div>'; }
+    function errorHtml(msg) { return '<div class="stat-pipeline-msg"><div class="pipeline-icon">⚠️</div><p class="pipeline-text">' + esc(msg) + '</p></div>'; }
+
+    var MODAL_TITLES = {
+      active: '활동 회원 수', views: '불판 조회수', voters: '투표 참여 회원', dopamine: '인당 평균 투표 수 (도파민 지수)',
+      economy: '포인트 소진율 (경제 지표)', clean: 'AI 필터 적발률 (클린 커뮤니티)', sponsor: '현재 진행 스폰서(광고) 불판',
+      viral: '불판 바이럴 지수', conversion: '투표 전환율', ignition: '불판 초기 점화 속도', retention: 'D+7 재방문률',
+      signups: '신규 가입자', votes: '총 투표수 (Votes)', posts: '신규 생성 불판', comments: '신규 작성 댓글'
+    };
+
+    async function openStatModal(key) {
+      var seq = ++STAT.modalSeq;
+      openModalShell(MODAL_TITLES[key] || '지표');
+      if (key === 'sponsor') { setModalBody(loadingHtml('스폰서 캠페인을 불러오는 중…')); return renderSponsorModal(seq); }
+      if (!STAT.data) { setModalBody(errorHtml('먼저 데이터가 조회되어야 합니다. 화면 위쪽의 오류 메시지를 확인해 주세요.')); return; }
+      if (key === 'clean') return renderCleanModal(seq);
+      setModalBody(modalContent(key, STAT.data));
+    }
+
+    async function renderSponsorModal(seq) {
+      try {
+        var sb = getStatSupabaseClient();
+        var res = await sb.rpc('sponsor_campaign_list');
+        if (seq !== STAT.modalSeq) return;
+        if (res.error) throw res.error;
+        var now = Date.now();
+        var list = (res.data || []).map(function (c) {
+          var s = c.campaign_start_at ? Date.parse(c.campaign_start_at) : -Infinity;
+          var e = c.campaign_end_at ? Date.parse(c.campaign_end_at) : Infinity;
+          var state = c.visibility_status !== 'visible' ? 'hidden' : (now < s ? 'upcoming' : (now >= e ? 'ended' : 'active'));
+          return { c: c, state: state };
+        });
+        var order = { active: 0, upcoming: 1, ended: 2, hidden: 3 };
+        list.sort(function (a, b) { return order[a.state] - order[b.state]; });
+        if (!list.length) { setModalBody(errorHtml('등록된 스폰서 캠페인이 없습니다.')); return; }
+        var labels = { active: '진행 중', upcoming: '시작 예정', ended: '종료', hidden: '숨김' };
+        function kdate(s) { return s ? new Date(s).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }) : '제한 없음'; }
+        var html = '<div class="stat-sponsor-list">' + list.slice(0, 40).map(function (x) {
+          var c = x.c;
+          var a = Number(c.vote_a || 0), b = Number(c.vote_b || 0), total = a + b;
+          var ap = total > 0 ? Math.round(a / total * 100) : 0, bp = total > 0 ? 100 - ap : 0;
+          var lead = total === 0 ? '아직 투표 없음' : (a === b ? '동률 (A ' + ap + '% · B ' + bp + '%)'
+            : (a > b ? '현재 1위 픽: <strong>A옵션 (' + ap + '%)</strong> · B옵션 ' + bp + '%' : '현재 1위 픽: <strong>B옵션 (' + bp + '%)</strong> · A옵션 ' + ap + '%'));
+          var ct = Number(c.coupon_total || 0), cu = Number(c.coupon_used || 0);
+          var cp = ct > 0 ? Math.round(cu / ct * 100) : 0;
+          var fill = cp >= 90 ? 'hot' : (cp >= 60 ? 'warn' : '');
+          var name = c.brand_name || c.company_name || c.title || '(이름 없음)';
+          return '<div class="stat-sponsor-item' + (x.state === 'active' ? '' : ' dim') + '">' +
+            '<div class="stat-sponsor-top"><span class="stat-sponsor-brand">🏪 ' + esc(name) + '</span><span class="stat-state st-' + x.state + '">' + labels[x.state] + '</span></div>' +
+            '<div class="stat-sponsor-title">' + esc(c.title || '') + ' · ' + esc(kdate(c.campaign_start_at)) + ' ~ ' + esc(kdate(c.campaign_end_at)) + '</div>' +
+            (ct > 0
+              ? '<div class="stat-progress-wrap"><div class="stat-progress-meta"><span>쿠폰 소진 ' + nf(cu) + ' / ' + nf(ct) + '장</span><span>' + cp + '%</span></div>' +
+                '<div class="stat-progress-track"><div class="stat-progress-fill ' + fill + '" style="width:' + cp + '%;"></div></div></div>'
+              : '<div class="stat-progress-meta"><span>등록된 쿠폰 없음</span><span></span></div>') +
+            '<div class="stat-sponsor-pick">' + lead + ' · 총 ' + nf(total) + '표</div>' +
+            '<div class="stat-sponsor-pick" style="color:var(--text-sub);">배너 클릭 ' + nf(c.banner_click_count) + '회 · 카카오 공유 ' + nf(c.kakao_share_count) + '회</div>' +
+          '</div>';
+        }).join('') + '</div>';
+        setModalBody(html);
+      } catch (err) {
+        if (seq !== STAT.modalSeq) return;
+        console.error('[Admin Statistics] sponsor modal 실패:', err);
+        setModalBody(errorHtml('스폰서 목록을 불러오지 못했습니다: ' + ((err && err.message) || err)));
+      }
+    }
+
+    async function renderCleanModal(seq) {
+      var d = STAT.data, cl = d.clean || {};
+      var caught = Number(cl.masked || 0) + Number(cl.blocked || 0);
+      var head = defBox('<b>적발률 = (AI가 가린 댓글 + AI가 막은 댓글) ÷ 전체 댓글</b>. 아래 내역은 AI 필터가 걸러낸 댓글과 관리자가 블라인드한 댓글입니다. 작성자는 개인정보 보호를 위해 ID 앞 8자리만 표시합니다.') +
+        kv([['전체 댓글', nf(cl.comments) + '개'], ['AI 가림(마스킹)', nf(cl.masked) + '개'], ['AI 차단', nf(cl.blocked) + '개'], ['AI 적발률', pct(caught, cl.comments, 2) || '—'], ['관리자/신고 블라인드', nf(cl.admin_blinded) + '개']]);
+      setModalBody(head + loadingHtml('적발 내역을 불러오는 중…'));
+      try {
+        var sb = getStatSupabaseClient();
+        var res = await sb.rpc('admin_stats_blind_log', { p_start: d.range.start, p_end: d.range.end, p_limit: 30 });
+        if (seq !== STAT.modalSeq) return;
+        if (res.error) throw res.error;
+        var rows = res.data || [];
+        if (!rows.length) { setModalBody(head + '<div class="stat-note" style="margin-top:18px;">이 기간에는 적발·블라인드된 댓글이 없습니다. 🎉</div>'); return; }
+        var stLabel = { masked: '가림(마스킹)', blocked: '차단' };
+        var list = '<div class="stat-breakdown-title" style="margin-top:22px;">최근 적발·블라인드 댓글 (최대 30건)</div><div class="stat-log-list">' + rows.map(function (r) {
+          var tag = stLabel[r.ai_filter_status] || (r.visibility_status === 'blinded' ? '관리자 블라인드' : '기타');
+          var when = r.created_at ? new Date(r.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '';
+          return '<div class="stat-log-card"><div class="stat-log-card-header"><span class="stat-log-tag">' + esc(tag) + (r.ai_filter_reason ? ' · ' + esc(r.ai_filter_reason) : '') + '</span>' +
+            '<span class="stat-log-time">' + esc(when) + '</span></div>' +
+            '<div class="stat-log-meta">작성자 ID: <code>' + esc(r.user_short) + '…</code></div>' +
+            '<div class="stat-log-text">' + esc(r.content) + '</div></div>';
+        }).join('') + '</div>';
+        setModalBody(head + list);
+      } catch (err) {
+        if (seq !== STAT.modalSeq) return;
+        console.error('[Admin Statistics] clean modal 실패:', err);
+        setModalBody(head + errorHtml('적발 내역을 불러오지 못했습니다: ' + ((err && err.message) || err)));
+      }
     }
 
     function closeStatModal() {
       var modal = document.getElementById('statDetailModal');
       if (!modal) return;
+      STAT.modalSeq++;
       modal.style.display = 'none';
       document.body.style.overflow = '';
     }
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeStatModal(); });
+
+    // ─────────────────────────────────────────────────────────────
+    // 탭 / 초기화
+    // ─────────────────────────────────────────────────────────────
+    function switchTab(tabType) {
+      document.querySelectorAll('.btn-switch-tab').forEach(function (btn) { btn.classList.remove('active'); });
+      document.querySelectorAll('.view-panel').forEach(function (panel) { panel.classList.remove('active'); });
+      if (tabType === 'internal') {
+        document.getElementById('tabInternalBtn').classList.add('active');
+        document.getElementById('viewInternal').classList.add('active');
+      } else {
+        document.getElementById('tabGa4Btn').classList.add('active');
+        document.getElementById('viewGa4').classList.add('active');
+        if (!STAT.ga4Loaded && typeof loadGa4Data === 'function') loadGa4Data();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // 기본 조회 기간: 오늘 포함 최근 7일 (한국시간)
+      document.getElementById('statEndDate').value = kstDateStr(0);
+      document.getElementById('statStartDate').value = kstDateStr(-6);
+      var range = getStatDateRange({ silent: true });
+      if (range) loadRealStatistics(range.startDate, range.endDate);
+    });
   </script>
 
 <div class="modal-overlay" id="statDetailModal" onclick="if(event.target === this) closeStatModal();">
@@ -1310,105 +1377,118 @@ var CHART_METRICS = {
         <div class="modal-body" id="statModalBody"></div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase-config.js"></script>
-<script src="js/admin-auth.js"></script>
-
 <script>
-    // GA4 데이터를 Supabase 함수를 통해 불러오는 통신 코드 (날짜 동기화 및 평균 체류시간 업그레이드)
-    // GA4 객관적 트래픽 데이터를 불러오는 통신 코드
-    // 5개의 리포트를 받아와서 화면을 그리는 최종 통신 코드
-    async function loadGa4Data() {
-        var btn = document.querySelector('#viewGa4 .btn-search');
-        if (!btn) return;
-        
-        var dateSelect = document.getElementById('gaDateRange');
-        var startDate = '7daysAgo';
-        if (dateSelect && dateSelect.value === 'today') startDate = 'today';
-        else if (dateSelect && dateSelect.value === '30days') startDate = '30daysAgo';
-        
-        var originalText = btn.textContent;
-        btn.textContent = '🔄 데이터 렌더링 중...';
-        btn.disabled = true;
+    // ─────────────────────────────────────────────────────────────
+    // 구글 애널리틱스(GA4) — Supabase 함수 ga4-analytics 를 통해 조회 (관리자 로그인 필요)
+    // ─────────────────────────────────────────────────────────────
+    var GA_LABELS = {
+      'Organic Social': '소셜 미디어 (인스타/카톡 등)', 'Direct': '직접 접속 (URL/북마크)', 'Organic Search': '검색 엔진 (구글/네이버)',
+      'Referral': '다른 사이트 링크', 'Paid Search': '검색 광고', 'Paid Social': '소셜 광고', 'Email': '이메일', 'Unassigned': '분류 안 됨',
+      'Organic Video': '동영상 플랫폼', 'Display': '디스플레이 광고',
+      'female': '여성', 'male': '남성',
+      'Seoul': '서울', 'Gyeonggi-do': '경기', 'Incheon': '인천', 'Busan': '부산', 'Daegu': '대구', 'Daejeon': '대전', 'Gwangju': '광주',
+      'Ulsan': '울산', 'Sejong': '세종', 'Gangwon-do': '강원', 'North Chungcheong Province': '충북', 'South Chungcheong Province': '충남',
+      'North Jeolla Province': '전북', 'South Jeolla Province': '전남', 'North Gyeongsang Province': '경북', 'South Gyeongsang Province': '경남',
+      'Jeju-do': '제주', '(not set)': '확인 불가(구글 미제공)'
+    };
 
-        try {
-            var sb = getStatSupabaseClient(); 
-            var { data, error } = await sb.functions.invoke('ga4-analytics', {
-                body: { startDate: startDate, endDate: 'today' }
-            });
+    function gaStatus(msg, kind) {
+      var el = document.getElementById('gaStatus');
+      if (!el) return;
+      if (!msg) { el.hidden = true; el.textContent = ''; return; }
+      el.className = 'stat-banner ' + (kind || 'info');
+      el.textContent = msg;
+      el.hidden = false;
+    }
 
-            if (error) throw error;
-            console.log("📊 GA4 전체 리포트:", data);
-            
-            // 1. 최상단 핵심 지표 업데이트
-            if (data.kpi && data.kpi.rows) {
-                var kpiRow = data.kpi.rows[0].metricValues;
-                var activeUsers = Number(kpiRow[0].value || 0);
-                var engagementRaw = Number(kpiRow[1].value || 0);
-                var pageViews = Number(kpiRow[2].value || 0);
-                var sessions = Number(kpiRow[3].value || 0);
+    function gaRenderBars(containerId, report, colors) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      if (!report || !report.rows || report.rows.length === 0) {
+        container.innerHTML = '<div style="color:#a1a1aa; font-size:0.85rem; padding:10px 0;">데이터가 충분하지 않거나 집계 중입니다.</div>';
+        return;
+      }
+      var rows = report.rows.map(function (r) { return { name: r.dimensionValues[0].value, val: Number(r.metricValues[0].value) }; })
+        .sort(function (a, b) { return b.val - a.val; });
+      var total = rows.reduce(function (s, r) { return s + r.val; }, 0);
+      container.innerHTML = rows.slice(0, 5).map(function (r, idx) {
+        var share = total > 0 ? Math.round(r.val / total * 100) : 0;
+        var color = colors[idx % colors.length];
+        var name = GA_LABELS[r.name] || r.name || '(알 수 없음)';
+        return '<div class="stat-hbar-row" style="margin-bottom:8px;">' +
+          '<div class="stat-hbar-label-row"><span class="stat-hbar-label">' + esc(name) + ' <span style="color:#71717a; font-weight:700;">(' + nf(r.val) + '명)</span></span>' +
+          '<span class="stat-hbar-pct" style="color:' + color + ';">' + share + '%</span></div>' +
+          '<div class="stat-hbar-track" style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px;">' +
+          '<div class="stat-hbar-fill" style="width:' + share + '%; background:' + color + '; box-shadow:none; height:100%; border-radius:4px;"></div></div></div>';
+      }).join('');
+    }
 
-                var avgSec = activeUsers > 0 ? (engagementRaw / activeUsers) : 0;
-                var m = Math.floor(avgSec / 60);
-                var s = Math.round(avgSec % 60);
-
-                document.getElementById('gaActiveUsers').textContent = activeUsers.toLocaleString('ko-KR') + ' 명';
-                document.getElementById('gaPageViews').textContent = pageViews.toLocaleString('ko-KR') + ' 회';
-                document.getElementById('gaSessions').textContent = sessions.toLocaleString('ko-KR') + ' 회';
-                document.getElementById('gaEngagementTime').textContent = m > 0 ? `${m}분 ${s}초` : `${s}초`;
-            }
-
-            // 2. 가로 막대 그래프 자동 생성 함수
-            function renderBarChart(containerId, reportData, colors) {
-                var container = document.getElementById(containerId);
-                if (!reportData || !reportData.rows || reportData.rows.length === 0) {
-                    container.innerHTML = '<div style="color:#a1a1aa; font-size:0.85rem; padding:10px 0;">데이터가 충분하지 않거나 집계 중입니다.</div>';
-                    return;
-                }
-                
-                var total = reportData.rows.reduce((sum, row) => sum + Number(row.metricValues[0].value), 0);
-                var html = '';
-                
-                // 조회수 많은 순서대로 정렬 후 최대 5개까지만 노출
-                var sortedRows = reportData.rows.sort((a,b) => Number(b.metricValues[0].value) - Number(a.metricValues[0].value)).slice(0, 5);
-
-                sortedRows.forEach((row, idx) => {
-                    var name = row.dimensionValues[0].value;
-                    var val = Number(row.metricValues[0].value);
-                    var pct = total > 0 ? Math.round((val / total) * 100) : 0;
-                    var color = colors[idx % colors.length];
-                    
-                    // 영문 이름 한글화 처리 (보기 좋게)
-                    if(name === 'Organic Social') name = '소셜 미디어 (인스타/카톡)';
-                    if(name === 'Direct') name = '직접 접속 (URL/북마크)';
-                    if(name === 'Organic Search') name = '검색 엔진 (구글/네이버)';
-                    if(name === 'female') name = '여성 (Female)';
-                    if(name === 'male') name = '남성 (Male)';
-
-                    html += `
-                    <div class="stat-hbar-row" style="margin-bottom:8px;">
-                        <div class="stat-hbar-label-row"><span class="stat-hbar-label">${name}</span><span class="stat-hbar-pct" style="color:${color};">${pct}%</span></div>
-                        <div class="stat-hbar-track" style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px;"><div class="stat-hbar-fill" style="width:${pct}%; background:${color}; box-shadow:none; height:100%; border-radius:4px;"></div></div>
-                    </div>`;
-                });
-                container.innerHTML = html;
-            }
-
-            // 3. 각 영역별 그래프 그리기 실행 (다양한 네온 컬러 적용)
-            renderBarChart('gaAcqContainer', data.acq, ['#ff007f', '#00f0ff', '#ffb700', '#a1a1aa']); // 유입경로
-            renderBarChart('gaOsContainer', data.os, ['#fff', '#39ff14', '#a1a1aa']); // 접속 기기
-            renderBarChart('gaGenderContainer', data.demo, ['#ff007f', '#00f0ff']); // 성별
-            renderBarChart('gaRegionContainer', data.region, ['#00f0ff', '#39ff14', '#ffb700', '#a1a1aa', '#fff']); // 지역
-
-            alert('✔️ [풀 연동 완료] 모든 그래프에 실제 트래픽 데이터가 적용되었습니다!');
-
-        } catch (err) {
-            console.error('[GA4 Sync Error]', err);
-            alert('구글 데이터 연동 중 오류가 발생했습니다: ' + (err.message || err));
-        } finally {
-            btn.textContent = originalText;
-            btn.disabled = false;
+    // supabase.functions.invoke 가 돌려주는 오류에서 서버가 보낸 한글 메시지를 꺼냄
+    async function gaErrorMessage(error) {
+      try {
+        if (error && error.context && typeof error.context.json === 'function') {
+          var body = await error.context.json();
+          if (body && body.error) return body.error;
         }
+      } catch (e) { /* ignore */ }
+      var m = (error && error.message) || String(error);
+      if (/Failed to send a request|NetworkError|Failed to fetch/i.test(m)) return 'ga4-analytics 함수에 연결하지 못했습니다. 함수가 배포되었는지 확인해 주세요.';
+      return m;
+    }
+
+    async function loadGa4Data() {
+      var btn = document.getElementById('gaSyncBtn');
+      if (!btn || btn.disabled) return;
+
+      var sel = document.getElementById('gaDateRange');
+      var map = { today: 'today', '7days': '7daysAgo', '30days': '30daysAgo' };
+      var startDate = map[sel ? sel.value : '7days'] || '7daysAgo';
+
+      var originalText = btn.textContent;
+      btn.textContent = '🔄 불러오는 중...';
+      btn.disabled = true;
+      gaStatus('구글 애널리틱스에서 데이터를 가져오는 중입니다…', 'info');
+
+      try {
+        var sb = getStatSupabaseClient();
+        var res = await sb.functions.invoke('ga4-analytics', { body: { startDate: startDate } });
+        if (res.error) throw new Error(await gaErrorMessage(res.error));
+        var data = res.data;
+        if (!data || data.error) throw new Error((data && data.error) || '빈 응답');
+
+        // 핵심 4대 지표 (데이터가 아직 없으면 rows 가 비어 옴 → 0 으로 표시)
+        var row = data.kpi && data.kpi.rows && data.kpi.rows[0] ? data.kpi.rows[0].metricValues : null;
+        var activeUsers = row ? Number(row[0].value || 0) : 0;
+        var engagementRaw = row ? Number(row[1].value || 0) : 0;
+        var pageViews = row ? Number(row[2].value || 0) : 0;
+        var sessions = row ? Number(row[3].value || 0) : 0;
+        var avgSec = activeUsers > 0 ? engagementRaw / activeUsers : 0;
+        var m = Math.floor(avgSec / 60), s = Math.round(avgSec % 60);
+
+        setText('gaActiveUsers', nf(activeUsers) + ' 명');
+        setText('gaPageViews', nf(pageViews) + ' 회');
+        setText('gaSessions', nf(sessions) + ' 회');
+        setText('gaEngagementTime', m > 0 ? m + '분 ' + s + '초' : s + '초');
+
+        gaRenderBars('gaAcqContainer', data.acq, ['#ff007f', '#00f0ff', '#ffb700', '#a1a1aa', '#fff']);
+        gaRenderBars('gaOsContainer', data.os, ['#fff', '#39ff14', '#a1a1aa', '#00f0ff', '#ffb700']);
+        gaRenderBars('gaGenderContainer', data.demo, ['#ff007f', '#00f0ff', '#a1a1aa']);
+        gaRenderBars('gaRegionContainer', data.region, ['#00f0ff', '#39ff14', '#ffb700', '#a1a1aa', '#fff']);
+
+        STAT.ga4Loaded = true;
+        var t = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        if (activeUsers === 0 && pageViews === 0) {
+          gaStatus('조회는 성공했지만 이 기간에 집계된 방문이 없습니다. GA 는 반영까지 수 시간~하루 정도 걸리고, 광고 차단·쿠키 거부 방문자는 잡히지 않습니다. (' + t + ' 조회)', 'warn');
+        } else {
+          gaStatus('✔ ' + t + ' 기준 최신 데이터입니다. GA 는 반영까지 최대 24~48시간 걸릴 수 있어 내부 DB 수치와 다를 수 있습니다.', 'ok');
+        }
+      } catch (err) {
+        console.error('[GA4 Sync Error]', err);
+        gaStatus('구글 데이터 연동 오류: ' + ((err && err.message) || err), 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     }
 </script>
 </body>
