@@ -213,12 +213,21 @@
     if (!sb || !userId) return null;
     const { data, error } = await sb
       .from('users')
-      .select('id, nickname, avatar_html, avatar_url, bio, signup_platform, points, is_info_collected')
+      .select('id, nickname, avatar_html, avatar_url, bio, points, is_info_collected')
       .eq('id', userId)
       .maybeSingle();
     if (error) {
       console.warn('[P!CKLE Auth] public.users profile fetch failed', error);
       return null;
+    }
+    /* 가입 경로(signup_platform)는 본인만 읽을 수 있는 함수로 조회 */
+    if (data) {
+      try {
+        const acct = await sb.rpc('pickle_get_my_account');
+        if (!acct.error && acct.data && typeof acct.data === 'object') {
+          data.signup_platform = acct.data.signup_platform || null;
+        }
+      } catch (_) {}
     }
     if (!data) return null;
     const demo = await fetchOwnDemographics(sb);

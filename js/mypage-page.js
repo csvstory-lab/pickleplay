@@ -346,6 +346,10 @@
       return null;
     }
     try {
+      /* 휴대폰 본인 인증은 아직 운영하지 않아 DB에 phone_verified 칸이 없음 — 불필요한 조회(오류) 생략 */
+      verificationDbRow = null;
+      return null;
+      // eslint-disable-next-line no-unreachable
       var sb = getSupabaseClient();
       var res = await sb
         .from('users')
@@ -2703,11 +2707,7 @@
         await markPenaltyLogsRead(sb, user.id);
       }
 
-      var userResult = await sb
-        .from('users')
-        .select('penalty_points, restricted_until, is_banned')
-        .eq('id', user.id)
-        .single();
+      var userResult = await sb.rpc('pickle_get_my_account');
 
       if (userResult.error) {
         console.warn('[P!CKLE Mypage] penalty user fetch failed', userResult.error);

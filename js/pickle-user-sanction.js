@@ -48,11 +48,7 @@
     }
 
     // 현재 유저의 상태를 DB에서 확실하게 다시 가져와서 확인
-    var result = await sb
-      .from('users')
-      .select('is_banned, restricted_until')
-      .eq('id', currentUser.id)
-      .single();
+    var result = await sb.rpc('pickle_get_my_account');
 
     var userData = result.data;
     var error = result.error;
@@ -84,11 +80,8 @@
     var sb = getSupabaseClient(supabase);
     if (!sb) return null;
 
-    var result = await sb
-      .from('users')
-      .select('is_banned, restricted_until')
-      .eq('id', userId)
-      .single();
+    /* 제재 상태는 본인 것만 조회 가능 (다른 회원 상태는 공개하지 않음) */
+    var result = await sb.rpc('pickle_get_my_account');
 
     if (result.error) {
       console.warn('[P!CKLE UserSanction] 제재 상태 조회 실패', result.error);

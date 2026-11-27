@@ -1172,12 +1172,8 @@ function renderCommentsList(comments, sortType) {
     var currentUser = await getAuthUserForAction();
 
     if (currentUser) {
-      var sanctionQuery = await supabase
-        .from('users')
-        .select('is_banned, restricted_until')
-        .eq('id', currentUser.id)
-        .single();
-      var userData = sanctionQuery.data;
+      var sanctionQuery = await supabase.rpc('pickle_get_my_account');
+      var userData = sanctionQuery.error ? null : sanctionQuery.data;
 
       if (userData && userData.is_banned === true) {
         alert('클린 가이드 위반으로 제재된 계정입니다.');

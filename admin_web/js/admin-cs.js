@@ -307,7 +307,7 @@
       var inquiryResult = await sb
         .from('inquiries')
         .select(
-          'id, user_id, inquiry_type, title, content, status, admin_reply, created_at, updated_at, replied_at, users:user_id ( nickname, signup_platform )'
+          'id, user_id, inquiry_type, title, content, status, admin_reply, created_at, updated_at, replied_at, users:user_id ( nickname )'
         )
         .order('created_at', { ascending: false });
 
