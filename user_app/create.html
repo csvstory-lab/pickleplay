@@ -567,13 +567,17 @@
     <div class="legal-warning-box">
         <div class="legal-warning-title">🚨 불판 등록 전 확인해주세요!</div>
         <div class="legal-warning-text">
-            음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 통보 없이 즉시 블라인드 처리되며, 계정이 영구 정지될 수 있습니다.
+            음란물, 불법 도박 홍보, 타인의 명예훼손(허위사실 유포 등) 및 초상권/저작권을 침해하는 내용을 등록할 경우 <strong>관련 법령에 따라 민/형사상 법적 책임</strong>을 질 수 있습니다.<br>문제가 되는 게시물은 신고 접수 또는 운영팀 확인에 따라 블라인드(임시조치) 또는 삭제될 수 있으며, 조치 사실과 사유는 사후에 안내됩니다. 위반이 반복되면 이용이 제한되거나 계정이 정지될 수 있습니다.<br>일반인의 실명·사진·외모를 비교하는 불판과 연예인·타인의 사진은 올릴 수 없습니다.
         </div>
         <p class="legal-typo-warning" role="note">⚠️ 누군가 <strong>픽(투표)</strong>을 시작하면 <strong>제목과 선택지를 수정할 수 없습니다.</strong> 오타가 없는지 한 번 더 확인해 주세요!</p>
         <!-- 잃어버린 체크박스 복구 -->
         <label class="legal-check-wrap">
             <input type="checkbox" id="legalAgreeCheck">
-            <span class="legal-check-label">위 내용을 확인하였으며, 이에 동의합니다.</span>
+            <span class="legal-check-label">[필수] 위 내용을 확인하였으며, 이에 동의합니다.</span>
+        </label>
+        <label class="legal-check-wrap">
+            <input type="checkbox" id="imageRightsCheck">
+            <span class="legal-check-label">[필수] 올리는 이미지에 타인의 얼굴·연예인 사진이 없고, 내가 쓸 권리가 있는 이미지입니다. (이미지가 없으면 체크만 해 주세요)</span>
         </label>
     </div>
 
@@ -1264,6 +1268,8 @@
         // 🚨 체크박스 방어 로직 추가
         const agree = document.getElementById('legalAgreeCheck')?.checked;
         if (!agree) { alert('불판 등록 전 주의사항을 확인하고 동의해주세요.'); return false; }
+        const imageRights = document.getElementById('imageRightsCheck')?.checked;
+        if (!imageRights) { alert('이미지 권리 확인(타인 얼굴·연예인 사진 없음)에 체크해주세요.'); return false; }
 
         const categorySlug = getSelectedCategorySlug();
         if (!categorySlug) { alert('"🔥 어떤 주제로 불판을 지펴볼까요?"를 선택해주세요.'); return; }

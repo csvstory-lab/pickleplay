@@ -280,6 +280,10 @@
       option_b_name: formData.optionB,
       is_sponsor: false,
       visibility_status: 'visible',
+      image_rights_confirmed: !!(
+        document.getElementById('imageRightsCheck') &&
+        document.getElementById('imageRightsCheck').checked
+      ),
     };
 
     Object.assign(payload, extractAuthorSnapshot(user));
@@ -538,6 +542,20 @@
         .indexOf('media_is_text_card') !== -1
     ) {
       delete payload.media_is_text_card;
+      insertResult = await sb
+        .from('posts')
+        .insert([payload])
+        .select('id, thumbnail_url')
+        .single();
+    }
+    if (
+      insertResult.error &&
+      String(insertResult.error.message || '')
+        .toLowerCase()
+        .indexOf('image_rights_confirmed') !== -1
+    ) {
+      // SQL 135 적용 전에도 등록이 막히지 않도록 새 컬럼만 빼고 한 번 더 시도
+      delete payload.image_rights_confirmed;
       insertResult = await sb
         .from('posts')
         .insert([payload])

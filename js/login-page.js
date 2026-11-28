@@ -314,6 +314,7 @@
     var pwInput = document.getElementById('signupPwInput');
     var pwConfirmInput = document.getElementById('password-confirm');
     var age14Checkbox = document.getElementById('signup-age14');
+    var termsCheckbox = document.getElementById('signup-terms');
     var marketingCheckbox = document.getElementById('signup-marketing');
     var ageGroupSelect = document.getElementById('signup-age-group');
     if (!signupBtn || !emailInput || !pwInput || !pwConfirmInput) return;
@@ -328,6 +329,7 @@
       pwInput.value = '';
       pwConfirmInput.value = '';
       if (age14Checkbox) age14Checkbox.checked = false;
+      if (termsCheckbox) termsCheckbox.checked = false;
       if (marketingCheckbox) marketingCheckbox.checked = false;
       if (ageGroupSelect) ageGroupSelect.value = '';
       document.querySelectorAll('input[name="signupGender"]').forEach(function (el) {
@@ -363,6 +365,11 @@
       if (!age14Checkbox || !age14Checkbox.checked) {
         alert('만 14세 이상임에 동의해 주세요.');
         if (age14Checkbox) age14Checkbox.focus();
+        return null;
+      }
+      if (termsCheckbox && !termsCheckbox.checked) {
+        alert('이용약관 및 개인정보 수집·이용에 동의해 주세요.');
+        termsCheckbox.focus();
         return null;
       }
       var gender = getSelectedGender();
@@ -401,6 +408,7 @@
           gender: payload.gender,
           age_group: payload.ageGroup,
           marketing_consent: payload.marketingConsent,
+          terms_agreed_at: new Date().toISOString(),
         });
         if (
           signupData &&
@@ -498,6 +506,7 @@
           gender: meta.gender || null,
           age_group: meta.age_group || null,
           marketing_consent: !!meta.marketing_consent,
+          terms_agreed_at: meta.terms_agreed_at || null,
         },
       },
     });
