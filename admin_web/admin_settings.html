@@ -260,6 +260,7 @@
             <button class="tab-btn" onclick="switchTab('noti', this)">🔔 알림/메시지</button>
             <button class="tab-btn" onclick="switchTab('admin', this)">🛡️ 관리자 권한</button>
             <button class="tab-btn" onclick="switchTab('penalty', this)">⚖️ 제재/벌점(AI) 알고리즘</button>
+            <button class="tab-btn" onclick="switchTab('feed', this)">🔥 메인 노출</button>
             <button class="tab-btn" onclick="switchTab('policy', this)" style="color:var(--neon-green);">📜 약관/정책 에디터</button>
             <button class="tab-btn" onclick="switchTab('audit', this)">📝 작업 기록</button>
         </div>
@@ -615,6 +616,10 @@
             </div>
         </div>
 
+        <div id="tab-feed" class="tab-content">
+            <div id="feedAdminRoot"></div>
+        </div>
+
         <div id="tab-audit" class="tab-content">
             <div class="setting-card" style="margin-bottom: 20px;">
                 <div class="sc-title">📝 관리자 작업 기록 <span id="auditCount" style="font-size:0.8rem;color:var(--text-sub);font-weight:400;margin-left:8px;"></span></div>
@@ -760,6 +765,7 @@
   <script src="js/admin-settings-system.js"></script>
   <script src="js/admin-audit-log.js"></script>
   <script src="js/admin-settings-policies.js"></script>
+  <script src="js/admin-settings-feed.js?v=20261128_feed1"></script>
   <script>
     function syncManualPushTargetField() {
         const select = document.getElementById('manualPushTargetSelect');
@@ -977,6 +983,9 @@
 
         if (tabId === 'admin') {
             loadAdmins();
+        }
+        if (tabId === 'feed' && window.AdminSettingsFeed) {
+            window.AdminSettingsFeed.load();
         }
         if (tabId === 'audit' && window.PickleAdminAudit) {
             window.PickleAdminAudit.load();

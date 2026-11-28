@@ -11,6 +11,7 @@
   'use strict';
 
   var ANON_KEY_STORAGE = 'pk_anon_key';
+  var MVP_SCRIPT_SRC = (document.currentScript && document.currentScript.src) || '';
   var DAILY_OPEN_STORAGE = 'pk_daily_open_date';
 
   function getClient() {
@@ -172,7 +173,28 @@
     showVerifyPrompt: showVerifyPrompt,
   };
 
+  /** 약관 동의 확인 팝업: 같은 폴더의 pickle-consent.js 를 불러와 실행 (실패해도 무시) */
+  function ensureConsent() {
+    try {
+      if (window.PickleConsent && window.PickleConsent.ensure) {
+        window.PickleConsent.ensure();
+        return;
+      }
+      if (!MVP_SCRIPT_SRC || document.getElementById('pickleConsentScript')) return;
+      var s = document.createElement('script');
+      s.id = 'pickleConsentScript';
+      s.src = MVP_SCRIPT_SRC.replace(/pickle-mvp\.js.*$/, 'pickle-consent.js?v=20261128_c1');
+      s.onload = function () {
+        if (window.PickleConsent && window.PickleConsent.ensure) window.PickleConsent.ensure();
+      };
+      document.head.appendChild(s);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
   function init() {
+    ensureConsent();
     logDailyOpenOnce();
     var page = (location.pathname || '').split('/').pop();
     if (page === '' || page === 'index.html') {

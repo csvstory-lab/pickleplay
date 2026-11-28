@@ -136,7 +136,7 @@
           '<td>' + (r.vote_a || 0) + ' / ' + (r.vote_b || 0) + '</td>' +
           '<td>' + r.coupon_used + ' / ' + r.coupon_total + (r.coupon_total ? ' (' + couponPct + '%)' : '') + lowStockWarning + '</td>' +
           '<td><span class="status-badge ' + status.cls + '">' + status.label + '</span></td>' +
-          '<td>' + internalBtns + '<button class="btn-action btn-report" onclick="PickleSponsor.openReportModal(\'' + r.campaign_id + '\')">📊 리포트</button></td>' +
+          '<td>' + internalBtns + '<button class="btn-action btn-report" onclick="PickleSponsor.openCouponModal(\'' + r.campaign_id + '\')">🎫 사용 확인</button><button class="btn-action btn-report" onclick="PickleSponsor.openReportModal(\'' + r.campaign_id + '\')">📊 리포트</button></td>' +
         '</tr>'
       );
     }).join('');
@@ -951,6 +951,160 @@
       '</div>';
   }
 
+
+  // ───────────────────────── 쿠폰 사용 확인 ─────────────────────────
+  // SQL: pickle_coupon_confirm_139.sql (sponsor_lookup_coupon / sponsor_confirm_coupon_use / sponsor_coupon_summary)
+  var couponCampaignId = null;
+  var couponLookedUpPin = null;
+
+  function fmtDateTime(iso) {
+    if (!iso) return '-';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '-';
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return (d.getFullYear() % 100) + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function couponReasonText(reason) {
+    var map = {
+      forbidden: '이 캠페인의 쿠폰을 확인할 권한이 없습니다.',
+      not_found: '이 캠페인에서 발급된 쿠폰이 아닙니다. PIN을 다시 확인해 주세요.',
+      pin_too_short: 'PIN을 4자 이상 입력해 주세요.',
+      expired: '유효기간이 지난 쿠폰입니다.',
+      already_used: '이미 사용 처리된 쿠폰입니다.',
+    };
+    return map[reason] || ('처리하지 못했습니다 (' + (reason || '알 수 없는 오류') + ')');
+  }
+
+  function setCouponResult(html, tone) {
+    var box = $('cpResult');
+    var color = tone === 'ok' ? 'var(--neon-green)' : tone === 'warn' ? 'var(--theme-gold)' : tone === 'bad' ? 'var(--neon-pink)' : 'var(--text-sub)';
+    box.style.display = html ? 'block' : 'none';
+    box.style.borderColor = color;
+    box.innerHTML = html || '';
+  }
+
+  async function refreshCouponSummary() {
+    var res = await sb.rpc('sponsor_coupon_summary', { p_campaign_id: couponCampaignId });
+    var kpi = $('cpKpis');
+    var recent = $('cpRecent');
+    if (res.error || !res.data || res.data.ok !== true) {
+      var msg = (res.error && res.error.message) || (res.data && res.data.reason) || '';
+      if (/Could not find the function|does not exist|schema cache/i.test(msg)) {
+        msg = '아직 DB에 쿠폰 사용 확인 기능이 설치되지 않았습니다. pickle_coupon_confirm_139.sql 을 먼저 실행해 주세요.';
+      }
+      kpi.innerHTML = '<div style="color:var(--neon-pink);grid-column:1/-1;">' + escapeHtml(msg || '요약을 불러오지 못했습니다.') + '</div>';
+      recent.innerHTML = '';
+      return;
+    }
+    var d = res.data;
+    function card(title, val, color) {
+      return '<div class="rkpi-card"><div class="rkpi-title">' + title + '</div><div class="rkpi-val" style="' + (color ? 'color:' + color + ';' : '') + '">' + Number(val || 0).toLocaleString() + '</div></div>';
+    }
+    kpi.innerHTML =
+      card('발급됨', d.issued) +
+      card('매장 사용 처리', d.used_by_staff, 'var(--neon-green)') +
+      card('고객 사용완료 표시', d.used_by_user, 'var(--theme-gold)') +
+      card('미사용', d.unused, 'var(--neon-blue)') +
+      card('기간 만료', d.expired, 'var(--neon-pink)') +
+      card('남은 재고', d.pool_left);
+
+    var rows = d.recent || [];
+    if (!rows.length) {
+      recent.innerHTML = '<tr><td colspan="4" style="color:var(--text-sub);padding:14px;">아직 처리 내역이 없습니다.</td></tr>';
+      return;
+    }
+    recent.innerHTML = rows.map(function (r) {
+      return '<tr><td>' + fmtDateTime(r.confirmed_at) + '</td><td style="font-family:inherit;">' + escapeHtml(r.title || '') +
+        '</td><td>****' + escapeHtml(r.pin_last4 || '') + (r.was_user_marked ? ' <span style="color:var(--theme-gold);">(고객 표시 후)</span>' : '') +
+        '</td><td style="font-family:inherit;">' + escapeHtml(r.confirmed_by || '') + '</td></tr>';
+    }).join('');
+  }
+
+  async function openCouponModal(campaignId) {
+    couponCampaignId = campaignId;
+    couponLookedUpPin = null;
+    var row = listRows.filter(function (r) { return r.campaign_id === campaignId; })[0] || {};
+    $('cpTitle').textContent = '🎫 쿠폰 사용 확인';
+    $('cpSub').textContent = (row.brand_name || '') + ' · ' + (row.title || '');
+    $('cpPin').value = '';
+    setCouponResult('', '');
+    $('couponModal').style.display = 'flex';
+    $('cpKpis').innerHTML = '<div style="color:var(--text-sub);grid-column:1/-1;">불러오는 중...</div>';
+    $('cpRecent').innerHTML = '';
+    await refreshCouponSummary();
+    $('cpPin').focus();
+  }
+
+  function closeCouponModal() {
+    $('couponModal').style.display = 'none';
+    couponCampaignId = null;
+    couponLookedUpPin = null;
+  }
+
+  async function couponLookup() {
+    var pin = $('cpPin').value.trim();
+    couponLookedUpPin = null;
+    if (pin.replace(/[\s-]/g, '').length < 4) {
+      setCouponResult('PIN을 4자 이상 입력해 주세요.', 'warn');
+      return;
+    }
+    setCouponResult('조회 중...', '');
+    var res = await sb.rpc('sponsor_lookup_coupon', { p_campaign_id: couponCampaignId, p_pin: pin });
+    if (res.error || !res.data) {
+      setCouponResult(escapeHtml((res.error && res.error.message) || '조회하지 못했습니다.'), 'bad');
+      return;
+    }
+    var d = res.data;
+    if (d.ok !== true) {
+      setCouponResult('❌ ' + escapeHtml(couponReasonText(d.reason)), 'bad');
+      return;
+    }
+
+    var info =
+      '<div style="font-weight:900;font-size:1.05rem;margin-bottom:6px;">' + escapeHtml(d.title || '') + '</div>' +
+      '<div style="font-size:0.82rem;color:var(--text-sub);line-height:1.7;">PIN ****' + escapeHtml(d.pin_last4 || '') +
+      ' · 발급 ' + fmtDateTime(d.issued_at) + ' · 유효기간 ' + (d.expires_at ? fmtDateTime(d.expires_at) : '제한 없음') + '</div>';
+    var btn = '<button type="button" class="btn-submit" style="margin-top:14px;" onclick="PickleSponsor.couponConfirm()">✅ 사용 처리하기</button>';
+
+    if (d.status === 'unused') {
+      couponLookedUpPin = pin;
+      setCouponResult('<div style="color:var(--neon-green);font-weight:900;margin-bottom:8px;">✅ 사용 가능한 쿠폰입니다</div>' + info + btn, 'ok');
+    } else if (d.status === 'used_by_user') {
+      couponLookedUpPin = pin;
+      setCouponResult('<div style="color:var(--theme-gold);font-weight:900;margin-bottom:8px;">⚠️ 고객이 앱에서 "사용완료"로 표시한 쿠폰입니다</div>' + info +
+        '<div style="font-size:0.8rem;color:var(--text-sub);margin-top:8px;">매장에서 실제로 사용을 확인했다면 아래 버튼으로 사용 처리를 남기세요.</div>' + btn, 'warn');
+    } else if (d.status === 'used_by_staff') {
+      setCouponResult('<div style="color:var(--neon-pink);font-weight:900;margin-bottom:8px;">❌ 이미 사용 처리된 쿠폰입니다 (' + fmtDateTime(d.used_at) + ')</div>' + info, 'bad');
+    } else if (d.status === 'expired') {
+      setCouponResult('<div style="color:var(--neon-pink);font-weight:900;margin-bottom:8px;">❌ 유효기간이 지난 쿠폰입니다</div>' + info, 'bad');
+    } else {
+      setCouponResult(escapeHtml(String(d.status || '')), 'bad');
+    }
+  }
+
+  async function couponConfirm() {
+    if (!couponLookedUpPin) return;
+    if (!window.confirm('이 쿠폰을 사용 처리합니다.\n처리 후에는 되돌릴 수 없습니다. 계속할까요?')) return;
+    var res = await sb.rpc('sponsor_confirm_coupon_use', { p_campaign_id: couponCampaignId, p_pin: couponLookedUpPin });
+    var d = res.data;
+    if (res.error || !d) {
+      setCouponResult('❌ ' + escapeHtml((res.error && res.error.message) || '처리하지 못했습니다.'), 'bad');
+      return;
+    }
+    if (d.ok !== true) {
+      setCouponResult('❌ ' + escapeHtml(couponReasonText(d.reason)), 'bad');
+      couponLookedUpPin = null;
+      return;
+    }
+    couponLookedUpPin = null;
+    $('cpPin').value = '';
+    setCouponResult('<div style="color:var(--neon-green);font-weight:900;">✅ 사용 처리되었습니다 — ' + escapeHtml(d.title || '') + '</div>', 'ok');
+    await refreshCouponSummary();
+    await loadList();
+    $('cpPin').focus();
+  }
+
   function closeReportModal() {
     $('reportModal').style.display = 'none';
     currentReportData = null;
@@ -1024,6 +1178,10 @@
     endCampaignNow: endCampaignNow,
     updateMockup: updateMockup,
     openReportModal: openReportModal,
+    openCouponModal: openCouponModal,
+    closeCouponModal: closeCouponModal,
+    couponLookup: couponLookup,
+    couponConfirm: couponConfirm,
     closeReportModal: closeReportModal,
     downloadReportCsv: downloadReportCsv,
     onAdvertiserSearchInput: onAdvertiserSearchInput,

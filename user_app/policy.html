@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이용약관 · 개인정보 처리방침 — P!CKLE</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<style>
+    :root {
+        --bg-base: #0a0a0c;
+        --bg-card: #1c1c1e;
+        --point-green: #4ADE80;
+        --text-main: #fcfcfc;
+        --text-sub: #a1a1aa;
+        --border-soft: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        background: var(--bg-base);
+        color: var(--text-main);
+        font-family: 'Pretendard', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .policy-wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 60px; }
+    .policy-top {
+        position: sticky; top: 0; z-index: 5; background: var(--bg-base);
+        display: flex; align-items: center; gap: 10px; padding: 14px 0 10px;
+        border-bottom: 1px solid var(--border-soft);
+    }
+    .policy-back {
+        background: none; border: none; color: var(--text-main); font-size: 1.3rem;
+        cursor: pointer; padding: 4px 8px; font-family: inherit;
+    }
+    .policy-title { font-size: 1.05rem; font-weight: 900; margin: 0; }
+    .policy-tabs { display: flex; gap: 8px; margin: 16px 0 12px; }
+    .policy-tab {
+        flex: 1; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-soft);
+        background: var(--bg-card); color: var(--text-sub); font-weight: 800; font-size: 0.9rem;
+        cursor: pointer; font-family: inherit;
+    }
+    .policy-tab.active { color: #09090b; background: var(--point-green); border-color: var(--point-green); }
+    .policy-meta { font-size: 0.78rem; color: var(--text-sub); margin: 0 0 14px; }
+    .policy-body {
+        background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 14px;
+        padding: 20px 18px; font-size: 0.9rem; line-height: 1.85; color: #e4e4e7;
+        word-break: keep-all; overflow-wrap: anywhere;
+    }
+    .policy-doc-empty, .policy-doc-loading, .policy-doc-error { color: var(--text-sub); margin: 0; }
+    .policy-doc-error { color: #ff6b6b; }
+</style>
+</head>
+<body>
+<div class="policy-wrap">
+    <div class="policy-top">
+        <button type="button" class="policy-back" id="policyBack" aria-label="뒤로">←</button>
+        <h1 class="policy-title">약관 및 정책</h1>
+    </div>
+
+    <div class="policy-tabs" role="tablist">
+        <button type="button" class="policy-tab" id="tabTerms" role="tab" data-type="terms">이용약관</button>
+        <button type="button" class="policy-tab" id="tabPrivacy" role="tab" data-type="privacy">개인정보 처리방침</button>
+    </div>
+    <p class="policy-meta" id="policyMeta"></p>
+    <div class="policy-body" id="policyBody"><p class="policy-doc-loading">불러오는 중…</p></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/supabase-bootstrap.js"></script>
+<script src="../js/pickle-policies.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var current = 'terms';
+    var cache = null;
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function typeFromUrl() {
+        try {
+            var t = new URLSearchParams(location.search).get('type');
+            return t === 'privacy' ? 'privacy' : 'terms';
+        } catch (e) {
+            return 'terms';
+        }
+    }
+
+    function render() {
+        document.getElementById('tabTerms').classList.toggle('active', current === 'terms');
+        document.getElementById('tabPrivacy').classList.toggle('active', current === 'privacy');
+        document.title = (current === 'terms' ? '이용약관' : '개인정보 처리방침') + ' — P!CKLE';
+
+        var meta = document.getElementById('policyMeta');
+        var body = document.getElementById('policyBody');
+        if (!cache) return;
+
+        var doc = current === 'terms' ? cache.terms_of_service : cache.privacy_policy;
+        if (!doc || !String(doc.content || '').trim()) {
+            meta.textContent = '';
+            body.innerHTML = '<p class="policy-doc-empty">아직 등록된 내용이 없습니다.</p>';
+            return;
+        }
+        meta.textContent = '버전 ' + (doc.version || '') + ' · 개정일자: ' +
+            (window.PicklePolicies && window.PicklePolicies.formatPublishedDate
+                ? window.PicklePolicies.formatPublishedDate(doc.published_at) : '—');
+        body.innerHTML = esc(doc.content).replace(/\n/g, '<br>');
+    }
+
+    function select(type) {
+        current = type;
+        try {
+            history.replaceState(null, '', 'policy.html?type=' + type);
+        } catch (e) { /* ignore */ }
+        render();
+        window.scrollTo(0, 0);
+    }
+
+    async function init() {
+        current = typeFromUrl();
+        document.getElementById('tabTerms').addEventListener('click', function () { select('terms'); });
+        document.getElementById('tabPrivacy').addEventListener('click', function () { select('privacy'); });
+        document.getElementById('policyBack').addEventListener('click', function () {
+            if (window.history.length > 1 && document.referrer) history.back();
+            else location.href = 'index.html';
+        });
+        render();
+        try {
+            cache = await window.PicklePolicies.fetchPolicyConfig({ forceRefresh: true });
+            render();
+        } catch (e) {
+            document.getElementById('policyBody').innerHTML =
+                '<p class="policy-doc-error">내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>';
+        }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
+</script>
+</body>
+</html>

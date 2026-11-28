@@ -375,6 +375,40 @@
     </div>
 </main>
 
+<!-- ============ 쿠폰 사용 확인 모달 ============ -->
+<div class="modal-overlay" id="couponModal">
+    <div class="modal-container" style="width:760px;">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="cpTitle">🎫 쿠폰 사용 확인</div>
+                <div class="modal-sub" id="cpSub"></div>
+            </div>
+            <button class="btn-close" onclick="PickleSponsor.closeCouponModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="report-kpi-grid" id="cpKpis"></div>
+
+            <div class="report-section">
+                <h4>🔎 고객이 보여준 PIN 번호 조회</h4>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="cpPin" class="input-field" style="flex:1; letter-spacing:1px; font-size:1.05rem;" placeholder="PIN 번호 입력 (띄어쓰기·하이픈은 상관없어요)" autocomplete="off" onkeydown="if(event.key==='Enter'){PickleSponsor.couponLookup();}">
+                    <button type="button" class="btn-new" style="flex:none;" onclick="PickleSponsor.couponLookup()">조회</button>
+                </div>
+                <div id="cpResult" style="display:none; margin-top:14px; padding:16px; border:1px solid var(--border-color); border-radius:10px; background:#09090b;"></div>
+                <div class="note-line">※ 조회만으로는 사용 처리되지 않습니다. 확인 후 "사용 처리하기"를 눌러야 합니다. 처리한 쿠폰은 되돌릴 수 없고, 처리자와 시각이 기록됩니다.</div>
+            </div>
+
+            <div class="report-section">
+                <h4>🧾 최근 사용 처리 내역 (최근 20건)</h4>
+                <table class="daily-table">
+                    <thead><tr><th>처리 시각</th><th>쿠폰</th><th>PIN</th><th>처리자</th></tr></thead>
+                    <tbody id="cpRecent"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ============ 리포트 모달 ============ -->
 <div class="modal-overlay" id="reportModal">
     <div class="modal-container">

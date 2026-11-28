@@ -10,6 +10,7 @@
 
   var TABLE_LABEL = {
     system_settings: '시스템 설정',
+    pickle_feed_config: '메인 노출 알고리즘',
     cs_settings: 'CS 설정',
     user_roles: '관리자 권한',
     users: '회원 상태',
@@ -29,7 +30,7 @@
   var SPECIAL = { 'user.ban': '🚫 영구 차단', 'user.unban': '🔓 차단 해제' };
   var GROUPS = {
     sanction: ['user.ban', 'user.unban', 'users.update', 'penalty_logs.insert', 'reports.update', 'posts.update', 'comments.update'],
-    settings: ['system_settings.update', 'cs_settings.update', 'user_roles.insert', 'user_roles.update', 'user_roles.delete'],
+    settings: ['system_settings.update', 'pickle_feed_config.update', 'cs_settings.update', 'user_roles.insert', 'user_roles.update', 'user_roles.delete'],
     content: ['notices', 'faqs', 'events', 'popups', 'banned_keywords', 'categories', 'inquiries'],
   };
   var ROLE_LABEL = { super: '최고관리자', marketer: '마케터', cs: 'CS 매니저', account: '재무/정산' };

@@ -404,6 +404,7 @@
         margin-top: 8px; line-height: 1.5;
     }
     .login-footer span { color: var(--text-sub); text-decoration: underline; cursor: pointer; }
+    .login-footer a { color: var(--text-sub); text-decoration: underline; }
 
     /* 모바일 — 터치 영역·간격 확대 */
     @media (max-width: 480px), (max-height: 740px) {
@@ -504,7 +505,8 @@
             </button>
 
             <div class="login-footer">
-                회원가입 시 <span>이용약관</span> 및 <span>개인정보처리방침</span>에 동의하게 됩니다.
+                회원가입 시 <a href="policy.html?type=terms" target="_blank" rel="noopener">이용약관</a> 및 <a href="policy.html?type=privacy" target="_blank" rel="noopener">개인정보처리방침</a>에 동의하게 됩니다.<br>
+                카카오·구글로 처음 시작하면 로그인 후 동의 확인 화면이 나옵니다.
             </div>
         </div>
     </div>
@@ -529,7 +531,7 @@
             </label>
             <label class="signup-check-row">
                 <input type="checkbox" id="signup-terms">
-                <span class="signup-check-label"><span class="req">[필수]</span> 이용약관 및 개인정보 수집·이용에 동의합니다.</span>
+                <span class="signup-check-label"><span class="req">[필수]</span> <a href="policy.html?type=terms" target="_blank" rel="noopener" style="color:#73A5FF;text-decoration:underline;">이용약관</a> 및 <a href="policy.html?type=privacy" target="_blank" rel="noopener" style="color:#73A5FF;text-decoration:underline;">개인정보 수집·이용</a>에 동의합니다.</span>
             </label>
             <label class="signup-check-row">
                 <input type="checkbox" id="signup-marketing">
