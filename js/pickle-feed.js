@@ -1,6 +1,7 @@
 /**
  * P!CKLE 메인 피드 — posts / pickle_posts Supabase 연동
- * 상단 3개: 킹왕짱 · 하단: 실시간 리스트
+ * 상단: 오늘의 픽클 · 하단: 지금 뜨거운 불판
+ * 노출 순서는 DB 함수 pickle_feed_ranked 가 정하고, 함수가 없거나 실패하면 최신순으로 대체
  */
 (function () {
   'use strict';
@@ -13,6 +14,19 @@
 
   var feedTimerInterval = null;
   var feedIsLoading = false;
+
+  /* ── 메인 노출 알고리즘(DB: pickle_feed_ranked) ── */
+  var RANKED_PAGE_SIZE = 60;
+  var FEED_QUEUE_KEY = 'pk_feed_q';
+  var FEED_QUEUE_MAX = 100;
+  var ANON_KEY_STORAGE = 'pk_anon_key';
+  /** post id → { slot, rank } (랭킹으로 불러온 카드만) */
+  var rankedMeta = new Map();
+  var rankedState = { active: false, offset: 0, hasMore: false, loadingMore: false };
+  var feedFlushing = false;
+  var feedFlushTimer = null;
+  var impressionSeen = new Set();
+  var impressionObserver = null;
 
   var FEED_LOGIN_PROMPT =
     '🔥 픽클의 뜨거운 불판 참여는 회원만 가능합니다!\n1초 만에 회원가입하고 진짜 취향을 저격해 볼까요?';
@@ -844,6 +858,321 @@ async function goDetail(id) {
     return hydrateThumbnailUrls(sb, posts);
   }
 
+  /* ───────────────────────── 노출 알고리즘 연동 ───────────────────────── */
+
+  /**
+   * DB 함수로 노출 순서를 받아 불판 정보를 채운다.
+   * 실패(함수 없음 등)하면 null → 호출한 쪽이 기존 최신순으로 대체한다.
+   * @returns {Promise<{posts:Array,lastRank:number,hasMore:boolean}|null>}
+   */
+  async function fetchRankedPosts(offset) {
+    var sb = getClient();
+    var rpc = await sb.rpc('pickle_feed_ranked', {
+      p_limit: RANKED_PAGE_SIZE,
+      p_offset: offset || 0,
+    });
+    if (rpc.error || !Array.isArray(rpc.data)) {
+      if (rpc.error) console.warn('[P!CKLE Feed] 노출 순위 조회 실패 → 최신순으로 대체', rpc.error);
+      return null;
+    }
+
+    var ranked = rpc.data.filter(function (r) {
+      return r && r.post_id;
+    });
+    if (!ranked.length) return { posts: [], lastRank: offset || 0, hasMore: false };
+
+    var ids = ranked.map(function (r) {
+      return r.post_id;
+    });
+    var nowIso = getActivePostsNowIso();
+    var result = await fetchPostRows(function (q) {
+      return applyActivePostsFilter(
+        q.eq('visibility_status', 'visible').in('id', ids),
+        nowIso
+      );
+    });
+    if (result.error || result.source !== 'posts') return null;
+
+    var posts = await enrichRowsToPosts(result.rows, result.source);
+    var order = new Map();
+    var maxRank = offset || 0;
+    ranked.forEach(function (r, i) {
+      order.set(r.post_id, i);
+      var rn = Number(r.rank_no) || 0;
+      if (rn > maxRank) maxRank = rn;
+      rankedMeta.set(r.post_id, { slot: r.slot || null, rank: rn || null });
+    });
+
+    posts.forEach(function (p) {
+      var meta = rankedMeta.get(p.id);
+      p.feedSlot = meta ? meta.slot : null;
+      p.feedRank = meta ? meta.rank : null;
+    });
+    posts.sort(function (a, b) {
+      return (order.has(a.id) ? order.get(a.id) : 1e9) - (order.has(b.id) ? order.get(b.id) : 1e9);
+    });
+
+    return {
+      posts: posts,
+      lastRank: maxRank,
+      hasMore: ranked.length >= RANKED_PAGE_SIZE,
+    };
+  }
+
+  /** 메인 피드용: 노출 순서 우선, 실패/빈 결과면 기존 최신순 */
+  async function fetchFeedPosts() {
+    rankedMeta.clear();
+    rankedState = { active: false, offset: 0, hasMore: false, loadingMore: false };
+
+    try {
+      var r = await fetchRankedPosts(0);
+      if (r && r.posts.length) {
+        rankedState.active = true;
+        rankedState.offset = r.lastRank;
+        rankedState.hasMore = r.hasMore;
+        return r.posts;
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Feed] 노출 순서 적용 실패 → 최신순으로 대체', err);
+    }
+    return fetchPicklePosts();
+  }
+
+  /* ── 노출/클릭 기록 (실패해도 화면은 정상 동작) ── */
+
+  function feedAnonKey() {
+    try {
+      var k = window.localStorage.getItem(ANON_KEY_STORAGE);
+      if (!k) {
+        k = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+        window.localStorage.setItem(ANON_KEY_STORAGE, k);
+      }
+      return k;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function feedEventId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function readFeedQueue() {
+    try {
+      var raw = window.localStorage.getItem(FEED_QUEUE_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeFeedQueue(arr) {
+    try {
+      window.localStorage.setItem(FEED_QUEUE_KEY, JSON.stringify(arr.slice(-FEED_QUEUE_MAX)));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function enqueueFeedEvent(type, postId) {
+    var meta = rankedMeta.get(postId);
+    if (!meta) return; // 랭킹으로 불러온 카드만 기록
+    var q = readFeedQueue();
+    q.push({ e: type, p: postId, s: meta.slot, r: meta.rank, id: feedEventId() });
+    writeFeedQueue(q);
+  }
+
+  async function flushFeedQueue() {
+    if (feedFlushing) return;
+    var q = readFeedQueue();
+    if (!q.length) return;
+
+    var sb;
+    try {
+      sb = getClient();
+    } catch (e) {
+      return;
+    }
+    if (!sb || !sb.rpc) return;
+
+    feedFlushing = true;
+    try {
+      var guard = 0;
+      while (q.length && guard < 5) {
+        guard += 1;
+        var batch = q.slice(0, 30);
+        var res = await sb.rpc('pickle_feed_log', {
+          p_events: batch,
+          p_anon_key: feedAnonKey(),
+        });
+        if (res && res.error) break; // 다음 기회에 다시 시도
+        var sent = {};
+        batch.forEach(function (x) {
+          sent[x.id] = true;
+        });
+        // 그사이 새로 쌓인 항목은 남기고, 보낸 것만 제거
+        q = readFeedQueue().filter(function (x) {
+          return !sent[x.id];
+        });
+        writeFeedQueue(q);
+      }
+    } catch (e) {
+      /* ignore */
+    } finally {
+      feedFlushing = false;
+    }
+  }
+
+  function scheduleFeedFlush(delayMs) {
+    if (feedFlushTimer) clearTimeout(feedFlushTimer);
+    feedFlushTimer = setTimeout(function () {
+      feedFlushTimer = null;
+      flushFeedQueue();
+    }, delayMs == null ? 1500 : delayMs);
+  }
+
+  function logFeedClick(postId) {
+    try {
+      if (!postId || !rankedMeta.has(postId)) return;
+      enqueueFeedEvent('click', postId);
+      flushFeedQueue(); // 화면 이동 전에 최대한 전송, 못 보내도 다음 방문 때 전송
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function markImpression(postId) {
+    if (!postId || impressionSeen.has(postId) || !rankedMeta.has(postId)) return;
+    impressionSeen.add(postId);
+    enqueueFeedEvent('impression', postId);
+    scheduleFeedFlush(2000);
+  }
+
+  /** 카드가 화면에 절반 이상 보이면 노출 1회 기록 (IntersectionObserver 없으면 앞쪽 일부만) */
+  function observeImpressions(root) {
+    if (!root || !rankedState.active) return;
+    var cards = root.querySelectorAll('[data-id]');
+    if (!cards.length) return;
+
+    if (typeof window.IntersectionObserver === 'function') {
+      if (!impressionObserver) {
+        impressionObserver = new window.IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (en) {
+              if (!en.isIntersecting) return;
+              var id = en.target.getAttribute('data-id');
+              markImpression(id);
+              impressionObserver.unobserve(en.target);
+            });
+          },
+          { threshold: 0.5 }
+        );
+      }
+      cards.forEach(function (c) {
+        impressionObserver.observe(c);
+      });
+    } else {
+      var n = 0;
+      cards.forEach(function (c) {
+        if (n++ < 12) markImpression(c.getAttribute('data-id'));
+      });
+    }
+  }
+
+  function bindFeedFlushOnHide() {
+    if (bindFeedFlushOnHide.done) return;
+    bindFeedFlushOnHide.done = true;
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') flushFeedQueue();
+    });
+  }
+
+  /* ── 더 보기 ── */
+
+  function ensureLoadMoreButton(list) {
+    var btn = document.getElementById('feedLoadMoreBtn');
+    if (!list) return null;
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'feedLoadMoreBtn';
+      btn.textContent = '불판 더 보기';
+      btn.style.cssText =
+        'display:none;width:calc(100% - 32px);margin:14px 16px 6px;padding:13px 0;' +
+        'border-radius:999px;border:1px solid rgba(255,255,255,0.18);' +
+        'background:rgba(255,255,255,0.06);color:#fcfcfc;font-size:0.9rem;' +
+        'font-weight:600;cursor:pointer;font-family:inherit;';
+      btn.addEventListener('click', loadMoreFeed);
+      if (list.parentNode) list.parentNode.insertBefore(btn, list.nextSibling);
+    }
+    return btn;
+  }
+
+  function updateLoadMoreButton() {
+    var list = document.getElementById('hotFeedList');
+    var btn = ensureLoadMoreButton(list);
+    if (!btn) return;
+    btn.style.display = rankedState.active && rankedState.hasMore ? 'block' : 'none';
+    btn.disabled = false;
+    btn.textContent = '불판 더 보기';
+  }
+
+  async function loadMoreFeed() {
+    if (!rankedState.active || !rankedState.hasMore || rankedState.loadingMore) return;
+    var list = document.getElementById('hotFeedList');
+    var btn = document.getElementById('feedLoadMoreBtn');
+    if (!list) return;
+
+    rankedState.loadingMore = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '불러오는 중...';
+    }
+
+    try {
+      var r = await fetchRankedPosts(rankedState.offset);
+      if (!r) {
+        rankedState.hasMore = false;
+        return;
+      }
+      rankedState.offset = r.lastRank;
+      rankedState.hasMore = r.hasMore && r.posts.length > 0;
+
+      var html = [];
+      r.posts.forEach(function (post) {
+        if (document.querySelector('#hotFeedList [data-id="' + post.id + '"]')) return;
+        if (document.querySelector('#aiCurationContainer [data-id="' + post.id + '"]')) return;
+        try {
+          var h = buildListCardHtml(post);
+          if (h) html.push(h);
+        } catch (err) {
+          console.warn('[P!CKLE Feed] 더보기 카드 렌더 스킵', post && post.id, err);
+        }
+      });
+
+      if (html.length) {
+        var before = list.querySelectorAll('.list-card').length;
+        list.insertAdjacentHTML('beforeend', html.join(''));
+        bindCardNavigation(list, '.list-card');
+        startFeedTimerRefresh();
+        var fresh = Array.prototype.slice.call(list.querySelectorAll('.list-card')).slice(before);
+        fresh.forEach(function (c) {
+          if (typeof window.IntersectionObserver === 'function' && impressionObserver) {
+            impressionObserver.observe(c);
+          } else {
+            markImpression(c.getAttribute('data-id'));
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Feed] 더보기 실패', err);
+    } finally {
+      rankedState.loadingMore = false;
+      updateLoadMoreButton();
+    }
+  }
+
   /**
    * Supabase posts 테이블에서 최신 불판 + 투표·댓글 집계
    * 인증 만료/탈퇴 잔여 세션 시 signOut 후 1회 재시도
@@ -996,14 +1325,18 @@ async function goDetail(id) {
     root.querySelectorAll(selector).forEach(function (card) {
       var id = card.dataset.id;
       if (!id) return;
+      if (card.dataset.pkBound === '1') return;
+      card.dataset.pkBound = '1';
       card.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
+        logFeedClick(id);
         goDetail(id);
       });
       card.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          logFeedClick(id);
           goDetail(id);
         }
       });
@@ -1130,8 +1463,23 @@ async function goDetail(id) {
       return;
     }
 
-    var kingPosts = all.slice(0, 3);
-    var listPosts = all.slice(3);
+    var kingPosts;
+    var listPosts;
+    if (rankedState.active) {
+      kingPosts = all.filter(function (p) {
+        return p.feedSlot === 'king_score' || p.feedSlot === 'king_new';
+      });
+      listPosts = all.filter(function (p) {
+        return !(p.feedSlot === 'king_score' || p.feedSlot === 'king_new');
+      });
+      if (!kingPosts.length) {
+        kingPosts = all.slice(0, 3);
+        listPosts = all.slice(3);
+      }
+    } else {
+      kingPosts = all.slice(0, 3);
+      listPosts = all.slice(3);
+    }
 
     try {
       renderKingCards(kingPosts);
@@ -1158,6 +1506,22 @@ async function goDetail(id) {
     }
   }
 
+  function afterFeedRendered(king, list) {
+    try {
+      impressionSeen = new Set();
+      if (impressionObserver) {
+        impressionObserver.disconnect();
+        impressionObserver = null;
+      }
+      bindFeedFlushOnHide();
+      observeImpressions(king);
+      observeImpressions(list);
+      updateLoadMoreButton();
+    } catch (e) {
+      console.warn('[P!CKLE Feed] 후처리 실패(무시)', e);
+    }
+  }
+
   async function loadPickleFeed() {
     if (window.PickleCategories && window.PickleCategories.load) {
       try {
@@ -1176,8 +1540,10 @@ async function goDetail(id) {
     showLoading(list);
 
     try {
-      var all = await fetchPicklePosts();
+      flushFeedQueue(); // 지난번에 못 보낸 클릭 기록이 있으면 전송
+      var all = await fetchFeedPosts();
       renderFeedFromPosts(all, king, list);
+      afterFeedRendered(king, list);
     } catch (err) {
       var detail = formatErrorDetail(err);
       console.error('[P!CKLE Feed] loadPickleFeed 실패', err);
@@ -1185,8 +1551,9 @@ async function goDetail(id) {
       if (isAuthRelatedError(err)) {
         await clearStaleSession();
         try {
-          var allRetry = await fetchPicklePosts();
+          var allRetry = await fetchFeedPosts();
           renderFeedFromPosts(allRetry, king, list);
+          afterFeedRendered(king, list);
           return;
         } catch (retryErr) {
           console.error('[P!CKLE Feed] auth recovery retry failed', retryErr);
@@ -1204,6 +1571,8 @@ async function goDetail(id) {
   window.PickleFeed = {
     load: loadPickleFeed,
     fetchPicklePosts: fetchPicklePosts,
+    fetchFeedPosts: fetchFeedPosts,
+    loadMore: loadMoreFeed,
     applyActivePostsFilter: applyActivePostsFilter,
     getActivePostsNowIso: getActivePostsNowIso,
     fetchPostRows: fetchPostRows,
