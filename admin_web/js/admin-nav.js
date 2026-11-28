@@ -56,11 +56,34 @@
     anchor.insertAdjacentElement('afterend', li);
   }
 
+  /** 모든 관리자 화면 사이드바에 "주제 분류" 메뉴를 추가 (명예의 전당 메뉴 바로 아래) */
+  function ensureTopicsMenu(sidebar) {
+    if (sidebar.querySelector('[data-admin-menu="topics"]')) return;
+    var already = Array.prototype.some.call(sidebar.querySelectorAll('.nav-sub-item'), function (el) {
+      return /admin_topics\.html/.test(el.getAttribute('onclick') || '') || el.getAttribute('data-nav-href') === 'admin_topics.html';
+    });
+    if (already) return;
+    var anchor = sidebar.querySelector('[data-admin-menu="hall"]');
+    if (!anchor) {
+      sidebar.querySelectorAll('.nav-sub-item').forEach(function (el) {
+        if (/admin_post_list\.html|admin_hall\.html/.test(el.getAttribute('onclick') || el.getAttribute('data-nav-href') || '')) anchor = el;
+      });
+    }
+    if (!anchor) return;
+    var li = document.createElement('li');
+    li.className = 'nav-sub-item';
+    li.setAttribute('data-admin-menu', 'topics');
+    li.setAttribute('onclick', "location.href='admin_topics.html'");
+    li.textContent = '· 주제 분류 (데이터)';
+    anchor.insertAdjacentElement('afterend', li);
+  }
+
   function bindSidebarNavigation() {
     var sidebar = document.querySelector('.sidebar');
     if (!sidebar || sidebar.dataset.navBound === '1') return;
     sidebar.dataset.navBound = '1';
     ensureHallMenu(sidebar);
+    ensureTopicsMenu(sidebar);
 
     sidebar.querySelectorAll('.nav-item, .nav-sub-item').forEach(function (item) {
       var onclick = item.getAttribute('onclick') || '';
