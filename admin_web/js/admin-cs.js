@@ -352,7 +352,7 @@
     if (urlEl) urlEl.value = row.kakao_channel_url || '';
     if (openEl && row.weekday_open) openEl.value = String(row.weekday_open).slice(0, 5);
     if (closeEl && row.weekday_close) closeEl.value = String(row.weekday_close).slice(0, 5);
-    if (enabledEl) enabledEl.checked = row.is_kakao_enabled !== false;
+    if (enabledEl) enabledEl.checked = row.is_kakao_enabled === true;
   }
 
   function findInquiry(id) {
@@ -496,7 +496,7 @@
       kakao_channel_url: urlEl ? urlEl.value.trim() : null,
       weekday_open: openEl && openEl.value ? openEl.value + ':00' : null,
       weekday_close: closeEl && closeEl.value ? closeEl.value + ':00' : null,
-      is_kakao_enabled: enabledEl ? enabledEl.checked : true,
+      is_kakao_enabled: enabledEl ? enabledEl.checked : false,
       operating_hours_summary:
         openEl && closeEl && openEl.value && closeEl.value
           ? '평일 ' + openEl.value + '~' + closeEl.value

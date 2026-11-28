@@ -199,7 +199,7 @@
         .eq('id', 1)
         .maybeSingle();
       var row = res && res.data;
-      if (!row || row.is_kakao_enabled === false) return;
+      if (!row || row.is_kakao_enabled !== true) return; // 상담 인력 준비 전까지 기본 숨김
       var url = String(row.kakao_channel_url || '').trim();
       if (!/^https?:\/\//i.test(url) || /_x{4,}/i.test(url)) return;
 
