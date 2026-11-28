@@ -520,6 +520,11 @@
             dbClient = window.getPickleSupabaseClient();
             console.log('🚀 [P!CKLE 관제탑] Supabase Singleton 클라이언트로 DB 연결 성공!');
             startApp();
+            // 대시보드 카드에서 넘어온 경우(?tab=appeal | legal) 해당 탭을 바로 연다
+            try {
+                const wantTab = new URLSearchParams(location.search).get('tab');
+                if (wantTab === 'appeal' || wantTab === 'legal') setTimeout(() => switchMasterView(wantTab), 400);
+            } catch (e) { /* ignore */ }
         } else {
             const errHtml = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--alert-red);font-weight:800;line-height:1.6;">⚠️ Supabase 설정을 불러오지 못했습니다.<br>../js/supabase-config.js 로드 순서를 확인해 주세요.</td></tr>`;
             document.getElementById('reportTableBody').innerHTML = errHtml;

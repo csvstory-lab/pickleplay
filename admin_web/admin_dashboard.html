@@ -69,6 +69,20 @@
     .health-val { color: #fff; font-weight: 900; letter-spacing: 1px; }
 
     /* 공통 섹션 타이틀 */
+    /* 처리가 필요한 요청 카드 */
+    .todo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+    .todo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px 20px; cursor: pointer; transition: all .2s; }
+    .todo-card:hover { transform: translateY(-3px); border-color: var(--neon-green); }
+    .todo-card.hot { border-color: var(--neon-pink); background: rgba(255, 0, 127, 0.05); }
+    .todo-label { font-size: .88rem; font-weight: 800; color: var(--text-sub); margin-bottom: 8px; }
+    .todo-card.hot .todo-label { color: #fff; }
+    .todo-count { font-weight: 900; font-size: 2rem; color: var(--neon-green); }
+    .todo-card.hot .todo-count { color: var(--neon-pink); }
+    .todo-count span { font-size: .95rem; margin-left: 3px; color: var(--text-sub); }
+    .todo-sub { font-size: .78rem; font-weight: 700; color: var(--text-sub); margin-top: 4px; }
+    .todo-sub.overdue { color: #ffcc00; }
+    .todo-total { font-size: .8rem; font-weight: 900; padding: 3px 10px; border-radius: 999px; background: rgba(255,0,127,.15); color: var(--neon-pink); border: 1px solid rgba(255,0,127,.35); }
+    .todo-total.ok { background: rgba(57,255,20,.1); color: var(--neon-green); border-color: rgba(57,255,20,.3); }
     .kpi-section-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
     /* 반응형 그리드 1 (누적 지표) */
@@ -207,6 +221,7 @@
     </header>
 
     <div class="dashboard-container">
+        <div id="todoRoot"></div>
         
         <div>
             <div class="kpi-section-title">📌 전체 누적 지표</div>
@@ -301,6 +316,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-dashboard.js"></script>
+<script src="js/admin-todo.js?v=20261128_td1"></script>
 <script src="js/admin-auth.js"></script>
 </body>
 </html>
