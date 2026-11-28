@@ -207,6 +207,11 @@
         transition: 0.25s ease; font-family: inherit;
     }
     .sub-tab.active { font-weight: 800; }
+    .ranking-period-note {
+        text-align: center; margin: -14px 0 18px; font-size: 0.74rem;
+        color: var(--text-sub); font-weight: 600;
+    }
+    .category-nav-scroll.is-disabled { opacity: 0.38; pointer-events: none; transition: opacity 0.2s; }
 
     /* 명예의 전당 Top 3 */
     .podium-container {
@@ -609,16 +614,16 @@
                 <h3><i class="ph-fill ph-fire tab-icon" aria-hidden="true"></i>가장 핫한 불판</h3>
                 <p>어떤 불판이 가장 뜨겁게 불타오르고 있는지 보여주는 '화력' 랭킹입니다!</p>
                 <ul>
-                    <li><strong>점수 방식:</strong> 투표(1점), 조회(0.1점), 댓글(3점), 공유(5점)</li>
-                    <li><strong>특징:</strong> 단기간에 참여가 폭발하면 가산점이 붙고, 시간이 지날수록 점수가 깎이는 다이내믹 순환 구조!</li>
+                    <li><strong>점수 방식:</strong> 투표(1점), 조회(0.1점), 댓글(3점), 공유(5점) — 선택한 기간(일간 24시간·주간 7일·월간 30일·연간 1년) 안에 쌓인 활동만 계산해요.</li>
+                    <li><strong>특징:</strong> 최근 1시간 사이 여러 유저가 한꺼번에 몰리면 가산점(×1.5~2.0)이 붙는 급상승 구조! 위쪽 카테고리 칩으로 분야별 랭킹도 볼 수 있어요. 작성자 본인의 활동과 광고 불판은 계산에서 빠져요.</li>
                 </ul>
             </section>
             <section class="ranking-guide-section ranking-guide-section--pickler">
                 <h3><i class="ph-fill ph-user tab-icon" aria-hidden="true"></i>최고의 픽클러</h3>
                 <p>PICKLE 생태계를 이끌어가는 '영향력' 랭킹입니다!</p>
                 <ul>
-                    <li><strong>점수 방식:</strong> 나를 픽한 유저 1명당 10점, 내 불판 참여자당 0.1점</li>
-                    <li><strong>보너스:</strong> 내 불판이 'HOT 불판 명예의 전당(Top 10)'에 오르면 500점 추가 획득!</li>
+                    <li><strong>점수 방식:</strong> 나를 새로 픽한 유저 1명당 10점, 내 불판에 참여(투표·댓글)한 유저 1명당 0.1점 — 선택한 기간 안에 생긴 것만 계산해요.</li>
+                    <li><strong>보너스:</strong> 내 댓글이 좋아요 50개에 도달하면 베스트 댓글 +50점, 내 불판이 명예의 전당에 오르면 +500점!</li>
                 </ul>
             </section>
         </div>
@@ -685,7 +690,7 @@
 <script src="../js/pickle-follows.js?v=20260617_ranking1"></script>
 <script src="../js/pickle-messages.js?v=20260617_messages3"></script>
 <script src="../js/pickle-sponsor-badge.js?v=20261127_ad2"></script>
-<script src="../js/pickle-ranking.js?v=20261127_ad2"></script>
+<script src="../js/pickle-ranking.js?v=20261128_rank154"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
 </div><!-- /#app-container -->

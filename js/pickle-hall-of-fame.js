@@ -1,6 +1,8 @@
 /**
  * P!CKLE — 🏅 전당 후보작 (hall_of_fame.html)
  * 알고리즘(허들·4대 천왕)은 supabase/24_notification_triggers.sql honor 알림과 동기화됨
+ * 허들(활성 유저 수 포함)은 서버 함수 pickle_hall_hurdle_info() 로 계산 — 브라우저는 다른 회원의 투표를 읽을 수 없어
+ * 예전 방식(브라우저 집계)은 늘 최소값(50표)만 나왔음. (함수가 없을 때만 예전 방식으로 대체)
  */
 (function () {
   'use strict';
@@ -154,6 +156,22 @@
     return activeIds.size;
   }
 
+  async function fetchHurdleInfo(sb) {
+    try {
+      var res = await sb.rpc('pickle_hall_hurdle_info');
+      if (!res.error && res.data && res.data.hurdle != null) {
+        return {
+          hurdle: Number(res.data.hurdle) || BASE_MIN_VOTES,
+          activeUsers: Number(res.data.active_users) || 0,
+        };
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Hall] 서버 허들 조회 실패 — 브라우저 계산으로 대체', err);
+    }
+    var activeUsers = await fetchActiveUserCount(sb);
+    return { hurdle: computeVoteHurdle(activeUsers), activeUsers: activeUsers };
+  }
+
   async function fetchEndedPostRows() {
     var feed = getFeedApi();
     var nowIso = new Date().toISOString();
@@ -294,8 +312,9 @@
       }
 
       var sb = getClient();
-      var activeUsers = await fetchActiveUserCount(sb);
-      var hurdle = computeVoteHurdle(activeUsers);
+      var hurdleInfo = await fetchHurdleInfo(sb);
+      var activeUsers = hurdleInfo.activeUsers;
+      var hurdle = hurdleInfo.hurdle;
       updateHurdleDisplay(hurdle, activeUsers);
 
       var result = await fetchEndedPostRows();

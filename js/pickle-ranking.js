@@ -1,8 +1,10 @@
 /**
  * P!CKLE — ranking.html 랭킹 DB 연동
- * @build 20261126_rankingperiod1
- * 일간: hot_grill_ranking · top_pickler_ranking (실시간 VIEW)
- * 주간/월간/연간: ranking_period_results (pg_cron 스냅샷, 가장 최근 집계분)
+ * @build 20261128_ranking154
+ * 일간/주간/월간/연간 모두 서버 함수로 "그 기간 안의 활동"만 합산해 실시간 계산
+ *   - pickle_ranking_hot_grills(period, category, limit)  : 핫 불판 (카테고리 필터 + 가속도 가산점)
+ *   - pickle_ranking_top_picklers(period, limit)          : 최고의 픽클러
+ * (154 SQL 적용 전에는 예전 방식 hot_grill_ranking · top_pickler_ranking · ranking_period_results 로 자동 대체)
  */
 (function () {
   'use strict';
@@ -14,6 +16,13 @@
   var postMetaMap = new Map();
   var userAvatarMap = new Map();
   var currentPeriod = 'daily';
+  var currentCategory = 'all';
+  var PERIOD_NOTE = {
+    daily: '최근 24시간 동안의 활동 기준',
+    weekly: '최근 7일 동안의 활동 기준',
+    monthly: '최근 30일 동안의 활동 기준',
+    yearly: '최근 1년 동안의 활동 기준',
+  };
 
   var ICON = {
     fire: '<i class="ph-fill ph-fire score-icon" aria-hidden="true"></i>',
@@ -287,13 +296,16 @@
     return userAvatarMap;
   }
 
-  async function fetchGrillRanking() {
+  /** 예전 방식(154 SQL 적용 전 대체용): 누적 점수 VIEW */
+  async function fetchGrillRankingLegacy() {
     var sb = getClient();
-    var result = await sb
+    var query = sb
       .from('hot_grill_ranking')
       .select('*')
       .order('hot_grill_score', { ascending: false })
       .limit(LIMIT);
+    if (currentCategory !== 'all') query = query.eq('category', currentCategory);
+    var result = await query;
 
     if (result.error) throw result.error;
 
@@ -305,7 +317,7 @@
     return rows;
   }
 
-  async function fetchPicklerRanking() {
+  async function fetchPicklerRankingLegacy() {
     var sb = getClient();
     var result = await sb
       .from('top_pickler_ranking')
@@ -320,6 +332,80 @@
       return r.user_id;
     });
     await fetchUserAvatarMap(userIds);
+    return rows;
+  }
+
+  function isMissingRpc(error) {
+    if (!error) return false;
+    var code = String(error.code || '');
+    var msg = String(error.message || '').toLowerCase();
+    return (
+      code === 'PGRST202' ||
+      code === '42883' ||
+      msg.indexOf('could not find the function') !== -1 ||
+      msg.indexOf('does not exist') !== -1
+    );
+  }
+
+  async function fetchGrillRanking() {
+    var sb = getClient();
+    var res = await sb.rpc('pickle_ranking_hot_grills', {
+      p_period: currentPeriod,
+      p_category: currentCategory === 'all' ? null : currentCategory,
+      p_limit: LIMIT,
+    });
+    if (res.error) {
+      if (isMissingRpc(res.error)) {
+        return currentPeriod === 'daily'
+          ? fetchGrillRankingLegacy()
+          : fetchPeriodGrillRanking(currentPeriod);
+      }
+      throw res.error;
+    }
+    var rows = (res.data || []).map(function (r) {
+      return {
+        post_id: r.post_id,
+        title: r.title,
+        category: r.category,
+        hot_grill_score: r.score,
+        velocity_mult: r.velocity_mult,
+      };
+    });
+    await fetchPostMetaMap(
+      rows.map(function (r) {
+        return r.post_id;
+      })
+    );
+    return rows;
+  }
+
+  async function fetchPicklerRanking() {
+    var sb = getClient();
+    var res = await sb.rpc('pickle_ranking_top_picklers', {
+      p_period: currentPeriod,
+      p_limit: LIMIT,
+    });
+    if (res.error) {
+      if (isMissingRpc(res.error)) {
+        return currentPeriod === 'daily'
+          ? fetchPicklerRankingLegacy()
+          : fetchPeriodPicklerRanking(currentPeriod);
+      }
+      throw res.error;
+    }
+    var rows = (res.data || []).map(function (r) {
+      return {
+        user_id: r.user_id,
+        nickname: r.nickname,
+        star_score_total: r.score,
+        follower_count: r.follower_total,
+      };
+    });
+    await fetchUserAvatarMap(
+      rows.map(function (r) {
+        return r.user_id;
+      })
+    );
     return rows;
   }
 
@@ -643,7 +729,12 @@
 
     if (!grillRows.length) {
       if (podium) podium.style.display = 'none';
-      setListMessage(list, EMPTY_MSG);
+      setListMessage(
+        list,
+        currentCategory === 'all'
+          ? EMPTY_MSG
+          : '이 카테고리에는 아직 랭킹 데이터가 없습니다.'
+      );
       return;
     }
 
@@ -745,6 +836,69 @@
     });
   }
 
+  /* ── 카테고리 칩 (핫 불판 랭킹을 카테고리별로 거름) ── */
+  function renderCategoryChips() {
+    var nav = document.getElementById('categoryNav');
+    var api = window.PickleCategories;
+    if (!nav || !api || !api.renderCategoryNavBar) return;
+    api.renderCategoryNavBar(nav, {
+      page: 'ranking',
+      useButtons: true,
+      activeCategory: currentCategory,
+    });
+    // pickle-categories.js 가 칩 클릭을 "카테고리 페이지 이동"으로 덮어쓰지 못하게 표시
+    nav.querySelectorAll('.category-nav-tab[data-category]').forEach(function (btn) {
+      btn.dataset.catNavBound = '1';
+    });
+    if (api.scrollCategoryNavIntoView) api.scrollCategoryNavIntoView(document);
+  }
+
+  function categoryLabel(slug) {
+    var api = window.PickleCategories;
+    if (slug === 'all') return '';
+    return (api && api.labelFromSlug && api.labelFromSlug(slug)) || '';
+  }
+
+  function updatePeriodNote() {
+    var wrap = document.getElementById('subTabs');
+    if (!wrap) return;
+    var note = document.getElementById('rankingPeriodNote');
+    if (!note) {
+      note = document.createElement('p');
+      note.id = 'rankingPeriodNote';
+      note.className = 'ranking-period-note';
+      wrap.insertAdjacentElement('afterend', note);
+    }
+    var text = PERIOD_NOTE[currentPeriod] || PERIOD_NOTE.daily;
+    var onGrill = !document.getElementById('tabGrill') ||
+      document.getElementById('tabGrill').classList.contains('active');
+    var label = categoryLabel(currentCategory);
+    if (onGrill && label) text += ' · ' + label;
+    note.textContent = text;
+  }
+
+  function setCategoryNavDisabled(disabled) {
+    var nav = document.getElementById('categoryNav');
+    if (nav) nav.classList.toggle('is-disabled', !!disabled);
+  }
+
+  function bindCategoryChipClicks() {
+    var nav = document.getElementById('categoryNav');
+    if (!nav || nav.dataset.rankingBound === '1') return;
+    nav.dataset.rankingBound = '1';
+    nav.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.category-nav-tab[data-category]') : null;
+      if (!btn || btn.tagName === 'A') return;
+      var api = window.PickleCategories;
+      var raw = btn.getAttribute('data-category') || 'all';
+      if (api && api.isHallDbSlug && api.isHallDbSlug(raw)) return;
+      var slug = api && api.normalizeSlug ? api.normalizeSlug(raw) : raw;
+      if (slug === currentCategory) return;
+      currentCategory = slug;
+      loadAll();
+    });
+  }
+
   async function loadAll() {
     setLoadingState();
 
@@ -753,15 +907,10 @@
         await window.PickleCategories.load();
       }
 
-      var results;
-      if (currentPeriod === 'daily') {
-        results = await Promise.all([fetchGrillRanking(), fetchPicklerRanking()]);
-      } else {
-        results = await Promise.all([
-          fetchPeriodGrillRanking(currentPeriod),
-          fetchPeriodPicklerRanking(currentPeriod),
-        ]);
-      }
+      renderCategoryChips();
+      updatePeriodNote();
+
+      var results = await Promise.all([fetchGrillRanking(), fetchPicklerRanking()]);
       grillRows = results[0];
       picklerRows = results[1];
 
@@ -781,6 +930,8 @@
 
     window.switchMainTab = function (tabName) {
       orig(tabName);
+      setCategoryNavDisabled(tabName === 'pickler');
+      updatePeriodNote();
       if (tabName === 'pickler') {
         renderPicklerArea();
       } else if (tabName === 'grill') {
@@ -808,6 +959,7 @@
 
   function init() {
     bindRankingGuideModal();
+    bindCategoryChipClicks();
     hookMainTabRender();
     hookSubTabFade();
     loadAll();
