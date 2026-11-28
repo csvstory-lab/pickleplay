@@ -172,6 +172,32 @@
     return { hurdle: computeVoteHurdle(activeUsers), activeUsers: activeUsers };
   }
 
+  /** 관리자 검토 결과: 제외된 불판은 숨기고, 선정된 불판은 허들과 무관하게 공식 등재로 표시 (155 SQL 적용 전에는 빈 값) */
+  async function fetchDecisions(sb) {
+    try {
+      var res = await sb.rpc('pickle_hall_decisions_public');
+      if (!res.error && res.data) {
+        return {
+          excluded: new Set((res.data.excluded || []).map(String)),
+          approved: new Set((res.data.approved || []).map(String)),
+        };
+      }
+    } catch (err) {
+      console.warn('[P!CKLE Hall] 검토 결과 조회 실패 — 자동 기준만 적용', err);
+    }
+    return { excluded: new Set(), approved: new Set() };
+  }
+
+  async function fetchApprovedPosts(missingIds) {
+    if (!missingIds.length) return [];
+    var feed = getFeedApi();
+    var result = await feed.fetchPostRows(function (q) {
+      return q.eq('visibility_status', 'visible').in('id', missingIds);
+    });
+    if (result.error) return [];
+    return feed.enrichRowsToPosts(result.rows, result.source);
+  }
+
   async function fetchEndedPostRows() {
     var feed = getFeedApi();
     var nowIso = new Date().toISOString();
@@ -194,10 +220,12 @@
     return resolveBadges(post).length > 0;
   }
 
-  function renderBadgeRow(badges) {
-    if (!badges || !badges.length) return '';
+  function renderBadgeRow(badges, approved) {
+    if ((!badges || !badges.length) && !approved) return '';
 
-    var html = badges
+    var html = (approved
+      ? '<span class="hof-badge hof-badge--approved">' + escapeHtml('🏅 공식 선정') + '</span>'
+      : '') + (badges || [])
       .map(function (b) {
         return (
           '<span class="hof-badge ' +
@@ -250,7 +278,7 @@
       '" data-id="' +
       escapeHtml(post.id) +
       '" role="button" tabindex="0">' +
-      renderBadgeRow(badges) +
+      renderBadgeRow(badges, post._hallApproved) +
       thumbHtml +
       '<div class="card-body">' +
       '<h3 class="title">' +
@@ -324,12 +352,30 @@
 
       var posts = await feed.enrichRowsToPosts(result.rows, result.source);
 
+      var decisions = await fetchDecisions(sb);
+
+      // 관리자가 선정한 불판 중 위 목록(최근 180건)에 없는 것도 가져옴
+      var have = new Set(posts.map(function (p) { return String(p.id); }));
+      var missing = Array.from(decisions.approved).filter(function (id) { return !have.has(id); });
+      if (missing.length) {
+        try {
+          posts = posts.concat(await fetchApprovedPosts(missing));
+        } catch (err) {
+          console.warn('[P!CKLE Hall] 선정 불판 추가 조회 실패', err);
+        }
+      }
+
       posts = posts
         .filter(function (p) {
-          return passesVoteHurdle(p, hurdle);
+          return !decisions.excluded.has(String(p.id));
         })
-        .filter(passesLegendBadgeFilter)
+        .filter(function (p) {
+          var approved = decisions.approved.has(String(p.id));
+          p._hallApproved = approved;
+          return approved || (passesVoteHurdle(p, hurdle) && passesLegendBadgeFilter(p));
+        })
         .sort(function (a, b) {
+          if (!!b._hallApproved !== !!a._hallApproved) return b._hallApproved ? 1 : -1;
           return (Number(b.totalVotes) || 0) - (Number(a.totalVotes) || 0);
         });
 
