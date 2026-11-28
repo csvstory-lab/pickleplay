@@ -1489,8 +1489,9 @@
     <div class="point-history-container">
         <div class="pt-total-box">
             <div class="pt-total-label">현재 사용 가능한 포인트</div>
-            <div class="pt-total-val">0 P</div>
+            <div class="pt-total-val" id="ptTotalVal">0 P</div>
         </div>
+        <div id="ptList"></div>
     </div>
 </div>
 
@@ -1508,9 +1509,9 @@
             </div>
         </div>
 
-        <div class="point-summary-box feature-hidden" onclick="openPointSheet()">
+        <div class="point-summary-box feature-hidden" id="pointSummaryBox" onclick="openPointSheet()">
             <div class="point-left">
-                <div class="point-val">💰 0 <span>P</span></div>
+                <div class="point-val" id="pointSummaryVal">💰 0 <span>P</span></div>
                 <div class="point-expire">⏳ 소멸 예정 포인트 없음</div>
             </div>
             <div class="point-right">내역 보기 ❯</div>
@@ -2311,6 +2312,7 @@
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 <script src="../js/pickle-sponsor-badge.js?v=20261127_ad2"></script>
 <script src="../js/mypage-page.js?v=20261127_ad2"></script>
+<script src="../js/mypage-points.js?v=20261128_pt1"></script>
 <script src="../js/pickle-legal-report.js"></script>
 <script src="../js/pickle-header-legacy-cleanup.js"></script>
 
