@@ -2303,7 +2303,13 @@ function renderCommentsList(comments, sortType) {
       var sb = window.PickleSupabase.getClient();
       var res = await sb.rpc('sponsor_claim_coupon', { p_post_id: postId });
       if (!res.error && res.data && res.data.ok && res.data.won && res.data.coupon) {
+        if (window.PickleMvp) window.PickleMvp.logEvent('coupon_popup_view', { post_id: postId });
         showSponsorCouponPopup(res.data.coupon);
+      } else if (
+        !res.error && res.data && res.data.ok && !res.data.won &&
+        res.data.reason === 'verification_required' && window.PickleMvp
+      ) {
+        window.PickleMvp.showVerifyPrompt({ from: 'sponsor_post' });
       }
     } catch (err) {
       console.warn('[P!CKLE Detail] sponsor coupon claim skipped', err);
