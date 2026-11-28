@@ -29,6 +29,7 @@
     'admin_post_list.html': 'posts',
     'admin_post_detail.html': 'posts',
     'admin_board_list.html': 'posts',
+    'admin_hall.html': 'hall',
     'admin_events.html': 'events',
     'admin_reports.html': 'reports',
     'admin_ai_filter.html': 'ai_filter',
@@ -47,6 +48,7 @@
     'admin_post_list.html': 'posts',
     'admin_board_list.html': 'posts',
     'admin_post_detail.html': 'posts',
+    'admin_hall.html': 'hall',
     'admin_events.html': 'events',
     'admin_reports.html': 'reports',
     'admin_ai_filter.html': 'ai_filter',
@@ -70,13 +72,14 @@
     'admin_cs.html',
     'admin_dashboard.html',
     'admin_statistics.html',
+    'admin_hall.html',
   ];
 
   /** 역할별 접근 가능 메뉴 */
   var MENU_ACCESS = {
-    super: ['dashboard', 'users', 'categories', 'posts', 'ads', 'events', 'reports', 'ai_filter', 'statistics', 'cs', 'settings', 'sponsor'],
+    super: ['dashboard', 'users', 'categories', 'posts', 'hall', 'ads', 'events', 'reports', 'ai_filter', 'statistics', 'cs', 'settings', 'sponsor'],
     marketer: ['dashboard', 'categories', 'posts', 'events', 'statistics', 'sponsor'],
-    cs: ['dashboard', 'users', 'categories', 'posts', 'reports', 'ai_filter', 'cs'],
+    cs: ['dashboard', 'users', 'categories', 'posts', 'hall', 'reports', 'ai_filter', 'cs'],
     account: ['dashboard', 'ads', 'statistics'],
     sponsor: ['sponsor'],
   };

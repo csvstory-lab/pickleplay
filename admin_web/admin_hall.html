@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P!CKLE - Admin: 명예의 전당 관리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --sidebar-bg: #121214;
+        --card-bg: #18181b;
+        --neon-green: #39ff14;
+        --neon-pink: #ff007f;
+        --neon-blue: #00f0ff;
+        --theme-gold: #ffcc00;
+        --text-main: #ffffff;
+        --text-sub: #a1a1aa;
+        --border-color: #27272a;
+    }
+
+    body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Pentabreed', 'Pretendard', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+    /* === 💡 완벽 복원된 사이드바 === */
+    .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo-area { padding: 0 25px 25px 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+    .logo { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-green), #aaff00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -1px; }
+    .logo-sub { font-size: 0.75rem; color: var(--text-sub); font-weight: 800; letter-spacing: 2px; }
+
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+    .nav-item-left { display: flex; align-items: center; gap: 12px; }
+    .nav-item:hover { background-color: rgba(255, 255, 255, 0.03); color: #fff; }
+    .nav-item.active { background-color: rgba(57, 255, 20, 0.05); color: var(--neon-green); border-left-color: var(--neon-green); font-weight: 800; }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-sub-item { padding: 8px 25px 8px 60px; font-size: 0.85rem; color: #71717a; cursor: pointer; transition: 0.2s; }
+    .nav-sub-item:hover { color: #d4d4d8; }
+    .nav-sub-item.active { color: #fff; font-weight: 700; }
+    .badge-danger { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+
+    /* === 메인 컨텐츠 === */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: var(--bg-color); }
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border-color); background-color: rgba(9, 9, 11, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 5; }
+    .page-title { font-size: 1.4rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .admin-profile { display: flex; align-items: center; gap: 15px; }
+    .admin-avatar { width: 36px; height: 36px; background-color: var(--neon-green); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-weight: 900; }
+
+    .content-container { padding: 30px 40px; }
+
+    /* 미니 KPI */
+    .mini-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .mini-kpi-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .mini-kpi-info { display: flex; flex-direction: column; gap: 5px; }
+    .mini-kpi-title { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); }
+    .mini-kpi-val { font-size: 1.4rem; font-weight: 900; color: #fff; }
+    .mini-kpi-icon { font-size: 1.8rem; opacity: 0.8; }
+
+    /* 검색 및 필터 바 */
+    .filter-bar { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); }
+    
+    .admin-input, .admin-select { background-color: #09090b; border: 1px solid #3f3f46; color: #fff; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-size: 0.9rem; padding: 10px 15px; border-radius: 8px; outline: none; transition: 0.2s; }
+    .admin-input:focus, .admin-select:focus { border-color: var(--neon-green); }
+    .admin-input { width: 240px; }
+    .admin-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px; }
+    .admin-select.cat-filter { width: 200px; }
+
+    .btn-search { background-color: var(--neon-green); color: #000; border: none; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-weight: 800; font-size: 0.9rem; padding: 11px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .btn-search:active { transform: scale(0.95); }
+    .btn-reset { background-color: transparent; color: var(--text-sub); border: 1px solid #3f3f46; font-family: 'Pentabreed', 'Pretendard', sans-serif; font-weight: 700; font-size: 0.9rem; padding: 11px 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .btn-reset:hover { border-color: #fff; color: #fff; }
+
+    /* 불판 데이터 테이블 */
+    .table-container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+    
+    /* 💡 테이블 헤더 컨트롤 영역 (10/50/100개 보기 추가) */
+    .table-control { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: #121214; }
+    .table-total { font-size: 0.85rem; font-weight: 800; color: var(--text-sub); }
+    
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background-color: #121214; padding: 15px; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+    td { padding: 15px; border-bottom: 1px solid #222; font-size: 0.9rem; font-weight: 600; color: #e4e4e7; vertical-align: middle; }
+    tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+    
+    .post-id { font-family: monospace; color: var(--text-sub); font-size: 0.8rem; }
+    .cat-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
+    
+    .post-title-cell { max-width: 250px; }
+    .post-title { font-weight: 800; color: #fff; display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .post-author { font-size: 0.75rem; color: var(--text-sub); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .meta-stat { color: var(--theme-gold); font-weight: 800; }
+    .meta-share { color: var(--neon-blue); font-weight: 800; }
+
+    /* A/B 투표율 미니 바 */
+    .vote-summary { width: 160px; }
+    .vote-count { font-size: 0.75rem; color: var(--theme-gold); font-weight: 800; margin-bottom: 4px; display: block; text-align: right; }
+    .mini-bar-wrapper { width: 100%; height: 8px; background-color: #27272a; border-radius: 4px; overflow: hidden; display: flex; }
+    .mini-bar-a { height: 100%; background-color: var(--neon-blue); }
+    .mini-bar-b { height: 100%; background-color: var(--neon-pink); }
+    .vote-pct { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; margin-top: 3px; }
+    .pct-a { color: var(--neon-blue); }
+    .pct-b { color: var(--neon-pink); }
+
+    /* 상태 뱃지 */
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
+    .status-active { background-color: rgba(57, 255, 20, 0.15); color: var(--neon-green); border: 1px solid rgba(57, 255, 20, 0.3); }
+    .status-ended { background-color: rgba(161, 161, 170, 0.15); color: var(--text-sub); border: 1px solid rgba(161, 161, 170, 0.3); }
+    .status-blinded { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); }
+
+    /* 액션 버튼 */
+    .action-btns { display: flex; gap: 8px; }
+    .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; font-family: 'Pentabreed', 'Pretendard', sans-serif;}
+    .btn-sm:active { transform: scale(0.95); }
+    .btn-detail { background-color: #3f3f46; color: #fff; }
+    .btn-detail:hover { background-color: #52525b; }
+    .btn-blind { background-color: transparent; border: 1px solid var(--neon-pink); color: var(--neon-pink); }
+    .btn-blind:hover { background-color: rgba(255, 0, 127, 0.1); }
+    .btn-unblind { background-color: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); }
+
+    /* 페이지네이션 */
+    .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 25px; padding-bottom: 40px; }
+    .page-btn { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 6px; background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .page-btn:hover { background-color: #27272a; color: #fff; }
+    .page-btn.active { background-color: var(--neon-green); border-color: var(--neon-green); color: #000; }
+
+
+    /* 명예의 전당 관리 */
+    .hall-help { background: rgba(255, 204, 0, 0.06); border: 1px solid rgba(255, 204, 0, 0.25); color: #e4e4e7; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.6; }
+    .hall-help b { color: var(--theme-gold); }
+    .hall-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .hall-tab { background: transparent; border: 1px solid #3f3f46; color: var(--text-sub); border-radius: 999px; padding: 8px 16px; font-weight: 800; font-size: 0.85rem; cursor: pointer; font-family: inherit; }
+    .hall-tab.active { background: var(--theme-gold); border-color: var(--theme-gold); color: #000; }
+    .hall-tab .n { margin-left: 6px; opacity: 0.85; }
+    .badge-chip { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; margin: 0 4px 4px 0; border: 1px solid; white-space: nowrap; }
+    .badge-scale { color: var(--neon-blue); border-color: var(--neon-blue); }
+    .badge-landslide { color: var(--neon-pink); border-color: var(--neon-pink); }
+    .badge-debate { color: #bf5fff; border-color: #bf5fff; }
+    .badge-dopamine { color: var(--neon-green); border-color: var(--neon-green); }
+    .dec-approved { background-color: rgba(255, 204, 0, 0.15); color: var(--theme-gold); border: 1px solid rgba(255, 204, 0, 0.4); }
+    .dec-excluded { background-color: rgba(255, 0, 127, 0.15); color: var(--neon-pink); border: 1px solid rgba(255, 0, 127, 0.3); }
+    .dec-pending { background-color: rgba(0, 240, 255, 0.12); color: var(--neon-blue); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .dec-auto-no { background-color: rgba(161, 161, 170, 0.15); color: var(--text-sub); border: 1px solid rgba(161, 161, 170, 0.3); }
+    .btn-approve { background-color: var(--theme-gold); color: #000; }
+    .btn-exclude { background-color: transparent; border: 1px solid var(--neon-pink); color: var(--neon-pink); }
+    .btn-reset-dec { background-color: transparent; border: 1px solid #52525b; color: #d4d4d8; }
+    .report-warn { color: var(--neon-pink); font-weight: 900; }
+    .note-line { display: block; font-size: 0.72rem; color: var(--text-sub); margin-top: 4px; max-width: 260px; white-space: normal; }
+    .hall-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .hall-modal-bg.open { display: flex; }
+    .hall-modal { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; width: min(480px, 92vw); padding: 24px; }
+    .hall-modal h3 { margin: 0 0 6px; font-size: 1.1rem; }
+    .hall-modal p { margin: 0 0 14px; color: var(--text-sub); font-size: 0.85rem; line-height: 1.5; }
+    .hall-modal textarea { width: 100%; box-sizing: border-box; min-height: 90px; background: #09090b; border: 1px solid #3f3f46; color: #fff; border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 0.9rem; resize: vertical; }
+    .hall-modal .row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .hall-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 12px 20px; border-radius: 10px; font-weight: 700; z-index: 1100; display: none; }
+    .hall-toast.show { display: block; }
+    .hall-sql-missing { background: rgba(255, 0, 127, 0.08); border: 1px solid rgba(255, 0, 127, 0.3); color: #fecdd3; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; font-size: 0.85rem; display: none; }
+</style>
+  <link rel="stylesheet" href="css/admin-header.css">
+</head>
+<body>
+
+<!-- 💡 사이드바 완벽 복원 -->
+<aside class="sidebar">
+    <div class="logo-area">
+        <h1 class="logo" onclick="location.href='admin_dashboard.html'">P!CKLE</h1>
+        <div class="logo-sub">ADMINISTRATOR 2.6</div>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item" onclick="location.href='admin_dashboard.html'"><div class="nav-item-left"><span class="nav-icon">📊</span> 대시보드</div></li>
+        <li class="nav-item" onclick="location.href='admin_users.html'"><div class="nav-item-left"><span class="nav-icon">👥</span> 회원 관리</div></li>
+        <li class="nav-item" onclick="location.href='admin_categories.html'"><div class="nav-item-left"><span class="nav-icon">📁</span> 카테고리 관리</div></li>
+        <li class="nav-item active" onclick="location.href='admin_post_list.html'"><div class="nav-item-left"><span class="nav-icon">🔥</span> 불판 관리</div></li>
+        <li class="nav-sub-item" onclick="location.href='admin_post_list.html'">· 일반 불판 관리</li>
+        <li class="nav-sub-item active" onclick="location.href='admin_hall.html'">· 명예의 전당 관리</li>
+        <li class="nav-sub-item" onclick="location.href='admin_sponsor.html'">· 스폰(최애) 불판 설정</li>
+        <li class="nav-item" onclick="location.href='admin_ads.html'"><div class="nav-item-left"><span class="nav-icon">💰</span> 광고(스폰) 정산</div></li>
+        <li class="nav-sub-item" onclick="location.href='admin_ads.html'">· 광고주/대행사 정산 관리</li>
+        <li class="nav-item" onclick="location.href='admin_events.html'"><div class="nav-item-left"><span class="nav-icon">🎁</span> 이벤트/프로모션</div></li>
+        <li class="nav-item" onclick="location.href='admin_reports.html'"><div class="nav-item-left"><span class="nav-icon">🚨</span> 신고 및 제재 관리</div><span class="badge-danger">12</span></li>
+        <li class="nav-item" onclick="location.href='admin_ai_filter.html'"><div class="nav-item-left"><span class="nav-icon">🤖</span> AI 필터링 설정</div></li>
+        <li class="nav-item" onclick="location.href='admin_statistics.html'"><div class="nav-item-left"><span class="nav-icon">📈</span> 통계 및 분석</div></li>
+        <li class="nav-item" onclick="location.href='admin_cs.html'"><div class="nav-item-left"><span class="nav-icon">🎧</span> 고객센터 (CS)</div></li>
+        <li class="nav-item" onclick="location.href='admin_settings.html'"><div class="nav-item-left"><span class="nav-icon">⚙️</span> 시스템 설정</div></li>
+    </ul>
+</aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <h2 class="page-title"><span style="font-size:1.5rem;">🏅</span> 명예의 전당 관리</h2>
+        <div class="admin-profile admin-header-user" id="adminHeaderUser">
+            <button type="button" class="admin-header-user-btn" id="btnHeaderUserMenu" aria-haspopup="true" aria-expanded="false">
+                <span id="header-user-info"></span>
+                <span class="admin-header-caret">▾</span>
+            </button>
+            <div class="admin-avatar" id="header-user-avatar">A</div>
+            <div class="admin-header-dropdown" id="headerUserDropdown" hidden>
+                <button type="button" class="admin-header-menu-item" id="btnHeaderChangePassword">🔐 비밀번호 변경</button>
+                <button type="button" class="admin-header-menu-item admin-header-menu-logout" id="btnHeaderLogout">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="content-container">
+
+        <div class="hall-sql-missing" id="hallSqlMissing">⚠️ 명예의 전당 관리 기능(SQL 155)이 아직 적용되지 않았습니다. Supabase에서 <b>pickle_hall_admin_155.sql</b>을 먼저 실행해 주세요.</div>
+
+        <div class="hall-help">
+            <b>이렇게 운영됩니다.</b> 투표 허들과 4대 천왕 뱃지(신의 저울·반박불가 팩폭·방구석 100분 토론·도파민 급발진) 중 하나를 통과한 마감 불판이 <b>검토 대기</b>로 올라옵니다.
+            <b>선정</b>하면 회원 화면 "전당 후보작"에 <b>공식 선정</b>으로 표시되고 작성자에게 알림이 가며 픽클러 점수 +500이 반영됩니다.
+            <b>제외</b>하면 회원 화면에서 숨겨지고(사유 필수, 작성자에게는 알리지 않음), 선정·제외 모두 <b>되돌리기</b>가 가능하며 처리 내역은 활동 기록에 남습니다.
+            아직 검토하지 않은 불판은 자동 기준만 통과하면 회원 화면에 그대로 보입니다.
+        </div>
+
+        <div class="mini-kpi-row" style="grid-template-columns: repeat(5, 1fr);">
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">현재 투표 허들</span><span class="mini-kpi-val" id="hallKpiHurdle">—</span></div>
+                <div class="mini-kpi-icon">🚧</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">활성 유저 (30일)</span><span class="mini-kpi-val" id="hallKpiActive" style="color: var(--neon-blue);">—</span></div>
+                <div class="mini-kpi-icon">👥</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">검토 대기</span><span class="mini-kpi-val" id="hallKpiPending" style="color: var(--neon-green);">—</span></div>
+                <div class="mini-kpi-icon">📝</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">공식 선정</span><span class="mini-kpi-val" id="hallKpiApproved" style="color: var(--theme-gold);">—</span></div>
+                <div class="mini-kpi-icon">🏅</div>
+            </div>
+            <div class="mini-kpi-card">
+                <div class="mini-kpi-info"><span class="mini-kpi-title">제외</span><span class="mini-kpi-val" id="hallKpiExcluded" style="color: var(--neon-pink);">—</span></div>
+                <div class="mini-kpi-icon">🚫</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="input-group">
+                <span class="input-label">마감 연도</span>
+                <select class="admin-select" id="hallYear" style="width: 130px;"></select>
+            </div>
+            <div class="input-group">
+                <span class="input-label">검색어</span>
+                <input type="text" class="admin-input" id="hallSearch" placeholder="불판 제목 또는 작성자(닉네임)">
+            </div>
+            <button type="button" class="btn-search" id="hallBtnSearch">조회</button>
+            <button type="button" class="btn-reset" id="hallBtnReset">초기화</button>
+        </div>
+
+        <div class="hall-tabs" id="hallTabs">
+            <button type="button" class="hall-tab active" data-status="pending">검토 대기<span class="n" id="hallTabPending"></span></button>
+            <button type="button" class="hall-tab" data-status="approved">공식 선정<span class="n" id="hallTabApproved"></span></button>
+            <button type="button" class="hall-tab" data-status="excluded">제외<span class="n" id="hallTabExcluded"></span></button>
+            <button type="button" class="hall-tab" data-status="all">전체</button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-control">
+                <span class="table-total">총 <b id="hallTotal">—</b>건</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>불판 주제</th>
+                        <th>카테고리</th>
+                        <th>마감 일시</th>
+                        <th>투표 (A vs B)</th>
+                        <th>댓글</th>
+                        <th>신고</th>
+                        <th>통과한 뱃지</th>
+                        <th>상태</th>
+                        <th>관리자 액션</th>
+                    </tr>
+                </thead>
+                <tbody id="hallBody">
+                    <tr><td colspan="9" style="text-align:center;padding:40px;color:#71717a;">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</main>
+
+<div class="hall-modal-bg" id="hallModalBg">
+    <div class="hall-modal" role="dialog" aria-modal="true">
+        <h3 id="hallModalTitle"></h3>
+        <p id="hallModalDesc"></p>
+        <textarea id="hallModalNote" maxlength="300"></textarea>
+        <div class="row">
+            <button type="button" class="btn-reset" id="hallModalCancel">취소</button>
+            <button type="button" class="btn-search" id="hallModalOk">확인</button>
+        </div>
+    </div>
+</div>
+<div class="hall-toast" id="hallToast"></div>
+
+<script src="js/admin-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin-hall.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin-auth.js"></script>
+</body>
+</html>

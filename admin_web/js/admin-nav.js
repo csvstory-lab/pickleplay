@@ -36,10 +36,31 @@
     }
   }
 
+  /** 모든 관리자 화면 사이드바에 "명예의 전당 관리" 메뉴를 한 번에 추가 (페이지마다 고치지 않아도 됨) */
+  function ensureHallMenu(sidebar) {
+    if (sidebar.querySelector('[data-admin-menu="hall"]')) return;
+    var already = Array.prototype.some.call(sidebar.querySelectorAll('.nav-sub-item'), function (el) {
+      return /admin_hall\.html/.test(el.getAttribute('onclick') || '') || el.getAttribute('data-nav-href') === 'admin_hall.html';
+    });
+    if (already) return;
+    var anchor = null;
+    sidebar.querySelectorAll('.nav-sub-item').forEach(function (el) {
+      if (/admin_post_list\.html/.test(el.getAttribute('onclick') || '')) anchor = el;
+    });
+    if (!anchor) return;
+    var li = document.createElement('li');
+    li.className = 'nav-sub-item';
+    li.setAttribute('data-admin-menu', 'hall');
+    li.setAttribute('onclick', "location.href='admin_hall.html'");
+    li.textContent = '· 명예의 전당 관리';
+    anchor.insertAdjacentElement('afterend', li);
+  }
+
   function bindSidebarNavigation() {
     var sidebar = document.querySelector('.sidebar');
     if (!sidebar || sidebar.dataset.navBound === '1') return;
     sidebar.dataset.navBound = '1';
+    ensureHallMenu(sidebar);
 
     sidebar.querySelectorAll('.nav-item, .nav-sub-item').forEach(function (item) {
       var onclick = item.getAttribute('onclick') || '';
