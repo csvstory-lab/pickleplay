@@ -80,7 +80,7 @@
       });
       if (res.error) throw res.error;
 
-      alert('문의가 접수되었습니다.\n담당자 확인 후 답변을 보내드립니다.');
+      alert('문의가 접수되었습니다.\n담당자 확인 후 답변을 보내드립니다.\n답변은 알림으로 알려드리고, 설정 > "내 1:1 문의"에서도 확인할 수 있어요.');
       if (textarea) textarea.value = '';
       if (select) select.selectedIndex = 0;
       if (typeof window.closePanel === 'function' && document.getElementById('supportPanel')) {
