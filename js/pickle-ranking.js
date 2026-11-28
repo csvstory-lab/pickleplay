@@ -55,6 +55,14 @@
     return Math.round(n).toLocaleString('ko-KR');
   }
 
+  /** 핫 불판 점수 표시: 0점(활동 없음)은 NEW, 10점 미만은 소수 한 자리, 그 이상은 정수 */
+  function formatGrillScore(value) {
+    var n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return 'NEW';
+    if (n < 10) return (Math.round(n * 10) / 10).toLocaleString('ko-KR', { minimumFractionDigits: 1 });
+    return formatScore(n);
+  }
+
   function scoreWithIcon(value, iconHtml) {
     return iconHtml + ' ' + formatScore(value);
   }
@@ -569,7 +577,7 @@
       var podiumAd = sponsorAdBadgeHtml(meta);
       if (podiumAd) nameEl.insertAdjacentHTML('afterbegin', podiumAd);
     }
-    if (scoreEl) scoreEl.innerHTML = scoreWithIcon(row.hot_grill_score, ICON.fire);
+    if (scoreEl) scoreEl.innerHTML = ICON.fire + ' ' + formatGrillScore(row.hot_grill_score);
     if (rankEl) rankEl.textContent = String(rank);
 
     slotEl.onclick = function () {
@@ -583,7 +591,7 @@
     var status = postStatusLabel(meta);
     var statusStyle =
       status === '마감 완료' ? ' style="color:var(--neon-sub);"' : '';
-    var score = formatScore(row.hot_grill_score);
+    var score = formatGrillScore(row.hot_grill_score);
     var picInner = renderMediaInner(meta, 'fire');
 
     return (
