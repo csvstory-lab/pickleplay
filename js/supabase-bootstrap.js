@@ -88,7 +88,7 @@
     }
 
     if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-      return 'Supabase JS 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해 주세요.';
+      return '연결이 잠깐 원활하지 않아요. 화면을 새로고침해 주세요.';
     }
 
     if (typeof window.getPickleSupabaseClient !== 'function') {

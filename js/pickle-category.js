@@ -334,9 +334,12 @@
     } catch (err) {
       console.error('[P!CKLE Category]', err);
       container.innerHTML =
-        '<div class="feed-empty feed-error">불판을 불러오지 못했습니다.<p style="font-size:0.75rem;margin-top:8px;word-break:break-all;">' +
-        String(err && err.message ? err.message : err) +
-        '</p></div>';
+        '<div class="feed-empty feed-error">불판을 잠깐 불러오지 못했어요. 화면을 새로고침해 주세요 🔄' +
+        (/[?&]debug=1/.test(location.search)
+          ? '<p style="font-size:0.75rem;margin-top:8px;word-break:break-all;">' +
+            String(err && err.message ? err.message : err).replace(/</g, '&lt;') + '</p>'
+          : '') +
+        '</div>';
       container.style.opacity = '1';
     } finally {
       state.loading = false;

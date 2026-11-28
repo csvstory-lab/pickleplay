@@ -1431,7 +1431,7 @@ async function goDetail(id) {
     var html =
       '<div class="feed-empty feed-error">' +
       escapeHtml(message) +
-      (detail
+      (detail && /[?&]debug=1/.test(location.search)
         ? '<p style="font-size:0.75rem;margin-top:8px;opacity:0.85;word-break:break-all;">' +
           escapeHtml(detail) +
           '</p>'
@@ -1560,7 +1560,7 @@ async function goDetail(id) {
           renderGuestSafeEmptyFeed(king, list);
         }
       } else {
-        showFeedError('불판을 불러오지 못했습니다.', detail);
+        showFeedError('불판을 잠깐 불러오지 못했어요. 화면을 새로고침해 주세요 🔄', detail);
       }
     } finally {
       setFeedLoading(false);

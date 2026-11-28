@@ -2375,7 +2375,10 @@ function renderCommentsList(comments, sortType) {
       renderDetail(post, voteStats, commentCount);
     } catch (err) {
       console.error('[P!CKLE Detail]', err);
-      showError('불판을 불러오지 못했습니다. ' + (err.message || String(err)));
+      showError(
+        '불판을 잠깐 불러오지 못했어요. 화면을 새로고침해 주세요.' +
+          (/[?&]debug=1/.test(location.search) ? ' (' + (err.message || String(err)) + ')' : ''),
+      );
     }
   }
 

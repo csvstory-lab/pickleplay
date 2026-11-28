@@ -180,8 +180,46 @@ function buildLogoSvg(width: number, height: number): SatoriElement {
   );
 }
 
+// -----------------------------------------------------------------------------
+// 공통 디자인 토큰 — 앱(user_app)의 다크 테마·파스텔 포인트 색과 동일하게 맞춤.
+// 이모지는 사용하지 않는다(Pretendard에 이모지 글리프가 없어 이미지에서 네모(▤)로 깨짐).
+// -----------------------------------------------------------------------------
+const C = {
+  bg: '#0a0a0c',
+  card: '#1c1c1e',
+  mint: '#4ADE80',
+  blue: '#73A5FF',
+  pink: '#FF85A1',
+  gold: '#FCD34D',
+  text: '#fcfcfc',
+  sub: '#a1a1aa',
+};
+const SITE_HOST = 'pickleplay.kr';
+
+function buildArrowSvg(size: number, color: string): SatoriElement {
+  return h(
+    'svg',
+    { viewBox: '0 0 24 24', width: size, height: size, fill: 'none' },
+    h('path', {
+      d: 'M5 12h14M13 6l6 6-6 6',
+      stroke: color,
+      'stroke-width': 3,
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    }),
+  );
+}
+
+function buildCrownSvg(size: number, color: string): SatoriElement {
+  return h(
+    'svg',
+    { viewBox: '0 0 24 24', width: size, height: size },
+    h('path', { d: 'M3 18l-1-11 5.5 4L12 4l4.5 7L22 7l-1 11H3zm0 2h18v2H3v-2z', fill: color }),
+  );
+}
+
 function buildHeader(title: string): SatoriElement {
-  const logo = buildLogoSvg(280, 70);
+  const logo = buildLogoSvg(340, 85);
 
   return h(
     'div',
@@ -193,9 +231,9 @@ function buildHeader(title: string): SatoriElement {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 28,
+        gap: 30,
         padding: '0 80px',
-        background: '#0a0a0c',
+        background: C.bg,
         boxSizing: 'border-box',
         flexShrink: 0,
       },
@@ -209,7 +247,7 @@ function buildHeader(title: string): SatoriElement {
           fontWeight: 800,
           lineHeight: 1.25,
           letterSpacing: -1,
-          color: '#fcfcfc',
+          color: C.text,
           wordBreak: 'keep-all',
           textAlign: 'center',
         },
@@ -227,9 +265,11 @@ function buildFooter(): SatoriElement {
         height: 420,
         width: WIDTH,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0a0a0c',
+        gap: 26,
+        background: C.bg,
         boxSizing: 'border-box',
         flexShrink: 0,
       },
@@ -239,21 +279,23 @@ function buildFooter(): SatoriElement {
       {
         style: {
           width: 952,
-          height: 140,
-          borderRadius: 32,
-          border: '3px dashed rgba(252, 252, 252, 0.55)',
-          color: '#fcfcfc',
-          background: 'rgba(255, 255, 255, 0.06)',
+          height: 150,
+          borderRadius: 75,
+          background: C.mint,
+          color: C.bg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 44,
+          gap: 18,
+          fontSize: 52,
           fontWeight: 800,
           letterSpacing: -1,
         },
       },
-      '👇 터치해서 내 픽 남기기',
+      '터치해서 내 픽 남기기',
+      buildArrowSvg(54, C.bg),
     ),
+    h('div', { style: { fontSize: 34, fontWeight: 700, color: C.sub } }, SITE_HOST),
   );
 }
 
@@ -284,7 +326,7 @@ function buildHalf(
     },
     h(
       'div',
-      { style: { fontSize: 40, fontWeight: 800, color: colors.accent, letterSpacing: -1 } },
+      { style: { fontSize: 40, fontWeight: 800, color: colors.accent, letterSpacing: 1 } },
       label,
     ),
     h(
@@ -339,14 +381,14 @@ function buildStoryTemplate(post: PostOgData): SatoriElement {
       buildHalf(
         'A PICK',
         optionA,
-        { bg: '#DCE8FF', accent: '#3E6BE0', text: '#152A5C' },
+        { bg: '#111c36', accent: C.blue, text: C.text },
         'flex-end',
         { paddingTop: 48, paddingBottom: 150 },
       ),
       buildHalf(
         'B PICK',
         optionB,
-        { bg: '#FFE0EA', accent: '#E23F72', text: '#5C1530' },
+        { bg: '#2e1320', accent: C.pink, text: C.text },
         'flex-start',
         { paddingTop: 150, paddingBottom: 48 },
       ),
@@ -364,11 +406,11 @@ function buildStoryTemplate(post: PostOgData): SatoriElement {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#fcfcfc',
-            color: '#0a0a0c',
-            fontSize: 56,
+            background: C.mint,
+            color: C.bg,
+            fontSize: 60,
             fontWeight: 800,
-            zIndex: 2,
+            border: `10px solid ${C.bg}`,
           },
         },
         'VS',
@@ -383,96 +425,51 @@ function buildStoryTemplate(post: PostOgData): SatoriElement {
 // 종료된 불판(투표 결과) 공유용 1:1 정방형 템플릿 — 위 9:16 스토리 템플릿과는 독립적으로 동작.
 // =============================================================================
 
-function buildResultHeader(title: string): SatoriElement {
-  return h(
-    'div',
-    {
-      style: {
-        background: '#000000',
-        padding: '80px 40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      },
-    },
-    h(
-      'div',
-      {
-        style: {
-          fontSize: 56,
-          fontWeight: 900,
-          color: '#ffffff',
-          textAlign: 'center',
-          wordBreak: 'keep-all',
-          lineHeight: 1.3,
-        },
-      },
-      title,
-    ),
-  );
-}
-
-function buildResultHalf(
+function buildResultCard(
+  label: string,
   name: string,
   pct: number,
-  colors: { bg: string; pct: string },
-  isWinner: boolean,
+  accent: string,
+  state: 'win' | 'lose' | 'draw',
 ): SatoriElement {
-  const children: SatoriChild[] = [];
-
-  if (isWinner) {
-    children.push(
-      h(
-        'div',
-        {
-          style: {
-            position: 'absolute',
-            top: 70,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#FFD700',
-            color: '#000000',
-            fontSize: 38,
-            fontWeight: 900,
-            padding: '16px 36px',
-            borderRadius: 50,
-            transform: 'rotate(-10deg)',
+  const isWin = state === 'win';
+  const badge =
+    state === 'win'
+      ? h(
+          'div',
+          {
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'rgba(252, 211, 77, 0.16)',
+              color: C.gold,
+              fontSize: 34,
+              fontWeight: 800,
+              padding: '10px 26px',
+              borderRadius: 40,
+            },
           },
-        },
-        '👑 WIN',
-      ),
-    );
-  }
-
-  children.push(
-    h(
-      'div',
-      {
-        style: {
-          fontSize: 60,
-          fontWeight: 800,
-          color: '#333333',
-          marginBottom: 24,
-          textAlign: 'center',
-          wordBreak: 'keep-all',
-        },
-      },
-      name,
-    ),
-    h(
-      'div',
-      {
-        style: {
-          fontSize: 130,
-          fontWeight: 900,
-          color: colors.pct,
-          textShadow: '2px 2px 0px rgba(255,255,255,0.5)',
-        },
-      },
-      `${pct}%`,
-    ),
-  );
+          buildCrownSvg(36, C.gold),
+          'WIN',
+        )
+      : state === 'draw'
+        ? h(
+            'div',
+            {
+              style: {
+                display: 'flex',
+                background: 'rgba(252, 211, 77, 0.16)',
+                color: C.gold,
+                fontSize: 34,
+                fontWeight: 800,
+                padding: '10px 26px',
+                borderRadius: 40,
+              },
+            },
+            'DRAW',
+          )
+        : h('div', { style: { display: 'flex', height: 58 } }, ' ');
 
   return h(
     'div',
@@ -481,61 +478,55 @@ function buildResultHalf(
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative',
-        background: colors.bg,
-        padding: 40,
+        justifyContent: 'center',
+        gap: 16,
+        padding: '28px 24px',
+        borderRadius: 40,
+        background: isWin ? 'rgba(255,255,255,0.07)' : C.card,
+        border: isWin ? `5px solid ${accent}` : '2px solid rgba(255,255,255,0.10)',
+        boxSizing: 'border-box',
       },
     },
-    ...children,
+    badge,
+    h('div', { style: { fontSize: 32, fontWeight: 800, color: accent, letterSpacing: 1 } }, `${label} PICK`),
+    h(
+      'div',
+      {
+        style: {
+          fontSize: 46,
+          fontWeight: 800,
+          lineHeight: 1.25,
+          color: isWin ? C.text : '#d4d4d8',
+          textAlign: 'center',
+          wordBreak: 'keep-all',
+          minHeight: 116,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+      },
+      name,
+    ),
+    h(
+      'div',
+      { style: { fontSize: 150, fontWeight: 900, lineHeight: 1, color: accent, letterSpacing: -4 } },
+      `${pct}%`,
+    ),
   );
 }
 
-function buildResultFooter(totalParticipants: number): SatoriElement {
+function buildRatioBar(pctA: number, pctB: number, total: number): SatoriElement {
+  if (total <= 0) {
+    return h('div', {
+      style: { display: 'flex', height: 26, borderRadius: 13, background: 'rgba(255,255,255,0.12)' },
+    });
+  }
   return h(
     'div',
-    {
-      style: {
-        background: '#000000',
-        padding: '45px 50px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      },
-    },
-    h(
-      'div',
-      {
-        style: {
-          fontSize: 36,
-          fontWeight: 700,
-          color: '#ffffff',
-          background: '#222222',
-          padding: '16px 32px',
-          borderRadius: 20,
-        },
-      },
-      `총 ${totalParticipants.toLocaleString()}명 참여 완료!`,
-    ),
-    h(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 10, // 로고 크기를 슬로건에 맞춰 줄인 만큼 간격도 함께 좁혀 균형 유지
-        },
-      },
-      h(
-        'div',
-        { style: { fontSize: 22, fontWeight: 600, color: '#aaaaaa' } },
-        '톡 쏘는 논쟁과 재미 - 픽클',
-      ),
-      // 9:16 헤더와 동일한 SVG 소스를 재사용, 슬로건(fontSize 22px)과 시각적으로 맞춘 높이 26px(비율 유지 width 104px).
-      buildLogoSvg(104, 26),
-    ),
+    { style: { display: 'flex', height: 26, borderRadius: 13, overflow: 'hidden', background: 'rgba(255,255,255,0.12)' } },
+    h('div', { style: { display: 'flex', width: `${pctA}%`, background: C.blue } }),
+    h('div', { style: { display: 'flex', width: `${pctB}%`, background: C.pink } }),
   );
 }
 
@@ -545,10 +536,9 @@ function buildResultSquareTemplate(post: PostOgData, stats: VoteStats): SatoriEl
   const optionB = truncateText(String(post.option_b_name || 'B 선택지'), 20);
   const pct = calcVotePercent(stats.votesA, stats.votesB);
 
-  let winner: 'A' | 'B' | null = null;
-  if (stats.votesA !== stats.votesB) {
-    winner = stats.votesA > stats.votesB ? 'A' : 'B';
-  }
+  const draw = stats.votesA === stats.votesB;
+  const aState = draw ? 'draw' : stats.votesA > stats.votesB ? 'win' : 'lose';
+  const bState = draw ? 'draw' : stats.votesB > stats.votesA ? 'win' : 'lose';
 
   return h(
     'div',
@@ -556,21 +546,90 @@ function buildResultSquareTemplate(post: PostOgData, stats: VoteStats): SatoriEl
       style: {
         width: RESULT_SIZE,
         height: RESULT_SIZE,
-        background: '#ffffff',
+        background: C.bg,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         fontFamily: 'Pretendard',
+        padding: '44px 48px 40px',
+        boxSizing: 'border-box',
       },
     },
-    buildResultHeader(title),
+    // 상단: 로고 + 결과 라벨
     h(
       'div',
-      { style: { display: 'flex', flex: 1 } },
-      buildResultHalf(optionA, pct.pctA, { bg: '#E6F3FF', pct: '#0066CC' }, winner === 'A'),
-      buildResultHalf(optionB, pct.pctB, { bg: '#FFF0F5', pct: '#CC0052' }, winner === 'B'),
+      { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+      buildLogoSvg(220, 55),
+      h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            fontSize: 30,
+            fontWeight: 800,
+            color: C.mint,
+            border: `3px solid ${C.mint}`,
+            borderRadius: 40,
+            padding: '8px 26px',
+          },
+        },
+        '투표 결과',
+      ),
     ),
-    buildResultFooter(stats.total),
+    h(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          marginTop: 26,
+          fontSize: 54,
+          fontWeight: 800,
+          lineHeight: 1.28,
+          letterSpacing: -1,
+          color: C.text,
+          wordBreak: 'keep-all',
+        },
+      },
+      title,
+    ),
+    // 중앙: A / B 결과 카드
+    h(
+      'div',
+      { style: { display: 'flex', flex: 1, gap: 20, marginTop: 28 } },
+      buildResultCard('A', optionA, pct.pctA, C.blue, aState),
+      buildResultCard('B', optionB, pct.pctB, C.pink, bState),
+    ),
+    // 비율 막대
+    h('div', { style: { display: 'flex', flexDirection: 'column', marginTop: 28 } }, buildRatioBar(pct.pctA, pct.pctB, stats.total)),
+    // 하단: 참여 인원 + CTA
+    h(
+      'div',
+      { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 30 } },
+      h(
+        'div',
+        { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+        h('div', { style: { display: 'flex', fontSize: 38, fontWeight: 800, color: C.text } }, `총 ${stats.total.toLocaleString()}명 참여`),
+        h('div', { style: { display: 'flex', fontSize: 28, fontWeight: 700, color: C.sub } }, SITE_HOST),
+      ),
+      h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            background: C.mint,
+            color: C.bg,
+            fontSize: 40,
+            fontWeight: 800,
+            padding: '22px 40px',
+            borderRadius: 60,
+          },
+        },
+        '나도 투표하기',
+        buildArrowSvg(40, C.bg),
+      ),
+    ),
   );
 }
 

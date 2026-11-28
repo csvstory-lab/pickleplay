@@ -24,15 +24,14 @@
 
 <title>P!CKLE - 로그인 (픽클러 데뷔하기 적용)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
     :root {
-        --bg-color: #09090b;
-        --card-bg: #18181b;
-        --neon-green: #39ff14;
-        --neon-pink: #ff007f;
-        --neon-blue: #00f0ff;
+        --bg-color: #0a0a0c;
+        --card-bg: #1c1c1e;
+        --neon-green: #4ADE80;
+        --neon-pink: #FF85A1;
+        --neon-blue: #73A5FF;
         --text-main: #ffffff;
         --text-sub: #a1a1aa;
         --border-color: #27272a;
@@ -114,7 +113,7 @@
     .email-field:focus {
         border-color: var(--neon-green);
         background-color: #353538;
-        box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
+        box-shadow: 3px 3px 0 rgba(74, 222, 128, 0.25);
     }
     /* 로그인 / 회원가입 화면 분리 */
     .auth-screen { width: 100%; }
@@ -145,10 +144,10 @@
     .btn-back-to-login:active { color: var(--neon-green); }
     .signup-title {
         margin: 0;
-        font-family: 'Black Han Sans', sans-serif;
+        font-family: 'Pretendard', sans-serif; font-weight: 900;
         font-size: 1.75rem;
         letter-spacing: -0.5px;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        background: linear-gradient(90deg, #4ADE80, #86EFAC);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -163,15 +162,15 @@
     .signup-info-notice {
         margin: 4px 0 2px;
         padding: 12px 14px;
-        border: 1px solid rgba(57, 255, 20, 0.35);
+        border: 1px solid rgba(74, 222, 128, 0.35);
         border-radius: 12px;
-        background: rgba(57, 255, 20, 0.06);
+        background: rgba(74, 222, 128, 0.06);
         font-size: 0.8rem;
         font-weight: 700;
         color: #c8ff9e;
         line-height: 1.5;
         word-break: keep-all;
-        box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+        box-shadow: 0 0 12px rgba(74, 222, 128, 0.08);
     }
     .signup-check-row {
         display: flex;
@@ -243,9 +242,9 @@
     }
     .gender-toggle input:checked + .gender-btn {
         border-color: var(--neon-green);
-        background-color: rgba(57, 255, 20, 0.12);
+        background-color: rgba(74, 222, 128, 0.12);
         color: #fff;
-        box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
+        box-shadow: 3px 3px 0 rgba(74, 222, 128, 0.25);
     }
     .signup-select {
         width: 100%;
@@ -268,7 +267,7 @@
     }
     .signup-select:focus {
         border-color: var(--neon-green);
-        box-shadow: 3px 3px 0 rgba(57, 255, 20, 0.25);
+        box-shadow: 3px 3px 0 rgba(74, 222, 128, 0.25);
     }
     .signup-select option { background: var(--card-bg); color: #fff; }
     .btn-email-login {
@@ -276,9 +275,9 @@
         min-height: 54px;
         margin-top: 4px;
         border: 2px solid #000; border-radius: 14px;
-        background: linear-gradient(90deg, var(--neon-green), #aaff00);
+        background: linear-gradient(90deg, #4ADE80, #86EFAC);
         color: #000;
-        font-family: 'Black Han Sans', sans-serif;
+        font-family: 'Pretendard', sans-serif; font-weight: 900;
         font-size: 1.22rem; letter-spacing: 0.5px;
         cursor: pointer;
         box-shadow: 4px 4px 0 #000;
@@ -346,7 +345,7 @@
     }
     .auth-modal-title {
         margin: 0 0 8px;
-        font-family: 'Black Han Sans', sans-serif;
+        font-family: 'Pretendard', sans-serif; font-weight: 900;
         font-size: 1.25rem;
         color: #fff;
     }
@@ -444,7 +443,7 @@
                 <defs>
                     <style>
                         .cls-1 { fill: #85db67; }
-                        .cls-2 { fill: #4918a0; }
+                        .cls-2 { fill: #fcfcfc; }
                     </style>
                 </defs>
                 <g>

@@ -885,7 +885,10 @@
       window.location.reload();
     } catch (error) {
       console.error('프로필 저장 실패:', error.message);
-      alert('프로필 저장에 실패했습니다: ' + error.message);
+      var pm = String((error && error.message) || '');
+      alert(/duplicate|unique/i.test(pm)
+        ? '이미 사용 중인 닉네임이에요. 다른 닉네임으로 바꿔 주세요.'
+        : '프로필을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       if (saveBtn) {
         saveBtn.disabled = false;
