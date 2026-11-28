@@ -277,7 +277,9 @@
           escapeHtml(title) +
           '</span>' +
           '</div>' +
-          '<span class="trend-stats">투표 ' +
+          '<span class="trend-stats">' +
+          (post.recent_votes != null ? '24시간 +' + formatKpi(post.recent_votes) + ' · ' : '') +
+          '누적 ' +
           formatKpi(post.vote_count) +
           ' / 참견 ' +
           formatKpi(post.comment_count) +
@@ -322,6 +324,28 @@
     return { total: fallback[0].count ?? 0, today: fallback[1].count ?? 0 };
   }
 
+  // 실시간 급상승: 최근 24시간 투표순(서버 함수 SQL 148). 미적용 시 숨김·종료 제외 누적 투표순으로 대체.
+  async function loadRisingPosts(sb) {
+    try {
+      var rpc = await sb.rpc('pickle_admin_rising_posts', { p_hours: 24, p_limit: 5 });
+      if (!rpc.error && Array.isArray(rpc.data)) return rpc.data;
+    } catch (e) { /* 아래 대체 조회 */ }
+    try {
+      var nowIso = new Date().toISOString();
+      var res = await sb
+        .from('posts')
+        .select('id, title, option_a_name, option_b_name, vote_count, comment_count, is_sponsor')
+        .eq('visibility_status', 'visible')
+        .or('expires_at.is.null,expires_at.gt.' + JSON.stringify(nowIso))
+        .order('vote_count', { ascending: false })
+        .limit(5);
+      return res.error ? [] : (res.data || []);
+    } catch (e) {
+      console.warn('[Admin Dashboard] 급상승 불판 조회 실패', e);
+      return [];
+    }
+  }
+
   async function loadDashboardKPIs() {
     try {
       var sb = getClient();
@@ -339,22 +363,17 @@
           .from('reports')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', todayStart),
-        sb
-          .from('posts')
-          .select('id, title, option_a_name, option_b_name, vote_count, comment_count, is_sponsor')
-          .order('vote_count', { ascending: false })
-          .limit(5),
+        loadRisingPosts(sb),
       ]);
 
       if (results[1].error) throw results[1].error;
       if (results[2].error) throw results[2].error;
-      if (results[3].error) throw results[3].error;
 
       setKpiText('dashboard-total-users', results[0].total);
       setKpiText('dashboard-active-posts', results[1].count ?? 0);
       setKpiText('dashboard-today-users', results[0].today);
       setKpiText('dashboard-today-reports', results[2].count ?? 0);
-      renderTopPosts(results[3].data || []);
+      renderTopPosts(results[3] || []);
 
       await Promise.all([loadTotalVotes(sb), loadPendingInquiries(sb), loadSponsorRevenue(sb), loadDashboardExtra(sb, todayStart)]);
     } catch (err) {
