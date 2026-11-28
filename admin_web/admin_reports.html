@@ -39,6 +39,10 @@
     #tabBtnReport.active::after {background-color: var(--neon-pink);}
     #tabBtnLegal.active {color: var(--neon-blue);}
     #tabBtnLegal.active::after {background-color: var(--neon-blue);}
+    #tabBtnAppeal.active {color: var(--neon-green);}
+    #tabBtnAppeal.active::after {background-color: var(--neon-green);}
+    .tab-count {display:inline-block; min-width:18px; margin-left:6px; padding:1px 6px; border-radius:10px; background:var(--neon-pink); color:#fff; font-size:.7rem; font-weight:900; text-align:center;}
+    .tab-count:empty {display:none;}
     .content-container {padding: 30px 40px; overflow-y: auto; flex: 1; scrollbar-width: none;}
     .content-container::-webkit-scrollbar {display: none;}
     .kpi-row {display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px;}
@@ -85,6 +89,7 @@
     .pagination {display: flex; justify-content: center; gap: 5px; margin-top: 25px; padding-bottom: 20px;}
     .page-btn {width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 6px; background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-sub); font-size: 0.85rem; font-weight: 700; cursor: pointer;}
     .page-btn.active-report {background-color: var(--neon-pink); border-color: var(--neon-pink); color: #fff;}
+    .page-btn.active-appeal {background-color: var(--neon-green); border-color: var(--neon-green); color: #000; font-weight: 900;}
     .page-btn.active-legal {background-color: var(--neon-blue); border-color: var(--neon-blue); color: #000; font-weight: 900;}
 
     /* 모달 스타일 복구 */
@@ -147,6 +152,7 @@
 <script src="../js/supabase-config.js"></script>
 <script src="js/admin-auth.js"></script>
 <script src="../js/pickle-penalties.js"></script>
+<script src="js/admin-appeals.js?v=20261128_ap1"></script>
   <link rel="stylesheet" href="css/admin-header.css">
 </head>
 <body>
@@ -197,6 +203,7 @@
     <div class="top-tab-wrapper">
         <button class="master-view-tab active" id="tabBtnReport" onclick="switchMasterView('report')">💬 일반 신고 및 가이드 제재 관리</button>
         <button class="master-view-tab" id="tabBtnLegal" onclick="switchMasterView('legal')">⚖️ 권리침해 신고 / 게시중단 요청서 심사</button>
+        <button class="master-view-tab" id="tabBtnAppeal" onclick="switchMasterView('appeal')">📮 이의제기 · 재게시 요청<span class="tab-count" id="appealPendingCount"></span></button>
     </div>
 
     <div class="content-container" id="sectorReportView">
@@ -273,7 +280,47 @@
         </div>
         <div class="pagination" id="legalPagination"></div>
     </div>
+
+    <div class="content-container hidden" id="sectorAppealView">
+        <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-info"><span class="kpi-title">검토 대기 중인 이의제기</span><span class="kpi-val" style="color:var(--neon-pink);" id="appealKpiPending">-</span></div></div>
+            <div class="kpi-card" style="grid-column: span 2;"><div class="kpi-info"><span class="kpi-title">처리 안내</span><span style="font-size:.85rem;color:var(--text-sub);line-height:1.6;">숨김 처리된 불판의 작성자가 남긴 이의제기입니다. 승인하면 불판이 다시 공개되고, 반려하면 숨김이 유지되며 사유가 작성자 알림으로 전달됩니다. 한 불판당 최대 3회까지 요청할 수 있습니다.</span></div></div>
+        </div>
+        <div class="filter-bar">
+            <select class="filter-select" id="appealStatus" onchange="AdminAppeals.setFilter()">
+                <option value="pending" selected>검토 대기</option>
+                <option value="done">처리 완료</option>
+                <option value="withdrawn">작성자 철회</option>
+                <option value="all">전체</option>
+            </select>
+            <button class="btn-search" onclick="AdminAppeals.setFilter()">조회</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr>
+                    <th style="width:13%;">접수 일시</th>
+                    <th style="width:12%;">작성자</th>
+                    <th style="width:28%;">숨김 불판 / 숨김 사유</th>
+                    <th style="width:27%;">이의 내용</th>
+                    <th style="width:9%;text-align:center;">상태</th>
+                    <th style="width:11%;text-align:center;">액션</th>
+                </tr></thead>
+                <tbody id="appealTableBody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--neon-green);font-weight:800;">🔍 DB 연동 대기 중...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="pagination" id="appealPagination"></div>
+    </div>
 </main>
+
+<div class="modal-overlay" id="appealModal" style="display:none;">
+    <div class="modal-container" style="border-color: var(--neon-green); max-width: 640px;">
+        <div class="modal-header">
+            <h3 class="modal-title" style="color: var(--neon-green);">📮 이의제기 · 재게시 요청 검토</h3>
+            <button class="btn-close" onclick="AdminAppeals.close()">✕</button>
+        </div>
+        <div style="padding: 20px 24px; overflow-y: auto;" id="appealModalBody"></div>
+    </div>
+</div>
 
 <div class="modal-overlay" id="sanctionModal">
     <div class="modal-container" style="border-color: var(--neon-pink);">
@@ -377,15 +424,19 @@
 
 <script id="ui-script">
     function switchMasterView(viewType) {
-        document.getElementById('tabBtnReport').classList.remove('active');
-        document.getElementById('tabBtnLegal').classList.remove('active');
-        document.getElementById('sectorReportView').classList.add('hidden');
-        document.getElementById('sectorLegalView').classList.add('hidden');
+        ['Report', 'Legal', 'Appeal'].forEach(function (k) {
+            document.getElementById('tabBtn' + k).classList.remove('active');
+            document.getElementById('sector' + k + 'View').classList.add('hidden');
+        });
 
         if (viewType === 'report') {
             document.getElementById('tabBtnReport').classList.add('active');
             document.getElementById('sectorReportView').classList.remove('hidden');
             if(window.loadReports) window.loadReports();
+        } else if (viewType === 'appeal') {
+            document.getElementById('tabBtnAppeal').classList.add('active');
+            document.getElementById('sectorAppealView').classList.remove('hidden');
+            if(window.AdminAppeals) window.AdminAppeals.load();
         } else {
             document.getElementById('tabBtnLegal').classList.add('active');
             document.getElementById('sectorLegalView').classList.remove('hidden');
@@ -966,7 +1017,7 @@
             if (shouldBlind && addPoint > 0 && ctxTargetId) {
                 const blindRes = ctxType === 'comment'
                     ? await dbClient.from('comments').update({ is_blind: true }).eq('id', ctxTargetId)
-                    : await dbClient.from('posts').update({ visibility_status: 'blinded' }).eq('id', ctxTargetId);
+                    : await hidePostViaRpc(ctxTargetId);
                 if (blindRes.error) {
                     console.error('[admin_reports] 블라인드 처리 실패:', {
                         message: blindRes.error.message,
@@ -995,6 +1046,14 @@
         }
     }
 
+    // 불판 숨김은 서버 함수로 처리 (일반 업데이트는 권한 정책상 관리자에게도 조용히 실패할 수 있음)
+    async function hidePostViaRpc(postId) {
+        const r = await dbClient.rpc('admin_set_post_visibility', { p_post_id: postId, p_status: 'blinded' });
+        if (r.error) { console.error('[admin_reports] 불판 숨김 실패', r.error); return { error: r.error }; }
+        if (r.data === false) { console.error('[admin_reports] 불판 숨김 대상 없음', postId); return { error: { message: 'not_found' } }; }
+        return { error: null };
+    }
+
     window.updateLegalCalc = function(actionType) {
         const countdown = document.getElementById('mdCountdownView');
         const preview = document.getElementById('mdNoticePreview');
@@ -1019,7 +1078,7 @@
             if (actionType === 'temporary' || actionType === 'resolved') {
                 if (curLegalTargetId && curLegalTargetId !== 0) {
                     if (curLegalTargetType === 'comment') await dbClient.from('comments').update({ is_blind: true }).eq('id', curLegalTargetId);
-                    else await dbClient.from('posts').update({ visibility_status: 'blinded' }).eq('id', curLegalTargetId);
+                    else await hidePostViaRpc(curLegalTargetId);
                 }
             }
             if (curLegalUserId && curLegalUserId !== '') {

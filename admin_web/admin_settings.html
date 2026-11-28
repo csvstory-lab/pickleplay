@@ -427,6 +427,18 @@
                         <div class="sc-item"><div class="sc-label"><strong>불판 내 댓글 작성 시</strong></div><div class="input-with-suffix"><input type="number" id="point_ugcComment" value="1" class="p-input" disabled><span>P</span></div></div>
                     </div>
 
+                    <div class="setting-card" style="grid-column: span 2;">
+                        <div class="sc-title">✍️ 작성 보상 세부 설정 (불판 작성 · 참여 인기 보너스)</div>
+                        <div class="sc-item"><div class="sc-label"><strong>하루에 보상받는 불판 수 (1인당)</strong><span>이 개수를 넘겨 올린 불판에는 작성 보상이 없습니다 (0 = 제한 없음)</span></div><div class="input-with-suffix"><input type="number" id="point_postDailyPosts" value="3" min="0" class="p-input" disabled><span>건</span></div></div>
+                        <div class="sc-item"><div class="sc-label"><strong>참여 인기 보너스 사용</strong><span>내 불판에 다른 사람이 일정 인원 이상 투표하면 작성자에게 자동 지급 (작성자 본인 투표·숨김 불판은 제외)</span></div><label class="switch"><input type="checkbox" id="point_milestoneEnabled" class="p-input" checked disabled><span class="slider"></span></label></div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-top:12px;">
+                            <div class="sc-item"><div class="sc-label"><strong>1단계</strong><span>투표 인원 / 지급 포인트 (0 = 사용 안 함)</span></div><div class="input-with-suffix"><input type="number" id="point_m1Voters" value="10" min="0" class="p-input" disabled><span>명</span></div><div class="input-with-suffix" style="margin-top:6px;"><input type="number" id="point_m1Points" value="20" min="0" class="p-input" disabled><span>P</span></div></div>
+                            <div class="sc-item"><div class="sc-label"><strong>2단계</strong><span>투표 인원 / 지급 포인트</span></div><div class="input-with-suffix"><input type="number" id="point_m2Voters" value="30" min="0" class="p-input" disabled><span>명</span></div><div class="input-with-suffix" style="margin-top:6px;"><input type="number" id="point_m2Points" value="50" min="0" class="p-input" disabled><span>P</span></div></div>
+                            <div class="sc-item"><div class="sc-label"><strong>3단계</strong><span>투표 인원 / 지급 포인트</span></div><div class="input-with-suffix"><input type="number" id="point_m3Voters" value="100" min="0" class="p-input" disabled><span>명</span></div><div class="input-with-suffix" style="margin-top:6px;"><input type="number" id="point_m3Points" value="150" min="0" class="p-input" disabled><span>P</span></div></div>
+                        </div>
+                        <p style="font-size:12px; color:#888; margin-top:10px;">※ 인기 보너스는 1일 최대 적립 한도 계산에서 제외되며, 불판 1개당 단계별로 1번만 지급됩니다. 위 "신규 불판 생성 시" 금액이 기본 작성 보상입니다.</p>
+                    </div>
+
                     <div class="setting-card">
                         <div class="sc-title">🏆 랭킹 및 명예 보상 (Honor)</div>
                         <div class="sc-item"><div class="sc-label"><strong>주간 베스트 불판 1위 등극 시</strong></div><div class="input-with-suffix"><input type="number" id="point_honorWeeklyBest" value="500" class="p-input" disabled><span>P</span></div></div>
@@ -761,8 +773,8 @@
   </div>
 
   <script src="../js/pickle-policies.js"></script>
-  <script src="../js/pickle-points.js"></script>
-  <script src="js/admin-settings-system.js"></script>
+  <script src="../js/pickle-points.js?v=20261128_pr1"></script>
+  <script src="js/admin-settings-system.js?v=20261128_pr1"></script>
   <script src="js/admin-audit-log.js"></script>
   <script src="js/admin-settings-policies.js"></script>
   <script src="js/admin-settings-feed.js?v=20261128_feed1"></script>

@@ -577,13 +577,12 @@
     });
 
     var newPostId = insertResult.data && insertResult.data.id;
-    if (window.PicklePoints && window.PicklePoints.tryAwardPoints && user && user.id) {
-      window.PicklePoints.tryAwardPoints(user.id, 'post', 'Post', newPostId).catch(function (err) {
+    if (window.PicklePoints && window.PicklePoints.awardPostReward && newPostId) {
+      window.PicklePoints.awardPostReward(newPostId).catch(function (err) {
         console.warn('[P!CKLE Create] post points skipped', err);
       });
-    } else if (window.PicklePoints && window.PicklePoints.awardPoints && user && user.id) {
-      console.log('✅ [Post] 완료 -> awardPoints 호출 시도');
-      window.PicklePoints.awardPoints(user.id, 'post', { sourceId: newPostId }).catch(function (err) {
+    } else if (window.PicklePoints && window.PicklePoints.tryAwardPoints && user && user.id) {
+      window.PicklePoints.tryAwardPoints(user.id, 'post', 'Post', newPostId).catch(function (err) {
         console.warn('[P!CKLE Create] post points skipped', err);
       });
     }

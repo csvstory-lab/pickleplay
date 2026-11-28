@@ -281,8 +281,30 @@
     };
   }
 
+  /**
+   * 불판 작성 보상 — 서버(pickle_award_post_reward)가 작성자·공개 상태·하루 한도를 직접 검증합니다.
+   * @param {string} postId
+   */
+  async function awardPostReward(postId) {
+    if (!postId) return { awarded: false, reason: 'invalid_args' };
+    var sb = getClient();
+    var res = await sb.rpc('pickle_award_post_reward', { p_post_id: postId });
+    if (res.error) {
+      console.warn('[P!CKLE Points] 작성 보상 RPC 실패', res.error);
+      return { awarded: false, reason: 'rpc_failed' };
+    }
+    var d = res.data || {};
+    return {
+      awarded: !!d.awarded,
+      amount: Number(d.amount) || 0,
+      balance: Number(d.balance) || 0,
+      reason: d.reason || null,
+    };
+  }
+
   window.PicklePoints = {
     awardPoints: awardPoints,
+    awardPostReward: awardPostReward,
     tryAwardPoints: tryAwardPoints,
     fetchPointConfig: fetchPointConfig,
     clearPointConfigCache: clearPointConfigCache,

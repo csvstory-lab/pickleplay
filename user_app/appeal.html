@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>숨김 불판 이의제기 — P!CKLE</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+<style>
+    :root {
+        --bg-base: #0a0a0c; --bg-card: #1c1c1e; --point-green: #4ADE80; --point-pink: #ff4d8d;
+        --text-main: #fcfcfc; --text-sub: #a1a1aa; --border-soft: rgba(255,255,255,0.12); --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 70px; }
+    .top { position: sticky; top: 0; z-index: 5; background: var(--bg-base); display: flex; align-items: center; gap: 10px; padding: 14px 0 10px; border-bottom: 1px solid var(--border-soft); }
+    .back { background: none; border: none; color: var(--text-main); font-size: 1.3rem; cursor: pointer; padding: 4px 8px; font-family: inherit; }
+    .title { font-size: 1.05rem; font-weight: 900; margin: 0; }
+    .guide { margin: 16px 0; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 14px; font-size: .85rem; line-height: 1.75; color: #d4d4d8; word-break: keep-all; }
+    .guide b { color: var(--text-main); }
+    .empty, .loading, .err { text-align: center; color: var(--text-sub); padding: 48px 12px; font-weight: 700; }
+    .err { color: #ff6b6b; }
+    .card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+    .card.focus { border-color: var(--point-green); box-shadow: 0 0 0 1px var(--point-green); }
+    .card-head { display: flex; gap: 12px; align-items: center; }
+    .thumb { width: 54px; height: 54px; border-radius: 10px; background: #2a2a2e center/cover no-repeat; flex-shrink: 0; }
+    .p-title { font-weight: 800; font-size: .98rem; line-height: 1.4; word-break: break-all; }
+    .p-meta { font-size: .76rem; color: var(--text-sub); margin-top: 4px; line-height: 1.5; }
+    .chip { display: inline-block; font-size: .72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 10px; }
+    .chip.pending { background: rgba(251,191,36,.12); color: var(--warn); }
+    .chip.accepted { background: rgba(74,222,128,.12); color: var(--point-green); }
+    .chip.rejected { background: rgba(255,77,141,.12); color: var(--point-pink); }
+    .chip.none { background: rgba(255,255,255,.07); color: var(--text-sub); }
+    .box { margin-top: 10px; padding: 10px 12px; background: #131315; border: 1px solid var(--border-soft); border-radius: 10px; font-size: .84rem; line-height: 1.65; white-space: pre-wrap; word-break: break-all; color: #d4d4d8; }
+    .box-title { font-size: .74rem; font-weight: 800; color: var(--text-sub); margin: 12px 0 0; }
+    textarea { width: 100%; margin-top: 12px; min-height: 110px; resize: vertical; background: #131315; border: 1px solid var(--border-soft); border-radius: 10px; color: var(--text-main); padding: 12px; font-size: .9rem; font-family: inherit; line-height: 1.6; }
+    textarea:focus { outline: none; border-color: var(--point-green); }
+    .row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: .75rem; color: var(--text-sub); }
+    .btn { margin-top: 10px; width: 100%; padding: 13px; border-radius: 12px; border: none; font-weight: 900; font-size: .95rem; cursor: pointer; font-family: inherit; background: var(--point-green); color: #09090b; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn.ghost { background: transparent; border: 1px solid var(--border-soft); color: var(--text-sub); font-weight: 800; }
+    .msg { margin-top: 8px; font-size: .8rem; min-height: 1.1em; color: var(--point-pink); }
+    .msg.ok { color: var(--point-green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <button type="button" class="back" id="backBtn" aria-label="뒤로">←</button>
+        <h1 class="title">숨김 처리된 내 불판</h1>
+    </div>
+
+    <div class="guide">
+        <b>숨김 처리된 불판에 이의가 있으신가요?</b><br>
+        신고 접수, 운영 정책 검토, 권리침해 신고 등으로 불판이 숨김 처리되면 이곳에 표시됩니다.
+        사유를 구체적으로 남겨주시면 운영팀이 확인한 뒤 <b>재게시(다시 공개)</b> 또는 <b>숨김 유지</b>로 답변드리며, 결과는 알림으로 안내됩니다.
+        한 불판당 최대 3회까지 요청할 수 있습니다.<br>
+        <span style="color:var(--text-sub);">※ 권리침해 신고로 인한 임시조치(최대 30일)는 신고인의 요청과 함께 검토되어 처리에 시간이 더 걸릴 수 있습니다.</span>
+    </div>
+
+    <div id="list"><div class="loading">불러오는 중…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/supabase-bootstrap.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var SOURCE_TEXT = {
+        infringement: '권리침해 신고 접수에 따른 임시조치',
+        report: '신고 접수·운영 검토에 따른 숨김',
+        admin: '운영팀 검토에 따른 숨김'
+    };
+    var focusId = '';
+    try { focusId = new URLSearchParams(location.search).get('post') || ''; } catch (e) { /* ignore */ }
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function client() {
+        if (window.PickleSupabaseBootstrap && window.PickleSupabaseBootstrap.getClient) return window.PickleSupabaseBootstrap.getClient();
+        if (window.PickleSupabase && window.PickleSupabase.getClient) return window.PickleSupabase.getClient();
+        if (window.getPickleSupabaseClient) return window.getPickleSupabaseClient();
+        return null;
+    }
+    function fmt(d) {
+        var t = new Date(d);
+        if (!d || isNaN(t.getTime())) return '-';
+        return t.getFullYear() + '.' + (t.getMonth() + 1) + '.' + t.getDate();
+    }
+    function daysLeft(d) {
+        return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+    }
+    function reasonText(code) {
+        return ({
+            message_too_short: '이의 내용을 10자 이상 적어주세요.',
+            message_too_long: '이의 내용은 1,000자 이내로 적어주세요.',
+            already_pending: '이미 검토 중인 요청이 있어요.',
+            too_many_appeals: '이 불판은 요청 가능 횟수(3회)를 모두 사용했어요.',
+            not_blinded: '이미 숨김이 해제된 불판이에요.',
+            self_hidden: '직접 숨긴 불판은 이의제기 대상이 아니에요.',
+            no_matching_record: '내 불판이 아니에요.',
+            forbidden: '로그인이 필요해요.'
+        })[code] || '요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
+    }
+
+    function statusChip(r) {
+        if (r.appeal_status === 'pending') return '<span class="chip pending">⏳ 운영팀 검토 중</span>';
+        if (r.appeal_status === 'rejected') return '<span class="chip rejected">숨김 유지 (반려)</span>';
+        if (r.appeal_status === 'accepted') return '<span class="chip accepted">재게시 승인</span>';
+        return '<span class="chip none">이의제기 전</span>';
+    }
+
+    function cardHtml(r) {
+        var thumb = r.thumbnail_url && /^https?:\/\//.test(r.thumbnail_url)
+            ? ' style="background-image:url(\'' + esc(r.thumbnail_url).replace(/'/g, '%27') + '\')"' : '';
+        var temp = '';
+        if (r.temp_until) {
+            var d = daysLeft(r.temp_until);
+            temp = '<br>임시조치 기간: ' + fmt(r.blinded_at) + ' ~ ' + fmt(r.temp_until) + (d > 0 ? ' (D-' + d + ')' : ' (기간 경과)');
+        }
+        var h = '<div class="card' + (focusId === r.post_id ? ' focus' : '') + '" id="c-' + esc(r.post_id) + '">' +
+            '<div class="card-head"><div class="thumb"' + thumb + '></div><div>' +
+            '<div class="p-title">' + esc(r.title || '(제목 없음)') + '</div>' +
+            '<div class="p-meta">' + esc(SOURCE_TEXT[r.blind_source] || '숨김 처리') + ' · ' + fmt(r.blinded_at) + temp + '</div></div></div>' +
+            statusChip(r);
+
+        if (r.appeal_message) {
+            h += '<div class="box-title">내가 남긴 이의 내용</div><div class="box">' + esc(r.appeal_message) + '</div>';
+        }
+        if (r.appeal_note && r.appeal_status !== 'pending') {
+            h += '<div class="box-title">운영팀 답변</div><div class="box">' + esc(r.appeal_note) + '</div>';
+        }
+        if (r.appeal_status === 'pending') {
+            h += '<button class="btn ghost" data-withdraw="' + esc(r.appeal_id) + '">요청 철회하기</button>';
+        } else if (r.can_appeal) {
+            h += '<textarea data-msg="' + esc(r.post_id) + '" maxlength="1000" placeholder="왜 숨김이 부당하다고 생각하시는지, 또는 어떻게 수정했는지 구체적으로 적어주세요. (10자 이상)"></textarea>' +
+                '<div class="row"><span>정확하고 구체적일수록 빠르게 검토돼요</span><span><span data-count="' + esc(r.post_id) + '">0</span> / 1000</span></div>' +
+                '<button class="btn" data-submit="' + esc(r.post_id) + '">이의제기 · 재게시 요청 보내기</button>';
+        } else if (r.appeal_count >= 3) {
+            h += '<div class="msg" style="color:var(--text-sub);">요청 가능 횟수(3회)를 모두 사용했어요. 추가 문의는 고객센터 1:1 문의로 남겨주세요.</div>';
+        }
+        h += '<div class="msg" data-msgbox="' + esc(r.post_id) + '"></div></div>';
+        return h;
+    }
+
+    function setMsg(postId, text, ok) {
+        var el = document.querySelector('[data-msgbox="' + postId + '"]');
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = 'msg' + (ok ? ' ok' : '');
+    }
+
+    async function load() {
+        var list = document.getElementById('list');
+        var sb = client();
+        if (!sb) { list.innerHTML = '<div class="err">연결을 확인하지 못했어요. 새로고침해 주세요.</div>'; return; }
+        var sess = await sb.auth.getSession();
+        if (!(sess && sess.data && sess.data.session)) {
+            location.replace('login.html?redirect=' + encodeURIComponent('appeal.html' + (focusId ? '?post=' + focusId : '')));
+            return;
+        }
+        var res = await sb.rpc('pickle_my_blinded_posts');
+        if (res.error) {
+            list.innerHTML = '<div class="err">불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+            return;
+        }
+        var rows = res.data || [];
+        if (!rows.length) {
+            list.innerHTML = '<div class="empty">숨김 처리된 불판이 없어요 🎉</div>';
+            return;
+        }
+        list.innerHTML = rows.map(cardHtml).join('');
+        var f = document.getElementById('c-' + focusId);
+        if (f && f.scrollIntoView) f.scrollIntoView({ block: 'center' });
+    }
+
+    document.addEventListener('input', function (e) {
+        var id = e.target && e.target.getAttribute && e.target.getAttribute('data-msg');
+        if (!id) return;
+        var c = document.querySelector('[data-count="' + id + '"]');
+        if (c) c.textContent = String(e.target.value.length);
+    });
+
+    document.addEventListener('click', async function (e) {
+        var t = e.target;
+        var sb = client();
+        var postId = t && t.getAttribute && t.getAttribute('data-submit');
+        if (postId && sb) {
+            var ta = document.querySelector('[data-msg="' + postId + '"]');
+            var text = ta ? ta.value.trim() : '';
+            if (text.length < 10) { setMsg(postId, reasonText('message_too_short')); return; }
+            t.disabled = true;
+            setMsg(postId, '보내는 중…', true);
+            var res = await sb.rpc('pickle_submit_appeal', { p_post_id: postId, p_message: text });
+            var d = res && res.data;
+            if (res.error || !d || !d.ok) {
+                t.disabled = false;
+                setMsg(postId, reasonText(d && d.reason));
+                return;
+            }
+            await load();
+            setMsg(postId, '요청이 접수됐어요. 결과는 알림으로 알려드릴게요.', true);
+            return;
+        }
+        var wid = t && t.getAttribute && t.getAttribute('data-withdraw');
+        if (wid && sb) {
+            if (!confirm('이의제기 요청을 철회할까요?')) return;
+            t.disabled = true;
+            await sb.rpc('pickle_withdraw_appeal', { p_appeal_id: wid });
+            await load();
+        }
+    });
+
+    document.getElementById('backBtn').addEventListener('click', function () {
+        if (window.history.length > 1 && document.referrer) history.back();
+        else location.href = 'index.html';
+    });
+
+    if (document.readyState === 'complete') load(); else window.addEventListener('load', load);
+})();
+</script>
+</body>
+</html>

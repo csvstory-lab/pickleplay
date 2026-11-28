@@ -48,6 +48,14 @@
     honor_best_comment: 50,
     expiry_period: 'none',
     daily_cap: 1000,
+    post_reward_daily_posts: 3,
+    post_milestone_enabled: true,
+    post_milestone_1_voters: 10,
+    post_milestone_1_points: 20,
+    post_milestone_2_voters: 30,
+    post_milestone_2_points: 50,
+    post_milestone_3_voters: 100,
+    post_milestone_3_points: 150,
   };
 
   var DEFAULT_PENALTY = {
@@ -372,6 +380,14 @@
     setInput('point_honorBestComment', c.honor_best_comment);
     setSelect('point_expiryPeriod', c.expiry_period);
     setInput('point_dailyCap', c.daily_cap);
+    setInput('point_postDailyPosts', c.post_reward_daily_posts);
+    setCheckbox('point_milestoneEnabled', c.post_milestone_enabled !== false && c.post_milestone_enabled !== 'false');
+    setInput('point_m1Voters', c.post_milestone_1_voters);
+    setInput('point_m1Points', c.post_milestone_1_points);
+    setInput('point_m2Voters', c.post_milestone_2_voters);
+    setInput('point_m2Points', c.post_milestone_2_points);
+    setInput('point_m3Voters', c.post_milestone_3_voters);
+    setInput('point_m3Points', c.post_milestone_3_points);
   }
 
   function collectPointConfig() {
@@ -388,6 +404,14 @@
       honor_best_comment: getNumber('point_honorBestComment', DEFAULT_POINT.honor_best_comment),
       expiry_period: getSelect('point_expiryPeriod') || DEFAULT_POINT.expiry_period,
       daily_cap: getNumber('point_dailyCap', DEFAULT_POINT.daily_cap),
+      post_reward_daily_posts: getNumber('point_postDailyPosts', DEFAULT_POINT.post_reward_daily_posts),
+      post_milestone_enabled: getCheckbox('point_milestoneEnabled'),
+      post_milestone_1_voters: getNumber('point_m1Voters', DEFAULT_POINT.post_milestone_1_voters),
+      post_milestone_1_points: getNumber('point_m1Points', DEFAULT_POINT.post_milestone_1_points),
+      post_milestone_2_voters: getNumber('point_m2Voters', DEFAULT_POINT.post_milestone_2_voters),
+      post_milestone_2_points: getNumber('point_m2Points', DEFAULT_POINT.post_milestone_2_points),
+      post_milestone_3_voters: getNumber('point_m3Voters', DEFAULT_POINT.post_milestone_3_voters),
+      post_milestone_3_points: getNumber('point_m3Points', DEFAULT_POINT.post_milestone_3_points),
     };
   }
 

@@ -27,9 +27,9 @@
     categories: '카테고리',
   };
   var OP_LABEL = { insert: '등록', update: '변경', delete: '삭제' };
-  var SPECIAL = { 'user.ban': '🚫 영구 차단', 'user.unban': '🔓 차단 해제' };
+  var SPECIAL = { 'user.ban': '🚫 영구 차단', 'user.unban': '🔓 차단 해제', 'post_appeal.accept': '✅ 이의제기 승인(재게시)', 'post_appeal.reject': '⛔ 이의제기 반려' };
   var GROUPS = {
-    sanction: ['user.ban', 'user.unban', 'users.update', 'penalty_logs.insert', 'reports.update', 'posts.update', 'comments.update'],
+    sanction: ['user.ban', 'user.unban', 'post_appeal.accept', 'post_appeal.reject', 'users.update', 'penalty_logs.insert', 'reports.update', 'posts.update', 'comments.update'],
     settings: ['system_settings.update', 'pickle_feed_config.update', 'cs_settings.update', 'user_roles.insert', 'user_roles.update', 'user_roles.delete'],
     content: ['notices', 'faqs', 'events', 'popups', 'banned_keywords', 'categories', 'inquiries'],
   };
