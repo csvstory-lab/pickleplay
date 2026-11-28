@@ -167,7 +167,9 @@
     if (!el) return null;
     var onclick = el.getAttribute('onclick') || '';
     var match = onclick.match(/['"](admin_[^'"]+\.html)['"]/);
-    return match ? match[1] : null;
+    if (match) return match[1];
+    var navHref = el.getAttribute('data-nav-href');
+    return navHref && /^admin_[^/]+\.html/.test(navHref) ? navHref.split(/[?#]/)[0] : null;
   }
 
   function redirect(url) {
@@ -285,6 +287,40 @@
     menu.insertBefore(li, menu.firstChild);
   }
 
+  /** 모든 관리자 화면에 "명예의 전당 관리", "주제 분류" 소메뉴를 보장 (화면마다 고치지 않아도 됨) */
+  function ensureDataSubMenus(sidebar) {
+    var subs = Array.prototype.slice.call(sidebar.querySelectorAll('.nav-sub-item'));
+    function has(href) {
+      return subs.some(function (el) {
+        return extractHrefFromOnclick(el) === href;
+      });
+    }
+    var anchor = null;
+    subs.forEach(function (el) {
+      if (extractHrefFromOnclick(el) === 'admin_post_list.html') anchor = el;
+    });
+    if (!anchor) return;
+    var items = [
+      { href: 'admin_hall.html', key: 'hall', label: '· 명예의 전당 관리' },
+      { href: 'admin_topics.html', key: 'topics', label: '· 주제 분류 (데이터)' },
+    ];
+    var last = anchor;
+    items.forEach(function (it) {
+      var existing = subs.filter(function (el) { return extractHrefFromOnclick(el) === it.href; })[0];
+      if (existing) {
+        last = existing;
+        return;
+      }
+      var li = document.createElement('li');
+      li.className = 'nav-sub-item';
+      li.setAttribute('data-admin-menu', it.key);
+      li.setAttribute('onclick', "location.href='" + it.href + "'");
+      li.textContent = it.label;
+      last.insertAdjacentElement('afterend', li);
+      last = li;
+    });
+  }
+
   function applySidebarRBAC(role) {
     role = normalizeRole(role);
     var allowed = MENU_ACCESS[role] || [];
@@ -293,6 +329,8 @@
 
     if (isSponsorRole(role)) {
       injectSponsorCampaignNav(sidebar);
+    } else {
+      ensureDataSubMenus(sidebar);
     }
 
     sidebar.querySelectorAll('.nav-item, .nav-sub-item').forEach(function (el) {
