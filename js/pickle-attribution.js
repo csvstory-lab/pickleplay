@@ -37,10 +37,26 @@
     return null;
   }
 
+  /** 무작위 8자리. 브라우저 보안 난수(crypto)를 우선 쓰고, 없으면 Math.random */
+  function randomPart() {
+    var chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+    try {
+      var c = window.crypto || window.msCrypto;
+      if (c && c.getRandomValues) {
+        var arr = new Uint8Array(8);
+        c.getRandomValues(arr);
+        var s = '';
+        for (var i = 0; i < arr.length; i++) s += chars.charAt(arr[i] % 36);
+        return s;
+      }
+    } catch (e) { /* fallback */ }
+    return Math.random().toString(36).slice(2, 10);
+  }
+
   function getAnonKey() {
     var k = lsGet(ANON_KEY_STORAGE);
     if (!k) {
-      k = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      k = 'a' + Date.now().toString(36) + randomPart();
       if (!lsSet(ANON_KEY_STORAGE, k)) return null;
     }
     return k;
